@@ -18,6 +18,7 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -277,9 +278,12 @@ func TestHandler_Export_MatchesList(t *testing.T) {
 
 	rows := exportRows(t, srv, url.Values{"q": {fx.client}, "sortBy": {"poNumber"}, "sortDir": {"asc"}})
 	require.Len(t, rows, 3)
-	assert.Equal(t, []string{"No. Delivery Note", "No. PO", "No. Quotation", "Tanggal", "Klien", "Status", "Total"}, rows[0])
-	assert.Equal(t, []string{"", fx.a.PoNumber, fx.a.QuotationNo, "2026-01-10", fx.client, "Pending", "555000"}, rows[1])
-	assert.Equal(t, []string{"", fx.b.PoNumber, fx.b.QuotationNo, "2026-02-20", fx.client, "PO Diunggah", "333000"}, rows[2])
+	assert.Equal(t, []string{
+		"No. Delivery Note", "Tanggal Delivery Note", "No. PO", "Tanggal PO",
+		"No. Quotation", "Klien", "Status", "Total",
+	}, rows[0])
+	assert.Equal(t, []string{"", "", fx.a.PoNumber, "2026-01-10", fx.a.QuotationNo, fx.client, "Pending", "555000"}, rows[1])
+	assert.Equal(t, []string{"", "", fx.b.PoNumber, "2026-02-20", fx.b.QuotationNo, fx.client, "PO Diunggah", "333000"}, rows[2])
 }
 
 // exportRows reads the XLSX sheet.
@@ -328,6 +332,9 @@ func TestHandler_Export_DeliveryNoteFollowsIssuance(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx, tx, srv := txServer(t)
 			_, poID := poAt(t, tx, purchaseorders.StatusOnProgress)
+			// The client's PO predates the note, so the two dates differ.
+			_, err := tx.Exec(ctx, `UPDATE purchase_orders SET po_date = DATE '2026-01-05' WHERE id = $1`, poID)
+			require.NoError(t, err)
 			tc.walk(t, tx, poID)
 			po, err := purchaseorders.NewRepo(tx, testutil.Store(t)).GetByID(ctx, poID)
 			require.NoError(t, err)
@@ -335,12 +342,17 @@ func TestHandler_Export_DeliveryNoteFollowsIssuance(t *testing.T) {
 
 			rows := exportRows(t, srv, url.Values{"q": {po.PoNumber}})
 			require.Len(t, rows, 2)
-			assert.Equal(t, tc.status, rows[1][5])
-			want := ""
+			assert.Equal(t, tc.status, rows[1][6])
+			assert.Equal(t, "2026-01-05", rows[1][3], "Tanggal PO is the client's PO date")
+			wantNo, wantDate := "", ""
 			if tc.listed {
-				want = *po.DeliveryNoteNumber
+				wantNo = *po.DeliveryNoteNumber
+				require.NotNil(t, po.DeliveryNoteDate, "the note date is stamped with its number")
+				wantDate = po.DeliveryNoteDate.In(tz.Jakarta()).Format("2006-01-02")
+				require.NotEqual(t, "2026-01-05", wantDate)
 			}
-			assert.Equal(t, want, rows[1][0])
+			assert.Equal(t, wantNo, rows[1][0])
+			assert.Equal(t, wantDate, rows[1][1], "the note date follows the PDF rule")
 		})
 	}
 }

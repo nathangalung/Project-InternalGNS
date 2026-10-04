@@ -112,7 +112,10 @@ func (s *scenarioState) exportListsDeliveryNoteNumber() error {
 		return err
 	}
 	for _, row := range rows {
-		if len(row) > 0 && row[0] == s.dnNumber {
+		if len(row) > exportDNDateCol && row[exportDNCol] == s.dnNumber {
+			if row[exportDNDateCol] == "" {
+				return fmt.Errorf("export lists %s without its date: %v", s.dnNumber, row)
+			}
 			return nil
 		}
 	}
@@ -130,9 +133,8 @@ func (s *scenarioState) exportShowsStatusLabel(want string) error {
 	if err != nil {
 		return err
 	}
-	const statusCol = 5
 	for _, row := range rows[1:] {
-		if len(row) > statusCol && row[statusCol] == want {
+		if len(row) > exportStatusCol && row[exportStatusCol] == want {
 			return nil
 		}
 	}

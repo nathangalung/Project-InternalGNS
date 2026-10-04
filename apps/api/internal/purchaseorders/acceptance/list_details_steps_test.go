@@ -18,9 +18,11 @@ import (
 
 // Export columns the steps read.
 const (
-	exportDNCol    = 0
-	exportPOCol    = 1
-	exportTotalCol = 6
+	exportDNCol     = 0
+	exportDNDateCol = 1
+	exportPOCol     = 2
+	exportStatusCol = 6
+	exportTotalCol  = 7
 )
 
 func (s *scenarioState) editPODetailsDated(poNumber, poDate string) error {
@@ -140,8 +142,9 @@ func (s *scenarioState) exportHidesDeliveryNote() error {
 	if err != nil {
 		return err
 	}
-	if row[exportDNCol] != "" {
-		return fmt.Errorf("want no delivery note number got %q", row[exportDNCol])
+	if row[exportDNCol] != "" || row[exportDNDateCol] != "" {
+		return fmt.Errorf("want no delivery note number or date got %q, %q",
+			row[exportDNCol], row[exportDNDateCol])
 	}
 	return nil
 }
