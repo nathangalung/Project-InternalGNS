@@ -209,7 +209,8 @@ test.describe("quotation wizard", () => {
     await product.getByLabel("Jumlah Produk *").fill("2")
     await product.getByRole("button", { name: "Simpan Data" }).click()
     await expect(product).toBeHidden()
-    await expect(page.getByRole("row", { name: new RegExp(item.name) })).toHaveCount(1)
+    await expect(page.getByRole("button", { name: /^Hapus produk \d+$/ })).toHaveCount(1)
+    await expect(page.getByText(item.name, { exact: true }).first()).toBeVisible()
 
     // The search and its one retry fail.
     await page.route("**/api/v1/items/search-advanced**", (route) =>
@@ -223,10 +224,14 @@ test.describe("quotation wizard", () => {
     await page.unroute("**/api/v1/items/search-advanced**")
     await page.getByRole("button", { name: "Coba Lagi" }).click()
     await expect(page.getByText("Gagal memuat katalog produk.")).toHaveCount(0)
+    // Escape closes the open suggestions, not the dialog.
+    await product.getByLabel("Kode IMPA/Nama Produk Request *").press("Escape")
+    await expect(product).toBeVisible()
     await product.getByRole("button", { name: "Batal" }).click()
 
     await expect(page.getByRole("heading", { name: "Pilih Produk" })).toBeVisible()
-    await expect(page.getByRole("row", { name: new RegExp(item.name) })).toHaveCount(1)
+    await expect(page.getByRole("button", { name: /^Hapus produk \d+$/ })).toHaveCount(1)
+    await expect(page.getByText(item.name, { exact: true }).first()).toBeVisible()
   })
 
   test("a failed client search stays on step 1 and keeps the lines", async ({ page, seed }) => {
@@ -246,7 +251,8 @@ test.describe("quotation wizard", () => {
     await product.getByLabel("Jumlah Produk *").fill("2")
     await product.getByRole("button", { name: "Simpan Data" }).click()
     await expect(product).toBeHidden()
-    await expect(page.getByRole("row", { name: new RegExp(item.name) })).toHaveCount(1)
+    await expect(page.getByRole("button", { name: /^Hapus produk \d+$/ })).toHaveCount(1)
+    await expect(page.getByText(item.name, { exact: true }).first()).toBeVisible()
 
     // The search and its one retry fail.
     await page.route("**/api/v1/clients/search**", (route) =>
@@ -264,7 +270,8 @@ test.describe("quotation wizard", () => {
     await page.getByLabel("Cari klien").fill("")
     await page.getByRole("button", { name: "Lanjut" }).click()
     await expect(page.getByRole("heading", { name: "Pilih Produk" })).toBeVisible()
-    await expect(page.getByRole("row", { name: new RegExp(item.name) })).toHaveCount(1)
+    await expect(page.getByRole("button", { name: /^Hapus produk \d+$/ })).toHaveCount(1)
+    await expect(page.getByText(item.name, { exact: true }).first()).toBeVisible()
   })
 })
 
