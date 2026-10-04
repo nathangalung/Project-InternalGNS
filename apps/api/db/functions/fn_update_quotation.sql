@@ -1,4 +1,4 @@
--- Canonical current body of fn_update_quotation (deployed by migration 00088).
+-- Canonical current body of fn_update_quotation (deployed by migration 00092).
 CREATE OR REPLACE FUNCTION public.fn_update_quotation(p_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_user_id bigint, p_notes text DEFAULT NULL::text)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -51,6 +51,11 @@ BEGIN
     RAISE EXCEPTION 'Diskon harus antara 0 dan 100; nilai yang dikirim %.', p_discount_pct
       USING ERRCODE = 'P0014';
   END IF;
+
+  -- Lines are prepared under the row lock, after the status checks, as
+  -- the live saves do: fn_link_vendor_item locks vendor_products, so the
+  -- quotation row is always taken first.
+  p_items := fn_prepare_quotation_lines(p_items, p_user_id);
 
   -- 3. Pre-calculate totals. The discount is gross minus net per line at
   -- the pct the lines inherit, as quotation_items.subtotal and v_po_totals

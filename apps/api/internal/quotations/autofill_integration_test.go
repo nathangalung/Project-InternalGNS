@@ -2,6 +2,7 @@ package quotations_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/jackc/pgx/v5"
@@ -119,6 +120,48 @@ func TestCreate_RefusesBadVendorPicks(t *testing.T) {
 			assert.Equal(t, tc.want, detailError(t, err))
 		})
 	}
+}
+
+// Saves check the quotation first.
+// Lines are prepared only under the row lock, after the status and client
+// checks, as the live saves do, so those refusals win over a vendor pick.
+func TestSave_ChecksQuotationBeforeLines(t *testing.T) {
+	vendorOnly := func(vendor int64) quotations.CreateItem {
+		l := offered()
+		l.VendorProductID, l.VendorID, l.OfferedItemID = nil, &vendor, nil
+		return l
+	}
+
+	for _, versioned := range []bool{false, true} {
+		t.Run(fmt.Sprintf("update of a sent quotation, versioned %v", versioned), func(t *testing.T) {
+			ctx, repo, tx := newRepo(t)
+			id := sentWithValidity(t, ctx, repo, intPtr(30))
+			var ifMatch *int32
+			if versioned {
+				d, err := repo.GetDetail(ctx, id)
+				require.NoError(t, err)
+				ifMatch = &d.RowVersion
+			}
+			req := quotations.UpdateRequest{
+				ValidityDays: intPtr(30), DiscountPct: "0",
+				Items: []quotations.CreateItem{vendorOnly(newVendor(t, ctx, tx, true))},
+			}
+			_, err := repo.Update(ctx, id, req, seedUserID, ifMatch)
+			assert.Equal(t, "P0013", sqlState(err))
+		})
+	}
+
+	t.Run("create for an inactive client", func(t *testing.T) {
+		ctx, repo, tx := newRepo(t)
+		vendor := newVendor(t, ctx, tx, true)
+		_, err := tx.Exec(ctx, `UPDATE company_client SET is_active = FALSE WHERE id = $1`, seedCompanyID)
+		require.NoError(t, err)
+		req := sampleCreate()
+		req.ContactID = nil
+		req.Items = []quotations.CreateItem{vendorOnly(vendor)}
+		_, err = repo.Create(ctx, req, seedUserID)
+		assert.Equal(t, "Klien tidak ditemukan atau sudah nonaktif. Pilih klien lain.", detailError(t, err))
+	})
 }
 
 // No-offer lines carry no price.
