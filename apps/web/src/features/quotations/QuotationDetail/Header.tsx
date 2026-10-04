@@ -38,7 +38,11 @@ export default function Header({
   return (
     <>
       <nav className={ui.breadcrumb} aria-label="Breadcrumb">
-        <Link to="/quotations" className={`${ui.breadcrumbLink} no-underline`}>
+        <Link
+          activeOptions={{ exact: true }}
+          to="/quotations"
+          className={`${ui.breadcrumbLink} no-underline`}
+        >
           Daftar Quotation
         </Link>
         <span className={ui.breadcrumbSep} aria-hidden="true">

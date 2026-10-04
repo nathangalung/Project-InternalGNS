@@ -397,6 +397,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
                 &rsaquo;
               </span>
               <Link
+                activeOptions={{ exact: true }}
                 to="/quotations/$id"
                 params={{ id: quotationId }}
                 className={`${ui.breadcrumbLink} no-underline`}

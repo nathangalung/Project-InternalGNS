@@ -299,7 +299,11 @@ export default function ClientDetail({ client }: ClientDetailProps) {
     <div className={ui.pageContent}>
       <div className="flex flex-col gap-3">
         <nav aria-label="Breadcrumb" className={ui.breadcrumb}>
-          <Link to="/clients" className={`${ui.breadcrumbLink} no-underline`}>
+          <Link
+            activeOptions={{ exact: true }}
+            to="/clients"
+            className={`${ui.breadcrumbLink} no-underline`}
+          >
             Daftar Klien
           </Link>
           <span aria-hidden="true" className={ui.breadcrumbSep}>

@@ -38,7 +38,11 @@ export default function Header({
   return (
     <>
       <nav className={ui.breadcrumb} aria-label="Breadcrumb">
-        <Link to="/purchase-orders" className={`${ui.breadcrumbLink} no-underline`}>
+        <Link
+          activeOptions={{ exact: true }}
+          to="/purchase-orders"
+          className={`${ui.breadcrumbLink} no-underline`}
+        >
           Daftar Purchase Order
         </Link>
         <span className={ui.breadcrumbSep} aria-hidden="true">

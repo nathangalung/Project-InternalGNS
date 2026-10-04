@@ -43,7 +43,11 @@ export default function Header({ inv, status, onDownloadPdf }: HeaderProps) {
   return (
     <>
       <nav className={ui.breadcrumb} aria-label="Breadcrumb">
-        <Link to="/invoices" className={`${ui.breadcrumbLink} no-underline`}>
+        <Link
+          activeOptions={{ exact: true }}
+          to="/invoices"
+          className={`${ui.breadcrumbLink} no-underline`}
+        >
           Daftar Invoice
         </Link>
         <span className={ui.breadcrumbSep} aria-hidden="true">
