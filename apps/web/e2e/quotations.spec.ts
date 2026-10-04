@@ -228,6 +228,44 @@ test.describe("quotation wizard", () => {
     await expect(page.getByRole("heading", { name: "Pilih Produk" })).toBeVisible()
     await expect(page.getByRole("row", { name: new RegExp(item.name) })).toHaveCount(1)
   })
+
+  test("a failed client search stays on step 1 and keeps the lines", async ({ page, seed }) => {
+    const client = await seed.client()
+    const vendor = await seed.vendor()
+    const item = await seed.item({ vendor, cost: 75_000 })
+
+    await page.goto("/quotations/add")
+    await page.getByLabel("Cari klien").fill(seed.prefix)
+    await page.getByRole("button", { name: new RegExp(client.name) }).click()
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Tambah Produk" }).click()
+    const product = page.getByRole("dialog", { name: "Tambah Produk ke Quotation" })
+    await product.getByLabel("Kode IMPA/Nama Produk Request *").fill(item.name)
+    await page.getByRole("option", { name: `${item.impaCode} - ${item.name}` }).click()
+    await product.getByRole("button", { name: "Salin ke Offer" }).click()
+    await product.getByLabel("Jumlah Produk *").fill("2")
+    await product.getByRole("button", { name: "Simpan Data" }).click()
+    await expect(product).toBeHidden()
+    await expect(page.getByRole("row", { name: new RegExp(item.name) })).toHaveCount(1)
+
+    // The search and its one retry fail.
+    await page.route("**/api/v1/clients/search**", (route) =>
+      route.fulfill({ status: 502, contentType: "application/problem+json", body: "{}" }),
+    )
+    await page.getByRole("button", { name: "Kembali" }).click()
+    await page.getByLabel("Cari klien").fill(`${seed.prefix} lain`)
+    await expect(
+      page.getByRole("alert").filter({ hasText: "Gagal memuat daftar klien." }),
+    ).toBeVisible()
+    await page.unroute("**/api/v1/clients/search**")
+    await page.getByRole("button", { name: "Coba Lagi" }).click()
+    await expect(page.getByText("Gagal memuat daftar klien.")).toHaveCount(0)
+
+    await page.getByLabel("Cari klien").fill("")
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await expect(page.getByRole("heading", { name: "Pilih Produk" })).toBeVisible()
+    await expect(page.getByRole("row", { name: new RegExp(item.name) })).toHaveCount(1)
+  })
 })
 
 test.describe("quotation wizard import and requests", () => {
