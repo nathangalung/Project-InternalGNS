@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test"
-import type { PurchaseOrderItemRow } from "../src/types/generated"
+import type { InvoiceDetail, PurchaseOrderItemRow } from "../src/types/generated"
 import { api, idFrom, pdfFile, rupiah, type SalesSeed, type SeedClient } from "./support/sales"
 import { expect, test } from "./support/seed"
 
@@ -417,6 +417,65 @@ test.describe("purchase order after invoicing", () => {
     await expect(edit).toBeDisabled()
     await page.goto(`/purchase-orders/${q.id}/edit`)
     await expect(page.getByText("Purchase Order tidak dapat diubah")).toBeVisible()
+  })
+
+  test("the UI cancel lets Ubah PO correct what the Pengganti bills", async ({ page, seed }) => {
+    const { q, po } = await acceptedPo(seed)
+    const invoice = await seed.deliver(po)
+    const bar = page.getByRole("region", { name: "Status Invoice" })
+
+    await test.step("cancel the invoice on its page", async () => {
+      await page.goto(`/invoices/${q.id}`)
+      await bar.getByRole("button", { name: "Batalkan Invoice" }).click()
+      const dialog = page.getByRole("dialog", { name: "Batalkan Invoice" })
+      await dialog.getByLabel("Alasan Pembatalan").fill("Salah jumlah")
+      await dialog.getByRole("button", { name: "Batalkan Invoice", exact: true }).click()
+      await expect(dialog).toBeHidden()
+      // No Pengganti yet, so the lines stay open.
+      await expect(bar.getByRole("button", { name: "Terbitkan Pengganti" })).toBeVisible()
+    })
+
+    await test.step("correct the quantity in Ubah PO", async () => {
+      await page.goto(`/purchase-orders/${q.id}`)
+      await page.getByRole("button", { name: "Ubah", exact: true }).click()
+      await expect(page).toHaveURL(new RegExp(`/purchase-orders/${q.id}/edit$`))
+      await page.getByRole("button", { name: "Edit produk 1" }).click()
+      const modal = page.getByRole("dialog", { name: "Edit Produk PO" })
+      await modal.getByLabel("Jumlah Produk *").fill("1")
+      await modal.getByRole("button", { name: "Simpan Perubahan" }).click()
+      await expect(modal).toBeHidden()
+      await page.getByRole("button", { name: "Lanjut" }).click()
+      await page.getByRole("button", { name: "Lanjut" }).click()
+      await page.getByRole("button", { name: "Simpan", exact: true }).click()
+      await expect(page).toHaveURL(new RegExp(`/purchase-orders/${q.id}$`))
+      await expect
+        .poll(async () => (await seed.poByQuotation(q.id)).poTotalProduk)
+        .toBe("100000.00")
+    })
+
+    await test.step("the Pengganti bills the corrected line and relocks it", async () => {
+      await page.goto(`/invoices/${q.id}`)
+      await bar.getByRole("button", { name: "Terbitkan Pengganti" }).click()
+      const dialog = page.getByRole("dialog", { name: "Terbitkan Invoice Pengganti" })
+      await dialog.getByRole("button", { name: "Terbitkan Pengganti", exact: true }).click()
+      await expect(dialog).toBeHidden()
+      await expect(bar.getByText(`Menggantikan ${invoice.invoiceNo}`)).toBeVisible()
+
+      const next = await api<InvoiceDetail>("GET", `/invoices/by-quotation/${q.id}`)
+      const corrected = await seed.poByQuotation(q.id)
+      expect(next.id).not.toBe(invoice.id)
+      expect(next.total).toBe(corrected.poGrandTotal)
+      expect(next.total).not.toBe(invoice.total)
+      const breakdown = page.getByRole("heading", { name: "Rincian Biaya" }).locator("xpath=..")
+      await expect(
+        breakdown
+          .getByText("Grand Total", { exact: true })
+          .locator("xpath=following-sibling::*[1]"),
+      ).toHaveText(rupiah(Number(next.total)))
+
+      await page.goto(`/purchase-orders/${q.id}`)
+      await expect(page.getByRole("button", { name: "Ubah", exact: true })).toBeDisabled()
+    })
   })
 })
 

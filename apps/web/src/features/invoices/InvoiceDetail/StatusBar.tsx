@@ -22,7 +22,11 @@ function describe(inv: InvoiceDetail, status: InvoiceDisplayStatus): string {
   }
   if (inv.status === "cancelled") {
     const reason = cancelReason(inv)
-    return reason ? `Dibatalkan. Alasan: ${reason}` : "Invoice ini sudah dibatalkan."
+    const head = reason ? `Dibatalkan. Alasan: ${reason}` : "Invoice ini sudah dibatalkan."
+    // Ubah PO stays open until the Pengganti.
+    return inv.canReplace
+      ? `${head} Perbaiki PO melalui Ubah PO bila perlu, lalu terbitkan invoice pengganti.`
+      : head
   }
   if (status === "TERLAMBAT") {
     return "Terlambat ditentukan otomatis dari tanggal jatuh tempo."

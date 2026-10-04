@@ -11,7 +11,6 @@ import { queryKeys } from "@/lib/query-keys"
 import { uploadWithFreshKey } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
 import { validateAsset } from "@/lib/upload-validation"
-import type { InvoiceDetail } from "@/types/api"
 import type { UpdateInvoiceDatesInput } from "./types"
 
 export function useInvoices(params: invApi.ListParams = {}) {
@@ -110,49 +109,24 @@ function useInvalidateInvoiceNumber() {
     Promise.all([invalidate(), qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })])
 }
 
-// Cancel held, Pengganti failed.
-class ReplacementFailed extends Error {
-  constructor(readonly reason: unknown) {
-    super("")
-  }
-}
-
-// Text for a held cancel.
-function replacementFailedText(reason: unknown): string {
-  const detail = errorMessage(reason, "").replace(/\.$/, "")
-  const why = detail ? `: ${detail}` : ""
-  return `Invoice sudah dibatalkan, tetapi invoice pengganti gagal diterbitkan${why}. Gunakan Terbitkan Pengganti untuk mencoba lagi.`
-}
-
-// Cancel, then issue the Pengganti.
+// Cancel without the Pengganti.
 //
-// Two calls, not one transaction. When the second fails the invoice stays
-// cancelled with canReplace set, and the page offers Terbitkan Pengganti;
-// the toast says so, so only the Pengganti is retried.
-export function useCancelAndReplaceInvoice() {
-  const qc = useQueryClient()
+// A delivered PO's lines reopen while its invoice is cancelled and no live
+// invoice replaces it, so the Pengganti is a separate step (Terbitkan
+// Pengganti) after Ubah PO; the PO read refreshes for its linesLocked.
+export function useCancelInvoice() {
   const invalidate = useInvalidateInvoices()
   const invalidateNumber = useInvalidateInvoiceNumber()
   return useMutation({
-    mutationFn: async ({ id, note }: { id: number; note: string }): Promise<InvoiceDetail> => {
-      await invApi.changeStatus(id, { status: "cancelled", note })
-      try {
-        return await invApi.replace(id)
-      } catch (err) {
-        throw new ReplacementFailed(err)
-      }
-    },
-    onSuccess: async (next) => {
-      qc.setQueryData(queryKeys.invoices.byQuotation(next.quotationId), next)
+    mutationFn: ({ id, note }: { id: number; note: string }) =>
+      invApi.changeStatus(id, { status: "cancelled", note }),
+    onSuccess: async () => {
       await invalidateNumber()
-      toast.success(`Invoice pengganti ${next.invoiceNo} diterbitkan.`)
+      toast.success(
+        "Invoice dibatalkan. Perbaiki PO melalui Ubah PO bila perlu, lalu terbitkan invoice pengganti.",
+      )
     },
     onError: async (err) => {
-      if (err instanceof ReplacementFailed) {
-        await invalidateNumber()
-        toast.error(replacementFailedText(err.reason))
-        return
-      }
       await invalidate()
       toast.error(errorMessage(err, "Gagal membatalkan invoice."))
     },

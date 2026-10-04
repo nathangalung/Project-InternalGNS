@@ -34,14 +34,14 @@ export type InvoiceAction = {
 // Button copy per offered target.
 //
 // Terlambat is derived from the due date, so an "overdue" entry is never
-// turned into a button. A cancel is only ever offered together with the
-// Pengganti that replaces it.
+// turned into a button. A cancel stands alone: Ubah PO opens until the
+// Pengganti is issued, so the PO can be corrected in between.
 const ACTION_BY_TARGET: Partial<
   Record<InvoiceBackendStatus, { kind: InvoiceActionKind; label: string }>
 > = {
   sent: { kind: "send", label: "Tandai Dikirim" },
   paid: { kind: "pay", label: "Tandai Dibayar" },
-  cancelled: { kind: "cancel", label: "Batalkan & Terbitkan Pengganti" },
+  cancelled: { kind: "cancel", label: "Batalkan Invoice" },
 }
 
 const ACTION_ORDER: InvoiceActionKind[] = ["send", "pay", "cancel"]

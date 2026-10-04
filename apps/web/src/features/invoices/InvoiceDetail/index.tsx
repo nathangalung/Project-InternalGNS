@@ -15,7 +15,7 @@ import { invoiceItemsToProducts, invoiceItemsToShipping } from "../adapters"
 import * as invApi from "../api"
 import { runDownload, safeFileName } from "../download"
 import {
-  useCancelAndReplaceInvoice,
+  useCancelInvoice,
   useInvoiceAttachmentDownloadUrl,
   useInvoiceItems,
   useMarkInvoicePaid,
@@ -63,7 +63,7 @@ export default function InvoiceDetail({ inv }: InvoiceDetailProps) {
   )
   const sendInvoice = useSendInvoice()
   const markPaid = useMarkInvoicePaid()
-  const cancelAndReplace = useCancelAndReplaceInvoice()
+  const cancelInvoice = useCancelInvoice()
   const replaceInvoice = useReplaceInvoice()
   const updateDates = useUpdateInvoiceDates()
   const attachmentInputRef = useRef<HTMLInputElement>(null)
@@ -76,7 +76,7 @@ export default function InvoiceDetail({ inv }: InvoiceDetailProps) {
   // Profit needs real cost data.
   const hasCost = useMemo(() => (invItems ?? []).some((it) => toNum(it.costPrice) > 0), [invItems])
   const shipping = useMemo(() => invoiceItemsToShipping(invItems), [invItems])
-  // A refetch can withdraw the open step, e.g. a cancel whose Pengganti failed.
+  // A refetch can withdraw the open step, e.g. another tab's cancel.
   const offered = modal === "replace" ? inv.canReplace : actions.some((a) => a.kind === modal)
   useEffect(() => {
     if (modal && !offered) setModal(null)
@@ -84,7 +84,7 @@ export default function InvoiceDetail({ inv }: InvoiceDetailProps) {
   const busy =
     sendInvoice.isPending ||
     markPaid.isPending ||
-    cancelAndReplace.isPending ||
+    cancelInvoice.isPending ||
     replaceInvoice.isPending
 
   // Totals from the snapshot lines; PPN and grand total as stored.
@@ -107,10 +107,7 @@ export default function InvoiceDetail({ inv }: InvoiceDetailProps) {
   async function confirmAction({ note, proof }: { note: string; proof?: File }) {
     if (modal === "send") await sendInvoice.mutateAsync(inv.id)
     if (modal === "pay") await markPaid.mutateAsync({ id: inv.id, proof })
-    if (modal === "cancel") {
-      const next = await cancelAndReplace.mutateAsync({ id: inv.id, note })
-      showNewest(next.quotationId)
-    }
+    if (modal === "cancel") await cancelInvoice.mutateAsync({ id: inv.id, note })
     if (modal === "replace") {
       const next = await replaceInvoice.mutateAsync(inv.id)
       showNewest(next.quotationId)

@@ -305,7 +305,9 @@ document's status history table.
   a paid invoice paid again is a no-op, or a 422 when it carries a proof. Draft,
   sent or overdue go to cancelled with a reason, and only when the invoice has
   a PO; `POST /invoices/{id}/replacement` then issues a Pengganti draft for
-  the same PO. The invoice stores its buyer's name, NPWP and address
+  the same PO. The web keeps the two apart (Batalkan Invoice, then
+  Terbitkan Pengganti on the cancelled invoice), since Ubah PO opens only
+  in between. The invoice stores its buyer's name, NPWP and address
   (`buyer_*`, copied by `fn_create_invoice`), and the detail, list, PDF and
   Coretax read those. A client edit never restates an invoice, draft
   included (the PO gate already required a valid NPWP and address at
