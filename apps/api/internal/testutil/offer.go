@@ -15,7 +15,7 @@ import (
 // SeedVendorID is the fixture vendor.
 const SeedVendorID int64 = 9000001
 
-// Validity is a sendable validity window.
+// Validity is a sendable window.
 // Sending a quotation needs validity_days, so a quotation a test sends
 // carries one.
 func Validity() *int {
