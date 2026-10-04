@@ -394,6 +394,30 @@ test.describe("purchase order after invoicing", () => {
     await expect(page.getByRole("button", { name: "Ganti Berkas" })).toHaveCount(0)
     await expect(page.getByRole("button", { name: "Unduh Berkas" })).toBeVisible()
   })
+
+  test("a cancelled invoice reopens Ubah PO until its Pengganti", async ({ page, seed }) => {
+    const { q, po } = await acceptedPo(seed)
+    const invoice = await seed.deliver(po)
+    await page.goto(`/purchase-orders/${q.id}`)
+    const edit = page.getByRole("button", { name: "Ubah", exact: true })
+    await expect(edit).toBeDisabled()
+
+    await api("PATCH", `/invoices/${invoice.id}/status`, {
+      status: "cancelled",
+      note: "Salah jumlah",
+    })
+    await page.reload()
+    await expect(edit).toBeEnabled()
+    await edit.click()
+    await expect(page).toHaveURL(new RegExp(`/purchase-orders/${q.id}/edit$`))
+    await expect(page.getByRole("heading", { name: "Edit Purchase Order" })).toBeVisible()
+
+    await api("POST", `/invoices/${invoice.id}/replacement`)
+    await page.goto(`/purchase-orders/${q.id}`)
+    await expect(edit).toBeDisabled()
+    await page.goto(`/purchase-orders/${q.id}/edit`)
+    await expect(page.getByText("Purchase Order tidak dapat diubah")).toBeVisible()
+  })
 })
 
 test.describe("purchase order list", () => {

@@ -3,7 +3,7 @@ import LoadingState from "@/components/shared/LoadingState"
 import NotFoundState from "@/components/shared/NotFoundState"
 import RouteErrorFallback from "@/components/shared/RouteErrorFallback"
 import { usePurchaseOrderByQuotation } from "@/features/purchaseOrders/hooks"
-import { isPoLocked } from "@/features/purchaseOrders/PurchaseOrderDetail/helpers"
+import { poEditLockReason } from "@/features/purchaseOrders/PurchaseOrderDetail/helpers"
 import PurchaseOrderEdit from "@/features/purchaseOrders/PurchaseOrderEdit"
 import { isMissing } from "@/lib/errors"
 
@@ -34,11 +34,12 @@ function PurchaseOrderEditRoute() {
     )
   }
 
-  if (isPoLocked(po.status)) {
+  const lockReason = poEditLockReason(po)
+  if (lockReason) {
     return (
       <NotFoundState
         title="Purchase Order tidak dapat diubah"
-        description="PO yang sudah dikirim atau dibatalkan tidak dapat diubah."
+        description={lockReason}
         size="page"
         backTo={{ to: "/purchase-orders", label: "Kembali ke Daftar Purchase Order" }}
       />

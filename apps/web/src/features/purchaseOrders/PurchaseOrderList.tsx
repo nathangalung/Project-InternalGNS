@@ -20,7 +20,7 @@ import { usePoUpload, usePurchaseOrders } from "./hooks"
 import {
   canDownloadDeliveryNote,
   deliveryNoteFileName,
-  isPoLocked,
+  isPoFileLocked,
   PO_LABEL,
   PO_STATUS_CONFIG,
   shortDocNo,
@@ -209,7 +209,9 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
                   const status = PO_STATUS_CONFIG[row.status]
                   const dnReady = canDownloadDeliveryNote(row)
                   // A delivered PO keeps its file
-                  const uploadLabel = isPoLocked(row.status) ? "Ubah detail PO" : "Unggah berkas PO"
+                  const uploadLabel = isPoFileLocked(row.status)
+                    ? "Ubah detail PO"
+                    : "Unggah berkas PO"
                   return (
                     <tr key={row.quotationId} className={ui.tr}>
                       <td className={`${ui.tdCenter} font-bold`} title={row.quotationNo}>

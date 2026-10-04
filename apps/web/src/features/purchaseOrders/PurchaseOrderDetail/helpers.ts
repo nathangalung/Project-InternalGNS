@@ -42,9 +42,24 @@ export function shortDocNo(no: string): string {
   return `${no.slice(0, slash)}…`
 }
 
-// Delivered or cancelled freezes lines.
-export function isPoLocked(status: PoStatus): boolean {
+// Delivered or cancelled keeps file.
+export function isPoFileLocked(status: PoStatus): boolean {
   return status === "DELIVERED" || status === "CANCELLED"
+}
+
+// Why Ubah PO is refused.
+//
+// The server sets linesLocked: a cancelled PO, or a delivered one unless its
+// invoice is cancelled and not yet replaced. Null means the lines are open.
+export function poEditLockReason(
+  po: Pick<PurchaseOrderRow, "status" | "linesLocked">,
+): string | null {
+  if (!po.linesLocked) return null
+  if (po.status === "CANCELLED") return "PO yang dibatalkan tidak dapat diubah."
+  if (po.status === "DELIVERED") {
+    return "PO yang sudah dikirim hanya dapat diubah setelah invoicenya dibatalkan dan sebelum invoice pengganti diterbitkan."
+  }
+  return "PO ini tidak dapat diubah."
 }
 
 // What the upload modal allows.
@@ -67,7 +82,7 @@ export function uploadRules(
   hasFile: boolean,
   detailsLocked: boolean,
 ): UploadRules {
-  const fileLocked = isPoLocked(status)
+  const fileLocked = isPoFileLocked(status)
   return {
     fileLocked,
     needsFile: !fileLocked && !hasFile,
