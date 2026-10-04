@@ -119,6 +119,13 @@ BEGIN
       USING ERRCODE = 'P0014';
   END IF;
 
+  -- Number first, before any lock.
+  -- The counter row is then the first lock this transaction takes, so the
+  -- line preparation (fn_link_vendor_item, trg_fn_sync_vendor_cost) never
+  -- holds a row another creator needs while it waits for the counter. A
+  -- refused quotation rolls the number back with it.
+  v_quotation_no := fn_next_doc_no('Q');
+
   -- The pct the lines inherit, at column scale.
   v_pct := p_discount_pct;
 
@@ -169,9 +176,6 @@ BEGIN
     v_dpp   := v_dpp + fn_line_dpp(p_shipping_cost);
     v_ppn   := v_ppn + fn_line_ppn(p_shipping_cost);
   END IF;
-
-  -- 4. Generate quotation_no
-  v_quotation_no := fn_next_doc_no('Q');
 
   -- 5. INSERT header
   INSERT INTO quotations (
