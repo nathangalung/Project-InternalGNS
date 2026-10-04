@@ -174,6 +174,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
           createdAt={formatDate(po.createdAt)}
           status={po.status}
           deliveryNoteNumber={po.deliveryNoteNumber}
+          legacyDnNo={po.legacyDnNo}
           invoiceNo={po.invoiceNo}
           onEdit={editLockReason ? undefined : onEdit}
           editLockReason={editLockReason ?? undefined}

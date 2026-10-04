@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router"
 import EntityLink from "@/components/shared/EntityLink"
+import LegacyNo from "@/components/shared/LegacyNo"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { ui } from "@/lib/ui"
 import PoNumber from "../PoNumber"
@@ -15,6 +16,8 @@ type HeaderProps = {
   // Saved status, never the pending choice
   status: PoStatus
   deliveryNoteNumber?: string
+  // Delivery note first issued, if imported
+  legacyDnNo?: string
   // Issued at DELIVERED
   invoiceNo?: string
   // Undefined once lines are locked
@@ -31,6 +34,7 @@ export default function Header({
   createdAt,
   status,
   deliveryNoteNumber,
+  legacyDnNo,
   invoiceNo,
   onEdit,
   editLockReason,
@@ -80,6 +84,14 @@ export default function Header({
                   <span className={`${ui.metaText} [overflow-wrap:anywhere]`}>
                     Surat Jalan {deliveryNoteNumber}
                   </span>
+                </>
+              )}
+              {legacyDnNo && (
+                <>
+                  <span className={ui.metaSep} aria-hidden="true">
+                    |
+                  </span>
+                  <LegacyNo value={legacyDnNo} separated={false} />
                 </>
               )}
               {invoiceNo && (

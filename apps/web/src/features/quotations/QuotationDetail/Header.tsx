@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router"
 import { useState } from "react"
+import LegacyNo from "@/components/shared/LegacyNo"
 import StatusBadge from "@/components/shared/StatusBadge"
 import type { Status } from "@/features/quotations/types"
 import { ui } from "@/lib/ui"
@@ -7,6 +8,8 @@ import { quotationBadge } from "../status"
 
 type HeaderProps = {
   quotationId: string
+  // Number first issued, if imported
+  legacyNo?: string
   createdAt: string
   version: number | string
   status: Status
@@ -18,6 +21,7 @@ type HeaderProps = {
 // Breadcrumb plus title actions.
 export default function Header({
   quotationId,
+  legacyNo,
   createdAt,
   version,
   status,
@@ -58,6 +62,7 @@ export default function Header({
           <div>
             <h1 className={ui.detailTitle}>Quotation {quotationId}</h1>
             <div className={ui.metaRow}>
+              <LegacyNo value={legacyNo} />
               <span className={ui.metaText}>Dibuat pada: {createdAt}</span>
               <span className={ui.metaSep}>|</span>
               <span className={ui.metaText}>Versi {version}</span>

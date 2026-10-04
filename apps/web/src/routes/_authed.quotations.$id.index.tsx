@@ -74,6 +74,7 @@ function QuotationDetailRoute() {
     <QuotationDetail
       key={detail.id}
       quotationNo={detail.quotationNo}
+      legacyNo={detail.legacyNo}
       quotation={quotation}
       transitions={detail.allowedTransitions ?? []}
       canRevise={detail.canRevise === true}
