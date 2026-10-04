@@ -11,8 +11,9 @@
 -- A purchase order's number is the client's own PO number. Accepting a
 -- quotation leaves it NULL until a user enters it, ON_PROGRESS and
 -- DELIVERED require it, and a PO in either state cannot clear it. Two
--- clients may share a PO number; one client may not reuse one
--- (uq_purchase_orders_client_po_number, which leaves NULLs distinct).
+-- clients may share a PO number; one client's live POs may not, ignoring
+-- case and surrounding spaces, while a cancelled PO frees its number
+-- (uq_purchase_orders_client_po_number, partial, so NULLs never clash).
 --
 -- No number embeds the client number any more, so the client-number lock
 -- from 00072 goes.
@@ -82,6 +83,14 @@ UPDATE purchase_orders SET po_number = NULL WHERE BTRIM(po_number) = '';
 ALTER TABLE purchase_orders
   ADD CONSTRAINT purchase_orders_po_number_not_blank
   CHECK (po_number IS NULL OR BTRIM(po_number) <> '');
+
+-- One live PO per client number.
+-- Case and surrounding spaces do not make a new number, and a cancelled
+-- PO frees its number for the order that replaces it.
+DROP INDEX uq_purchase_orders_client_po_number;
+CREATE UNIQUE INDEX uq_purchase_orders_client_po_number
+  ON purchase_orders (company_client_id, lower(btrim(po_number)))
+  WHERE po_number IS NOT NULL AND status <> 'CANCELLED';
 
 DROP TRIGGER trg_company_client_number_lock ON company_client;
 DROP FUNCTION trg_fn_lock_client_number();
@@ -686,6 +695,21 @@ WHERE po_number IS NULL;
 
 ALTER TABLE purchase_orders DROP CONSTRAINT purchase_orders_po_number_not_blank;
 ALTER TABLE purchase_orders ALTER COLUMN po_number SET NOT NULL;
+
+-- The exact per-client index returns.
+-- A number reissued after a cancel would clash under it, so the cancelled
+-- holder keeps a marked copy of its number.
+UPDATE purchase_orders c
+SET po_number = left(c.po_number, 35) || '-BATAL-' || c.id
+WHERE c.status = 'CANCELLED'
+  AND EXISTS (
+    SELECT 1 FROM purchase_orders o
+    WHERE o.company_client_id = c.company_client_id
+      AND o.po_number = c.po_number AND o.id <> c.id
+  );
+DROP INDEX uq_purchase_orders_client_po_number;
+CREATE UNIQUE INDEX uq_purchase_orders_client_po_number
+  ON purchase_orders (company_client_id, po_number);
 
 -- +goose StatementBegin
 CREATE OR REPLACE FUNCTION public.fn_create_quotation(p_company_client_id bigint, p_contact_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_created_by bigint, p_notes text DEFAULT NULL::text, p_status text DEFAULT 'draft'::text)
