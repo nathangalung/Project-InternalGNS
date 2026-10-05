@@ -6327,11 +6327,16 @@
     {
       "name": "public.doc_counters",
       "type": "BASE TABLE",
-      "comment": "Last running number per document type (Q, INV, DN); fn_next_doc_no takes the next one under the row lock.",
+      "comment": "Last running number per document type (Q, INV, DN) and year; fn_next_doc_no takes the next one of the current WIB year under the row lock.",
       "columns": [
         {
           "name": "doc_type",
           "type": "varchar(3)",
+          "nullable": false
+        },
+        {
+          "name": "year",
+          "type": "integer",
           "nullable": false
         },
         {
@@ -6349,10 +6354,11 @@
       "indexes": [
         {
           "name": "doc_counters_pkey",
-          "def": "CREATE UNIQUE INDEX doc_counters_pkey ON public.doc_counters USING btree (doc_type)",
+          "def": "CREATE UNIQUE INDEX doc_counters_pkey ON public.doc_counters USING btree (doc_type, year)",
           "table": "public.doc_counters",
           "columns": [
-            "doc_type"
+            "doc_type",
+            "year"
           ]
         }
       ],
@@ -6408,13 +6414,34 @@
           ]
         },
         {
-          "name": "doc_counters_pkey",
-          "type": "PRIMARY KEY",
-          "def": "PRIMARY KEY (doc_type)",
+          "name": "doc_counters_year_check",
+          "type": "CHECK",
+          "def": "CHECK (((year \u003e= 1000) AND (year \u003c= 9999)))",
           "table": "public.doc_counters",
           "referenced_table": "",
           "columns": [
-            "doc_type"
+            "year"
+          ]
+        },
+        {
+          "name": "doc_counters_year_not_null",
+          "type": "n",
+          "def": "NOT NULL year",
+          "table": "public.doc_counters",
+          "referenced_table": "",
+          "columns": [
+            "year"
+          ]
+        },
+        {
+          "name": "doc_counters_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (doc_type, year)",
+          "table": "public.doc_counters",
+          "referenced_table": "",
+          "columns": [
+            "doc_type",
+            "year"
           ]
         }
       ]
