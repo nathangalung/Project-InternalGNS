@@ -42,8 +42,8 @@ var sortable = listq.Whitelist{
 		"total":        {Expr: "inv.total", Dir: listq.Desc},
 		"createdAt":    {Expr: "inv.created_at", Dir: listq.Desc},
 		"created_at":   {Expr: "inv.created_at", Dir: listq.Desc},
-		"invoiceNo":    {Expr: "inv.invoice_no", Dir: listq.Desc},
-		"invoice_no":   {Expr: "inv.invoice_no", Dir: listq.Desc},
+		"invoiceNo":    {Expr: listq.DocNoOrder("inv.invoice_no"), Dir: listq.Desc},
+		"invoice_no":   {Expr: listq.DocNoOrder("inv.invoice_no"), Dir: listq.Desc},
 	},
 }
 

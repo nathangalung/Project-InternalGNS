@@ -186,6 +186,17 @@ func Contains(s string) string {
 	return "%" + likeEscaper.Replace(s) + "%"
 }
 
+// DocNoOrder sorts numbers by year.
+//
+// Quotation, invoice and delivery-note numbers restart every year, so the
+// text alone would list Q-00001/GNS/I/2025 beside Q-00001/GNS/I/2026. The
+// key puts the year the number prints, before any revision suffix, in
+// front of the number; a number without one sorts on its own text. col is
+// a fixed column written by the repo, never by the client.
+func DocNoOrder(col string) string {
+	return `COALESCE(substring(` + col + ` FROM '/([0-9]{4})(?: Rev\.[0-9]+)?$'), '') || ` + col
+}
+
 // romanMonths are the number months.
 var romanMonths = []string{"I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"}
 

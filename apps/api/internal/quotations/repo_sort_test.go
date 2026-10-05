@@ -8,6 +8,9 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/listq"
 )
 
+// byNo orders numbers by year.
+const byNo = `COALESCE(substring(q.quotation_no FROM '/([0-9]{4})(?: Rev\.[0-9]+)?$'), '') || q.quotation_no`
+
 // UI sort keys resolve columns.
 func TestSortableWhitelist(t *testing.T) {
 	tests := []struct {
@@ -16,12 +19,12 @@ func TestSortableWhitelist(t *testing.T) {
 		sortDir string
 		want    string
 	}{
-		{"quotationNo asc", "quotationNo", "asc", "q.quotation_no ASC, q.id DESC"},
-		{"quotationNo desc", "quotationNo", "desc", "q.quotation_no DESC, q.id DESC"},
+		{"quotationNo asc", "quotationNo", "asc", byNo + " ASC, q.id DESC"},
+		{"quotationNo desc", "quotationNo", "desc", byNo + " DESC, q.id DESC"},
 		{"version asc", "version", "asc", "q.version ASC, q.id DESC"},
 		{"createdAt asc", "createdAt", "asc", "q.created_at ASC, q.id DESC"},
 		{"grandTotal asc", "grandTotal", "asc", "q.grand_total ASC, q.id DESC"},
-		{"legacy quotation_no", "quotation_no", "asc", "q.quotation_no ASC, q.id DESC"},
+		{"legacy quotation_no", "quotation_no", "asc", byNo + " ASC, q.id DESC"},
 		{"legacy created_at", "created_at", "asc", "q.created_at ASC, q.id DESC"},
 		{"legacy grand_total", "grand_total", "asc", "q.grand_total ASC, q.id DESC"},
 		{"legacy total", "total", "asc", "q.grand_total ASC, q.id DESC"},

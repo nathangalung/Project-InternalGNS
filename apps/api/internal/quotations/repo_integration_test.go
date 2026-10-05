@@ -2,6 +2,8 @@ package quotations_test
 
 import (
 	"context"
+	"regexp"
+	"slices"
 	"strings"
 	"testing"
 
@@ -390,7 +392,7 @@ func TestRepo_List_FiltersAndSort(t *testing.T) {
 	resAsc, err := repo.List(ctx, quotations.ListFilter{SortBy: "quotation_no", SortDir: "asc", Limit: 100})
 	require.NoError(t, err)
 	for i := 1; i < len(resAsc.Rows); i++ {
-		assert.LessOrEqual(t, resAsc.Rows[i-1].QuotationNo, resAsc.Rows[i].QuotationNo)
+		assert.LessOrEqual(t, noKey(resAsc.Rows[i-1].QuotationNo), noKey(resAsc.Rows[i].QuotationNo))
 	}
 
 	resTotalSort, err := repo.List(ctx, quotations.ListFilter{SortBy: "total", SortDir: "asc", Limit: 100})
@@ -416,6 +418,54 @@ func TestRepo_List_FiltersAndSort(t *testing.T) {
 	resBadSort, err := repo.List(ctx, quotations.ListFilter{SortBy: "; DROP TABLE--", Limit: 100})
 	require.NoError(t, err)
 	assert.NotEmpty(t, resBadSort.Rows)
+}
+
+// noYear finds a number's year.
+var noYear = regexp.MustCompile(`/([0-9]{4})(?: Rev\.[0-9]+)?$`)
+
+// noKey mirrors listq.DocNoOrder.
+func noKey(no string) string {
+	if m := noYear.FindStringSubmatch(no); m != nil {
+		return m[1] + no
+	}
+	return no
+}
+
+// Numbers sort year first.
+// Numbers restart every year, so a 2031 quotation lists before every 2032
+// one whatever its running number, and a revision after its base.
+func TestRepo_List_SortByNumberYearFirst(t *testing.T) {
+	ctx, repo, tx := newRepo(t)
+	numbers := []string{
+		"Q-00002/GNS/I/2032", "Q-00007/GNS/XII/2031", "Q-00001/GNS/II/2032",
+		"Q-00001/GNS/II/2032 Rev.1", "Q-00012/GNS/XI/2031",
+	}
+	for _, no := range numbers {
+		id, err := repo.Create(ctx, sampleCreate(), seedUserID)
+		require.NoError(t, err)
+		_, err = tx.Exec(ctx, `UPDATE quotations SET quotation_no = $1 WHERE id = $2`, no, id)
+		require.NoError(t, err)
+	}
+
+	sorted := func(dir string) []string {
+		res, err := repo.List(ctx, quotations.ListFilter{Q: "/203", SortBy: "quotationNo", SortDir: dir, Limit: 100})
+		require.NoError(t, err)
+		var out []string
+		for _, r := range res.Rows {
+			if slices.Contains(numbers, r.QuotationNo) {
+				out = append(out, r.QuotationNo)
+			}
+		}
+		return out
+	}
+	asc := []string{
+		"Q-00007/GNS/XII/2031", "Q-00012/GNS/XI/2031",
+		"Q-00001/GNS/II/2032", "Q-00001/GNS/II/2032 Rev.1", "Q-00002/GNS/I/2032",
+	}
+	assert.Equal(t, asc, sorted("asc"))
+	desc := slices.Clone(asc)
+	slices.Reverse(desc)
+	assert.Equal(t, desc, sorted("desc"))
 }
 
 func TestRepo_List_TotalAndDateBounds(t *testing.T) {

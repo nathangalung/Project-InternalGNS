@@ -56,8 +56,8 @@ var sortable = listq.Whitelist{
 		"grandTotal":   {Expr: "q.grand_total", Dir: listq.Desc},
 		"grand_total":  {Expr: "q.grand_total", Dir: listq.Desc},
 		"total":        {Expr: "q.grand_total", Dir: listq.Desc},
-		"quotationNo":  {Expr: "q.quotation_no", Dir: listq.Desc},
-		"quotation_no": {Expr: "q.quotation_no", Dir: listq.Desc},
+		"quotationNo":  {Expr: listq.DocNoOrder("q.quotation_no"), Dir: listq.Desc},
+		"quotation_no": {Expr: listq.DocNoOrder("q.quotation_no"), Dir: listq.Desc},
 		"version":      {Expr: "q.version", Dir: listq.Desc},
 	},
 }
