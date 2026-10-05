@@ -30,7 +30,7 @@
 | [public.invoice_status_history](public.invoice_status_history.md)             | 8       |                                                                                                                                                                             | BASE TABLE |
 | [public.quotation_edit_locks](public.quotation_edit_locks.md)                 | 4       |                                                                                                                                                                             | BASE TABLE |
 | [public.item_images](public.item_images.md)                                   | 5       |                                                                                                                                                                             | BASE TABLE |
-| [public.doc_counters](public.doc_counters.md)                                 | 3       | Last running number per document type (Q, INV, DN); fn_next_doc_no takes the next one under the row lock.                                                                   | BASE TABLE |
+| [public.doc_counters](public.doc_counters.md)                                 | 4       | Last running number per document type (Q, INV, DN) and year; fn_next_doc_no takes the next one of the current WIB year under the row lock.                                  | BASE TABLE |
 
 ## Stored procedures and functions
 

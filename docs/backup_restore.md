@@ -263,8 +263,9 @@ po-docs              31/128082 31/128082 ok
 ```
 
 That run predates migration 00098, which replaced `doc_sequences` with
-`doc_counters` (one row per document type), so a backup taken now lists
-`public.doc_counters` with 3 rows in its place.
+`doc_counters` (one row per document type, and per year since 00101), so a
+backup taken now lists `public.doc_counters` in its place, with one row
+for each type and year a number was drawn in.
 
 The ETags of all 73 restored objects matched their sources. The public schema
 had 71 functions in both databases. The restore also refused an existing

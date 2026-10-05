@@ -188,13 +188,19 @@ renders exactly those moves; it keeps no transition map of its own. A refused
 move is a 422 with Indonesian detail text. Every move writes a row to that
 document's status history table.
 
-Quotation, invoice and delivery-note numbers are one running number per
-document type that never resets, five digits wide and growing past 99999,
-then the Roman month and year of the WIB issue date: `Q-00011/GNS/X/2026`,
-`INV-00007/GNS/X/2026`, `DN-00007/GNS/X/2026`. `fn_next_doc_no(type)` takes
-the next value from that type's `doc_counters` row under its row lock, so
-concurrent callers queue and a rolled-back document leaves no gap; it is
-never a SEQUENCE. A revision keeps its base number with `Rev.n`, and a
+Quotation, invoice and delivery-note numbers are a running number per
+document type and per year that restarts at 00001 every year, five digits
+wide and growing past 99999, then the Roman month and year of the WIB issue
+date, the year the count belongs to: `Q-00011/GNS/X/2026`,
+`INV-00007/GNS/X/2026`, `DN-00007/GNS/X/2026`, and `Q-00001/GNS/I/2027`
+after the last quotation of 2026. `fn_next_doc_no(type)` takes the next
+value from the `doc_counters` row of that type and the year of
+`CURRENT_DATE` under its row lock, creating the row with the year's first
+number, so concurrent callers queue and a rolled-back document leaves no
+gap; it is never a SEQUENCE. Migration 00101 renumbered every number
+issued before it within its year, in order, and the notes that copy one;
+sorting a list by number orders by year first (`listq.DocNoOrder`). A
+revision keeps its base number with `Rev.n`, so its base's year, and a
 Pengganti draws a new invoice number. Numbers issued before 00098 keep their
 legacy format (year, client number and a yearly count). A re-imported
 document also keeps the number it was first issued under in `legacy_no`
