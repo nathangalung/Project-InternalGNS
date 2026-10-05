@@ -14,7 +14,7 @@ Opaque refresh tokens (SHA-256 hashed). Rotation on use, revocation on logout.
 | expires_at      | timestamp with time zone |                                            | false    |          |                                 |                                                                                                    |
 | created_at      | timestamp with time zone | now()                                      | false    |          |                                 |                                                                                                    |
 | revoked_at      | timestamp with time zone |                                            | true     |          |                                 | Set when the token is consumed (rotated) or explicitly revoked. NULL = active.                     |
-| revoked_reason  | text                     |                                            | true     |          |                                 | Why the token was revoked: rotated, logout, admin, reuse. NULL on legacy rows.                     |
+| revoked_reason  | text                     |                                            | true     |          |                                 | Why the token was revoked: rotated, logout, admin, reuse, cookie_migration. NULL on legacy rows.   |
 | session_version | integer                  |                                            | false    |          |                                 | The owner's users.session_version when this token was minted. Redeemable only while the two match. |
 
 ## Constraints

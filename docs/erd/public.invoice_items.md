@@ -32,16 +32,20 @@
 
 | Name                                 | Type        | Definition                                                                                                       |
 | ------------------------------------ | ----------- | ---------------------------------------------------------------------------------------------------------------- |
+| invoice_items_cost_price_check       | CHECK       | CHECK (((cost_price >= (0)::numeric) AND (cost_price <> 'NaN'::numeric)))                                        |
 | invoice_items_created_at_not_null    | n           | NOT NULL created_at                                                                                              |
 | invoice_items_created_by_not_null    | n           | NOT NULL created_by                                                                                              |
+| invoice_items_gross_unit_price_check | CHECK       | CHECK (((gross_unit_price >= (0)::numeric) AND (gross_unit_price <> 'NaN'::numeric)))                            |
 | invoice_items_id_not_null            | n           | NOT NULL id                                                                                                      |
 | invoice_items_invoice_id_not_null    | n           | NOT NULL invoice_id                                                                                              |
 | invoice_items_item_name_not_null     | n           | NOT NULL item_name                                                                                               |
 | invoice_items_line_type_check        | CHECK       | CHECK (((line_type)::text = ANY ((ARRAY['product'::character varying, 'shipping'::character varying])::text[]))) |
 | invoice_items_line_type_not_null     | n           | NOT NULL line_type                                                                                               |
 | invoice_items_qty_check              | CHECK       | CHECK ((qty >= (0)::numeric))                                                                                    |
+| invoice_items_qty_not_nan            | CHECK       | CHECK ((qty <> 'NaN'::numeric))                                                                                  |
 | invoice_items_qty_not_null           | n           | NOT NULL qty                                                                                                     |
 | invoice_items_unit_price_check       | CHECK       | CHECK ((unit_price >= (0)::numeric))                                                                             |
+| invoice_items_unit_price_not_nan     | CHECK       | CHECK ((unit_price <> 'NaN'::numeric))                                                                           |
 | invoice_items_unit_price_not_null    | n           | NOT NULL unit_price                                                                                              |
 | invoice_items_created_by_fkey        | FOREIGN KEY | FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT                                                 |
 | invoice_items_updated_by_fkey        | FOREIGN KEY | FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE RESTRICT                                                 |

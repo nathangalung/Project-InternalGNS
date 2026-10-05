@@ -30,11 +30,13 @@
 | item_code         | varchar(20)              |                                                  | true     |                                                                                                                                                                                                                        |          |                                                     |                                                                                                |
 | ship_destination  | varchar(255)             |                                                  | true     |                                                                                                                                                                                                                        |          |                                                     |                                                                                                |
 | shipping_days     | integer                  |                                                  | true     |                                                                                                                                                                                                                        |          |                                                     | Estimated delivery working days, shipping lines only.                                          |
+| vendor_product_id | bigint                   |                                                  | true     |                                                                                                                                                                                                                        |          | [public.vendor_products](public.vendor_products.md) |                                                                                                |
 
 ## Constraints
 
 | Name                                        | Type        | Definition                                                                                                       |
 | ------------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------- |
+| purchase_order_items_cost_price_check       | CHECK       | CHECK (((cost_price >= (0)::numeric) AND (cost_price <> 'NaN'::numeric)))                                        |
 | purchase_order_items_created_at_not_null    | n           | NOT NULL created_at                                                                                              |
 | purchase_order_items_created_by_not_null    | n           | NOT NULL created_by                                                                                              |
 | purchase_order_items_discount_pct_check     | CHECK       | CHECK (((discount_pct >= (0)::numeric) AND (discount_pct <= (100)::numeric)))                                    |
@@ -46,14 +48,18 @@
 | purchase_order_items_line_number_not_null   | n           | NOT NULL line_number                                                                                             |
 | purchase_order_items_po_id_not_null         | n           | NOT NULL po_id                                                                                                   |
 | purchase_order_items_qty_check              | CHECK       | CHECK ((qty >= (0)::numeric))                                                                                    |
+| purchase_order_items_qty_not_nan            | CHECK       | CHECK ((qty <> 'NaN'::numeric))                                                                                  |
 | purchase_order_items_qty_not_null           | n           | NOT NULL qty                                                                                                     |
 | purchase_order_items_selling_price_check    | CHECK       | CHECK ((selling_price >= (0)::numeric))                                                                          |
+| purchase_order_items_selling_price_not_nan  | CHECK       | CHECK ((selling_price <> 'NaN'::numeric))                                                                        |
 | purchase_order_items_selling_price_not_null | n           | NOT NULL selling_price                                                                                           |
+| purchase_order_items_shipping_days_check    | CHECK       | CHECK ((shipping_days > 0))                                                                                      |
 | purchase_order_items_updated_at_not_null    | n           | NOT NULL updated_at                                                                                              |
 | purchase_order_items_created_by_fkey        | FOREIGN KEY | FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT                                                 |
 | purchase_order_items_updated_by_fkey        | FOREIGN KEY | FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE RESTRICT                                                 |
 | purchase_order_items_unit_id_fkey           | FOREIGN KEY | FOREIGN KEY (unit_id) REFERENCES units(id) ON DELETE RESTRICT                                                    |
 | purchase_order_items_offered_item_id_fkey   | FOREIGN KEY | FOREIGN KEY (offered_item_id) REFERENCES items(id) ON DELETE RESTRICT                                            |
+| purchase_order_items_vendor_product_id_fkey | FOREIGN KEY | FOREIGN KEY (vendor_product_id) REFERENCES vendor_products(id) ON DELETE RESTRICT                                |
 | purchase_order_items_quotation_item_id_fkey | FOREIGN KEY | FOREIGN KEY (quotation_item_id) REFERENCES quotation_items(id) ON DELETE SET NULL                                |
 | purchase_order_items_po_id_fkey             | FOREIGN KEY | FOREIGN KEY (po_id) REFERENCES purchase_orders(id) ON DELETE CASCADE                                             |
 | purchase_order_items_pkey                   | PRIMARY KEY | PRIMARY KEY (id)                                                                                                 |
@@ -65,8 +71,8 @@
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
 | purchase_order_items_pkey                  | CREATE UNIQUE INDEX purchase_order_items_pkey ON public.purchase_order_items USING btree (id)                                  |
 | purchase_order_items_po_id_line_number_key | CREATE UNIQUE INDEX purchase_order_items_po_id_line_number_key ON public.purchase_order_items USING btree (po_id, line_number) |
-| idx_po_items_po                            | CREATE INDEX idx_po_items_po ON public.purchase_order_items USING btree (po_id)                                                |
 | idx_po_items_quotation_item                | CREATE INDEX idx_po_items_quotation_item ON public.purchase_order_items USING btree (quotation_item_id)                        |
+| idx_po_items_vendor_product                | CREATE INDEX idx_po_items_vendor_product ON public.purchase_order_items USING btree (vendor_product_id)                        |
 
 ## Triggers
 

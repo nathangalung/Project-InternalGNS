@@ -949,6 +949,16 @@
       ],
       "constraints": [
         {
+          "name": "vendors_contact_info_shape",
+          "type": "CHECK",
+          "def": "CHECK (((contact_info IS NULL) OR ((jsonb_typeof(contact_info) = 'object'::text) AND (COALESCE(jsonb_typeof((contact_info -\u003e 'email'::text)), 'string'::text) = ANY (ARRAY['string'::text, 'null'::text])) AND (COALESCE(jsonb_typeof((contact_info -\u003e 'phone'::text)), 'string'::text) = ANY (ARRAY['string'::text, 'null'::text])) AND (COALESCE(jsonb_typeof((contact_info -\u003e 'sku'::text)), 'string'::text) = ANY (ARRAY['string'::text, 'null'::text])))))",
+          "table": "public.vendors",
+          "referenced_table": "",
+          "columns": [
+            "contact_info"
+          ]
+        },
+        {
           "name": "vendors_created_at_not_null",
           "type": "n",
           "def": "NOT NULL created_at",
@@ -1343,8 +1353,7 @@
         {
           "name": "product_url",
           "type": "text",
-          "nullable": true,
-          "comment": "Optional URL to the product page on the vendor site (e.g. catalog listing, quote reference). NULL = not provided."
+          "nullable": true
         }
       ],
       "indexes": [
@@ -1395,6 +1404,16 @@
           "name": "vendor_products_cost_price_check",
           "type": "CHECK",
           "def": "CHECK ((cost_price \u003e= (0)::numeric))",
+          "table": "public.vendor_products",
+          "referenced_table": "",
+          "columns": [
+            "cost_price"
+          ]
+        },
+        {
+          "name": "vendor_products_cost_price_not_nan",
+          "type": "CHECK",
+          "def": "CHECK ((cost_price \u003c\u003e 'NaN'::numeric))",
           "table": "public.vendor_products",
           "referenced_table": "",
           "columns": [
@@ -1780,14 +1799,12 @@
         {
           "name": "dpp_nilai_lain",
           "type": "numeric(15,2)",
-          "nullable": true,
-          "extra_def": "GENERATED ALWAYS AS (((total - total_discount) * 11.0) / 12.0) STORED"
+          "nullable": true
         },
         {
           "name": "ppn_amount",
           "type": "numeric(15,2)",
-          "nullable": true,
-          "extra_def": "GENERATED ALWAYS AS ((((total - total_discount) * 11.0) / 12.0) * 0.12) STORED"
+          "nullable": true
         },
         {
           "name": "row_version",
@@ -1826,8 +1843,13 @@
         {
           "name": "grand_total",
           "type": "numeric(15,2)",
+          "nullable": true
+        },
+        {
+          "name": "legacy_no",
+          "type": "text",
           "nullable": true,
-          "extra_def": "GENERATED ALWAYS AS ((total - total_discount) * 1.11) STORED"
+          "comment": "Number the quotation was first issued under before re-import; NULL for app-created quotations."
         }
       ],
       "indexes": [
@@ -1977,6 +1999,16 @@
           ]
         },
         {
+          "name": "quotations_legacy_no_not_blank",
+          "type": "CHECK",
+          "def": "CHECK (((legacy_no IS NULL) OR (btrim(legacy_no) \u003c\u003e ''::text)))",
+          "table": "public.quotations",
+          "referenced_table": "",
+          "columns": [
+            "legacy_no"
+          ]
+        },
+        {
           "name": "quotations_quotation_no_not_null",
           "type": "n",
           "def": "NOT NULL quotation_no",
@@ -2024,6 +2056,16 @@
           "referenced_table": "",
           "columns": [
             "updated_at"
+          ]
+        },
+        {
+          "name": "quotations_validity_days_check",
+          "type": "CHECK",
+          "def": "CHECK ((validity_days \u003e 0))",
+          "table": "public.quotations",
+          "referenced_table": "",
+          "columns": [
+            "validity_days"
           ]
         },
         {
@@ -2124,10 +2166,6 @@
       ],
       "triggers": [
         {
-          "name": "trg_quotations_updated_at",
-          "def": "CREATE TRIGGER trg_quotations_updated_at BEFORE UPDATE ON public.quotations FOR EACH ROW EXECUTE FUNCTION set_updated_at()"
-        },
-        {
           "name": "trg_protect_quotation_discount",
           "def": "CREATE TRIGGER trg_protect_quotation_discount BEFORE UPDATE OF discount_pct ON public.quotations FOR EACH ROW EXECUTE FUNCTION trg_fn_protect_quotation_discount()"
         },
@@ -2138,6 +2176,14 @@
         {
           "name": "trg_log_quotation_creation",
           "def": "CREATE TRIGGER trg_log_quotation_creation AFTER INSERT ON public.quotations FOR EACH ROW EXECUTE FUNCTION trg_fn_log_quotation_creation()"
+        },
+        {
+          "name": "trg_quotation_tax_default",
+          "def": "CREATE TRIGGER trg_quotation_tax_default BEFORE INSERT ON public.quotations FOR EACH ROW EXECUTE FUNCTION trg_fn_quotation_tax_default()"
+        },
+        {
+          "name": "trg_quotations_updated_at",
+          "def": "CREATE TRIGGER trg_quotations_updated_at BEFORE UPDATE ON public.quotations FOR EACH ROW EXECUTE FUNCTION set_updated_at()"
         }
       ]
     },
@@ -2308,8 +2354,7 @@
         {
           "name": "request_id",
           "type": "bigint",
-          "nullable": true,
-          "comment": "Back-pointer to quotation_item_requests row that this line was built from. NULL = legacy row or admin-added line without an explicit klien request log."
+          "nullable": true
         },
         {
           "name": "shipping_days",
@@ -2334,14 +2379,6 @@
           "columns": [
             "quotation_id",
             "line_number"
-          ]
-        },
-        {
-          "name": "idx_quotation_items_quotation",
-          "def": "CREATE INDEX idx_quotation_items_quotation ON public.quotation_items USING btree (quotation_id)",
-          "table": "public.quotation_items",
-          "columns": [
-            "quotation_id"
           ]
         },
         {
@@ -2378,6 +2415,16 @@
         }
       ],
       "constraints": [
+        {
+          "name": "quotation_items_cost_price_check",
+          "type": "CHECK",
+          "def": "CHECK (((cost_price \u003e= (0)::numeric) AND (cost_price \u003c\u003e 'NaN'::numeric)))",
+          "table": "public.quotation_items",
+          "referenced_table": "",
+          "columns": [
+            "cost_price"
+          ]
+        },
         {
           "name": "quotation_items_created_at_not_null",
           "type": "n",
@@ -2479,6 +2526,16 @@
           ]
         },
         {
+          "name": "quotation_items_qty_not_nan",
+          "type": "CHECK",
+          "def": "CHECK ((qty \u003c\u003e 'NaN'::numeric))",
+          "table": "public.quotation_items",
+          "referenced_table": "",
+          "columns": [
+            "qty"
+          ]
+        },
+        {
           "name": "quotation_items_qty_not_null",
           "type": "n",
           "def": "NOT NULL qty",
@@ -2529,6 +2586,16 @@
           ]
         },
         {
+          "name": "quotation_items_selling_price_not_nan",
+          "type": "CHECK",
+          "def": "CHECK ((selling_price \u003c\u003e 'NaN'::numeric))",
+          "table": "public.quotation_items",
+          "referenced_table": "",
+          "columns": [
+            "selling_price"
+          ]
+        },
+        {
           "name": "quotation_items_selling_price_not_null",
           "type": "n",
           "def": "NOT NULL selling_price",
@@ -2536,6 +2603,16 @@
           "referenced_table": "",
           "columns": [
             "selling_price"
+          ]
+        },
+        {
+          "name": "quotation_items_shipping_days_check",
+          "type": "CHECK",
+          "def": "CHECK ((shipping_days \u003e 0))",
+          "table": "public.quotation_items",
+          "referenced_table": "",
+          "columns": [
+            "shipping_days"
           ]
         },
         {
@@ -2700,6 +2777,14 @@
         {
           "name": "trg_inherit_quotation_discount",
           "def": "CREATE TRIGGER trg_inherit_quotation_discount BEFORE INSERT ON public.quotation_items FOR EACH ROW EXECUTE FUNCTION trg_fn_inherit_quotation_discount()"
+        },
+        {
+          "name": "trg_learn_match_on_update",
+          "def": "CREATE TRIGGER trg_learn_match_on_update AFTER UPDATE OF requested_item_id, requested_name ON public.quotation_items FOR EACH ROW WHEN (((old.requested_item_id IS DISTINCT FROM new.requested_item_id) OR (lower(TRIM(BOTH FROM old.requested_name)) IS DISTINCT FROM lower(TRIM(BOTH FROM new.requested_name))))) EXECUTE FUNCTION trg_fn_learn_match()"
+        },
+        {
+          "name": "trg_sync_vendor_cost_on_update",
+          "def": "CREATE TRIGGER trg_sync_vendor_cost_on_update AFTER UPDATE OF cost_price, vendor_product_id, update_vendor_price ON public.quotation_items FOR EACH ROW WHEN ((new.update_vendor_price AND ((old.cost_price IS DISTINCT FROM new.cost_price) OR (old.vendor_product_id IS DISTINCT FROM new.vendor_product_id) OR (NOT old.update_vendor_price)))) EXECUTE FUNCTION trg_fn_sync_vendor_cost()"
         }
       ]
     },
@@ -2716,7 +2801,7 @@
         {
           "name": "po_number",
           "type": "varchar(50)",
-          "nullable": false
+          "nullable": true
         },
         {
           "name": "quotation_id",
@@ -2807,6 +2892,18 @@
           "name": "uploaded_at",
           "type": "timestamp with time zone",
           "nullable": true
+        },
+        {
+          "name": "delivery_note_date",
+          "type": "date",
+          "nullable": true,
+          "comment": "WIB day delivery_note_number was issued; NULL on legacy rows without history."
+        },
+        {
+          "name": "legacy_dn_no",
+          "type": "text",
+          "nullable": true,
+          "comment": "Delivery-note number printed on the original DO before re-import; NULL for app-created POs."
         }
       ],
       "indexes": [
@@ -2844,20 +2941,20 @@
           ]
         },
         {
-          "name": "uq_purchase_orders_client_po_number",
-          "def": "CREATE UNIQUE INDEX uq_purchase_orders_client_po_number ON public.purchase_orders USING btree (company_client_id, po_number)",
-          "table": "public.purchase_orders",
-          "columns": [
-            "company_client_id",
-            "po_number"
-          ]
-        },
-        {
           "name": "uq_purchase_orders_quotation_id",
           "def": "CREATE UNIQUE INDEX uq_purchase_orders_quotation_id ON public.purchase_orders USING btree (quotation_id)",
           "table": "public.purchase_orders",
           "columns": [
             "quotation_id"
+          ]
+        },
+        {
+          "name": "uq_purchase_orders_client_po_number",
+          "def": "CREATE UNIQUE INDEX uq_purchase_orders_client_po_number ON public.purchase_orders USING btree (company_client_id, lower(btrim((po_number)::text))) WHERE ((po_number IS NOT NULL) AND ((status)::text \u003c\u003e 'CANCELLED'::text))",
+          "table": "public.purchase_orders",
+          "columns": [
+            "company_client_id",
+            "lower"
           ]
         }
       ],
@@ -2923,6 +3020,16 @@
           ]
         },
         {
+          "name": "purchase_orders_legacy_dn_no_not_blank",
+          "type": "CHECK",
+          "def": "CHECK (((legacy_dn_no IS NULL) OR (btrim(legacy_dn_no) \u003c\u003e ''::text)))",
+          "table": "public.purchase_orders",
+          "referenced_table": "",
+          "columns": [
+            "legacy_dn_no"
+          ]
+        },
+        {
           "name": "purchase_orders_po_date_not_null",
           "type": "n",
           "def": "NOT NULL po_date",
@@ -2933,9 +3040,9 @@
           ]
         },
         {
-          "name": "purchase_orders_po_number_not_null",
-          "type": "n",
-          "def": "NOT NULL po_number",
+          "name": "purchase_orders_po_number_not_blank",
+          "type": "CHECK",
+          "def": "CHECK (((po_number IS NULL) OR (btrim((po_number)::text) \u003c\u003e ''::text)))",
           "table": "public.purchase_orders",
           "referenced_table": "",
           "columns": [
@@ -3081,16 +3188,16 @@
       ],
       "triggers": [
         {
-          "name": "trg_purchase_orders_updated_at",
-          "def": "CREATE TRIGGER trg_purchase_orders_updated_at BEFORE UPDATE ON public.purchase_orders FOR EACH ROW EXECUTE FUNCTION set_updated_at()"
-        },
-        {
           "name": "trg_po_inherit_quotation_discount",
           "def": "CREATE TRIGGER trg_po_inherit_quotation_discount BEFORE INSERT ON public.purchase_orders FOR EACH ROW EXECUTE FUNCTION trg_fn_po_inherit_quotation_discount()"
         },
         {
           "name": "trg_log_po_creation",
           "def": "CREATE TRIGGER trg_log_po_creation AFTER INSERT ON public.purchase_orders FOR EACH ROW EXECUTE FUNCTION trg_fn_log_po_creation()"
+        },
+        {
+          "name": "trg_purchase_orders_updated_at",
+          "def": "CREATE TRIGGER trg_purchase_orders_updated_at BEFORE UPDATE ON public.purchase_orders FOR EACH ROW EXECUTE FUNCTION set_updated_at()"
         }
       ]
     },
@@ -3239,6 +3346,11 @@
           "type": "integer",
           "nullable": true,
           "comment": "Estimated delivery working days, shipping lines only."
+        },
+        {
+          "name": "vendor_product_id",
+          "type": "bigint",
+          "nullable": true
         }
       ],
       "indexes": [
@@ -3260,23 +3372,33 @@
           ]
         },
         {
-          "name": "idx_po_items_po",
-          "def": "CREATE INDEX idx_po_items_po ON public.purchase_order_items USING btree (po_id)",
-          "table": "public.purchase_order_items",
-          "columns": [
-            "po_id"
-          ]
-        },
-        {
           "name": "idx_po_items_quotation_item",
           "def": "CREATE INDEX idx_po_items_quotation_item ON public.purchase_order_items USING btree (quotation_item_id)",
           "table": "public.purchase_order_items",
           "columns": [
             "quotation_item_id"
           ]
+        },
+        {
+          "name": "idx_po_items_vendor_product",
+          "def": "CREATE INDEX idx_po_items_vendor_product ON public.purchase_order_items USING btree (vendor_product_id)",
+          "table": "public.purchase_order_items",
+          "columns": [
+            "vendor_product_id"
+          ]
         }
       ],
       "constraints": [
+        {
+          "name": "purchase_order_items_cost_price_check",
+          "type": "CHECK",
+          "def": "CHECK (((cost_price \u003e= (0)::numeric) AND (cost_price \u003c\u003e 'NaN'::numeric)))",
+          "table": "public.purchase_order_items",
+          "referenced_table": "",
+          "columns": [
+            "cost_price"
+          ]
+        },
         {
           "name": "purchase_order_items_created_at_not_null",
           "type": "n",
@@ -3388,6 +3510,16 @@
           ]
         },
         {
+          "name": "purchase_order_items_qty_not_nan",
+          "type": "CHECK",
+          "def": "CHECK ((qty \u003c\u003e 'NaN'::numeric))",
+          "table": "public.purchase_order_items",
+          "referenced_table": "",
+          "columns": [
+            "qty"
+          ]
+        },
+        {
           "name": "purchase_order_items_qty_not_null",
           "type": "n",
           "def": "NOT NULL qty",
@@ -3408,6 +3540,16 @@
           ]
         },
         {
+          "name": "purchase_order_items_selling_price_not_nan",
+          "type": "CHECK",
+          "def": "CHECK ((selling_price \u003c\u003e 'NaN'::numeric))",
+          "table": "public.purchase_order_items",
+          "referenced_table": "",
+          "columns": [
+            "selling_price"
+          ]
+        },
+        {
           "name": "purchase_order_items_selling_price_not_null",
           "type": "n",
           "def": "NOT NULL selling_price",
@@ -3415,6 +3557,16 @@
           "referenced_table": "",
           "columns": [
             "selling_price"
+          ]
+        },
+        {
+          "name": "purchase_order_items_shipping_days_check",
+          "type": "CHECK",
+          "def": "CHECK ((shipping_days \u003e 0))",
+          "table": "public.purchase_order_items",
+          "referenced_table": "",
+          "columns": [
+            "shipping_days"
           ]
         },
         {
@@ -3474,6 +3626,19 @@
           "referenced_table": "public.items",
           "columns": [
             "offered_item_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "purchase_order_items_vendor_product_id_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (vendor_product_id) REFERENCES vendor_products(id) ON DELETE RESTRICT",
+          "table": "public.purchase_order_items",
+          "referenced_table": "public.vendor_products",
+          "columns": [
+            "vendor_product_id"
           ],
           "referenced_columns": [
             "id"
@@ -3589,20 +3754,10 @@
           "nullable": true
         },
         {
-          "name": "dpp_nilai_lain",
-          "type": "numeric(15,2)",
-          "nullable": true
-        },
-        {
           "name": "ppn_rate",
           "type": "numeric(4,2)",
           "nullable": false,
           "default": "12.00"
-        },
-        {
-          "name": "ppn_amount",
-          "type": "numeric(15,2)",
-          "nullable": true
         },
         {
           "name": "tax_transaction_code",
@@ -3651,15 +3806,25 @@
           "default": "now()"
         },
         {
-          "name": "total",
-          "type": "numeric(15,2)",
-          "nullable": true
-        },
-        {
           "name": "attachment_object_key",
           "type": "text",
           "nullable": true,
           "comment": "MinIO object key inside bucket invoice-attachments (e.g. payment receipt). NULL = no attachment."
+        },
+        {
+          "name": "dpp_nilai_lain",
+          "type": "numeric(15,2)",
+          "nullable": true
+        },
+        {
+          "name": "ppn_amount",
+          "type": "numeric(15,2)",
+          "nullable": true
+        },
+        {
+          "name": "total",
+          "type": "numeric(15,2)",
+          "nullable": true
         },
         {
           "name": "total_discount",
@@ -3681,6 +3846,30 @@
           "name": "payment_proof_key",
           "type": "text",
           "nullable": true
+        },
+        {
+          "name": "buyer_name",
+          "type": "varchar(255)",
+          "nullable": false,
+          "comment": "Client name the invoice is addressed to, copied when the invoice is created."
+        },
+        {
+          "name": "buyer_npwp",
+          "type": "varchar(20)",
+          "nullable": true,
+          "comment": "Client NPWP the invoice is addressed to, copied when the invoice is created."
+        },
+        {
+          "name": "buyer_address",
+          "type": "text",
+          "nullable": true,
+          "comment": "Client address the invoice is addressed to, copied when the invoice is created."
+        },
+        {
+          "name": "legacy_no",
+          "type": "text",
+          "nullable": true,
+          "comment": "Number the invoice was first issued under before re-import; NULL for app-created invoices."
         }
       ],
       "indexes": [
@@ -3760,6 +3949,16 @@
       ],
       "constraints": [
         {
+          "name": "invoices_buyer_name_not_null",
+          "type": "n",
+          "def": "NOT NULL buyer_name",
+          "table": "public.invoices",
+          "referenced_table": "",
+          "columns": [
+            "buyer_name"
+          ]
+        },
+        {
           "name": "invoices_company_client_id_not_null",
           "type": "n",
           "def": "NOT NULL company_client_id",
@@ -3827,6 +4026,16 @@
           "referenced_table": "",
           "columns": [
             "invoice_no"
+          ]
+        },
+        {
+          "name": "invoices_legacy_no_not_blank",
+          "type": "CHECK",
+          "def": "CHECK (((legacy_no IS NULL) OR (btrim(legacy_no) \u003c\u003e ''::text)))",
+          "table": "public.invoices",
+          "referenced_table": "",
+          "columns": [
+            "legacy_no"
           ]
         },
         {
@@ -4192,6 +4401,16 @@
       ],
       "constraints": [
         {
+          "name": "invoice_items_cost_price_check",
+          "type": "CHECK",
+          "def": "CHECK (((cost_price \u003e= (0)::numeric) AND (cost_price \u003c\u003e 'NaN'::numeric)))",
+          "table": "public.invoice_items",
+          "referenced_table": "",
+          "columns": [
+            "cost_price"
+          ]
+        },
+        {
           "name": "invoice_items_created_at_not_null",
           "type": "n",
           "def": "NOT NULL created_at",
@@ -4209,6 +4428,16 @@
           "referenced_table": "",
           "columns": [
             "created_by"
+          ]
+        },
+        {
+          "name": "invoice_items_gross_unit_price_check",
+          "type": "CHECK",
+          "def": "CHECK (((gross_unit_price \u003e= (0)::numeric) AND (gross_unit_price \u003c\u003e 'NaN'::numeric)))",
+          "table": "public.invoice_items",
+          "referenced_table": "",
+          "columns": [
+            "gross_unit_price"
           ]
         },
         {
@@ -4272,6 +4501,16 @@
           ]
         },
         {
+          "name": "invoice_items_qty_not_nan",
+          "type": "CHECK",
+          "def": "CHECK ((qty \u003c\u003e 'NaN'::numeric))",
+          "table": "public.invoice_items",
+          "referenced_table": "",
+          "columns": [
+            "qty"
+          ]
+        },
+        {
           "name": "invoice_items_qty_not_null",
           "type": "n",
           "def": "NOT NULL qty",
@@ -4285,6 +4524,16 @@
           "name": "invoice_items_unit_price_check",
           "type": "CHECK",
           "def": "CHECK ((unit_price \u003e= (0)::numeric))",
+          "table": "public.invoice_items",
+          "referenced_table": "",
+          "columns": [
+            "unit_price"
+          ]
+        },
+        {
+          "name": "invoice_items_unit_price_not_nan",
+          "type": "CHECK",
+          "def": "CHECK ((unit_price \u003c\u003e 'NaN'::numeric))",
           "table": "public.invoice_items",
           "referenced_table": "",
           "columns": [
@@ -4536,139 +4785,6 @@
       ]
     },
     {
-      "name": "public.doc_sequences",
-      "type": "BASE TABLE",
-      "comment": "Running sequence per (doc_type, company, year). UPSERT atomic via fn_next_doc_no for race-safe number generation.",
-      "columns": [
-        {
-          "name": "doc_type",
-          "type": "varchar(10)",
-          "nullable": false
-        },
-        {
-          "name": "company_id",
-          "type": "bigint",
-          "nullable": false
-        },
-        {
-          "name": "year",
-          "type": "integer",
-          "nullable": false
-        },
-        {
-          "name": "last_seq",
-          "type": "integer",
-          "nullable": false,
-          "default": "0"
-        },
-        {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "nullable": false,
-          "default": "now()"
-        }
-      ],
-      "indexes": [
-        {
-          "name": "doc_sequences_pkey",
-          "def": "CREATE UNIQUE INDEX doc_sequences_pkey ON public.doc_sequences USING btree (doc_type, company_id, year)",
-          "table": "public.doc_sequences",
-          "columns": [
-            "doc_type",
-            "company_id",
-            "year"
-          ]
-        }
-      ],
-      "constraints": [
-        {
-          "name": "doc_sequences_company_id_not_null",
-          "type": "n",
-          "def": "NOT NULL company_id",
-          "table": "public.doc_sequences",
-          "referenced_table": "",
-          "columns": [
-            "company_id"
-          ]
-        },
-        {
-          "name": "doc_sequences_doc_type_check",
-          "type": "CHECK",
-          "def": "CHECK (((doc_type)::text = ANY ((ARRAY['Q'::character varying, 'PO'::character varying, 'INV'::character varying, 'DN'::character varying])::text[])))",
-          "table": "public.doc_sequences",
-          "referenced_table": "",
-          "columns": [
-            "doc_type"
-          ]
-        },
-        {
-          "name": "doc_sequences_doc_type_not_null",
-          "type": "n",
-          "def": "NOT NULL doc_type",
-          "table": "public.doc_sequences",
-          "referenced_table": "",
-          "columns": [
-            "doc_type"
-          ]
-        },
-        {
-          "name": "doc_sequences_last_seq_not_null",
-          "type": "n",
-          "def": "NOT NULL last_seq",
-          "table": "public.doc_sequences",
-          "referenced_table": "",
-          "columns": [
-            "last_seq"
-          ]
-        },
-        {
-          "name": "doc_sequences_updated_at_not_null",
-          "type": "n",
-          "def": "NOT NULL updated_at",
-          "table": "public.doc_sequences",
-          "referenced_table": "",
-          "columns": [
-            "updated_at"
-          ]
-        },
-        {
-          "name": "doc_sequences_year_not_null",
-          "type": "n",
-          "def": "NOT NULL year",
-          "table": "public.doc_sequences",
-          "referenced_table": "",
-          "columns": [
-            "year"
-          ]
-        },
-        {
-          "name": "doc_sequences_company_id_fkey",
-          "type": "FOREIGN KEY",
-          "def": "FOREIGN KEY (company_id) REFERENCES company_client(id) ON DELETE RESTRICT",
-          "table": "public.doc_sequences",
-          "referenced_table": "public.company_client",
-          "columns": [
-            "company_id"
-          ],
-          "referenced_columns": [
-            "id"
-          ]
-        },
-        {
-          "name": "doc_sequences_pkey",
-          "type": "PRIMARY KEY",
-          "def": "PRIMARY KEY (doc_type, company_id, year)",
-          "table": "public.doc_sequences",
-          "referenced_table": "",
-          "columns": [
-            "doc_type",
-            "company_id",
-            "year"
-          ]
-        }
-      ]
-    },
-    {
       "name": "public.quotation_reconciliation",
       "type": "VIEW",
       "comment": "Reconciliation check: header total vs SUM items. Non-zero diff = inconsistency.",
@@ -4860,7 +4976,6 @@
     {
       "name": "public.quotation_item_requests",
       "type": "BASE TABLE",
-      "comment": "Pre-quotation request log. Each row = one RFQ line from klien (manual input or OCR). Goes through pending→matched/substituted/unavailable review, then 0..N quotation_items rows are built from it. Owner-facing audit via v_quotation_request_audit.",
       "columns": [
         {
           "name": "id",
@@ -4914,8 +5029,7 @@
           "name": "source_type",
           "type": "varchar(20)",
           "nullable": false,
-          "default": "'manual'::character varying",
-          "comment": "manual=staff typed it in, ocr=extracted from klien document via OCR, import=batch loaded from external file."
+          "default": "'manual'::character varying"
         },
         {
           "name": "source_ref",
@@ -4978,15 +5092,6 @@
         {
           "name": "uq_qir_quotation_line",
           "def": "CREATE UNIQUE INDEX uq_qir_quotation_line ON public.quotation_item_requests USING btree (quotation_id, line_no)",
-          "table": "public.quotation_item_requests",
-          "columns": [
-            "quotation_id",
-            "line_no"
-          ]
-        },
-        {
-          "name": "idx_qir_quotation",
-          "def": "CREATE INDEX idx_qir_quotation ON public.quotation_item_requests USING btree (quotation_id, line_no)",
           "table": "public.quotation_item_requests",
           "columns": [
             "quotation_id",
@@ -5246,19 +5351,18 @@
       ],
       "triggers": [
         {
-          "name": "trg_qir_updated_at",
-          "def": "CREATE TRIGGER trg_qir_updated_at BEFORE UPDATE ON public.quotation_item_requests FOR EACH ROW EXECUTE FUNCTION set_updated_at()"
-        },
-        {
           "name": "trg_qir_lock_parent",
           "def": "CREATE TRIGGER trg_qir_lock_parent BEFORE INSERT OR DELETE OR UPDATE ON public.quotation_item_requests FOR EACH ROW EXECUTE FUNCTION trg_fn_qir_lock_parent()"
+        },
+        {
+          "name": "trg_qir_updated_at",
+          "def": "CREATE TRIGGER trg_qir_updated_at BEFORE UPDATE ON public.quotation_item_requests FOR EACH ROW EXECUTE FUNCTION set_updated_at()"
         }
       ]
     },
     {
       "name": "public.v_quotation_request_audit",
       "type": "VIEW",
-      "comment": "Owner-facing side-by-side: client_requested | matched_item_name | quoted_qty/price. One row per request line, repeated when 1 request maps to N quotation_items (1:N case). Quotations without requests still appear (LEFT JOIN, qir.* NULL). Order via ORDER BY quotation_id, line_no, quoted_line_number in queries.",
       "columns": [
         {
           "name": "quotation_id",
@@ -5447,7 +5551,7 @@
           "name": "revoked_reason",
           "type": "text",
           "nullable": true,
-          "comment": "Why the token was revoked: rotated, logout, admin, reuse. NULL on legacy rows."
+          "comment": "Why the token was revoked: rotated, logout, admin, reuse, cookie_migration. NULL on legacy rows."
         },
         {
           "name": "session_version",
@@ -5942,6 +6046,375 @@
           "referenced_table": "",
           "columns": [
             "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.quotation_edit_locks",
+      "type": "BASE TABLE",
+      "columns": [
+        {
+          "name": "quotation_id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "part",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "nullable": false
+        }
+      ],
+      "indexes": [
+        {
+          "name": "quotation_edit_locks_pkey",
+          "def": "CREATE UNIQUE INDEX quotation_edit_locks_pkey ON public.quotation_edit_locks USING btree (quotation_id, part)",
+          "table": "public.quotation_edit_locks",
+          "columns": [
+            "quotation_id",
+            "part"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "quotation_edit_locks_expires_at_not_null",
+          "type": "n",
+          "def": "NOT NULL expires_at",
+          "table": "public.quotation_edit_locks",
+          "referenced_table": "",
+          "columns": [
+            "expires_at"
+          ]
+        },
+        {
+          "name": "quotation_edit_locks_part_check",
+          "type": "CHECK",
+          "def": "CHECK (((part = 'header'::text) OR (part ~ '^line:[1-9][0-9]*$'::text)))",
+          "table": "public.quotation_edit_locks",
+          "referenced_table": "",
+          "columns": [
+            "part"
+          ]
+        },
+        {
+          "name": "quotation_edit_locks_part_not_null",
+          "type": "n",
+          "def": "NOT NULL part",
+          "table": "public.quotation_edit_locks",
+          "referenced_table": "",
+          "columns": [
+            "part"
+          ]
+        },
+        {
+          "name": "quotation_edit_locks_quotation_id_not_null",
+          "type": "n",
+          "def": "NOT NULL quotation_id",
+          "table": "public.quotation_edit_locks",
+          "referenced_table": "",
+          "columns": [
+            "quotation_id"
+          ]
+        },
+        {
+          "name": "quotation_edit_locks_user_id_not_null",
+          "type": "n",
+          "def": "NOT NULL user_id",
+          "table": "public.quotation_edit_locks",
+          "referenced_table": "",
+          "columns": [
+            "user_id"
+          ]
+        },
+        {
+          "name": "quotation_edit_locks_user_id_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (user_id) REFERENCES users(id)",
+          "table": "public.quotation_edit_locks",
+          "referenced_table": "public.users",
+          "columns": [
+            "user_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "quotation_edit_locks_quotation_id_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (quotation_id) REFERENCES quotations(id) ON DELETE CASCADE",
+          "table": "public.quotation_edit_locks",
+          "referenced_table": "public.quotations",
+          "columns": [
+            "quotation_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "quotation_edit_locks_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (quotation_id, part)",
+          "table": "public.quotation_edit_locks",
+          "referenced_table": "",
+          "columns": [
+            "quotation_id",
+            "part"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.item_images",
+      "type": "BASE TABLE",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false,
+          "default": "nextval('item_images_id_seq'::regclass)"
+        },
+        {
+          "name": "item_id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "object_key",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "created_by",
+          "type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "item_images_pkey",
+          "def": "CREATE UNIQUE INDEX item_images_pkey ON public.item_images USING btree (id)",
+          "table": "public.item_images",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "item_images_object_key_key",
+          "def": "CREATE UNIQUE INDEX item_images_object_key_key ON public.item_images USING btree (object_key)",
+          "table": "public.item_images",
+          "columns": [
+            "object_key"
+          ]
+        },
+        {
+          "name": "idx_item_images_item",
+          "def": "CREATE INDEX idx_item_images_item ON public.item_images USING btree (item_id, id)",
+          "table": "public.item_images",
+          "columns": [
+            "item_id",
+            "id"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "item_images_created_at_not_null",
+          "type": "n",
+          "def": "NOT NULL created_at",
+          "table": "public.item_images",
+          "referenced_table": "",
+          "columns": [
+            "created_at"
+          ]
+        },
+        {
+          "name": "item_images_id_not_null",
+          "type": "n",
+          "def": "NOT NULL id",
+          "table": "public.item_images",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "item_images_item_id_not_null",
+          "type": "n",
+          "def": "NOT NULL item_id",
+          "table": "public.item_images",
+          "referenced_table": "",
+          "columns": [
+            "item_id"
+          ]
+        },
+        {
+          "name": "item_images_object_key_not_null",
+          "type": "n",
+          "def": "NOT NULL object_key",
+          "table": "public.item_images",
+          "referenced_table": "",
+          "columns": [
+            "object_key"
+          ]
+        },
+        {
+          "name": "item_images_created_by_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (created_by) REFERENCES users(id)",
+          "table": "public.item_images",
+          "referenced_table": "public.users",
+          "columns": [
+            "created_by"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "item_images_item_id_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE",
+          "table": "public.item_images",
+          "referenced_table": "public.items",
+          "columns": [
+            "item_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "item_images_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.item_images",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "item_images_object_key_key",
+          "type": "UNIQUE",
+          "def": "UNIQUE (object_key)",
+          "table": "public.item_images",
+          "referenced_table": "",
+          "columns": [
+            "object_key"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.doc_counters",
+      "type": "BASE TABLE",
+      "comment": "Last running number per document type (Q, INV, DN); fn_next_doc_no takes the next one under the row lock.",
+      "columns": [
+        {
+          "name": "doc_type",
+          "type": "varchar(3)",
+          "nullable": false
+        },
+        {
+          "name": "last_seq",
+          "type": "integer",
+          "nullable": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "doc_counters_pkey",
+          "def": "CREATE UNIQUE INDEX doc_counters_pkey ON public.doc_counters USING btree (doc_type)",
+          "table": "public.doc_counters",
+          "columns": [
+            "doc_type"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "doc_counters_doc_type_check",
+          "type": "CHECK",
+          "def": "CHECK (((doc_type)::text = ANY ((ARRAY['Q'::character varying, 'INV'::character varying, 'DN'::character varying])::text[])))",
+          "table": "public.doc_counters",
+          "referenced_table": "",
+          "columns": [
+            "doc_type"
+          ]
+        },
+        {
+          "name": "doc_counters_doc_type_not_null",
+          "type": "n",
+          "def": "NOT NULL doc_type",
+          "table": "public.doc_counters",
+          "referenced_table": "",
+          "columns": [
+            "doc_type"
+          ]
+        },
+        {
+          "name": "doc_counters_last_seq_check",
+          "type": "CHECK",
+          "def": "CHECK ((last_seq \u003e= 0))",
+          "table": "public.doc_counters",
+          "referenced_table": "",
+          "columns": [
+            "last_seq"
+          ]
+        },
+        {
+          "name": "doc_counters_last_seq_not_null",
+          "type": "n",
+          "def": "NOT NULL last_seq",
+          "table": "public.doc_counters",
+          "referenced_table": "",
+          "columns": [
+            "last_seq"
+          ]
+        },
+        {
+          "name": "doc_counters_updated_at_not_null",
+          "type": "n",
+          "def": "NOT NULL updated_at",
+          "table": "public.doc_counters",
+          "referenced_table": "",
+          "columns": [
+            "updated_at"
+          ]
+        },
+        {
+          "name": "doc_counters_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (doc_type)",
+          "table": "public.doc_counters",
+          "referenced_table": "",
+          "columns": [
+            "doc_type"
           ]
         }
       ]
@@ -6484,6 +6957,19 @@
     {
       "table": "public.purchase_order_items",
       "columns": [
+        "vendor_product_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.vendor_products",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "zero_or_one",
+      "def": "FOREIGN KEY (vendor_product_id) REFERENCES vendor_products(id) ON DELETE RESTRICT"
+    },
+    {
+      "table": "public.purchase_order_items",
+      "columns": [
         "quotation_item_id"
       ],
       "cardinality": "zero_or_more",
@@ -6664,19 +7150,6 @@
       "def": "FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE"
     },
     {
-      "table": "public.doc_sequences",
-      "columns": [
-        "company_id"
-      ],
-      "cardinality": "zero_or_more",
-      "parent_table": "public.company_client",
-      "parent_columns": [
-        "id"
-      ],
-      "parent_cardinality": "exactly_one",
-      "def": "FOREIGN KEY (company_id) REFERENCES company_client(id) ON DELETE RESTRICT"
-    },
-    {
       "table": "public.quotation_status_history",
       "columns": [
         "changed_by"
@@ -6831,6 +7304,58 @@
       ],
       "parent_cardinality": "exactly_one",
       "def": "FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "public.quotation_edit_locks",
+      "columns": [
+        "user_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.users",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (user_id) REFERENCES users(id)"
+    },
+    {
+      "table": "public.quotation_edit_locks",
+      "columns": [
+        "quotation_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.quotations",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (quotation_id) REFERENCES quotations(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "public.item_images",
+      "columns": [
+        "created_by"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.users",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "zero_or_one",
+      "def": "FOREIGN KEY (created_by) REFERENCES users(id)"
+    },
+    {
+      "table": "public.item_images",
+      "columns": [
+        "item_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.items",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE"
     }
   ],
   "functions": [
@@ -7105,12 +7630,6 @@
       "type": "FUNCTION"
     },
     {
-      "name": "public.fn_next_doc_no",
-      "return_type": "text",
-      "arguments": "p_doc_type character varying, p_company_id bigint",
-      "type": "FUNCTION"
-    },
-    {
       "name": "public.fn_search_vendors",
       "return_type": "record",
       "arguments": "p_q text, p_min_score real DEFAULT 0.3, p_limit integer DEFAULT 10",
@@ -7153,15 +7672,15 @@
       "type": "FUNCTION"
     },
     {
-      "name": "public.trg_fn_qir_lock_parent",
-      "return_type": "trigger",
-      "arguments": "",
-      "type": "FUNCTION"
-    },
-    {
       "name": "public.fn_update_po_items",
       "return_type": "void",
       "arguments": "p_po_id bigint, p_user_id bigint, p_discount_pct numeric, p_notes text, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.trg_fn_qir_lock_parent",
+      "return_type": "trigger",
+      "arguments": "",
       "type": "FUNCTION"
     },
     {
@@ -7259,11 +7778,191 @@
       "return_type": "record",
       "arguments": "p_q text, p_min_score real DEFAULT 0.3, p_limit integer DEFAULT 10, p_is_active boolean DEFAULT true",
       "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_recommend_lines",
+      "return_type": "record",
+      "arguments": "p_client_id bigint, p_item_ids bigint[]",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_prepare_quotation_lines",
+      "return_type": "jsonb",
+      "arguments": "p_items jsonb, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_quotation_notify",
+      "return_type": "void",
+      "arguments": "p_quotation_id bigint, p_kind text, p_part text, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_quotation_lock_draft",
+      "return_type": "void",
+      "arguments": "p_quotation_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_quotation_line_of",
+      "return_type": "void",
+      "arguments": "p_quotation_id bigint, p_line_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_quotation_part_free",
+      "return_type": "void",
+      "arguments": "p_quotation_id bigint, p_part text, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_quotation_part_held",
+      "return_type": "void",
+      "arguments": "p_quotation_id bigint, p_part text, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_quotation_no_other_editors",
+      "return_type": "void",
+      "arguments": "p_quotation_id bigint, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_quotation_lock",
+      "return_type": "timestamptz",
+      "arguments": "p_quotation_id bigint, p_part text, p_user_id bigint, p_ttl_seconds integer",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_quotation_unlock",
+      "return_type": "void",
+      "arguments": "p_quotation_id bigint, p_part text, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_recompute_quotation_totals",
+      "return_type": "void",
+      "arguments": "p_quotation_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_quotation_add_lines",
+      "return_type": "_int8",
+      "arguments": "p_quotation_id bigint, p_items jsonb, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_quotation_update_line",
+      "return_type": "void",
+      "arguments": "p_quotation_id bigint, p_line_id bigint, p_item jsonb, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_quotation_set_line_offer",
+      "return_type": "void",
+      "arguments": "p_quotation_id bigint, p_line_id bigint, p_available boolean, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_quotation_delete_line",
+      "return_type": "void",
+      "arguments": "p_quotation_id bigint, p_line_id bigint, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_quotation_update_header",
+      "return_type": "void",
+      "arguments": "p_quotation_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_notes text, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_item_image_lock",
+      "return_type": "text",
+      "arguments": "p_item_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_item_image_add",
+      "return_type": "int8",
+      "arguments": "p_item_id bigint, p_key text, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_item_image_delete",
+      "return_type": "void",
+      "arguments": "p_item_id bigint, p_image_id bigint, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_item_image_set_cover",
+      "return_type": "void",
+      "arguments": "p_item_id bigint, p_image_id bigint, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_quotation_update_contact",
+      "return_type": "text",
+      "arguments": "p_quotation_id bigint, p_contact_id bigint, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_link_vendor_item",
+      "return_type": "int8",
+      "arguments": "p_vendor_id bigint, p_item_id bigint, p_cost numeric, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_line_dpp",
+      "return_type": "numeric",
+      "arguments": "p_subtotal numeric",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_line_ppn",
+      "return_type": "numeric",
+      "arguments": "p_subtotal numeric",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.trg_fn_quotation_tax_default",
+      "return_type": "trigger",
+      "arguments": "",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_quotation_request_add",
+      "return_type": "quotation_item_requests",
+      "arguments": "p_quotation_id bigint, p_line_no integer, p_request_text text, p_request_impa text, p_requested_qty numeric, p_requested_uom text, p_matched_item_id bigint, p_match_status text, p_source_type text, p_source_ref text, p_notes text, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_quotation_request_update",
+      "return_type": "quotation_item_requests",
+      "arguments": "p_quotation_id bigint, p_id bigint, p_if_match integer, p_line_no integer, p_request_text text, p_request_impa text, p_requested_qty numeric, p_requested_uom text, p_matched_item_id bigint, p_match_status text, p_source_type text, p_source_ref text, p_notes text, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_quotation_request_delete",
+      "return_type": "void",
+      "arguments": "p_quotation_id bigint, p_id bigint, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_po_lines_locked",
+      "return_type": "bool",
+      "arguments": "p_po_id bigint, p_status text",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_next_doc_no",
+      "return_type": "text",
+      "arguments": "p_doc_type character varying",
+      "type": "FUNCTION"
     }
   ],
   "driver": {
     "name": "postgres",
-    "database_version": "PostgreSQL 18.3 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+    "database_version": "PostgreSQL 18.6 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
     "meta": {
       "current_schema": "public",
       "search_paths": [

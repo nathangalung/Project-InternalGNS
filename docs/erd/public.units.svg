@@ -94,35 +94,38 @@
 <!-- public.purchase_order_items -->
 <g id="node4" class="node">
 <title>public.purchase_order_items</title>
-<polygon fill="#efefef" stroke="none" points="783.23,-469 783.23,-504.6 1130.15,-504.6 1130.15,-469 783.23,-469"/>
-<polygon fill="none" stroke="black" points="783.23,-469 783.23,-504.6 1130.15,-504.6 1130.15,-469 783.23,-469"/>
-<text text-anchor="start" x="790.23" y="-482.4" font-family="Arial Bold" font-size="18.00">public.purchase_order_items</text>
-<text text-anchor="start" x="998.66" y="-482.4" font-family="Arial" font-size="14.00">    </text>
-<text text-anchor="start" x="1029.78" y="-482.4" font-family="Arial" font-size="14.00" fill="#666666">[BASE TABLE]</text>
-<polygon fill="none" stroke="black" points="783.23,-438.2 783.23,-469 1130.15,-469 1130.15,-438.2 783.23,-438.2"/>
-<text text-anchor="start" x="790.23" y="-450.4" font-family="Arial" font-size="14.00">po_id </text>
-<text text-anchor="start" x="828.37" y="-450.4" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
-<polygon fill="none" stroke="black" points="783.23,-407.4 783.23,-438.2 1130.15,-438.2 1130.15,-407.4 783.23,-407.4"/>
-<text text-anchor="start" x="790.23" y="-419.6" font-family="Arial" font-size="14.00">quotation_item_id </text>
-<text text-anchor="start" x="904.64" y="-419.6" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
-<polygon fill="none" stroke="black" points="783.23,-376.6 783.23,-407.4 1130.15,-407.4 1130.15,-376.6 783.23,-376.6"/>
-<text text-anchor="start" x="790.23" y="-388.8" font-family="Arial" font-size="14.00">offered_item_id </text>
-<text text-anchor="start" x="890.62" y="-388.8" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
-<polygon fill="none" stroke="black" points="783.23,-345.8 783.23,-376.6 1130.15,-376.6 1130.15,-345.8 783.23,-345.8"/>
-<text text-anchor="start" x="790.23" y="-358" font-family="Arial" font-size="14.00">unit_id </text>
-<text text-anchor="start" x="835.37" y="-358" font-family="Arial" font-size="14.00" fill="#666666">[smallint]</text>
-<polygon fill="none" stroke="black" points="783.23,-315 783.23,-345.8 1130.15,-345.8 1130.15,-315 783.23,-315"/>
-<text text-anchor="start" x="790.23" y="-327.2" font-family="Arial" font-size="14.00">created_by </text>
-<text text-anchor="start" x="863.39" y="-327.2" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
-<polygon fill="none" stroke="black" points="783.23,-284.2 783.23,-315 1130.15,-315 1130.15,-284.2 783.23,-284.2"/>
-<text text-anchor="start" x="790.23" y="-296.4" font-family="Arial" font-size="14.00">updated_by </text>
-<text text-anchor="start" x="867.3" y="-296.4" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
+<polygon fill="#efefef" stroke="none" points="783.23,-484.4 783.23,-520 1130.15,-520 1130.15,-484.4 783.23,-484.4"/>
+<polygon fill="none" stroke="black" points="783.23,-484.4 783.23,-520 1130.15,-520 1130.15,-484.4 783.23,-484.4"/>
+<text text-anchor="start" x="790.23" y="-497.8" font-family="Arial Bold" font-size="18.00">public.purchase_order_items</text>
+<text text-anchor="start" x="998.66" y="-497.8" font-family="Arial" font-size="14.00">    </text>
+<text text-anchor="start" x="1029.78" y="-497.8" font-family="Arial" font-size="14.00" fill="#666666">[BASE TABLE]</text>
+<polygon fill="none" stroke="black" points="783.23,-453.6 783.23,-484.4 1130.15,-484.4 1130.15,-453.6 783.23,-453.6"/>
+<text text-anchor="start" x="790.23" y="-465.8" font-family="Arial" font-size="14.00">po_id </text>
+<text text-anchor="start" x="828.37" y="-465.8" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
+<polygon fill="none" stroke="black" points="783.23,-422.8 783.23,-453.6 1130.15,-453.6 1130.15,-422.8 783.23,-422.8"/>
+<text text-anchor="start" x="790.23" y="-435" font-family="Arial" font-size="14.00">quotation_item_id </text>
+<text text-anchor="start" x="904.64" y="-435" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
+<polygon fill="none" stroke="black" points="783.23,-392 783.23,-422.8 1130.15,-422.8 1130.15,-392 783.23,-392"/>
+<text text-anchor="start" x="790.23" y="-404.2" font-family="Arial" font-size="14.00">offered_item_id </text>
+<text text-anchor="start" x="890.62" y="-404.2" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
+<polygon fill="none" stroke="black" points="783.23,-361.2 783.23,-392 1130.15,-392 1130.15,-361.2 783.23,-361.2"/>
+<text text-anchor="start" x="790.23" y="-373.4" font-family="Arial" font-size="14.00">unit_id </text>
+<text text-anchor="start" x="835.37" y="-373.4" font-family="Arial" font-size="14.00" fill="#666666">[smallint]</text>
+<polygon fill="none" stroke="black" points="783.23,-330.4 783.23,-361.2 1130.15,-361.2 1130.15,-330.4 783.23,-330.4"/>
+<text text-anchor="start" x="790.23" y="-342.6" font-family="Arial" font-size="14.00">created_by </text>
+<text text-anchor="start" x="863.39" y="-342.6" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
+<polygon fill="none" stroke="black" points="783.23,-299.6 783.23,-330.4 1130.15,-330.4 1130.15,-299.6 783.23,-299.6"/>
+<text text-anchor="start" x="790.23" y="-311.8" font-family="Arial" font-size="14.00">updated_by </text>
+<text text-anchor="start" x="867.3" y="-311.8" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
+<polygon fill="none" stroke="black" points="783.23,-268.8 783.23,-299.6 1130.15,-299.6 1130.15,-268.8 783.23,-268.8"/>
+<text text-anchor="start" x="790.23" y="-281" font-family="Arial" font-size="14.00">vendor_product_id </text>
+<text text-anchor="start" x="910.09" y="-281" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
 </g>
 <!-- public.purchase_order_items&#45;&gt;public.units -->
 <g id="edge3" class="edge">
 <title>public.purchase_order_items:unit_id&#45;&gt;public.units:id</title>
-<path fill="none" stroke="black" d="M772.24,-360.19C733.75,-351.44 765.88,-287.54 783.23,-241 799.98,-196.05 836.39,-203.74 853.18,-158.8 868.31,-118.33 897.38,-61.6 854.18,-61.6"/>
-<polygon fill="black" stroke="black" points="771.95,-360.16 781.44,-365.64 777.25,-360.7 781.56,-361.13 781.56,-361.13 781.56,-361.13 777.25,-360.7 782.35,-356.69 771.95,-360.16"/>
+<path fill="none" stroke="black" d="M771.85,-375.76C719.77,-366.56 758.13,-283.73 783.23,-225.6 800.27,-186.13 836.07,-198.24 853.18,-158.8 870.38,-119.17 897.38,-61.6 854.18,-61.6"/>
+<polygon fill="black" stroke="black" points="771.93,-375.77 781.53,-381.06 777.24,-376.2 781.56,-376.55 781.56,-376.55 781.56,-376.55 777.24,-376.2 782.26,-372.09 771.93,-375.77"/>
 </g>
 <!-- public.invoice_items -->
 <g id="node5" class="node">
