@@ -3,8 +3,9 @@
 -- Empties the business tables of the reimport plan's table plan
 -- (docs/data_reimport_plan.md) and loads ../seeds/03_historical.sql.
 -- Users, refresh tokens, countries, units and goose state are kept;
--- doc_counters is set by the seed to the highest loaded number.
--- Refuses to run unless migration 00100 is applied.
+-- doc_counters is set by the seed to the highest loaded number of each
+-- type and year.
+-- Refuses to run unless migration 00101 is applied.
 --
 -- Data users entered in the app is carried over, matched by normalised
 -- name (case, spaces and punctuation ignored, a leading PT. or CV. and a
@@ -30,8 +31,8 @@ BEGIN;
 DO $$
 BEGIN
   IF NOT COALESCE((SELECT is_applied FROM goose_db_version
-                   WHERE version_id = 100 ORDER BY id DESC LIMIT 1), FALSE) THEN
-    RAISE EXCEPTION 'replace_business_data: migration 00100 is not applied; migrate first';
+                   WHERE version_id = 101 ORDER BY id DESC LIMIT 1), FALSE) THEN
+    RAISE EXCEPTION 'replace_business_data: migration 00101 is not applied; migrate first';
   END IF;
 END $$;
 

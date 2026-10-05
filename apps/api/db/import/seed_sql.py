@@ -1,7 +1,7 @@
 """Write the seed model as one deterministic SQL script.
 
 The script is apps/api/db/seeds/03_historical.sql. It loads into a
-database migrated to 00100 with 01_master.sql applied and every business
+database migrated to 00101 with 01_master.sql applied and every business
 table empty, inside one transaction: its own when run alone (make
 seed-dev), or the caller's when replace_business_data.sql sets
 gns_outer_tx and includes it.
@@ -148,8 +148,8 @@ def guards(model: Model) -> str:
         "ORDER BY created_at, id LIMIT 1;\n\n"
         "DO $$\nBEGIN\n"
         "  IF NOT COALESCE((SELECT is_applied FROM goose_db_version\n"
-        "                   WHERE version_id = 100 ORDER BY id DESC LIMIT 1), FALSE) THEN\n"
-        "    RAISE EXCEPTION 'historical seed: migration 00100 is not applied';\n  END IF;\n"
+        "                   WHERE version_id = 101 ORDER BY id DESC LIMIT 1), FALSE) THEN\n"
+        "    RAISE EXCEPTION 'historical seed: migration 00101 is not applied';\n  END IF;\n"
         "  IF NOT EXISTS (SELECT 1 FROM seed_actor) THEN\n"
         "    RAISE EXCEPTION 'historical seed: no active superadmin to own the rows';\n"
         "  END IF;\n"
@@ -636,19 +636,31 @@ def invoices(model: Model) -> str:
     return "\n".join(parts)
 
 
+def year_tops(model: Model) -> dict[tuple[str, int], int]:
+    """The highest loaded number per (type, year)."""
+    drawn = [("Q", q.date.year, q.seq) for q in model.quotations if q.version == 1]
+    drawn += [("INV", inv.invoice_date.year, inv.seq) for inv in model.invoices]
+    drawn += [("DN", po.dn_date.year, po.dn_seq) for po in model.pos if po.dn_seq]
+    tops: dict[tuple[str, int], int] = {}
+    for kind, year, seq in drawn:
+        tops[kind, year] = max(seq, tops.get((kind, year), 0))
+    return tops
+
+
 def counters(model: Model) -> str:
-    q = max((x.seq for x in model.quotations), default=0)
-    inv = max((x.seq for x in model.invoices), default=0)
-    dn = max((x.dn_seq for x in model.pos), default=0)
+    tops = year_tops(model)
+    rows = ",\n".join(f"  ({lit(k)}, {y}, {n})" for (k, y), n in sorted(tops.items()))
+    insert = (
+        f"INSERT INTO doc_counters (doc_type, year, last_seq) VALUES\n{rows};\n" if rows else ""
+    )
     resets = "\n".join(
         f"  PERFORM setval(pg_get_serial_sequence('{t}', 'id'),"
         f" COALESCE((SELECT max(id) FROM {t}), 0) + 1, false);"
         for t in ID_TABLES
     )
     return (
-        "-- Numbering continues after the highest loaded number\n"
-        f"UPDATE doc_counters SET last_seq = CASE doc_type WHEN 'Q' THEN {q}"
-        f" WHEN 'INV' THEN {inv} WHEN 'DN' THEN {dn} END, updated_at = NOW();\n\n"
+        "-- Each year continues after its highest loaded number\n"
+        f"DELETE FROM doc_counters;\n{insert}\n"
         "-- Id sequences past the loaded rows\n"
         f"DO $$\nBEGIN\n{resets}\n"
         "  PERFORM setval('company_client_number_seq',"

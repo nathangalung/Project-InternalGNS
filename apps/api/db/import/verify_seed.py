@@ -11,7 +11,8 @@ inside one transaction that is rolled back, so nothing is written:
   to its header;
 - every document number has the new format, and a base number carries
   its own document's month and year;
-- doc_counters is at or above the highest loaded number of each type;
+- numbers restart at 00001 each year without gaps, and doc_counters
+  holds each type and year at its highest loaded number or above;
 - a PO in ON_PROGRESS or DELIVERED without a PO number has a reason in
   pos.json, and every PO product line is priced above zero;
 - every offered line of an accepted quotation has its product and unit;
@@ -40,7 +41,7 @@ from collections import defaultdict
 
 from build_seed import table_counts
 from seed_model import PAID_BEFORE, ROMAN, Model, SeedError, build, dec, load_inputs
-from seed_sql import lit
+from seed_sql import lit, year_tops
 
 ROMAN_RE = "(" + "|".join(ROMAN) + ")"
 NUMBER_RE = {
@@ -48,6 +49,20 @@ NUMBER_RE = {
     "INV": f"^INV-[0-9]{{5,}}/GNS/{ROMAN_RE}/[0-9]{{4}}$",
     "DN": f"^DN-[0-9]{{5,}}/GNS/{ROMAN_RE}/[0-9]{{4}}$",
 }
+
+# Every loaded number as (type, year, running number).
+SEQS = """(
+              SELECT m[1] AS t, m[3]::int AS y, m[2]::int AS s
+              FROM (
+                SELECT regexp_match(no, '^(Q|INV|DN)-([0-9]+)/GNS/[IVX]+/([0-9]{4})') AS m
+                FROM (
+                  SELECT quotation_no AS no FROM quotations
+                  UNION ALL SELECT invoice_no FROM invoices
+                  UNION ALL SELECT delivery_note_number FROM purchase_orders
+                ) a
+              ) b
+              WHERE m IS NOT NULL
+            ) n"""
 
 # Master tables replace_business_data.sql may carry user rows into.
 CARRIED = (
@@ -102,7 +117,7 @@ def checks(model: Model) -> list[tuple[str, str]]:
     ]
     reasons = [(po.id, po.missing_reason) for po in model.pos if po.missing_reason]
     reason_ids = values(reasons, "id, reason") if reasons else "(SELECT NULL::bigint) AS e(id)"
-    q_seq = max(q.seq for q in model.quotations)
+    tops = [(t, y, n) for (t, y), n in sorted(year_tops(model).items())]
     counts = " UNION ALL ".join(
         f"SELECT {lit(t)} AS t, count(*) AS n, {n} AS want, {lit(t in CARRIED)} AS carried FROM {t}"
         for t, n in table_counts(model).items()
@@ -171,19 +186,27 @@ def checks(model: Model) -> list[tuple[str, str]]:
                    OR delivery_note_number NOT LIKE '%' || {period("delivery_note_date")})""",
         ),
         (
-            "doc_counters at or above the highest loaded number",
+            "numbers restart at 00001 each year without gaps",
             f"""
-            SELECT doc_type || ' counter ' || last_seq || ', highest loaded ' || hi
-            FROM doc_counters JOIN (
-              SELECT 'Q' AS t, max(substring(quotation_no FROM '^Q-([0-9]+)')::int) AS hi
-              FROM quotations
-              UNION ALL
-              SELECT 'INV', max(substring(invoice_no FROM '^INV-([0-9]+)')::int) FROM invoices
-              UNION ALL
-              SELECT 'DN', max(substring(delivery_note_number FROM '^DN-([0-9]+)')::int)
-              FROM purchase_orders
-            ) m ON m.t = doc_type
-            WHERE last_seq < coalesce(hi, 0) OR (doc_type = 'Q' AND hi <> {q_seq})""",
+            SELECT t || ' ' || y || ': ' || count(DISTINCT s) || ' numbers from ' || min(s)
+                   || ' to ' || max(s)
+            FROM {SEQS}
+            GROUP BY t, y
+            HAVING min(s) <> 1 OR count(DISTINCT s) <> max(s)""",
+        ),
+        (
+            "doc_counters at or above the highest number of each type and year",
+            f"""
+            SELECT coalesce(m.t, e.t, c.doc_type) || ' ' || coalesce(m.y, e.y::int, c.year)
+                   || ': counter ' || coalesce(c.last_seq::text, 'missing')
+                   || ', highest loaded ' || coalesce(m.hi::text, 'none')
+                   || ', highest built ' || coalesce(e.hi::text, 'none')
+            FROM (SELECT t, y, max(s) AS hi FROM {SEQS} GROUP BY t, y) m
+            FULL JOIN {values(tops, "t, y, hi")} ON e.t = m.t AND e.y::int = m.y
+            FULL JOIN doc_counters c ON c.doc_type = coalesce(m.t, e.t)
+                                    AND c.year = coalesce(m.y, e.y::int)
+            WHERE c.last_seq IS NULL OR c.last_seq < coalesce(m.hi, 0)
+               OR m.hi IS DISTINCT FROM e.hi::int""",
         ),
         (
             "POs at work without a PO number have a reason in pos.json",

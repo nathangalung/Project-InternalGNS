@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from datetime import date
 from decimal import Decimal
 from typing import Any
@@ -27,6 +28,7 @@ from seed_model import (
     split_discount,
     split_total,
     vendor_key,
+    yearly_numbers,
 )
 from seed_sql import render
 
@@ -69,9 +71,103 @@ def test_numbers_follow_date_then_original_number() -> None:
         ("Q-30/GNS/III/2025", "Q-00001/GNS/III/2025"),
         ("Q-10/GNS/III/2025", "Q-00002/GNS/III/2025"),
         ("Q-20/GNS/III/2025", "Q-00003/GNS/III/2025"),
-        ("Q-5/GNS/I/2026", "Q-00004/GNS/I/2026"),
+        ("Q-5/GNS/I/2026", "Q-00001/GNS/I/2026"),
     ]
     assert all(not any(n.startswith("No. asli") for n in q.notes) for q in model.quotations)
+
+
+def test_yearly_numbers_restart_each_year() -> None:
+    days = [date(2025, 11, 3), date(2025, 12, 30), date(2026, 1, 2), date(2026, 1, 2)]
+    assert yearly_numbers("INV", days) == [
+        (1, "INV-00001/GNS/XI/2025"),
+        (2, "INV-00002/GNS/XII/2025"),
+        (1, "INV-00001/GNS/I/2026"),
+        (2, "INV-00002/GNS/I/2026"),
+    ]
+
+
+def test_a_revision_keeps_its_base_year() -> None:
+    group = {"group": "g", "count": 2, "base_id": "a.xlsx#S"}
+    model = build(
+        inputs(
+            [
+                staged(
+                    "a.xlsx#S",
+                    "Q-7/GNS/XII/2025",
+                    "2025-12-30",
+                    [line(1, 100)],
+                    revision=group | {"index": 0},
+                ),
+                staged(
+                    "b.xlsx#S",
+                    "Q-7-R/GNS/I/2026",
+                    "2026-01-05",
+                    [line(1, 90)],
+                    revision=group | {"index": 1},
+                ),
+                staged("c.xlsx#S", "Q-8/GNS/I/2026", "2026-01-02", [line(1, 100)]),
+            ]
+        )
+    )
+    got = [(q.original, q.number, q.id) for q in model.quotations]
+    assert got == [
+        ("Q-7/GNS/XII/2025", "Q-00001/GNS/XII/2025", 1),
+        ("Q-7-R/GNS/I/2026", "Q-00001/GNS/XII/2025 Rev.1", 2),
+        ("Q-8/GNS/I/2026", "Q-00001/GNS/I/2026", 3),
+    ]
+
+
+def _two_years() -> Model:
+    recs, pos, invs = [], [], []
+    for i, (quoted, billed) in enumerate(
+        [("2025-12-01", "2025-12-20"), ("2026-01-03", "2026-01-10"), ("2026-01-04", "2026-02-01")],
+        1,
+    ):
+        rec = staged(f"q{i}.xlsx#S", f"Q-{i}/GNS/I/2026", quoted, [line(1, 1000)])
+        po = po_doc(
+            rec,
+            [{"no": 1, "qty": 1, "unit_price": 1000, "quote_row": 15}],
+            client_po_number=f"PO-{i}",
+        )
+        recs.append(rec)
+        pos.append(po)
+        invs.append(invoice_doc(po, f"{i}/INV", billed))
+    return build(inputs(recs, pos, invs))
+
+
+def test_invoices_and_delivery_notes_restart_each_year() -> None:
+    model = _two_years()
+    assert [(inv.number, inv.id) for inv in model.invoices] == [
+        ("INV-00001/GNS/XII/2025", 1),
+        ("INV-00001/GNS/I/2026", 2),
+        ("INV-00002/GNS/II/2026", 3),
+    ]
+    assert sorted(po.dn_number for po in model.pos) == [
+        "DN-00001/GNS/I/2026",
+        "DN-00001/GNS/XII/2025",
+        "DN-00002/GNS/II/2026",
+    ]
+    assert [q.number for q in model.quotations] == [
+        "Q-00001/GNS/XII/2025",
+        "Q-00001/GNS/I/2026",
+        "Q-00002/GNS/I/2026",
+    ]
+
+
+def test_the_seed_sets_a_counter_per_type_and_year() -> None:
+    sql = render(_two_years())
+    assert "DELETE FROM doc_counters;" in sql
+    rows = re.findall(
+        r"\('(Q|INV|DN)', ([0-9]{4}), ([0-9]+)\)", sql.split("DELETE FROM doc_counters;")[1]
+    )
+    assert sorted(rows) == [
+        ("DN", "2025", "1"),
+        ("DN", "2026", "2"),
+        ("INV", "2025", "1"),
+        ("INV", "2026", "2"),
+        ("Q", "2025", "1"),
+        ("Q", "2026", "2"),
+    ]
 
 
 def test_revision_chain_keeps_base_number() -> None:

@@ -97,6 +97,16 @@ def doc_number(prefix: str, seq: int, day: date) -> str:
     return f"{prefix}-{seq:05d}/GNS/{ROMAN[day.month - 1]}/{day.year}"
 
 
+def yearly_numbers(prefix: str, days: Iterable[date]) -> list[tuple[int, str]]:
+    """(seq, number) per date in order, restarting each year, as fn_next_doc_no."""
+    seen: Counter[int] = Counter()
+    out: list[tuple[int, str]] = []
+    for day in days:
+        seen[day.year] += 1
+        out.append((seen[day.year], doc_number(prefix, seen[day.year], day)))
+    return out
+
+
 def revision_number(base: str, n: int) -> str:
     """Base number plus ' Rev.n', as fn_revise_quotation."""
     return f"{base} Rev.{n}"
@@ -379,6 +389,7 @@ class Quotation:
     id: int = 0
     number: str = ""
     seq: int = 0
+    order: int = 0
     version: int = 1
     parent: Quotation | None = None
     successor: Quotation | None = None
@@ -1208,17 +1219,18 @@ class Builder:
 
     # Numbering
     def number_quotations(self) -> None:
-        """Q numbers by date; revisions keep their base number."""
+        """Q numbers by date, restarting each year; revisions keep their base number."""
         bases = [q for q in self.quotations if q.version == 1]
         bases.sort(key=lambda q: (q.date, natural_key(q.original), q.source, q.client.name))
-        for seq, base in enumerate(bases, 1):
-            base.seq, base.number = seq, doc_number("Q", seq, base.date)
+        numbers = yearly_numbers("Q", (b.date for b in bases))
+        for order, (base, (seq, number)) in enumerate(zip(bases, numbers, strict=True), 1):
+            base.order, base.seq, base.number = order, seq, number
             rev = base.successor
             while rev is not None:
-                rev.seq = seq
+                rev.order, rev.seq = order, seq
                 rev.number = revision_number(base.number, rev.version - 1)
                 rev = rev.successor
-        self.quotations.sort(key=lambda q: (q.seq, q.version))
+        self.quotations.sort(key=lambda q: (q.order, q.version))
         line_id = 0
         for qid, q in enumerate(self.quotations, 1):
             q.id = qid
@@ -1412,9 +1424,9 @@ class Builder:
             raise SeedError("a PO has two invoices")
         self.invoices.sort(key=lambda i: (i.invoice_date, natural_key(i.original), i.source))
         line_id = 0
-        for seq, inv in enumerate(self.invoices, 1):
-            inv.id, inv.seq = seq, seq
-            inv.number = doc_number("INV", seq, inv.invoice_date)
+        numbers = yearly_numbers("INV", (inv.invoice_date for inv in self.invoices))
+        for iid, (inv, (seq, number)) in enumerate(zip(self.invoices, numbers, strict=True), 1):
+            inv.id, inv.seq, inv.number = iid, seq, number
             for ln in inv.lines:
                 line_id += 1
                 ln.id = line_id
@@ -1422,8 +1434,9 @@ class Builder:
             (po for po in self.pos if po.dn_date != date.min),
             key=lambda p: (p.dn_date, natural_key(p.dn_original), p.source),
         )
-        for seq, po in enumerate(delivered, 1):
-            po.dn_seq, po.dn_number = seq, doc_number("DN", seq, po.dn_date)
+        numbers = yearly_numbers("DN", (po.dn_date for po in delivered))
+        for po, (seq, number) in zip(delivered, numbers, strict=True):
+            po.dn_seq, po.dn_number = seq, number
 
     def match_lines(self, doc: Doc, po: PurchaseOrder) -> list[POLine]:
         """Each printed invoice line's PO line, in order; zero PO lines may be skipped."""
@@ -1618,7 +1631,7 @@ class Builder:
         for q in self.quotations:
             for ln in q.lines:
                 if ln.link is not None and ln.cost is not None and ln.cost > 0:
-                    ln.link.priced.append((q.date, (q.seq, q.version), ln.line_number, ln.cost))
+                    ln.link.priced.append((q.date, (q.order, q.version), ln.line_number, ln.cost))
         links = sorted(self.links.values(), key=lambda lk: (lk.vendor.id, lk.product.id))
         for i, lk in enumerate(links, 1):
             lk.id = i
