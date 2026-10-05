@@ -10,10 +10,13 @@
 -- name (case, spaces and punctuation ignored, a leading PT. or CV. and a
 -- trailing Tbk dropped): client tax and contact fields, logos and
 -- numbers, contacts, vendor contact fields, products created in the app
--- or holding photos, and PO files. Rows the test suites created never
--- carry over. What cannot be placed (a client the seed lacks, documents
--- created in the app) is not loaded; the carry-over report at the end
--- lists it with ids and names only, and counts the test rows left out.
+-- or holding photos, and PO files. A client the seed lacks that existed
+-- before the last historical quotation carries over, with its contacts,
+-- as a client with no documents. Rows the test suites created never
+-- carry over. What cannot be placed (a client created in the app after
+-- that, documents created in the app) is not loaded; the carry-over
+-- report at the end lists it with ids and names only, and counts the
+-- test rows left out.
 --
 -- Run with psql -f (the include path is relative to this file):
 --   dev:  make reimport-dev
@@ -88,7 +91,7 @@ WHERE email ~* '^e2e[.-][^@]*@globalsakti\.com$' OR pg_temp.gns_test_mail(email)
 -- What users entered, read before the tables are emptied
 CREATE TEMP TABLE carry_client ON COMMIT DROP AS
 SELECT id, number, name, pg_temp.gns_norm(name) AS norm, npwp, address, country_code,
-       tku_id, email, logo_object_key,
+       tku_id, email, logo_object_key, is_active, created_by, created_at, updated_at,
        pg_temp.gns_test_name(name) OR created_by IN (SELECT id FROM test_user) AS test
 FROM company_client;
 
@@ -237,6 +240,45 @@ BEGIN
       UPDATE company_client SET number = r.number WHERE id = r.new_id;
       INSERT INTO carry_log VALUES ('client number kept', r.old_id, r.new_id, r.number);
     END IF;
+  END LOOP;
+  PERFORM setval('company_client_number_seq', (SELECT max(number::INTEGER) FROM company_client));
+END $$;
+
+-- A client the seed lacks that existed before the last historical
+-- quotation (the cutoff the products use) is kept, without documents;
+-- its contacts follow below. One created in the app after it is not.
+-- Its number stays when free, else it takes the next one.
+DO $$
+DECLARE
+  v_cutoff TIMESTAMPTZ := (SELECT max(created_at) FROM quotations);
+  r        RECORD;
+  v_id     BIGINT;
+  v_number TEXT;
+BEGIN
+  FOR r IN
+    SELECT DISTINCT ON (o.norm) o.*
+    FROM carry_client o
+    WHERE o.created_at <= v_cutoff
+      AND NOT EXISTS (SELECT 1 FROM client_map m WHERE m.old_id = o.id)
+    ORDER BY o.norm, (o.npwp IS NOT NULL) DESC, (o.address IS NOT NULL) DESC, o.id
+  LOOP
+    v_number := CASE
+      WHEN r.number ~ '^[0-9]{4}$'
+           AND NOT EXISTS (SELECT 1 FROM company_client WHERE number = r.number)
+      THEN r.number
+      ELSE fn_next_client_number()
+    END;
+    INSERT INTO company_client
+      (number, name, npwp, address, country_code, tku_id, email, logo_object_key, is_active,
+       created_by, updated_by, created_at, updated_at)
+    VALUES
+      (v_number, r.name, r.npwp, r.address, r.country_code, r.tku_id, r.email,
+       r.logo_object_key, r.is_active, r.created_by, r.created_by, r.created_at, r.updated_at)
+    RETURNING id INTO v_id;
+    INSERT INTO client_map
+    SELECT o.id, v_id FROM carry_client o
+    WHERE o.norm = r.norm AND NOT EXISTS (SELECT 1 FROM client_map m WHERE m.old_id = o.id);
+    INSERT INTO carry_log VALUES ('client kept without documents', r.id, v_id, r.name);
   END LOOP;
   PERFORM setval('company_client_number_seq', (SELECT max(number::INTEGER) FROM company_client));
 END $$;
@@ -486,7 +528,15 @@ SELECT kind, count(*) AS rows FROM carry_log GROUP BY kind ORDER BY kind;
 \echo 'Carry-over: products added again (old id, new id)'
 SELECT old_id, new_id, label AS name FROM carry_log WHERE kind = 'product added' ORDER BY old_id;
 
-\echo 'Not loaded: clients with no seeded match, with their contacts'
+\echo 'Carried over: clients the seed lacks, kept without documents (new id)'
+SELECT c.id, c.number, c.name,
+       (SELECT count(*) FROM company_contacts ct WHERE ct.company_id = c.id) AS contacts
+FROM carry_log l
+JOIN company_client c ON c.id = l.new_id
+WHERE l.kind = 'client kept without documents'
+ORDER BY c.id;
+
+\echo 'Not loaded: clients created in the app after the historical data, with their contacts'
 SELECT o.id, o.number, o.name,
        (SELECT count(*) FROM carry_contact cc WHERE cc.client_norm = o.norm) AS contacts
 FROM carry_client o

@@ -219,9 +219,10 @@ so `updated_at` ends as the last status move.
 `replace_business_data.sql` empties every business table (users, refresh
 tokens, countries, units and goose state stay) and loads the seed in the
 same transaction, carrying over what users entered in the app (client tax
-fields, logos and numbers, contacts, vendor contact fields, products made
-in the app or holding photos, PO files; never rows the test suites
-created) and printing a carry-over report of what it could not place; `make reimport-dev` runs it on a local
+fields, logos and numbers, clients the seed lacks that existed before the
+last historical quotation, kept without documents, contacts, vendor
+contact fields, products made in the app or holding photos, PO files;
+never rows the test suites created) and printing a carry-over report of what it could not place; `make reimport-dev` runs it on a local
 database and then `verify_seed.py`. The carry-over rules and the prod
 steps are in `docs/data_reimport_plan.md`.
 
