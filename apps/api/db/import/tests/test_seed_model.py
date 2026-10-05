@@ -9,9 +9,9 @@ from typing import Any
 import pytest
 
 from build_seed import report
-from helpers import inputs, line, staged
+from helpers import inputs, invoice_doc, line, po_doc, staged
 from seed_model import (
-    AS_OF,
+    PAID_BEFORE,
     UNPRICED_REASON,
     Model,
     QLine,
@@ -62,8 +62,7 @@ def test_numbers_follow_date_then_original_number() -> None:
                 staged("c.xlsx#S", "Q-10/GNS/III/2025", "2025-03-02", [line(1, 100)]),
                 staged("d.xlsx#S", "Q-5/GNS/I/2026", "2026-01-05", [line(1, 100)]),
             ]
-        ),
-        as_of=AS_OF,
+        )
     )
     got = [(q.original, q.number) for q in model.quotations]
     assert got == [
@@ -126,9 +125,7 @@ def test_missing_date_takes_nearest_earlier_number() -> None:
     [
         ({"has_po": True}, "accepted"),
         ({"superseded": True, "has_po": True}, "revision"),
-        ({"day": date(2026, 9, 30), "validity": 3}, "expired"),
-        ({"day": date(2026, 10, 1), "validity": 3}, "sent"),
-        ({"day": date(2024, 1, 1), "validity": None}, "sent"),
+        ({}, "sent"),
         ({"unpriced": True, "year": 2026}, "draft"),
         ({"unpriced": True, "year": 2025, "priced_cost": True}, "cancelled"),
         ({"unpriced": True, "year": 2024, "priced_cost": False}, None),
@@ -141,9 +138,6 @@ def test_quotation_status(kw: dict[str, Any], want: str | None) -> None:
         "unpriced": False,
         "priced_cost": False,
         "year": 2026,
-        "day": date(2026, 9, 1),
-        "validity": 3,
-        "as_of": AS_OF,
     }
     assert quotation_status(**(args | kw)) == want
 
@@ -168,14 +162,53 @@ def test_unpriced_rule_drafts_cancels_and_skips() -> None:
     ]
 
 
-def test_expired_history_is_a_system_move() -> None:
+def test_a_quotation_past_its_validity_stays_sent() -> None:
     model = build(inputs([staged("a.xlsx#S", "Q-1/GNS/I/2025", "2025-01-02", [line(1, 100)])]))
     (q,) = model.quotations
-    assert [h.to_status for h in q.history] == ["draft", "sent", "expired"]
-    expired = q.history[-1]
-    assert expired.system
-    assert expired.at.date() == date(2025, 1, 5)
-    assert expired.note == "Kedaluwarsa otomatis: masa berlaku 3 hari sejak 02-01-2025 telah lewat."
+    assert q.status == "sent"
+    assert [(h.from_status, h.to_status) for h in q.history] == [(None, "draft"), ("draft", "sent")]
+
+
+# Invoice status
+def _invoiced(day: str, due: str | None) -> Model:
+    rec = staged("a.xlsx#S", "Q-1/GNS/I/2026", "2026-01-05", [line(1, 1000)])
+    po = po_doc(rec, [{"no": 1, "qty": 1, "unit_price": 1000, "quote_row": 15}])
+    return build(inputs([rec], [po], [invoice_doc(po, "1/INV", day, due_date=due)]))
+
+
+def test_an_invoice_before_the_cutoff_is_paid_on_its_due_date() -> None:
+    (inv,) = _invoiced("2026-09-04", "2026-10-04").invoices
+    assert date(2026, 9, 4) < PAID_BEFORE
+    assert inv.status == "paid"
+    assert [(h.from_status, h.to_status) for h in inv.history] == [
+        ("draft", "sent"),
+        ("sent", "paid"),
+    ]
+    assert inv.paid_at == inv.history[-1].at
+    assert inv.paid_at is not None
+    assert inv.paid_at.strftime("%Y-%m-%d %H:%M %z") == "2026-10-04 09:00 +0700"
+
+
+def test_an_invoice_from_the_cutoff_stays_sent() -> None:
+    (inv,) = _invoiced(PAID_BEFORE.isoformat(), "2026-10-05").invoices
+    assert inv.status == "sent"
+    assert inv.paid_at is None
+    assert [h.to_status for h in inv.history] == ["sent"]
+
+
+def test_a_paid_invoice_without_a_due_date_is_paid_after_it_is_sent() -> None:
+    (inv,) = _invoiced("2026-03-02", None).invoices
+    sent, paid = inv.history
+    assert inv.status == "paid"
+    assert paid.at.date() == date(2026, 3, 2)
+    assert paid.at > sent.at
+    assert inv.paid_at == paid.at
+
+
+def test_the_seed_writes_the_invoice_status_and_paid_at() -> None:
+    sql = render(_invoiced("2026-09-04", "2026-10-04"))
+    assert "'paid'" in sql
+    assert "'2026-10-04 09:00:00+07'" in sql
 
 
 # Lines and totals
@@ -284,9 +317,9 @@ def test_split_total_takes_the_rest_on_the_last_line() -> None:
 def test_monotonic_spaces_same_day_moves() -> None:
     h = monotonic(
         [
-            (date(2025, 1, 2), None, "draft", None, False),
-            (date(2025, 1, 2), "draft", "sent", None, False),
-            (date(2025, 1, 1), "sent", "accepted", None, False),
+            (date(2025, 1, 2), None, "draft", None),
+            (date(2025, 1, 2), "draft", "sent", None),
+            (date(2025, 1, 1), "sent", "accepted", None),
         ]
     )
     assert [x.at.strftime("%Y-%m-%d %H:%M %z") for x in h] == [

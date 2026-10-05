@@ -21,6 +21,9 @@ def test_every_check_is_one_insert_inside_a_rolled_back_transaction(
     names = [name for name, _ in verify_seed.checks(model)]
     assert "every PO product line is priced above zero" in names
     assert "invoice buyers are the printed buyers" in names
+    assert "invoice status equals the last history move" in names
+    assert any(n.startswith("paid exactly where invoice_date is before") for n in names)
+    assert "fn_expire_quotations" not in sql
     assert sql.startswith("BEGIN;") and sql.rstrip().endswith("ROLLBACK;")
     assert sql.count("INSERT INTO verify_result SELECT") == len(names)
     assert "'INV-00001/GNS/X/2026'" in sql

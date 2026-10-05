@@ -15,8 +15,9 @@ inside one transaction that is rolled back, so nothing is written:
 - a PO in ON_PROGRESS or DELIVERED without a PO number has a reason in
   pos.json, and every PO product line is priced above zero;
 - every offered line of an accepted quotation has its product and unit;
-- each quotation's status is its last history move, and
-  fn_expire_quotations would change nothing on the reference day;
+- each quotation's, PO's and invoice's status is its last history move;
+- an imported invoice is paid exactly when dated before PAID_BEFORE,
+  with paid_at at its paid move as the model dates it, else sent;
 - every imported document keeps the number it was issued under
   (legacy_no, legacy_dn_no), and every invoice's buyer is the one it
   prints (what it left blank may come from the client the replacement
@@ -38,7 +39,7 @@ import sys
 from collections import defaultdict
 
 from build_seed import table_counts
-from seed_model import AS_OF, ROMAN, Model, SeedError, build, dec, load_inputs
+from seed_model import PAID_BEFORE, ROMAN, Model, SeedError, build, dec, load_inputs
 from seed_sql import lit
 
 ROMAN_RE = "(" + "|".join(ROMAN) + ")"
@@ -112,6 +113,7 @@ def checks(model: Model) -> list[tuple[str, str]]:
     buyers = [
         (inv.number, inv.buyer_name, inv.buyer_npwp, inv.buyer_address) for inv in model.invoices
     ]
+    paid = [(inv.number, inv.status, inv.paid_at) for inv in model.invoices]
     wib = "created_at AT TIME ZONE 'Asia/Jakarta'"
     return [
         (
@@ -210,6 +212,38 @@ def checks(model: Model) -> list[tuple[str, str]]:
             WHERE h.to_status <> p.status""",
         ),
         (
+            "invoice status equals the last history move",
+            """
+            SELECT i.invoice_no || ': ' || i.status || ' but history ends ' || h.to_status
+            FROM invoices i JOIN LATERAL (
+              SELECT to_status FROM invoice_status_history
+              WHERE invoice_id = i.id ORDER BY changed_at DESC, id DESC LIMIT 1
+            ) h ON TRUE
+            WHERE h.to_status <> i.status""",
+        ),
+        (
+            f"paid exactly where invoice_date is before {PAID_BEFORE}, at its paid move",
+            f"""
+            SELECT coalesce(i.invoice_no, e.no) || ': ' || coalesce(i.status, '-')
+                   || ' paid_at ' || coalesce(i.paid_at::text, '-')
+                   || ', model ' || e.status || ' paid_at ' || coalesce(e.paid_at, '-')
+            FROM {values(paid, "no, status, paid_at")}
+            FULL JOIN invoices i ON i.invoice_no = e.no
+            WHERE (i.status, i.paid_at) IS DISTINCT FROM (e.status, e.paid_at::timestamptz)
+            UNION ALL
+            SELECT i.invoice_no || ': ' || i.status || ', dated ' || i.invoice_date
+            FROM invoices i
+            WHERE i.legacy_no IS NOT NULL
+              AND (i.status = 'paid') <> (i.invoice_date < {lit(PAID_BEFORE)}::date)
+            UNION ALL
+            SELECT i.invoice_no || ': paid_at ' || i.paid_at || ', paid move ' || h.at
+            FROM invoices i JOIN LATERAL (
+              SELECT max(changed_at) AS at FROM invoice_status_history
+              WHERE invoice_id = i.id AND to_status = 'paid'
+            ) h ON TRUE
+            WHERE i.status = 'paid' AND i.paid_at IS DISTINCT FROM h.at""",
+        ),
+        (
             "every PO product line is priced above zero",
             """
             SELECT 'PO ' || po_id || ' line ' || line_number || ': ' || item_name
@@ -274,13 +308,6 @@ def checks(model: Model) -> list[tuple[str, str]]:
             f"""
             SELECT t || ': ' || n - want || ' more' FROM ({counts}) c
             WHERE carried AND n > want""",
-        ),
-        (
-            f"fn_expire_quotations({model.as_of}) changes nothing",
-            f"""
-            SELECT 'it would expire ' || n || ' quotations'
-            FROM (SELECT fn_expire_quotations({lit(model.as_of)}::date) AS n) x
-            WHERE n <> 0""",
         ),
         (
             "info: POs without a client PO number",
@@ -354,7 +381,7 @@ def main(argv: list[str] | None = None) -> int:
         print("usage: verify_seed.py DSN (or set DATABASE_URL)", file=sys.stderr)
         return 2
     try:
-        model = build(as_of=AS_OF)
+        model = build()
     except SeedError as exc:
         print(f"verify_seed: {exc}", file=sys.stderr)
         return 1
