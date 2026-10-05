@@ -8,7 +8,7 @@ documents, and clean the product master. Owner decisions, October 2026.
 
 | Topic | Decision |
 |---|---|
-| Quotation, invoice and delivery-note numbers | 5-digit running number per document type, never reset: `Q-00011/GNS/X/2026`, `INV-00007/GNS/X/2026`, `DN-00007/GNS/X/2026`. The Roman month and the year stay in the number, and search accepts `10/2026` or `X/2026` to find a month. |
+| Quotation, invoice and delivery-note numbers | 5-digit running number per document type that restarts at 00001 every year (the year of the document's own WIB date, the one the number prints): `Q-00011/GNS/X/2026`, `INV-00007/GNS/X/2026`, `DN-00007/GNS/X/2026`, and `Q-00001/GNS/I/2027` after the last 2026 quotation (migration 00101; numbers issued earlier were renumbered within their year, in order). The Roman month and the year stay in the number, and search accepts `10/2026` or `X/2026` to find a month. |
 | Historical numbers | Renumbered by document date. The number each document was issued under is kept, searchable, in `quotations.legacy_no`, `invoices.legacy_no` and `purchase_orders.legacy_dn_no` (migration 00099). |
 | PO number | The client's own PO number. A PO created by accepting a quotation has no number until it is entered; Dalam Progres requires it. |
 | Client number lock | Removed: no document number embeds the client number any more. |
@@ -61,10 +61,11 @@ documents, and clean the product master. Owner decisions, October 2026.
    client PO files and the DO and invoice workbooks, each linked to its
    source quotation by evidence (client PO number, client reference, lines
    and prices) recorded in `local/docs_manifest.py`.
-5. `build_seed.py`: numbers every document by date, writes statuses with
-   their history, POs with client numbers, delivery notes and invoices with
-   the amounts printed on the source files, and sets `doc_counters` so new
-   documents continue after the highest number. It writes
+5. `build_seed.py`: numbers every document by date, restarting each year,
+   writes statuses with their history, POs with client numbers, delivery
+   notes and invoices with the amounts printed on the source files, and
+   sets `doc_counters` per type and year so new documents continue after
+   the highest number of their year. It writes
    `apps/api/db/seeds/03_historical.sql` and `out/seed_report.md` (counts,
    skipped and flagged records, totals that differ from the printed ones,
    and the number mapping) and `out/review_vendors.csv`;
@@ -74,7 +75,7 @@ documents, and clean the product master. Owner decisions, October 2026.
 
 ## App changes
 
-- `fn_next_doc_no`: `TYPE-NNNNN/GNS/<Roman>/<YYYY>`, one sequence per type.
+- `fn_next_doc_no`: `TYPE-NNNNN/GNS/<Roman>/<YYYY>`, one sequence per type and year (00101).
 - PO number nullable until entered; the PO gate requires it.
 - Client number editable after use.
 - Search normalises `MM/YYYY` to the Roman form.
@@ -97,7 +98,7 @@ documents, and clean the product master. Owner decisions, October 2026.
 | quotations, quotation_items, quotation_item_requests, item_request_matches, quotation_status_history, quotation_edit_locks | Rebuilt |
 | purchase_orders, purchase_order_items, po_status_history | Rebuilt |
 | invoices, invoice_items, invoice_status_history | Rebuilt |
-| doc_counters | Set to the highest imported number per type |
+| doc_counters | Emptied, then one row per type and year at the highest imported number of that year |
 
 ## Running the replacement
 
@@ -105,7 +106,7 @@ documents, and clean the product master. Owner decisions, October 2026.
 table plan rebuilds (users, refresh tokens, countries, units and goose
 state stay) and loads `apps/api/db/seeds/03_historical.sql` in the same
 transaction: an error anywhere rolls everything back. It refuses to run
-unless migration 00100 is applied. The seed itself refuses to load into
+unless migration 00101 is applied. The seed itself refuses to load into
 non-empty business tables, so a plain `make seed-dev` never doubles data.
 
 Data users entered in the app is carried over in the same transaction,
@@ -171,7 +172,7 @@ scp apps/api/db/seeds/01_master.sql apps/api/db/seeds/03_historical.sql \
 ```
 
 Then on the VPS, from a checkout of the deployed commit (the api migrates
-to 00100 on its first start):
+to 00101 on its first start):
 
 1. Take a backup and confirm it ends with `backup ok`:
    `/opt/internalgns-ops/backup.sh` (or `systemctl start
@@ -237,6 +238,20 @@ docker exec "$PG" rm /tmp/fix_imported_invoices_paid.sql
 ```
 
 `verify_seed.py` then passes as it does on a fresh load.
+
+### Databases loaded before yearly numbers
+
+A database loaded with a seed built before migration 00101 numbers each
+type with one counter across years (`Q-00462/GNS/I/2026` for the first
+quotation of 2026). Migration 00101 renumbers it on the api's first
+start, within each year in the old order, so it holds the same numbers a
+seed built now would load, and rewrites the notes that copy a number
+(Revisi dari, Direvisi menjadi, Dipesan bersama, berasal dari); the
+legacy numbers stay. Nothing needs running by hand: take the backup the
+deploy takes anyway, and `verify_seed.py` then passes as it does on a
+fresh load. Rebuild the seed (`make seed-build`) before any later
+reimport: a seed built before 00101 refuses nothing on a 00101 database
+but would load numbers the yearly counters do not know.
 
 ## Source and safety
 

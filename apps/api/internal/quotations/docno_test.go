@@ -168,12 +168,77 @@ func TestNextDocNo_CountersPerType(t *testing.T) {
 	assert.Equal(t, dn+1, seqOf(t, nextDocNo(t, ctx, tx, "DN")))
 }
 
+// setCounter sets one year's counter.
+func setCounter(t *testing.T, ctx context.Context, tx pgx.Tx, docType string, year, last int) {
+	t.Helper()
+	_, err := tx.Exec(ctx, `
+		INSERT INTO doc_counters (doc_type, year, last_seq) VALUES ($1, $2, $3)
+		ON CONFLICT (doc_type, year) DO UPDATE SET last_seq = EXCLUDED.last_seq`,
+		docType, year, last)
+	require.NoError(t, err)
+}
+
+// counterOf reads one year's counter.
+// A year never drawn from reads -1.
+func counterOf(t *testing.T, ctx context.Context, tx pgx.Tx, docType string, year int) int {
+	t.Helper()
+	var last int
+	require.NoError(t, tx.QueryRow(ctx, `
+		SELECT COALESCE((SELECT last_seq FROM doc_counters WHERE doc_type = $1 AND year = $2), -1)`,
+		docType, year).Scan(&last))
+	return last
+}
+
+// thisYear is the WIB year.
+func thisYear(t *testing.T, ctx context.Context, tx pgx.Tx) int {
+	t.Helper()
+	var year int
+	require.NoError(t, tx.QueryRow(ctx, `SELECT EXTRACT(YEAR FROM CURRENT_DATE)::int`).Scan(&year))
+	return year
+}
+
+// New years start at 00001.
+// The first number of a year creates that year's counter; the counters of
+// other years and other types stay as they are.
+func TestNextDocNo_NewYearStartsAtOne(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	year := thisYear(t, ctx, tx)
+	setCounter(t, ctx, tx, "Q", year-1, 777)
+	setCounter(t, ctx, tx, "INV", year, 41)
+	_, err := tx.Exec(ctx, `DELETE FROM doc_counters WHERE doc_type = 'Q' AND year = $1`, year)
+	require.NoError(t, err)
+
+	first := nextDocNo(t, ctx, tx, "Q")
+	m := docNo.FindStringSubmatch(first)
+	require.NotNil(t, m, "%q is not a document number", first)
+	assert.Equal(t, "00001", m[2])
+	assert.Equal(t, strconv.Itoa(year), m[4])
+	assert.Equal(t, 2, seqOf(t, nextDocNo(t, ctx, tx, "Q")))
+
+	assert.Equal(t, 2, counterOf(t, ctx, tx, "Q", year))
+	assert.Equal(t, 777, counterOf(t, ctx, tx, "Q", year-1), "last year's counter is untouched")
+	assert.Equal(t, 41, counterOf(t, ctx, tx, "INV", year), "the invoice counter is untouched")
+}
+
+// The year's counter decides.
+// A higher counter for another year never moves this year's number.
+func TestNextDocNo_CounterPerYear(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	year := thisYear(t, ctx, tx)
+	setCounter(t, ctx, tx, "DN", year, 7)
+	setCounter(t, ctx, tx, "DN", year-1, 900)
+	setCounter(t, ctx, tx, "DN", year+1, 5)
+
+	assert.Regexp(t, `^DN-00008/GNS/[IVX]+/`+strconv.Itoa(year)+`$`, nextDocNo(t, ctx, tx, "DN"))
+	assert.Equal(t, 900, counterOf(t, ctx, tx, "DN", year-1))
+	assert.Equal(t, 5, counterOf(t, ctx, tx, "DN", year+1))
+}
+
 // Past 99999 the number grows.
 // lpad would cut the sixth digit and reissue an old number.
 func TestNextDocNo_GrowsPastFiveDigits(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
-	_, err := tx.Exec(ctx, `UPDATE doc_counters SET last_seq = 99998 WHERE doc_type = 'DN'`)
-	require.NoError(t, err)
+	setCounter(t, ctx, tx, "DN", thisYear(t, ctx, tx), 99998)
 
 	assert.Regexp(t, `^DN-99999/GNS/`, nextDocNo(t, ctx, tx, "DN"))
 	assert.Regexp(t, `^DN-100000/GNS/`, nextDocNo(t, ctx, tx, "DN"))
@@ -247,7 +312,62 @@ func TestNextDocNo_ConcurrentCallersDiffer(t *testing.T) {
 	assert.Equal(t, seqOf(t, a)+1, seqOf(t, b.no))
 }
 
-// Quotations share one counter.
+// A year's first number queues.
+// With no counter for the year yet, a second caller waits for the first,
+// and the first's rollback hands it 00001 again.
+func TestNextDocNo_FirstOfYearQueuesWithoutGap(t *testing.T) {
+	ctx := context.Background()
+	pool := testutil.Pool(t)
+	var year int
+	require.NoError(t, pool.QueryRow(ctx, `SELECT EXTRACT(YEAR FROM CURRENT_DATE)::int`).Scan(&year))
+	var saved *int
+	require.NoError(t, pool.QueryRow(ctx,
+		`SELECT (SELECT last_seq FROM doc_counters WHERE doc_type = 'INV' AND year = $1)`, year).Scan(&saved))
+	_, err := pool.Exec(ctx, `DELETE FROM doc_counters WHERE doc_type = 'INV' AND year = $1`, year)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		if saved != nil {
+			_, _ = pool.Exec(context.Background(), `
+				INSERT INTO doc_counters (doc_type, year, last_seq) VALUES ('INV', $1, $2)
+				ON CONFLICT (doc_type, year) DO UPDATE
+				SET last_seq = GREATEST(doc_counters.last_seq, EXCLUDED.last_seq)`, year, *saved)
+		}
+	})
+
+	first, err := pool.Begin(ctx)
+	require.NoError(t, err)
+	defer func() { _ = first.Rollback(ctx) }()
+	assert.Equal(t, 1, seqOf(t, nextDocNo(t, ctx, first, "INV")))
+
+	type drawn struct {
+		no  string
+		err error
+	}
+	done := make(chan drawn, 1)
+	go func() {
+		tx, err := pool.Begin(ctx)
+		if err != nil {
+			done <- drawn{err: err}
+			return
+		}
+		defer func() { _ = tx.Rollback(ctx) }()
+		var no string
+		err = tx.QueryRow(ctx, `SELECT fn_next_doc_no('INV')`).Scan(&no)
+		done <- drawn{no, err}
+	}()
+	select {
+	case d := <-done:
+		t.Fatalf("second caller did not wait for the first: %+v", d)
+	case <-time.After(300 * time.Millisecond):
+	}
+	require.NoError(t, first.Rollback(ctx))
+
+	b := <-done
+	require.NoError(t, b.err)
+	assert.Equal(t, 1, seqOf(t, b.no), "the rolled-back first number is reissued")
+}
+
+// Quotations share the year's counter.
 // Two clients' quotations draw consecutive numbers, whatever their client
 // numbers.
 func TestQuotationNo_OneCounterAcrossClients(t *testing.T) {

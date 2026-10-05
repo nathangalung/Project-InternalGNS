@@ -69,7 +69,7 @@ Feature: Quotation lifecycle
     And the user tries to transition the quotation to "sent"
     Then the response status is 422
 
-  Scenario: Quotations of every client draw from one running number
+  Scenario: Quotations of every client draw from the year's running number
     Given two clients numbered "0901" and "0911"
     When the user creates one quotation for each of those clients
     Then the second quotation number follows the first

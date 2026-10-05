@@ -237,6 +237,14 @@ func TestContains(t *testing.T) {
 }
 
 // Month-year queries become anchored patterns.
+// Number keys lead by year.
+func TestDocNoOrder(t *testing.T) {
+	want := `COALESCE(substring(q.quotation_no FROM '/([0-9]{4})(?: Rev\.[0-9]+)?$'), '') || q.quotation_no`
+	if got := DocNoOrder("q.quotation_no"); got != want {
+		t.Errorf("DocNoOrder = %q, want %q", got, want)
+	}
+}
+
 func TestPeriod(t *testing.T) {
 	cases := []struct {
 		in, want string

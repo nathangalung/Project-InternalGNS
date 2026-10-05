@@ -190,8 +190,8 @@ POST /api/v1/quotations
 [fn_create_quotation], one transaction
     1. check the lines and the discount
     2. snapshot the client and contact names
-    3. fn_next_doc_no('Q'): the next running number from doc_counters
-       under its row lock, with the WIB month and year
+    3. fn_next_doc_no('Q'): the next running number from the doc_counters
+       row of the WIB year, under its row lock, with the WIB month and year
     4. insert the header, the lines and an optional shipping line;
        triggers inherit the discount, sync vendor cost, learn matches, and
        log the draft in quotation_status_history

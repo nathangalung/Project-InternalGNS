@@ -2,13 +2,14 @@
 
 ## Description
 
-Last running number per document type (Q, INV, DN); fn_next_doc_no takes the next one under the row lock.
+Last running number per document type (Q, INV, DN) and year; fn_next_doc_no takes the next one of the current WIB year under the row lock.
 
 ## Columns
 
 | Name       | Type                     | Default | Nullable | Children | Parents | Comment |
 | ---------- | ------------------------ | ------- | -------- | -------- | ------- | ------- |
 | doc_type   | varchar(3)               |         | false    |          |         |         |
+| year       | integer                  |         | false    |          |         |         |
 | last_seq   | integer                  |         | false    |          |         |         |
 | updated_at | timestamp with time zone | now()   | false    |          |         |         |
 
@@ -21,13 +22,15 @@ Last running number per document type (Q, INV, DN); fn_next_doc_no takes the nex
 | doc_counters_last_seq_check      | CHECK       | CHECK ((last_seq >= 0))                                                                                                       |
 | doc_counters_last_seq_not_null   | n           | NOT NULL last_seq                                                                                                             |
 | doc_counters_updated_at_not_null | n           | NOT NULL updated_at                                                                                                           |
-| doc_counters_pkey                | PRIMARY KEY | PRIMARY KEY (doc_type)                                                                                                        |
+| doc_counters_year_check          | CHECK       | CHECK (((year >= 1000) AND (year <= 9999)))                                                                                   |
+| doc_counters_year_not_null       | n           | NOT NULL year                                                                                                                 |
+| doc_counters_pkey                | PRIMARY KEY | PRIMARY KEY (doc_type, year)                                                                                                  |
 
 ## Indexes
 
-| Name              | Definition                                                                          |
-| ----------------- | ----------------------------------------------------------------------------------- |
-| doc_counters_pkey | CREATE UNIQUE INDEX doc_counters_pkey ON public.doc_counters USING btree (doc_type) |
+| Name              | Definition                                                                                |
+| ----------------- | ----------------------------------------------------------------------------------------- |
+| doc_counters_pkey | CREATE UNIQUE INDEX doc_counters_pkey ON public.doc_counters USING btree (doc_type, year) |
 
 ## Relations
 

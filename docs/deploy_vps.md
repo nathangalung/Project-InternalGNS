@@ -739,13 +739,17 @@ older, takes three more things:
   the enforcing label on the older SPA.
 
 That decision comes too late to protect the numbers. Quotation, invoice and
-delivery-note numbers come from one counter per type in `doc_counters`
-(00098), and new clients draw their number from `company_client_number_seq`.
-The restore rewinds both, so the first quotation, delivery note or invoice
-after the rollback would reuse a number already filed with a client or DJP.
-Step 3 saves the counters the failed release reached, and step 6 raises them
-again before the Deploy. A PO's number is the client's own and needs no
-counter.
+delivery-note numbers come from one counter per type and year in
+`doc_counters` (00101; one per type from 00098 to 00100), and new clients
+draw their number from `company_client_number_seq`. The restore rewinds
+both, so the first quotation, delivery note or invoice after the rollback
+would reuse a number already filed with a client or DJP. Step 3 saves the
+counters the failed release reached, one row per type and year, and step 6
+raises them again before the Deploy: each type and year on a target with
+yearly counters, and each type to the highest saved year on a target with
+one counter per type, whose next number then lies above every number the
+failed release issued in any year. A PO's number is the client's own and
+needs no counter.
 
 ```bash
 set -a; . /etc/internalgns-backup.env; set +a
@@ -765,10 +769,10 @@ systemctl start internalgns-backup.service
 # 3. Save the counters the failed release reached, and the top version of
 #    each quotation chain. Stop if a command fails. If the failed release
 #    never started (its migrations failed), nothing was numbered: skip 3 and 6.
-q -c "COPY (SELECT doc_type, last_seq FROM doc_counters) TO STDOUT" >"$NUM.tsv"
+q -c "COPY (SELECT doc_type, year, last_seq FROM doc_counters) TO STDOUT" >"$NUM.tsv"
 q -F ' ' -c "SELECT last_value, is_called FROM company_client_number_seq" >"$NUM.seq"
-q -c "COPY (SELECT regexp_replace(quotation_no, ' Rev\.[0-9]+\$', ''), max(version)
-  FROM quotations GROUP BY 1) TO STDOUT" >"$NUM.rev"
+q -c "COPY (SELECT min(id), regexp_replace(quotation_no, ' Rev\.[0-9]+\$', ''), max(version)
+  FROM quotations GROUP BY 2) TO STDOUT" >"$NUM.rev"
 
 # 4. Empty what restore.sh refuses to overwrite: the database and the
 #    snapshot's buckets. The restore and the api's boot recreate buckets.
@@ -787,10 +791,11 @@ done
 raise() {
   read -r last called <"$NUM.seq"
   { printf '%s\n' 'BEGIN;' \
-      'CREATE TEMP TABLE seen (doc_type text, last_seq int);' \
+      'CREATE TEMP TABLE seen (doc_type text, year int, last_seq int);' \
       'COPY seen FROM STDIN;'
     cat "$NUM.tsv"
-    printf '%s\n' '\.' 'CREATE TEMP TABLE revs (base text, version int);' 'COPY revs FROM STDIN;'
+    printf '%s\n' '\.' 'CREATE TEMP TABLE revs (base_id bigint, base text, version int);' \
+      'COPY revs FROM STDIN;'
     cat "$NUM.rev"
     printf '%s\n' '\.'
     cat <<SQL
@@ -801,13 +806,29 @@ BEGIN
     RAISE NOTICE 'doc_counters missing: run raise again after 00098 is deployed';
     RETURN;
   END IF;
-  FOR r IN
-    UPDATE doc_counters d SET last_seq = s.last_seq, updated_at = now()
-    FROM seen s WHERE s.doc_type = d.doc_type AND s.last_seq > d.last_seq
-    RETURNING d.doc_type, d.last_seq
-  LOOP
-    RAISE NOTICE '% counter raised to %', r.doc_type, r.last_seq;
-  END LOOP;
+  IF EXISTS (SELECT 1 FROM information_schema.columns
+             WHERE table_schema = 'public' AND table_name = 'doc_counters'
+               AND column_name = 'year') THEN
+    FOR r IN
+      INSERT INTO doc_counters AS d (doc_type, year, last_seq)
+      SELECT doc_type, year, last_seq FROM seen
+      ON CONFLICT (doc_type, year) DO UPDATE
+        SET last_seq = EXCLUDED.last_seq, updated_at = now()
+        WHERE EXCLUDED.last_seq > d.last_seq
+      RETURNING d.doc_type, d.year, d.last_seq
+    LOOP
+      RAISE NOTICE '% % counter raised to %', r.doc_type, r.year, r.last_seq;
+    END LOOP;
+  ELSE
+    FOR r IN
+      UPDATE doc_counters d SET last_seq = s.last_seq, updated_at = now()
+      FROM (SELECT doc_type, max(last_seq) AS last_seq FROM seen GROUP BY 1) s
+      WHERE s.doc_type = d.doc_type AND s.last_seq > d.last_seq
+      RETURNING d.doc_type, d.last_seq
+    LOOP
+      RAISE NOTICE '% counter raised to %', r.doc_type, r.last_seq;
+    END LOOP;
+  END IF;
 END
 \$\$;
 SELECT 'client number sequence raised to ' || setval(r, last, called)
@@ -816,10 +837,12 @@ FROM (SELECT to_regclass('company_client_number_seq') AS r,
 WHERE r IS NOT NULL
   AND last + called::int > coalesce(pg_sequence_last_value(r) + 1, 1);
 COMMIT;
-SELECT 'revised after the deploy ' || r.base FROM revs r
-JOIN (SELECT regexp_replace(quotation_no, ' Rev\.[0-9]+$', '') AS base,
+SELECT 'revised after the deploy ' || cur.base || ' (sent as ' || r.base || ')'
+FROM revs r
+JOIN (SELECT min(id) AS base_id,
+             regexp_replace(quotation_no, ' Rev\.[0-9]+$', '') AS base,
              max(version) AS version
-      FROM quotations GROUP BY 1) cur USING (base)
+      FROM quotations GROUP BY 2) cur USING (base_id)
 WHERE cur.version < r.version;
 SQL
   } | q
@@ -844,6 +867,17 @@ quotation, delivery note or invoice. In a new shell, run the whole preamble
 first (the env file, `NUM`, `svc`, `PG`, `q`) and paste the `raise`
 definition. A rollback target without `company_client_number_seq` (00056)
 skips the sequence line.
+
+A rollback target from 00098 to 00100 numbers with one counter per type
+across years, and `raise` lifts each to the highest year the failed release
+saved. Deploying 00101 again renumbers every document within its year and
+starts each yearly counter at the highest number left in the database, so
+the documents written since the rollback can take yearly numbers the failed
+release already issued. Prefer a fix-up release to a rollback across 00101.
+If one happens, keep `$NUM.tsv`, run `raise` right after 00101 is deployed
+again, before anyone issues a document, and compare the numbers of the
+documents written since the rollback with the failed release's backup
+from step 2 before sending any of them again.
 
 A revision takes its number from the quotation it revises (`Rev.<n>` on the
 base number), not from a counter, so no raise can protect it. Do not revise
