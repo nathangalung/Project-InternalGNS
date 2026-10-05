@@ -17,7 +17,6 @@ describe("quotation status labels", () => {
   })
 
   const cases = [
-    { status: "expired", want: "Kedaluwarsa" },
     { status: "cancelled", want: "Dibatalkan" },
     { status: "rejected", want: "Ditolak" },
   ] as const

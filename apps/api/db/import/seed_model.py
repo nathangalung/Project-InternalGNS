@@ -34,8 +34,8 @@ from paths import (
 from unit_map import canonical_unit
 from vendors import Decisions, channel_details, display_name, load_decisions, split_cell
 
-# The reimport's reference day (WIB) for the expiry rule.
-AS_OF = date(2026, 10, 4)
+# Invoices dated before this are Dibayar: a month before the rebuild.
+PAID_BEFORE = date(2026, 9, 5)
 WIB = timezone(timedelta(hours=7))
 DAY_START = time(9, 0)
 
@@ -53,7 +53,6 @@ APP_PPN_RATE = Decimal("12.00")
 
 ROMAN = ("I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII")
 UNPRICED_REASON = "Tidak pernah diberi harga jual"
-EXPIRY_NOTE = "Kedaluwarsa otomatis: masa berlaku {days} hari sejak {sent} telah lewat."
 
 Doc = dict[str, Any]
 
@@ -327,7 +326,6 @@ class History:
     to_status: str
     at: datetime
     note: str | None
-    system: bool = False
 
 
 @dataclass
@@ -471,6 +469,8 @@ class Invoice:
     number: str = ""
     seq: int = 0
     history: list[History] = field(default_factory=list)
+    status: str = "sent"
+    paid_at: datetime | None = None
 
 
 @dataclass
@@ -485,7 +485,6 @@ class Model:
     invoices: list[Invoice]
     skipped: list[tuple[str, str]]
     flagged: list[tuple[str, str]]
-    as_of: date
 
 
 # App arithmetic
@@ -519,15 +518,15 @@ def quotation_totals(lines: Iterable[QLine], pct: Decimal) -> Totals:
     return Totals(total_produk, total, disc, dpp, ppn, total - disc + ppn)
 
 
-def monotonic(events: list[tuple[date, str | None, str, str | None, bool]]) -> list[History]:
+def monotonic(events: list[tuple[date, str | None, str, str | None]]) -> list[History]:
     """Status moves at 09:00 of their day, each at least a minute apart."""
     out: list[History] = []
     last: datetime | None = None
-    for day, frm, to, note, system in events:
+    for day, frm, to, note in events:
         when = at(day)
         if last is not None and when <= last:
             when = last + timedelta(minutes=1)
-        out.append(History(frm, to, when, note, system))
+        out.append(History(frm, to, when, note))
         last = when
     return out
 
@@ -539,9 +538,6 @@ def quotation_status(
     unpriced: bool,
     priced_cost: bool,
     year: int,
-    day: date,
-    validity: int | None,
-    as_of: date,
 ) -> str | None:
     """The owner's status rule; None means the quotation is skipped."""
     if superseded:
@@ -552,8 +548,6 @@ def quotation_status(
         if year >= 2026:
             return "draft"
         return "cancelled" if priced_cost else None
-    if validity is not None and day + timedelta(days=validity) < as_of:
-        return "expired"
     return "sent"
 
 
@@ -648,9 +642,8 @@ def text_or_none(value: object) -> str | None:
 class Builder:
     """Applies the owner rules to the inputs."""
 
-    def __init__(self, inputs: Inputs, as_of: date = AS_OF) -> None:
+    def __init__(self, inputs: Inputs) -> None:
         self.inp = inputs
-        self.as_of = as_of
         self.skipped: list[tuple[str, str]] = []
         self.flagged: list[tuple[str, str]] = []
         self.clients: dict[str, Client] = {}
@@ -1149,9 +1142,6 @@ class Builder:
                 unpriced=unpriced,
                 priced_cost=has_cost(rec),
                 year=self.dates[rec["id"]].year,
-                day=self.dates[rec["id"]],
-                validity=(rec["terms"] or {}).get("validity_days"),
-                as_of=self.as_of,
             )
             if status is None:
                 self.skipped.append((label, "older than 2026 with no harga jual and no harga beli"))
@@ -1558,36 +1548,35 @@ class Builder:
         po_of = {po.quotation.key: po for po in self.pos}
         for q in self.quotations:
             first = f"Revisi dari {q.parent.number}" if q.parent else "Quotation dibuat"
-            ev: list[tuple[date, str | None, str, str | None, bool]] = [
-                (q.date, None, "draft", first, False)
-            ]
+            ev: list[tuple[date, str | None, str, str | None]] = [(q.date, None, "draft", first)]
             if q.status == "cancelled":
-                ev.append((q.date, "draft", "cancelled", UNPRICED_REASON, False))
+                ev.append((q.date, "draft", "cancelled", UNPRICED_REASON))
             elif q.status != "draft":
-                ev.append((q.date, "draft", "sent", None, False))
+                ev.append((q.date, "draft", "sent", None))
             if q.status == "revision":
                 nxt = q.successor
                 assert nxt is not None
-                ev.append((nxt.date, "sent", "revision", f"Direvisi menjadi {nxt.number}", False))
+                ev.append((nxt.date, "sent", "revision", f"Direvisi menjadi {nxt.number}"))
             elif q.status == "accepted":
-                ev.append((po_of[q.key].po_date, "sent", "accepted", None, False))
-            elif q.status == "expired":
-                days = q.validity_days or 0
-                note = EXPIRY_NOTE.format(days=days, sent=q.date.strftime("%d-%m-%Y"))
-                ev.append((q.date + timedelta(days=days), "sent", "expired", note, True))
+                ev.append((po_of[q.key].po_date, "sent", "accepted", None))
             q.history = monotonic(ev)
         for po in self.pos:
             po.history = monotonic(
                 [
-                    (po.po_date, None, "PENDING", "PO dibuat", False),
-                    (po.po_date, "PENDING", "UPLOADED", None, False),
-                    (po.po_date, "UPLOADED", "ON_PROGRESS", None, False),
-                    (po.dn_date, "ON_PROGRESS", "DELIVERED", None, False),
+                    (po.po_date, None, "PENDING", "PO dibuat"),
+                    (po.po_date, "PENDING", "UPLOADED", None),
+                    (po.po_date, "UPLOADED", "ON_PROGRESS", None),
+                    (po.dn_date, "ON_PROGRESS", "DELIVERED", None),
                 ]
             )
         for inv in self.invoices:
-            inv.history = monotonic([(inv.invoice_date, "draft", "sent", None, False)])
-            inv.history[0].at += timedelta(minutes=1)
+            sent = at(inv.invoice_date) + timedelta(minutes=1)
+            inv.history = [History("draft", "sent", sent, None)]
+            if inv.invoice_date < PAID_BEFORE:
+                # Paid on its due date, and never before the send.
+                inv.paid_at = max(at(inv.due_date or inv.invoice_date), sent + timedelta(minutes=1))
+                inv.history.append(History("sent", "paid", inv.paid_at, None))
+            inv.status = inv.history[-1].to_status
 
     # Masters, last
     def finish_masters(self) -> None:
@@ -1680,10 +1669,9 @@ class Builder:
             invoices=self.invoices,
             skipped=self.skipped,
             flagged=self.flagged,
-            as_of=self.as_of,
         )
 
 
-def build(inputs: Inputs | None = None, as_of: date = AS_OF) -> Model:
+def build(inputs: Inputs | None = None) -> Model:
     """The seed model from the inputs on disk, or the given ones."""
-    return Builder(inputs or load_inputs(), as_of).build()
+    return Builder(inputs or load_inputs()).build()

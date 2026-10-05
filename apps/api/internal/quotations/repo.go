@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -12,7 +11,6 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/db/queries"
 	dbpkg "github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/listq"
-	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 )
 
 // Executor aliased for backwards compat.
@@ -323,16 +321,4 @@ func (r *Repo) Revise(ctx context.Context, id int64, note *string, userID int64)
 		return 0, fmt.Errorf("revise quotation %d: %w", id, err)
 	}
 	return newID, nil
-}
-
-// ExpireDue expires lapsed sent quotations.
-// asOf is read on the WIB calendar. Returns 0 when another replica holds
-// the job lock.
-func (r *Repo) ExpireDue(ctx context.Context, asOf time.Time) (int64, error) {
-	today := asOf.In(tz.Jakarta()).Format(time.DateOnly)
-	var n int64
-	if err := r.db.QueryRow(ctx, r.store.Get("quotations.expire_due"), today).Scan(&n); err != nil {
-		return 0, fmt.Errorf("expire quotations: %w", err)
-	}
-	return n, nil
 }

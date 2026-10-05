@@ -96,7 +96,6 @@ var RequiredKeys = []string{
 	"quotations.add_lines",
 	"quotations.delete_line",
 	"quotations.edit_locks",
-	"quotations.expire_due",
 	"quotations.fn_change_status",
 	"quotations.fn_create",
 	"quotations.fn_revise",

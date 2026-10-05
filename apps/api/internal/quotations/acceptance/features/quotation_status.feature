@@ -1,8 +1,9 @@
 Feature: Quotation status model
   Ditolak means the client declined and Dibatalkan means we withdrew;
   both need a reason. Buat Revisi clones a sent quotation into the next
-  draft version. A daily job expires sent quotations past their validity.
-  The API returns the allowed moves so the screen never hardcodes them.
+  draft version. Nothing expires on its own: a sent quotation stays sent
+  until a user moves it. The API returns the allowed moves so the screen
+  never hardcodes them.
 
   Background:
     Given an authenticated user with id 1
@@ -19,7 +20,6 @@ Feature: Quotation status model
       | setup                  | current   | target    |
       | none                   | draft     | accepted  |
       | none                   | draft     | rejected  |
-      | none                   | draft     | expired   |
       | none                   | draft     | revision  |
       | sent                   | sent      | expired   |
       | sent                   | sent      | draft     |
@@ -104,42 +104,9 @@ Feature: Quotation status model
     Given an existing draft quotation
     And the user transitions the quotation through "cancelled" giving a reason
     When the user reads the quotation stats
-    Then the stats list "draft,sent,revision,accepted,rejected,cancelled,expired"
-    And the stats labels are "Draf,Dikirim,Revisi,Disetujui,Ditolak,Dibatalkan,Kedaluwarsa"
+    Then the stats list "draft,sent,revision,accepted,rejected,cancelled"
+    And the stats labels are "Draf,Dikirim,Revisi,Disetujui,Ditolak,Dibatalkan"
     And the stats count 1 "cancelled" and 0 "rejected"
-
-  # The job reads its clock on the WIB calendar: 8 March 17:01Z is
-  # already 9 March in Jakarta, the first day past a 7-day validity.
-  Scenario Outline: The daily job expires sent quotations past validity
-    Given an existing draft quotation
-    And the user transitions the quotation through "sent" giving a reason
-    And the quotation was sent at "2026-03-01T10:00:00+07:00" with a validity of 7 days
-    When the expiry job runs at "<now>"
-    And the user reads the quotation
-    Then the quotation status is "<status>"
-
-    Examples:
-      | now                       | status  |
-      | 2026-03-05T12:00:00+07:00 | sent    |
-      | 2026-03-08T16:59:00Z      | sent    |
-      | 2026-03-08T17:01:00Z      | expired |
-      | 2026-04-20T12:00:00+07:00 | expired |
-
-  Scenario: The send date is read in WIB too
-    Given an existing draft quotation
-    And the user transitions the quotation through "sent" giving a reason
-    And the quotation was sent at "2026-02-28T17:30:00Z" with a validity of 7 days
-    When the expiry job runs at "2026-03-08T10:00:00Z"
-    And the user reads the quotation
-    Then the quotation status is "sent"
-
-  Scenario: An expired quotation records a system history note
-    Given an existing draft quotation
-    And the user transitions the quotation through "sent" giving a reason
-    And the quotation was sent at "2026-03-01T10:00:00+07:00" with a validity of 7 days
-    When the expiry job runs at "2026-03-10T08:00:00+07:00"
-    And the user reads the quotation
-    Then the latest history entry is a system note mentioning "masa berlaku 7 hari sejak 01-03-2026"
 
   Scenario Outline: Only superadmin and operational change quotation status
     Given an existing draft quotation

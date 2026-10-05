@@ -46,7 +46,7 @@ func TestDB_LineNumbersChecked(t *testing.T) {
 }
 
 // Day counts must be positive.
-// A negative validity expired a sent quotation on the next hourly run.
+// A negative validity would print a nonsense Validity.
 func TestDB_DayCountsChecked(t *testing.T) {
 	addr := "Tanjung Priok"
 	zero := 0

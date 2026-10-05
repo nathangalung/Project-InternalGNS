@@ -198,17 +198,17 @@ confirmed IMPA codes, the vendor decisions, `out/pos.json` and
 | Topic | Rule |
 |---|---|
 | Numbers | `Q-`, `INV-` and `DN-NNNNN/GNS/<Roman month>/<YYYY>`, one running counter per type in document-date order (ties by original number, then source path, then client), month and year from the document's own date. A revision keeps its base number plus ` Rev.n`, as Buat Revisi writes it. The number each document was issued under goes to `quotations.legacy_no` (the PDF's number when one was issued, without reference text after the year; other numbers a copy or the workbook printed go to the notes), `invoices.legacy_no` and `purchase_orders.legacy_dn_no` (the printed DO number), which the app searches. `doc_counters` ends at the highest loaded number of each type. |
-| Quotation status | Accepted where a client PO exists; superseded by a revision: Revisi; otherwise Kedaluwarsa when date + validity is before the reference day (2026-10-04, `--as-of`), else Dikirim. No harga jual on any line: Draf in 2026, Dibatalkan (`Tidak pernah diberi harga jual`) when older with a harga beli, skipped when older with no price. Each status is written with its history: NULL to draft and draft to sent at the quotation date, sent to accepted at the PO date, sent to expired at date + validity (as `fn_expire_quotations` writes it, no actor), sent to revision at the revision's date. |
+| Quotation status | Accepted where a client PO exists; superseded by a revision: Revisi; otherwise Dikirim, whatever its validity (nothing expires on its own). No harga jual on any line: Draf in 2026, Dibatalkan (`Tidak pernah diberi harga jual`) when older with a harga beli, skipped when older with no price. Each status is written with its history: NULL to draft and draft to sent at the quotation date, sent to accepted at the PO date, sent to revision at the revision's date. |
 | Totals | The app's own `fn_recompute_quotation_totals` writes every quotation total (per-line DPP Nilai Lain and PPN), so PPN is always added. A difference of more than Rp 1 from the printed grand total (the PDF's when the lines came from it) puts `Grand total tercetak: Rp ...` in the notes, and a workbook edited after a PDF that could not be read notes `Grand total tercetak (PDF): Rp ...`; the report lists each with its cause. |
 | Lines | Every staged line, with its product as `offered_item_id` and its vendor link. Lines the PRINT sheet left out of its total are ordinary lines, named in the notes. No Offer lines are Tidak Ditawarkan (harga jual 0, no vendor, no harga beli). A quantity that is missing or 0 follows the printed amount, else 1 (`quotation_items.qty > 0`); a negative line (a trade-in credit) is not a line but a note. An extra charge on the PRINT sheet, the delivery days (`N working days ...`) and the printed DELIVERY PLACE (its `ship_destination`, which the quotation PDF prints) become the one shipping line. A vendor cell naming several shops links the first and notes the rest. |
 | Discount | The PRINT percentage; a fixed amount is stored as the nearest percentage, the printed amount in the notes. |
 | Split and merge | A quotation ordered by two clients is one quotation per client with that client's PO quantities; a PO covering two quotations sits on the main one with the PO's real lines, and the other quotation is noted. A PO without a quotation in the files gets one rebuilt from its lines, with a product for each (the catalogue's when the name matches), a unit, and the PO's discount. |
 | POs | The client's PO number, or none with the reason in the notes. Lines are the PO's own, each with the quotation line's product and vendor link; a line equal to the printed untaxed amount is the shipping line, and positions at Rp 0 are left out and noted. The shipping line carries the delivery place the PO prints (else the quotation's), at Rp 0 when nothing was charged. The vessel the PO names replaces a contradicting quotation vessel, which is noted, since the delivery note and invoice print it. A second company the PO prints is noted as `Pihak kedua`. Every PO is invoiced, so it is DELIVERED (Dikirim) with its delivery note dated the DO date (the invoice date when no DO is printed), with history PENDING, UPLOADED, ON_PROGRESS at the PO date and DELIVERED at the DO date. |
-| Invoices | Dikirim, with dates, lines and header amounts as printed in `invoices.json`, never recomputed; the printed discount and PPN are spread over the lines so they sum to the header. The buyer is the one the invoice prints (name, address, NPWP when printed), even another company than the PO's client. Freight, cargo and boat lines are services (J). |
+| Invoices | Dibayar when dated before 2026-09-05 (`PAID_BEFORE`, a month before the rebuild), paid at 09:00 WIB on the due date (the invoice date when none is printed) with a sent to paid history row; Dikirim when dated later. Dates, lines and header amounts as printed in `invoices.json`, never recomputed; the printed discount and PPN are spread over the lines so they sum to the header. The buyer is the one the invoice prints (name, address, NPWP when printed), even another company than the PO's client. Freight, cargo and boat lines are services (J). |
 | Masters | One client per canonical name, numbered 0001 up by first quotation date, with the address its latest invoice billed to itself prints (no file prints an NPWP). Contacts from the quotations' ATTN data: two people in one ATTN are two contacts, contacts sharing an email or whose name is part of one other's merge, only a plain client mailbox (`validate.Email`'s pattern, not the seller's own) is kept, and an email shared across clients goes where it was used most. One vendor per merge key (case, spacing, legal form, honorific, Tehnik/Teknik and a place or marketplace suffix ignored) or per owner decision in `local/vendor_overrides.json`, with the phone and place from its Telp column; look-alikes no rule joined are rows in `out/review_vendors.csv`. Every product in `out/products.json`, with `impa_enrichment.json` codes applied when present and not taken; one vendor link per vendor and product, at the latest harga beli. |
 | Actor | Every row is created by the oldest active superadmin, looked up in SQL. |
 
-The SQL refuses to load unless migration 00099 is applied, 01_master.sql
+The SQL refuses to load unless migration 00100 is applied, 01_master.sql
 is loaded, a superadmin exists and every business table is empty, so `make
 seed-dev` on a populated database stops with a pointer to `make
 reimport-dev`. It loads in one transaction, writes the history the
@@ -231,11 +231,17 @@ steps are in `docs/data_reimport_plan.md`.
 transaction: quotation totals against `fn_recompute_quotation_totals`,
 invoice amounts against `invoices.json`, number formats and periods,
 `doc_counters`, POs at work without a PO number, status against history,
-`fn_expire_quotations` on the reference day, the numbers documents were
+invoices paid exactly where dated before `PAID_BEFORE`, the numbers documents were
 issued under, invoice buyers against the printed ones, PO product lines
 above Rp 0, a product and unit on every offered line of an accepted
 quotation, and rows per table against the report (master tables the
 carry-over adds to may hold more). It exits 1 on any failure.
+
+`fix_imported_invoices_paid.sql` is a one-off for a database loaded before
+the paid rule: after migration 00100 it marks every imported invoice still
+sent and dated before 2026-09-05 paid through `fn_change_invoice_status`,
+dated as the seed dates it, and prints the counts before and after. It
+holds no data and a second run changes nothing.
 
 ## Usage
 

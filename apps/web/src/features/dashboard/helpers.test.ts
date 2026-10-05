@@ -42,7 +42,7 @@ describe("statusCount", () => {
   const cases = [
     { name: "present", list, status: "rejected", want: 3 },
     { name: "zero stays zero", list, status: "cancelled", want: 0 },
-    { name: "absent", list, status: "expired", want: undefined },
+    { name: "absent", list, status: "accepted", want: undefined },
     { name: "no list", list: undefined, status: "rejected", want: undefined },
   ]
   for (const c of cases) {
@@ -108,7 +108,7 @@ function quotation(status: string): QuotationListRow {
 describe("toRecentQuotation", () => {
   const labels: DashboardStatusCount[] = [
     { status: "rejected", label: "Ditolak", count: 1 },
-    { status: "expired", label: "Kedaluwarsa", count: 1 },
+    { status: "revision", label: "Direvisi", count: 1 },
     { status: "cancelled", label: "Dibatalkan", count: 1 },
     { status: "archived", label: "Diarsipkan", count: 1 },
   ]
@@ -130,7 +130,7 @@ describe("toRecentQuotation", () => {
 
   const cases = [
     { name: "known status keeps its label", status: "rejected", want: "Ditolak" },
-    { name: "API label wins over the local one", status: "expired", want: "Kedaluwarsa" },
+    { name: "API label wins over the local one", status: "revision", want: "Direvisi" },
     { name: "cancelled reads Dibatalkan", status: "cancelled", want: "Dibatalkan" },
     { name: "unknown status uses the API label", status: "archived", want: "Diarsipkan" },
   ]

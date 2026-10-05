@@ -6,15 +6,15 @@ Quotation status change timeline. Populated by trg_log_quotation_creation (initi
 
 ## Columns
 
-| Name         | Type                     | Default                                              | Nullable | Children | Parents                                   | Comment                                                             |
-| ------------ | ------------------------ | ---------------------------------------------------- | -------- | -------- | ----------------------------------------- | ------------------------------------------------------------------- |
-| id           | bigint                   | nextval('quotation_status_history_id_seq'::regclass) | false    |          |                                           |                                                                     |
-| quotation_id | bigint                   |                                                      | false    |          | [public.quotations](public.quotations.md) |                                                                     |
-| from_status  | varchar(20)              |                                                      | true     |          |                                           |                                                                     |
-| to_status    | varchar(20)              |                                                      | false    |          |                                           |                                                                     |
-| note         | text                     |                                                      | true     |          |                                           |                                                                     |
-| changed_by   | bigint                   |                                                      | true     |          | [public.users](public.users.md)           | Acting user. NULL marks a system transition (fn_expire_quotations). |
-| changed_at   | timestamp with time zone | now()                                                | false    |          |                                           |                                                                     |
+| Name         | Type                     | Default                                              | Nullable | Children | Parents                                   | Comment      |
+| ------------ | ------------------------ | ---------------------------------------------------- | -------- | -------- | ----------------------------------------- | ------------ |
+| id           | bigint                   | nextval('quotation_status_history_id_seq'::regclass) | false    |          |                                           |              |
+| quotation_id | bigint                   |                                                      | false    |          | [public.quotations](public.quotations.md) |              |
+| from_status  | varchar(20)              |                                                      | true     |          |                                           |              |
+| to_status    | varchar(20)              |                                                      | false    |          |                                           |              |
+| note         | text                     |                                                      | true     |          |                                           |              |
+| changed_by   | bigint                   |                                                      | true     |          | [public.users](public.users.md)           | Acting user. |
+| changed_at   | timestamp with time zone | now()                                                | false    |          |                                           |              |
 
 ## Constraints
 

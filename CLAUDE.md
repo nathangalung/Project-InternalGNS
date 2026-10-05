@@ -130,7 +130,7 @@ cmd/pdfsmoke/       PDF render smoke check
 cmd/gentypes/       Web API types from the DTO allowlist
 internal/
   app/              Router, middleware (auth, RBAC, logging, CORS, body limit),
-                    background loops (refresh purge, quotation expiry)
+                    background loops (refresh purge)
   auth/             Login, JWT, refresh-token rotation, session version
   clients/ vendors/ items/ quotations/ purchaseorders/ invoices/ dashboard/
                     Handler, repo, and DTOs per feature, with tests
@@ -209,9 +209,10 @@ clear it (`fn_update_po_details`, a 422 on `poNumber`). It is unique per
 client (`uq_purchase_orders_client_po_number`), not globally, and the web
 shows a missing one as Belum ada No. PO.
 
-- Quotation: draft, sent, revision, accepted, rejected, cancelled, expired.
+- Quotation: draft, sent, revision, accepted, rejected, cancelled.
   Draft goes to sent or cancelled; sent to accepted, rejected or cancelled;
-  revision to rejected or cancelled. Rejected and cancelled need a reason.
+  revision to rejected or cancelled. Nothing expires: a sent quotation stays
+  sent until a user moves it, whatever its validity. Rejected and cancelled need a reason.
   Accepted creates the PO in the same transaction. Only drafts are editable.
   The client's own reference (No. Referensi Klien, `client_ref_no`, printed
   as Your Ref No.) is typed in the wizard's summary step and saved with the
@@ -227,9 +228,8 @@ shows a missing one as Belum ada No. PO.
   destination.
   A draft may keep unfinished product lines, but sending refuses (with the
   count) while any offered product line lacks its product, unit, vendor,
-  harga beli or harga jual, and while `validity_days` is empty, since a sent
-  quotation without one would never expire (a draft without one can still
-  be cancelled). The web sends any typed validity, 0 included, so the
+  harga beli or harga jual, and while `validity_days` is empty, since the
+  PDF prints the Validity (a draft without one can still be cancelled). The web sends any typed validity, 0 included, so the
   server answers it with a field error instead of storing none. A line
   marked Tidak Ditawarkan (`is_available`
   false, `noOffer` in the wizard) is a request the company cannot offer:
@@ -250,13 +250,9 @@ shows a missing one as Belum ada No. PO.
   Revisi is not a manual move: Buat Revisi (`POST /quotations/{id}/revise`,
   offered when `canRevise`, i.e. from sent) clones a new draft version with
   `parent_id` and a `Rev.n` number and moves the original to revision.
-  Kedaluwarsa is set only by `fn_expire_quotations`, which expires sent
-  quotations past `validity_days` from the last send, by WIB date. The API
-  runs it at startup and then hourly (`quotations.RunExpiryLoop`), and
-  `pg_try_advisory_xact_lock` keeps two replicas from both doing a run.
   The quotation PDF is dated at its last send, a draft to sent move, so
-  for a quotation sent in the app its date plus its Validity ends when it
-  expires; a draft prints today, and a row with no such move (legacy, or
+  the Validity it prints runs from the day the client received it; a draft
+  prints today, and a row with no such move (legacy, or
   imported straight as sent, whose NULL to sent creation log carries the
   import time) prints its creation date. Its ATTN block prints the
   chosen contact's own email and phone, read by id even once that contact

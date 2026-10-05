@@ -3,7 +3,6 @@ package quotations_test
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -50,7 +49,6 @@ func TestRepo_QueryFailuresPropagate(t *testing.T) {
 		{"update contact", func() error { return r.UpdateContact(ctx, 1, 1, 1) }},
 		{"list revisions", func() error { _, err := r.ListRevisions(ctx, 1); return err }},
 		{"revise", func() error { _, err := r.Revise(ctx, 1, nil, 1); return err }},
-		{"expire due", func() error { _, err := r.ExpireDue(ctx, time.Now()); return err }},
 		{"list requests", func() error { _, err := r.ListItemRequests(ctx, 1); return err }},
 		{"get request", func() error { _, err := r.GetItemRequest(ctx, 1); return err }},
 		{"create request", func() error {

@@ -31,7 +31,7 @@ authenticated `/storage/object` proxy (`internal/storage`), which streams to
 MinIO.
 
 Two background loops run inside the API process: the refresh-token purge and
-the quotation expiry job. Both stop with the server.
+the quotation change listener. Both stop with the server.
 
 ## Backend packages (`apps/api/internal/`)
 
@@ -44,7 +44,7 @@ the quotation expiry job. Both stop with the server.
 | `vendors` | Vendors, logos, items per vendor. |
 | `items` | Product catalog, vendor prices, fuzzy search and request matching, images. |
 | `units`, `countries` | Read-only master data. |
-| `quotations` | Quotation header and lines, status machine, revisions, expiry job, item requests, PDF. |
+| `quotations` | Quotation header and lines, status machine, revisions, item requests, live editing, PDF. |
 | `purchaseorders` | PO lines, file upload, status machine and history, delivery-note PDF. |
 | `invoices` | Invoice lines, status machine and history, payment proof, replacement, Coretax export, PDF. |
 | `dashboard` | Summary, time series and XLSX export, with financial gating. |

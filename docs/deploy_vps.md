@@ -627,10 +627,7 @@ ROLLBACK;
     transition and is recorded in `quotation_status_history`.
   - Still being negotiated: the app has no way back to `sent`, so issue a new
     quotation. If the number chain must continue instead, a DBA can reset the
-    row and revise it in one transaction, so the expiry job never sees it as
-    `sent`. `fn_expire_quotations` dates the window from the last
-    `to_status = 'sent'` history row, so a legacy row left in `sent` would
-    expire on the next tick:
+    row and revise it in one transaction, so it is never left in `sent`:
 
     ```sql
     BEGIN;

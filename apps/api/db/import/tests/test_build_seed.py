@@ -51,7 +51,7 @@ def test_it_writes_the_seed_report_and_vendor_review(
     data = inputs(
         [staged("a.xlsx#S", "Q-1/GNS/I/2026", "2026-10-01", [line(1, 10, 5, vendor="Toko")])]
     )
-    monkeypatch.setattr(build_seed, "build", lambda as_of: build(data, as_of))
+    monkeypatch.setattr(build_seed, "build", lambda: build(data))
     seed, report = sources / "seed.sql", out / "report.md"
     assert build_seed.main(["--seed", str(seed), "--report", str(report)]) == 0
     assert seed.read_text().startswith("-- HISTORICAL IMPORT")

@@ -66,8 +66,6 @@ export function statusHint(status: QuotationStatus): string {
       return "Quotation ini sudah direvisi. Lanjutkan di draf versi terbaru."
     case "accepted":
       return "Quotation disetujui dan PO sudah dibuat. Status tidak dapat diubah lagi."
-    case "expired":
-      return "Masa berlaku quotation sudah habis. Status tidak dapat diubah lagi."
     case "rejected":
     case "cancelled":
       return "Status akhir. Status tidak dapat diubah lagi."

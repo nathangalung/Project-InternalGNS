@@ -96,7 +96,7 @@ export default function DashboardOperational() {
           <StatCard label="Total Purchase Order Aktif" value={fig(formatId(totalPo))} />
         </div>
 
-        <StatusTiles title="Status Quotation" items={summary?.quotationStatuses} slots={7} />
+        <StatusTiles title="Status Quotation" items={summary?.quotationStatuses} slots={6} />
         <StatusTiles title="Status Purchase Order" items={summary?.poStatuses} slots={5} />
 
         <div className={ui.panel}>

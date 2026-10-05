@@ -15,14 +15,14 @@ type StatusTilesProps = {
 // Order and labels come from the API, so a new status needs no web change.
 // Until the summary arrives, slots blank tiles hold the grid's height, so
 // the chart below does not jump when the counts land.
-// Below 360px one column keeps the longest label (Kedaluwarsa) whole.
+// Below 360px one column keeps the longest label whole.
 export default function StatusTiles({ title, items, slots }: StatusTilesProps) {
   const headingId = useId()
   if (items && items.length === 0) return null
   const count = items?.length ?? slots
   const cols =
     count > 5
-      ? "min-[360px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-7"
+      ? "min-[360px]:grid-cols-2 sm:grid-cols-3 2xl:grid-cols-6"
       : "min-[360px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-3">
