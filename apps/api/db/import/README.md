@@ -237,6 +237,12 @@ above Rp 0, a product and unit on every offered line of an accepted
 quotation, and rows per table against the report (master tables the
 carry-over adds to may hold more). It exits 1 on any failure.
 
+`fix_imported_invoices_paid.sql` is a one-off for a database loaded before
+the paid rule: after migration 00100 it marks every imported invoice still
+sent and dated before 2026-09-05 paid through `fn_change_invoice_status`,
+dated as the seed dates it, and prints the counts before and after. It
+holds no data and a second run changes nothing.
+
 ## Usage
 
 The tool runs on Python 3.14 (`.python-version`) and needs uv 0.12.19 or
