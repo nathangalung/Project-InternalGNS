@@ -41,7 +41,7 @@ CREATE VIEW v_po_totals AS (
 
 | Name                                                          | Columns | Comment | Type       |
 | ------------------------------------------------------------- | ------- | ------- | ---------- |
-| [public.purchase_order_items](public.purchase_order_items.md) | 26      |         | BASE TABLE |
+| [public.purchase_order_items](public.purchase_order_items.md) | 27      |         | BASE TABLE |
 
 ## Relations
 

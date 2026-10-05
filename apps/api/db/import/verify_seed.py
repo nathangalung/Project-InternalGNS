@@ -49,7 +49,14 @@ NUMBER_RE = {
 }
 
 # Master tables replace_business_data.sql may carry user rows into.
-CARRIED = ("company_contacts", "vendors", "items", "vendor_products", "item_images")
+CARRIED = (
+    "company_client",
+    "company_contacts",
+    "vendors",
+    "items",
+    "vendor_products",
+    "item_images",
+)
 
 TOTAL_COLS = (
     "total_produk",

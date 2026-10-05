@@ -40,7 +40,7 @@ CREATE VIEW quotation_reconciliation AS (
 
 | Name                                                | Columns | Comment | Type       |
 | --------------------------------------------------- | ------- | ------- | ---------- |
-| [public.quotations](public.quotations.md)           | 27      |         | BASE TABLE |
+| [public.quotations](public.quotations.md)           | 28      |         | BASE TABLE |
 | [public.quotation_items](public.quotation_items.md) | 31      |         | BASE TABLE |
 
 ## Relations
