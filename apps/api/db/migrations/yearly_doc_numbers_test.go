@@ -86,6 +86,7 @@ func (f docFixture) counters() map[string]int {
 	return out
 }
 
+// ptr points at v.
 func ptr[T any](v T) *T { return &v }
 
 // Numbers restart per year.

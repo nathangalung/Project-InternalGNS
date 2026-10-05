@@ -79,7 +79,8 @@ END;
 $function$;
 -- +goose StatementEnd
 
--- Without a row_version bump, so no open edit goes stale.
+-- Keep row_version and updated_at.
+-- No open edit goes stale.
 ALTER TABLE quotations DISABLE TRIGGER trg_quotations_updated_at;
 ALTER TABLE invoices DISABLE TRIGGER trg_invoices_updated_at;
 ALTER TABLE purchase_orders DISABLE TRIGGER trg_purchase_orders_updated_at;
@@ -127,7 +128,7 @@ ALTER TABLE purchase_orders ENABLE TRIGGER trg_purchase_orders_updated_at;
 DROP FUNCTION pg_temp.renumbered(TEXT);
 DROP TABLE doc_renumber;
 
--- One counter per type and year.
+-- Yearly counters.
 DROP TABLE doc_counters;
 CREATE TABLE doc_counters (
   doc_type   VARCHAR(3)  NOT NULL CHECK (doc_type IN ('Q', 'INV', 'DN')),
@@ -140,7 +141,7 @@ CREATE TABLE doc_counters (
 COMMENT ON TABLE doc_counters IS
   'Last running number per document type (Q, INV, DN) and year; fn_next_doc_no takes the next one of the current WIB year under the row lock.';
 
--- Each year resumes after its highest.
+-- Resume after each year's highest.
 INSERT INTO doc_counters (doc_type, year, last_seq)
 SELECT m[1], m[3]::INTEGER, max(m[2]::INTEGER)
 FROM (
@@ -193,7 +194,7 @@ COMMENT ON FUNCTION fn_next_doc_no(character varying) IS
 
 -- +goose Down
 
--- One counter per type again.
+-- Back to one counter.
 -- It resumes above every number of every year and every yearly counter,
 -- so the next number cannot repeat one already issued. The numbers keep
 -- their yearly values; the documented production rollback restores a

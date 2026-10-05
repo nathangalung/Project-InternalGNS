@@ -197,7 +197,7 @@ func thisYear(t *testing.T, ctx context.Context, tx pgx.Tx) int {
 	return year
 }
 
-// A new year starts at 00001.
+// New years start at 00001.
 // The first number of a year creates that year's counter; the counters of
 // other years and other types stay as they are.
 func TestNextDocNo_NewYearStartsAtOne(t *testing.T) {
