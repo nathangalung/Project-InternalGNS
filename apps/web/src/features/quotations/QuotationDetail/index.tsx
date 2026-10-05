@@ -21,6 +21,8 @@ import TransitionModal from "./TransitionModal"
 
 type QuotationDetailProps = {
   quotationNo: string
+  // Number first issued, if imported
+  legacyNo?: string
   quotation: QuotationData
   // Server moves for the saved status
   transitions: QuotationTransition[]
@@ -35,6 +37,7 @@ type QuotationDetailProps = {
 // Quotation detail orchestrator.
 export default function QuotationDetail({
   quotationNo,
+  legacyNo,
   quotation: q,
   transitions,
   canRevise,
@@ -60,6 +63,7 @@ export default function QuotationDetail({
     <div className={ui.pageContent}>
       <Header
         quotationId={quotationNo}
+        legacyNo={legacyNo}
         createdAt={q.createdAt}
         version={q.version}
         status={q.status}

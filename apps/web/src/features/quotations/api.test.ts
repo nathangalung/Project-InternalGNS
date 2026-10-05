@@ -54,8 +54,8 @@ describe("quotations api", () => {
   })
 
   it("names the PDF after a filesystem-safe number", async () => {
-    await api.downloadPdfFile(5, "001/GNS/Q/IX/2026")
-    expect(downloadPdf).toHaveBeenCalledWith("/quotations/5/pdf", "001_GNS_Q_IX_2026.pdf")
+    await api.downloadPdfFile(5, "Q-00011/GNS/X/2026")
+    expect(downloadPdf).toHaveBeenCalledWith("/quotations/5/pdf", "Q-00011_GNS_X_2026.pdf")
   })
 
   it.each<[string, () => Promise<unknown>, Parameters<typeof apiRequest>[0]]>([

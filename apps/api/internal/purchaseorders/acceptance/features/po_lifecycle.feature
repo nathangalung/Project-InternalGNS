@@ -9,11 +9,11 @@ Feature: Purchase order lifecycle
     And the commercial domain is empty
 
   Scenario: Accepted quotation auto-creates a pending PO
-    Given an accepted quotation
+    Given a quotation accepted without a client PO number
     When the user reads the PO by quotation
     Then the response status is 200
     And the PO status is "PENDING"
-    And the PO number is set
+    And the PO has no number
 
   Scenario: Read PO snapshot items
     Given an accepted quotation

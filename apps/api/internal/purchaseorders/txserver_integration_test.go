@@ -131,5 +131,6 @@ func createQuotation(t *testing.T, tx pgx.Tx, req quotations.CreateRequest) (int
 	require.NoError(t, qrepo.ChangeStatus(ctx, qID, "accepted", nil, seedUserID))
 	po, err := purchaseorders.NewRepo(tx, testutil.Store(t)).GetByQuotation(ctx, qID)
 	require.NoError(t, err)
+	testutil.EnterPONumber(t, ctx, tx, po.ID)
 	return qID, po.ID
 }

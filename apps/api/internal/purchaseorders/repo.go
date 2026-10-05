@@ -21,6 +21,7 @@ var (
 	ErrLocked            = errors.New("purchase order locked")
 	ErrVersionMismatch   = errors.New("purchase order version mismatch")
 	ErrDuplicatePoNumber = errors.New("po_number already exists")
+	ErrPoNumberRequired  = errors.New("po_number required once work started")
 )
 
 type Repo struct {
@@ -60,7 +61,19 @@ func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	c := listq.New()
 	if f.Q != "" {
 		p := c.Arg(listq.Contains(f.Q))
-		c.And("(po.po_number ILIKE " + p + " OR q.quotation_no ILIKE " + p + " OR cc.name ILIKE " + p + ")")
+		cond := "po.po_number ILIKE " + p + " OR cc.name ILIKE " + p
+		// 10/2026 finds PO and delivery-note numbers of that month, and
+		// I/2026 skips II/2026. The client's own PO number is free text, so
+		// it also keeps the typed match. The old delivery-note number of a
+		// re-imported PO answers typed text only.
+		if period, ok := listq.Period(f.Q); ok {
+			pp := c.Arg(period)
+			cond += " OR po.po_number ILIKE " + pp + " OR po.delivery_note_number ILIKE " + pp
+		} else {
+			cond += " OR q.quotation_no ILIKE " + p + " OR po.delivery_note_number ILIKE " + p +
+				" OR po.legacy_dn_no ILIKE " + p
+		}
+		c.And("(" + cond + ")")
 	}
 	if len(f.Statuses) > 0 {
 		p := c.Arg(f.Statuses)
@@ -178,9 +191,11 @@ func (r *Repo) UpdateNotes(ctx context.Context, id int64, notes string, actorID 
 }
 
 // UpdateDetails rewrites PO number, date.
-// Both are the client's PO number and date.
+// Both are the client's PO number and date; a blank number stores none.
 // ifMatch nil skips the optimistic-lock guard; a filed invoice locks both
-// fields, which the function reports as ErrLocked.
+// fields, which the function reports as ErrLocked. Clearing the number of
+// a PO in ON_PROGRESS or DELIVERED is ErrPoNumberRequired, the only P0014
+// fn_update_po_details raises.
 func (r *Repo) UpdateDetails(
 	ctx context.Context, id int64, poNumber string, poDate time.Time, actorID int64, ifMatch *int32,
 ) error {
@@ -188,8 +203,13 @@ func (r *Repo) UpdateDetails(
 		id, ifMatch, poNumber, poDate, actorID)
 	if err != nil {
 		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			return ErrDuplicatePoNumber
+		if errors.As(err, &pgErr) {
+			switch pgErr.Code {
+			case "23505":
+				return ErrDuplicatePoNumber
+			case db.SQLStateValidation:
+				return &ruleError{kind: ErrPoNumberRequired, msg: pgErr.Message}
+			}
 		}
 		return classifyPgErr(err)
 	}
@@ -205,14 +225,14 @@ func (r *Repo) ListItems(ctx context.Context, poID int64) ([]PurchaseOrderItem, 
 }
 
 // Completeness lists ON_PROGRESS blockers.
-// Each is a client, vendor or shipping gap.
+// Each is a PO number, client, vendor or shipping gap.
 // An empty slice means the PO may be worked on.
 func (r *Repo) Completeness(ctx context.Context, poID int64) ([]CompletenessIssue, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("purchase_orders.completeness_client"), poID)
 	if err != nil {
 		return nil, fmt.Errorf("query client completeness: %w", err)
 	}
-	client, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[ClientCompleteness])
+	gate, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[gateRow])
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrNotFound
 	}
@@ -238,7 +258,8 @@ func (r *Repo) Completeness(ctx context.Context, poID int64) ([]CompletenessIssu
 		return nil, fmt.Errorf("scan line completeness: %w", err)
 	}
 
-	var issues []CompletenessIssue
+	client := gate.ClientCompleteness
+	issues := poNumberIssues(poID, gate.PoNumber)
 	if missing := missingClientFields(client); len(missing) > 0 {
 		issues = append(issues, recordIssue(KindClient, client.ID, client.Name, missing))
 	}

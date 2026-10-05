@@ -57,6 +57,7 @@ func acceptedQuotationWithVendor(t *testing.T, tx pgx.Tx, companyID int64) int64
 
 	po, err := purchaseorders.NewRepo(tx, testutil.Store(t)).GetByQuotation(ctx, qid)
 	require.NoError(t, err)
+	testutil.EnterPONumber(t, ctx, tx, po.ID)
 	return po.ID
 }
 
@@ -363,9 +364,90 @@ func gapCodes(is purchaseorders.CompletenessIssue) []purchaseorders.GapCode {
 // fieldKey is the legacy key.
 func fieldKey(is purchaseorders.CompletenessIssue) string {
 	scope := map[purchaseorders.IssueKind]string{
-		purchaseorders.KindClient:   "klien",
-		purchaseorders.KindVendor:   "vendor",
-		purchaseorders.KindShipping: "pengiriman",
+		purchaseorders.KindPurchaseOrder: "po",
+		purchaseorders.KindClient:        "klien",
+		purchaseorders.KindVendor:        "vendor",
+		purchaseorders.KindShipping:      "pengiriman",
 	}[is.Kind]
 	return fmt.Sprintf("%s:%d", scope, is.ID)
+}
+
+// The client's number gates work.
+// A numberless PO is refused at ON_PROGRESS with the PO's own gap, and
+// passes once the number is entered.
+func TestHandler_OnProgressGate_NeedsPONumber(t *testing.T) {
+	ctx, tx, srv := txServer(t)
+	_, poID := acceptedQuotationWithBarePO(t, tx)
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+	require.NoError(t, repo.UpdateFile(ctx, poID, ownedPOFile(poID), seedUserID))
+
+	issues, err := repo.Completeness(ctx, poID)
+	require.NoError(t, err)
+	require.Len(t, issues, 1)
+	assert.Equal(t, purchaseorders.CompletenessIssue{
+		Kind: purchaseorders.KindPurchaseOrder, ID: poID, Message: "No. PO klien belum diisi",
+		Missing: []purchaseorders.CompletenessGap{{Code: purchaseorders.GapPoNumber, Label: "No. PO Klien"}},
+	}, issues[0])
+
+	promote := func() *http.Response {
+		return doJSON(t, srv, http.MethodPatch, fmt.Sprintf("/purchase-orders/%d/status", poID),
+			purchaseorders.ChangeStatusRequest{Status: purchaseorders.StatusOnProgress})
+	}
+	res := promote()
+	var p purchaseorders.IncompleteProblem
+	readJSON(t, res, &p)
+	res.Body.Close()
+	require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+	assert.Equal(t, purchaseorders.IncompleteCode, p.Code)
+	assert.Equal(t, map[string]string{fmt.Sprintf("po:%d", poID): "No. PO klien belum diisi"}, p.Fields)
+
+	require.NoError(t, repo.UpdateDetails(ctx, poID, "PO/KLIEN/88", poDateFixture(), seedUserID, nil))
+	res = promote()
+	res.Body.Close()
+	require.Equal(t, http.StatusNoContent, res.StatusCode)
+}
+
+// Delivery checks the number again.
+// The details edit refuses clearing it in work, so only a write around the
+// functions can drop it; the gate still names it.
+func TestHandler_DeliveredGate_NeedsPONumber(t *testing.T) {
+	ctx, tx, srv := txServer(t)
+	_, poID := poAt(t, tx, purchaseorders.StatusOnProgress)
+	_, err := tx.Exec(ctx, `UPDATE purchase_orders SET po_number = NULL WHERE id = $1`, poID)
+	require.NoError(t, err)
+
+	res := doJSON(t, srv, http.MethodPatch, fmt.Sprintf("/purchase-orders/%d/status", poID),
+		purchaseorders.ChangeStatusRequest{Status: purchaseorders.StatusDelivered})
+	defer res.Body.Close()
+	require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+	var p purchaseorders.IncompleteProblem
+	readJSON(t, res, &p)
+	require.Len(t, p.Issues, 1)
+	assert.Equal(t, purchaseorders.KindPurchaseOrder, p.Issues[0].Kind)
+}
+
+// The database holds the rule.
+// fn_change_po_status refuses work on a numberless PO even without the
+// handler's gate.
+func TestRepo_Transition_NeedsPONumber(t *testing.T) {
+	tests := []struct {
+		name   string
+		from   purchaseorders.Status
+		target purchaseorders.Status
+	}{
+		{"on progress", purchaseorders.StatusUploaded, purchaseorders.StatusOnProgress},
+		{"delivered", purchaseorders.StatusOnProgress, purchaseorders.StatusDelivered},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, tx := testutil.BeginTx(t)
+			_, poID := poAt(t, tx, tc.from)
+			_, err := tx.Exec(ctx, `UPDATE purchase_orders SET po_number = NULL WHERE id = $1`, poID)
+			require.NoError(t, err)
+
+			err = purchaseorders.NewRepo(tx, testutil.Store(t)).Transition(ctx, poID, tc.target, "", seedUserID)
+			require.ErrorIs(t, err, purchaseorders.ErrInvalidTransition)
+			assert.EqualError(t, err, "No. PO klien belum diisi. Isi No. PO terlebih dahulu.")
+		})
+	}
 }

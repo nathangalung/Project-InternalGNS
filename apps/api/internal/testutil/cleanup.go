@@ -21,7 +21,6 @@ var cleanupPlan = []struct {
 	}},
 	{"company_client", []string{
 		`DELETE FROM company_contacts WHERE company_id = ANY($1)`,
-		`DELETE FROM doc_sequences WHERE company_id = ANY($1)`,
 		`DELETE FROM company_client WHERE id = ANY($1)`,
 	}},
 	{"items", []string{

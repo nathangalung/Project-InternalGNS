@@ -28,7 +28,16 @@ var testPOFile = purchaseorders.UpdateFileRequest{
 }
 
 // Accept quotation, return PO.
+// The client's PO number is entered, as work requires.
 func acceptedQuotationWithPO(t *testing.T, tx pgx.Tx) (int64, int64) {
+	t.Helper()
+	qid, poID := acceptedQuotationWithBarePO(t, tx)
+	testutil.EnterPONumber(t, context.Background(), tx, poID)
+	return qid, poID
+}
+
+// Accept quotation, PO numberless.
+func acceptedQuotationWithBarePO(t *testing.T, tx pgx.Tx) (int64, int64) {
 	t.Helper()
 	ctx := context.Background()
 	qrepo := quotations.NewRepo(tx, testutil.Store(t))

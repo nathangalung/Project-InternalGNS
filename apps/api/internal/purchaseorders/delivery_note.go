@@ -137,7 +137,7 @@ func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, d
 
 	return dnData{
 		DeliveryNoteNo: pdfgen.LatexEscape(dnNo),
-		PONo:           pdfgen.LatexEscape(po.PoNumber),
+		PONo:           pdfgen.LatexEscape(pdfgen.StrDeref(po.PoNumber)),
 		PODate:         po.PoDate.In(tz.Jakarta()).Format("2 January 2006"),
 		CompanyName:    pdfgen.LatexBreakable(po.CompanyName),
 		CompanyAddress: pdfgen.LatexBreakable(pdfgen.StrDeref(client.Address)),

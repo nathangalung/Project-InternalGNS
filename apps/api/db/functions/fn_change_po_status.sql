@@ -1,4 +1,4 @@
--- Canonical current body of fn_change_po_status (deployed by migration 00087).
+-- Canonical current body of fn_change_po_status (deployed by migration 00098).
 CREATE OR REPLACE FUNCTION public.fn_change_po_status(p_po_id bigint, p_new_status text, p_user_id bigint, p_note text DEFAULT NULL::text)
  RETURNS void
  LANGUAGE plpgsql
@@ -6,14 +6,14 @@ AS $function$
 DECLARE
   v_old        TEXT;
   v_ok         BOOLEAN;
-  v_company_id BIGINT;
+  v_po_number  TEXT;
   v_dn_current TEXT;
   v_file       TEXT;
   v_dn         TEXT;
   v_note       TEXT := NULLIF(BTRIM(p_note), '');
 BEGIN
-  SELECT status, company_client_id, delivery_note_number, file_url
-    INTO v_old, v_company_id, v_dn_current, v_file
+  SELECT status, po_number, delivery_note_number, file_url
+    INTO v_old, v_po_number, v_dn_current, v_file
     FROM purchase_orders WHERE id = p_po_id FOR UPDATE;
 
   IF v_old IS NULL THEN
@@ -59,6 +59,12 @@ BEGIN
       USING ERRCODE = 'P0012';
   END IF;
 
+  -- Work needs the client's PO number.
+  IF p_new_status IN ('ON_PROGRESS', 'DELIVERED') AND v_po_number IS NULL THEN
+    RAISE EXCEPTION 'No. PO klien belum diisi. Isi No. PO terlebih dahulu.'
+      USING ERRCODE = 'P0012';
+  END IF;
+
   -- Work needs a priced product.
   IF p_new_status IN ('ON_PROGRESS', 'DELIVERED') AND (
     NOT EXISTS (
@@ -85,7 +91,7 @@ BEGIN
   END IF;
 
   IF p_new_status IN ('ON_PROGRESS', 'DELIVERED') AND v_dn_current IS NULL THEN
-    v_dn := fn_next_doc_no('DN', v_company_id);
+    v_dn := fn_next_doc_no('DN');
   END IF;
 
   UPDATE purchase_orders

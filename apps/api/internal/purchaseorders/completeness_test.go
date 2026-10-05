@@ -169,6 +169,28 @@ func TestIncompleteProblem(t *testing.T) {
 }
 
 // One gap for the PO's address.
+func TestPoNumberIssues(t *testing.T) {
+	gap := []CompletenessIssue{{
+		Kind: KindPurchaseOrder, ID: 9, Message: "No. PO klien belum diisi",
+		Missing: []CompletenessGap{{Code: GapPoNumber, Label: "No. PO Klien"}},
+	}}
+	cases := []struct {
+		name   string
+		number *string
+		want   []CompletenessIssue
+	}{
+		{name: "entered", number: s("PO/KLIEN/1")},
+		{name: "none", want: gap},
+		{name: "blank", number: s("  "), want: gap},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, poNumberIssues(9, tc.number))
+		})
+	}
+	assert.Equal(t, map[string]string{"po:9": "No. PO klien belum diisi"}, completenessFields(gap))
+}
+
 func TestShippingIssues(t *testing.T) {
 	product := func(dest *string) LineCompleteness {
 		return LineCompleteness{ItemType: "product", ShipDestination: dest}

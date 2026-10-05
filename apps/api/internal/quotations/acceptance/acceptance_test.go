@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -168,22 +169,20 @@ const (
 	docNoClientB int64 = 9100002
 )
 
-func (s *scenarioState) seedNumberedClient(id int64, number string, seq int) error {
-	pool := testutil.Pool(s.t)
-	ctx := context.Background()
-	if _, err := pool.Exec(ctx,
+func (s *scenarioState) seedNumberedClient(id int64, number string) error {
+	_, err := testutil.Pool(s.t).Exec(context.Background(),
 		`INSERT INTO company_client (id, number, name, country_code, created_by, updated_by)
-		 VALUES ($1, $2, $3, 'IDN', 1, 1)`, id, number, "Fixture "+number); err != nil {
+		 VALUES ($1, $2, $3, 'IDN', 1, 1)`, id, number, "Fixture "+number)
+	return err
+}
+
+// seedTwoClients writes both fixtures.
+func (s *scenarioState) seedTwoClients(a, b string) error {
+	s.dropNumberedClients()
+	if err := s.seedNumberedClient(docNoClientA, a); err != nil {
 		return err
 	}
-	if seq > 0 {
-		if _, err := pool.Exec(ctx,
-			`INSERT INTO doc_sequences (doc_type, company_id, year, last_seq, updated_at)
-			 VALUES ('Q', $1, EXTRACT(YEAR FROM NOW())::INT, $2, NOW())`, id, seq); err != nil {
-			return err
-		}
-	}
-	return nil
+	return s.seedNumberedClient(docNoClientB, b)
 }
 
 func (s *scenarioState) dropNumberedClients() {
@@ -195,7 +194,6 @@ func (s *scenarioState) dropNumberedClients() {
 		_, _ = pool.Exec(ctx, `DELETE FROM quotation_status_history WHERE quotation_id IN
 			(SELECT id FROM quotations WHERE company_client_id = $1)`, id)
 		_, _ = pool.Exec(ctx, `DELETE FROM quotations WHERE company_client_id = $1`, id)
-		_, _ = pool.Exec(ctx, `DELETE FROM doc_sequences WHERE company_id = $1`, id)
 		_, _ = pool.Exec(ctx, `DELETE FROM company_client WHERE id = $1`, id)
 	}
 }
@@ -232,9 +230,21 @@ func (s *scenarioState) createForBothClients() error {
 	return nil
 }
 
-func (s *scenarioState) docNosDiffer() error {
-	if s.docNos[0] == s.docNos[1] {
-		return fmt.Errorf("both clients got quotation number %s", s.docNos[0])
+// quotationSeq reads the count.
+var quotationSeq = regexp.MustCompile(`^Q-([0-9]{5,})/GNS/[IVX]+/[0-9]{4}$`)
+
+// Second number follows first.
+func (s *scenarioState) docNosFollow() error {
+	var seqs [2]int
+	for i, no := range s.docNos {
+		m := quotationSeq.FindStringSubmatch(no)
+		if m == nil {
+			return fmt.Errorf("%q is not a quotation number", no)
+		}
+		seqs[i], _ = strconv.Atoi(m[1])
+	}
+	if seqs[1] != seqs[0]+1 {
+		return fmt.Errorf("want %s to follow %s", s.docNos[1], s.docNos[0])
 	}
 	return nil
 }
@@ -372,15 +382,9 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		sc.Step(`^the user creates a quotation with status "([^"]+)"$`, state.createWithStatus)
 		sc.Step(`^the user creates a quotation with a zero quantity product line$`, state.createZeroQtyQuotation)
 		sc.Step(`^no quotation was stored$`, state.noQuotationStored)
-		sc.Step(`^a client numbered "([^"]+)" already on quotation sequence (\d+)$`, func(number string, seq int) error {
-			state.dropNumberedClients()
-			return state.seedNumberedClient(docNoClientA, number, seq)
-		})
-		sc.Step(`^a client numbered "([^"]+)"$`, func(number string) error {
-			return state.seedNumberedClient(docNoClientB, number, 0)
-		})
+		sc.Step(`^two clients numbered "([^"]+)" and "([^"]+)"$`, state.seedTwoClients)
 		sc.Step(`^the user creates one quotation for each of those clients$`, state.createForBothClients)
-		sc.Step(`^the two quotation numbers differ$`, state.docNosDiffer)
+		sc.Step(`^the second quotation number follows the first$`, state.docNosFollow)
 		sc.Step(`^the response status is (\d+)$`, state.statusEquals)
 		sc.Step(`^the response contains a quotation id$`, state.responseHasID)
 		sc.Step(`^an existing draft quotation$`, state.seedDraft)

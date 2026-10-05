@@ -5,7 +5,7 @@ GROUP BY status
 ORDER BY status;
 
 -- name: quotations.get_header
-SELECT id, quotation_no, version, company_client_id, company_client_name,
+SELECT id, quotation_no, legacy_no, version, company_client_id, company_client_name,
        contact_id, contact_name, client_ref_no, vessel_name, status,
        payment_terms, validity_days,
        discount_pct::text, total_produk::text, total::text, total_discount::text,
@@ -44,6 +44,7 @@ ORDER BY changed_at, id;
 SELECT
     q.id,
     q.quotation_no,
+    q.legacy_no,
     q.version,
     q.company_client_id,
     q.company_client_name AS company_name,

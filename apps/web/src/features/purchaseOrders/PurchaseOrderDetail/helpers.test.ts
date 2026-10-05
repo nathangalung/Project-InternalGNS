@@ -13,11 +13,16 @@ import {
   PO_CONFLICT_MESSAGE,
   PO_LABEL,
   PO_LOCKED_CODE,
+  PO_NUMBER_MISSING,
+  PO_NUMBER_REQUIRED_MESSAGE,
   PO_STATUS_CONFIG,
   PO_STATUS_ORDER,
   poBreakdown,
+  poDetailsErrors,
   poEditLockReason,
   poErrorMessage,
+  poNumberRequired,
+  poRef,
   shortDocNo,
   uploadRules,
 } from "./helpers"
@@ -254,10 +259,57 @@ describe("completenessIssues", () => {
 
 describe("shortDocNo", () => {
   it.each<[string, string]>([
-    ["001/GNS/Q/IX/2026", "001…"],
+    ["Q-00011/GNS/X/2026", "Q-00011…"],
     ["PO-77", "PO-77"],
     ["/GNS", "…"],
   ])("%s -> %s", (no, want) => {
     expect(shortDocNo(no)).toBe(want)
+  })
+})
+
+describe("PO number", () => {
+  it("names a PO by its number, else by its quotation", () => {
+    expect(poRef({ poNumber: "PO/KLIEN/7", quotationNo: "Q-00011/GNS/X/2026" })).toBe("PO/KLIEN/7")
+    expect(poRef({ quotationNo: "Q-00011/GNS/X/2026" })).toBe("PO dari Q-00011/GNS/X/2026")
+    expect(PO_NUMBER_MISSING).toBe("Belum ada No. PO")
+  })
+
+  // Mirrors fn_update_po_details.
+  it.each<[PurchaseOrderRow["status"], boolean]>([
+    ["PENDING", false],
+    ["UPLOADED", false],
+    ["ON_PROGRESS", true],
+    ["DELIVERED", true],
+    ["CANCELLED", false],
+  ])("%s requires the number: %s", (status, want) => {
+    expect(poNumberRequired(status)).toBe(want)
+  })
+
+  it("puts a details refusal on its fields", () => {
+    const err = new ApiError(
+      422,
+      problem(422, {
+        fields: {
+          poNumber: PO_NUMBER_REQUIRED_MESSAGE,
+          poDate: "Tanggal PO harus berformat YYYY-MM-DD.",
+          other: "x",
+        },
+      }),
+      "Unprocessable",
+    )
+    expect(poDetailsErrors(err)).toEqual({
+      fields: {
+        poNumber: PO_NUMBER_REQUIRED_MESSAGE,
+        poDate: "Tanggal PO harus berformat YYYY-MM-DD.",
+      },
+      banner: "x",
+    })
+  })
+
+  it.each<[string, unknown]>([
+    ["a conflict", new ApiError(409, problem(409), "Conflict")],
+    ["a plain error", new Error("boom")],
+  ])("leaves %s to the toast", (_name, err) => {
+    expect(poDetailsErrors(err)).toBeNull()
   })
 })

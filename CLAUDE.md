@@ -90,7 +90,9 @@ make dev            # Postgres, MinIO, API (:8080), and the SPA (:5174)
 make web            # Vite dev server only (:5174)
 make stack-up       # Postgres, MinIO, pgweb, and API in Docker
 make stack-down     # Stop the Docker stack
-make seed-dev       # Migrate, then load master and historical data (dev only)
+make seed-dev       # Migrate, build the historical seed, load it with the master data (dev only)
+make reimport-dev   # Replace business data with the historical seed, then verify (dev only)
+make seed-build     # Rebuild the historical seed from Data/ and db/import/local/
 make db-ui          # pgweb database browser (:8081)
 make test           # Go tests, web typecheck, and Vitest
 make test-api       # Go tests on a throwaway database, as CI runs them
@@ -147,7 +149,7 @@ db/
   migrations/       Goose SQL migrations
   queries/          Embedded, hand-written SQL parsed by Load()
   functions/        Canonical current body of every plpgsql/sql function
-  seeds/            Master data and the historical import
+  seeds/            Master data; the historical seed is built, never committed
   import/           Excel-to-seed tool (uv)
 ```
 
@@ -185,6 +187,27 @@ carries `allowedTransitions` (`to`, `label`, `requiresNote`), and the web
 renders exactly those moves; it keeps no transition map of its own. A refused
 move is a 422 with Indonesian detail text. Every move writes a row to that
 document's status history table.
+
+Quotation, invoice and delivery-note numbers are one running number per
+document type that never resets, five digits wide and growing past 99999,
+then the Roman month and year of the WIB issue date: `Q-00011/GNS/X/2026`,
+`INV-00007/GNS/X/2026`, `DN-00007/GNS/X/2026`. `fn_next_doc_no(type)` takes
+the next value from that type's `doc_counters` row under its row lock, so
+concurrent callers queue and a rolled-back document leaves no gap; it is
+never a SEQUENCE. A revision keeps its base number with `Rev.n`, and a
+Pengganti draws a new invoice number. Numbers issued before 00098 keep their
+legacy format (year, client number and a yearly count). A re-imported
+document also keeps the number it was first issued under in `legacy_no`
+(quotations, invoices) or `legacy_dn_no` (the PO's original DO): only the
+import writes it (00099), the list searches match it as typed text but never
+as a period, and the detail pages show it muted as No. lama. A purchase order's
+number is the client's own PO number: accepting a quotation leaves
+`po_number` NULL until a user enters it (blank means none), ON_PROGRESS and
+DELIVERED require it (a `po_number` gap on the PO in the completeness gate,
+and `fn_change_po_status` refuses it too), and a PO in either state cannot
+clear it (`fn_update_po_details`, a 422 on `poNumber`). It is unique per
+client (`uq_purchase_orders_client_po_number`), not globally, and the web
+shows a missing one as Belum ada No. PO.
 
 - Quotation: draft, sent, revision, accepted, rejected, cancelled, expired.
   Draft goes to sent or cancelled; sent to accepted, rejected or cancelled;
@@ -237,7 +260,8 @@ document's status history table.
   imported straight as sent, whose NULL to sent creation log carries the
   import time) prints its creation date. Its ATTN block prints the
   chosen contact's own email and phone, read by id even once that contact
-  is deactivated, and none when the quotation has no contact.
+  is deactivated, and none when the quotation has no contact. Its DELIVERY
+  PLACE prints the shipping line's address, else the vessel.
   A saved draft is edited live, by several users at once, one part each.
   The parts are the header (contact, client reference, shipping, terms,
   discount) and each line (`line:<id>`); `POST /quotations/{id}/locks`
@@ -289,10 +313,10 @@ document's status history table.
   (`fn_update_po_items`) refuses otherwise, and so do ON_PROGRESS and
   DELIVERED, so no Rp 0 invoice is issued. A qty 0 line stays allowed, but
   ON_PROGRESS and DELIVERED need one product line with a quantity. Both
-  moves also pass the completeness gate (client, vendor and shipping-address
-  data), a 422 `po_incomplete`; delivery runs it again, since ON_PROGRESS
-  edits and client edits can reopen a gap. Each PO line stores its own
-  supplier (`vendor_product_id`), copied from the quotation line only when
+  moves also pass the completeness gate (the client's PO number, client,
+  vendor and shipping-address data), a 422 `po_incomplete`; delivery runs it
+  again, since ON_PROGRESS edits and client edits can reopen a gap. Each PO
+  line stores its own supplier (`vendor_product_id`), copied from the quotation line only when
   that link is for the line's product, and the items list and the gate
   read it from the PO line. The line edit takes `vendorProductId` (a link
   for the line's product) or `vendorId`, and refuses a `quotationItemId`
@@ -327,9 +351,9 @@ Status labels are Indonesian and come from the API (`StatusLabel` in each
 package); `src/lib/status.ts` mirrors them for fields that carry only the key.
 
 Clients get a four-digit number from the server. A blank number on create is
-filled by `fn_next_client_number`; a typed one must be four digits and unused,
-and it is locked once a quotation uses it, because every document number
-embeds it.
+filled by `fn_next_client_number`; a typed one must be four digits and unused.
+It stays editable after quotations use it, since no document number embeds
+it.
 
 A client's NPWP follows one rule, `validate.ClientNPWP`, mirrored by
 `optionalNpwpError` in the web: an Indonesian client (country IDN or blank)
@@ -433,6 +457,15 @@ through `clampPage` in `lib/pagination.ts`, and every pager renders
 defaults), and every list's empty row goes through `emptyListText`
 (`lib/list-empty.ts`), so a search or filter with no match says
 `Tidak ada hasil untuk …` instead of the list's own "Belum ada …".
+The quotation, PO and invoice lists read a search of a month and year
+(`10/2026`, `X/2026`, `x / 2026`) as that period: `listq.Period` turns it into
+the slash-anchored pattern `%/X/2026%`, which each list's own generated
+numbers match instead of the typed text (the quotation number on Quotation,
+the invoice number on Invoice, the delivery-note number on PO), so `I/2026`
+never lists `II/2026`. The client's own PO number matches both the typed text
+and the period pattern; names always match the typed text, and the quotation
+number on the invoice and PO lists matches it only when the query is not a
+period.
 Every list shows what narrows it as chips (`components/shared/ActiveFilters`);
 the master-data lists build them with `filterChips` (`lib/filter-chips.ts`),
 and every chip removes only its own filter.
@@ -581,6 +614,12 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
 
 - Python (only the `apps/api/db/import` tool) runs through `uv`; never call
   python, python3, pip, or pip3 directly.
+- The repository is public, so business data never enters git: `Data/`, the
+  import's `out/`, its hand-made decisions in `local/`, its real-file tests
+  in `tests_local/` and `db/seeds/03_historical.sql` are gitignored and live
+  only on the operator's machine. `make seed-dev`, `reimport-dev` and
+  `seed-build` stop and list what is missing without them. Tracked tests use
+  invented numbers, contacts and amounts, never values from `Data/`.
 - The JavaScript toolchain uses `bun` and `bunx`, not npm or npx.
 - Comments are in English. Section, function, and class header comments stay
   within five words. No emoji and no decorative separator lines.

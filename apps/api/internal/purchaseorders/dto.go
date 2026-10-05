@@ -13,8 +13,10 @@ const (
 )
 
 type PurchaseOrder struct {
-	ID                int64      `db:"id"                  json:"id"`
-	PoNumber          string     `db:"po_number"           json:"poNumber"`
+	ID int64 `db:"id"                  json:"id"`
+	// The client's own PO number.
+	// Nil until a user enters it; ON_PROGRESS and DELIVERED require it.
+	PoNumber          *string    `db:"po_number"           json:"poNumber,omitempty"`
 	QuotationID       int64      `db:"quotation_id"        json:"quotationId"`
 	QuotationNo       string     `db:"quotation_no"        json:"quotationNo"`
 	CompanyClientID   int64      `db:"company_client_id"   json:"companyClientId"`
@@ -49,6 +51,9 @@ type PurchaseOrder struct {
 	// Day the number issued, WIB.
 	// Nil before ON_PROGRESS and on legacy rows with no status history.
 	DeliveryNoteDate *time.Time `db:"delivery_note_date" json:"deliveryNoteDate,omitempty"`
+	// Delivery note first issued.
+	// The number on the original DO, set by a re-import only.
+	LegacyDnNo *string `db:"legacy_dn_no" json:"legacyDnNo,omitempty"`
 	// Invoice issued at DELIVERED.
 	// A live one wins over a cancelled one; nil before delivery.
 	InvoiceNo *string `db:"invoice_no" json:"invoiceNo,omitempty"`

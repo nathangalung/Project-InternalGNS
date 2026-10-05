@@ -34,12 +34,11 @@ func TestHandler_UpdateDetails(t *testing.T) {
 		{name: "bad id", id: "abc", poNumber: "PO/1", poDate: "2026-01-15", want: http.StatusBadRequest},
 		{name: "malformed If-Match", poNumber: "PO/1", poDate: "2026-01-15", ifMatch: "abc", want: http.StatusBadRequest},
 		{name: "bad json", raw: "{", want: http.StatusBadRequest},
-		{name: "blank number", poNumber: "  ", poDate: "2026-01-15",
-			want: http.StatusUnprocessableEntity, wantField: "poNumber", wantMsg: "required"},
+		{name: "blank number clears it before work", poNumber: "  ", poDate: "2026-01-15", want: http.StatusNoContent},
 		{name: "impossible date", poNumber: "PO/1", poDate: "2026-13-45",
-			want: http.StatusUnprocessableEntity, wantField: "poDate", wantMsg: "YYYY-MM-DD"},
+			want: http.StatusUnprocessableEntity, wantField: "poDate", wantMsg: "Tanggal PO harus berformat YYYY-MM-DD."},
 		{name: "date with time", poNumber: "PO/1", poDate: "2026-01-15T00:00:00Z",
-			want: http.StatusUnprocessableEntity, wantField: "poDate", wantMsg: "YYYY-MM-DD"},
+			want: http.StatusUnprocessableEntity, wantField: "poDate", wantMsg: "Tanggal PO harus berformat YYYY-MM-DD."},
 		{name: "unknown PO", id: "99999999", poNumber: "PO/1", poDate: "2026-01-15", want: http.StatusNotFound},
 		{name: "stale If-Match", poNumber: "PO/1", poDate: "2026-01-15", ifMatch: "stale", want: http.StatusConflict},
 		{name: "fifty multibyte characters fit", poNumber: fiftyRunes, poDate: "2026-01-15", want: http.StatusNoContent},
@@ -102,9 +101,107 @@ func TestHandler_UpdateDetails_Persists(t *testing.T) {
 
 	after, err := repo.GetByID(ctx, poID)
 	require.NoError(t, err)
-	assert.Equal(t, "PO/KLIEN/77", after.PoNumber)
+	require.NotNil(t, after.PoNumber)
+	assert.Equal(t, "PO/KLIEN/77", *after.PoNumber)
 	assert.Equal(t, "2026-02-03", after.PoDate.Format(time.DateOnly))
 	assert.Greater(t, after.RowVersion, before.RowVersion)
+}
+
+// Accepting leaves the number empty.
+// A PO's number is the client's own, entered later.
+func TestRepo_AcceptedPOHasNoNumber(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, poID := acceptedQuotationWithBarePO(t, tx)
+	po, err := purchaseorders.NewRepo(tx, testutil.Store(t)).GetByID(ctx, poID)
+	require.NoError(t, err)
+	assert.Nil(t, po.PoNumber)
+}
+
+// Blank stores none, trimmed otherwise.
+// Clearing is refused once work has started.
+func TestRepo_UpdateDetails_NumberRule(t *testing.T) {
+	tests := []struct {
+		name    string
+		status  purchaseorders.Status
+		number  string
+		want    *string
+		wantErr bool
+	}{
+		{"pending trims", purchaseorders.StatusPending, "  PO/K/1  ", strPtr("PO/K/1"), false},
+		{"pending clears", purchaseorders.StatusPending, "   ", nil, false},
+		{"uploaded clears", purchaseorders.StatusUploaded, "", nil, false},
+		{"on progress keeps a number", purchaseorders.StatusOnProgress, "PO/K/2", strPtr("PO/K/2"), false},
+		{"on progress refuses clearing", purchaseorders.StatusOnProgress, "  ", nil, true},
+		{"delivered refuses clearing", purchaseorders.StatusDelivered, "", nil, true},
+		{"cancelled clears", purchaseorders.StatusCancelled, "", nil, false},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, tx := testutil.BeginTx(t)
+			_, poID := poAt(t, tx, tc.status)
+			repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+			before, err := repo.GetByID(ctx, poID)
+			require.NoError(t, err)
+
+			// A savepoint keeps the refused write from aborting the test tx.
+			sp, err := tx.Begin(ctx)
+			require.NoError(t, err)
+			err = purchaseorders.NewRepo(sp, testutil.Store(t)).
+				UpdateDetails(ctx, poID, tc.number, poDateFixture(), seedUserID, nil)
+			if err != nil {
+				require.NoError(t, sp.Rollback(ctx))
+			} else {
+				require.NoError(t, sp.Commit(ctx))
+			}
+			after, rerr := repo.GetByID(ctx, poID)
+			require.NoError(t, rerr)
+			if tc.wantErr {
+				require.ErrorIs(t, err, purchaseorders.ErrPoNumberRequired)
+				assert.EqualError(t, err,
+					"No. PO klien wajib diisi untuk PO yang sudah Dalam Progres atau Dikirim.")
+				assert.Equal(t, before.PoNumber, after.PoNumber, "the number stays")
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, after.PoNumber)
+		})
+	}
+}
+
+// Clearing in work refused.
+func TestHandler_UpdateDetails_ClearInWork(t *testing.T) {
+	_, tx, srv := txServer(t)
+	_, poID := poAt(t, tx, purchaseorders.StatusOnProgress)
+
+	res := doJSON(t, srv, http.MethodPatch, fmt.Sprintf("/purchase-orders/%d/details", poID),
+		purchaseorders.UpdateDetailsRequest{PoNumber: " ", PoDate: "2026-01-15"})
+	defer res.Body.Close()
+	require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+	assert.Equal(t, "No. PO klien wajib diisi untuk PO yang sudah Dalam Progres atau Dikirim.",
+		readProblem(t, res).Fields["poNumber"])
+}
+
+// Numberless POs share a client.
+// The per-client unique index leaves NULLs distinct.
+func TestRepo_NumberlessPOsOfOneClient(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, first := acceptedQuotationWithBarePO(t, tx)
+	_, second := acceptedQuotationWithBarePO(t, tx)
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+	for _, id := range []int64{first, second} {
+		po, err := repo.GetByID(ctx, id)
+		require.NoError(t, err)
+		assert.Nil(t, po.PoNumber)
+		assert.Equal(t, seedCompanyID, po.CompanyClientID)
+	}
+}
+
+// Blank numbers never stored.
+func TestPurchaseOrders_BlankNumberRefused(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, poID := acceptedQuotationWithBarePO(t, tx)
+	_, err := tx.Exec(ctx, `UPDATE purchase_orders SET po_number = '  ' WHERE id = $1`, poID)
+	require.ErrorContains(t, err, "purchase_orders_po_number_not_blank")
 }
 
 // Duplicates are field errors.

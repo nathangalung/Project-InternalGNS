@@ -14,7 +14,7 @@ import { expect, test } from "./support/seed"
 // mixes them up lands on the wrong row.
 async function acceptedPo(
   seed: SalesSeed,
-  opts: { client?: SeedClient; discountPct?: number } = {},
+  opts: { client?: SeedClient; discountPct?: number; poNumber?: string | null } = {},
 ) {
   const client = opts.client ?? (await seed.client())
   const vendor = await seed.vendor()
@@ -22,7 +22,7 @@ async function acceptedPo(
   const lines = [{ item, qty: 3, price: 100_000, cost: 60_000 }]
   await seed.quotation({ client, lines })
   const q = await seed.quotation({ client, lines, discountPct: opts.discountPct })
-  const po = await seed.accept(q.id)
+  const po = await seed.accept(q.id, { poNumber: opts.poNumber })
   expect(po.id).not.toBe(q.id)
   return { client, vendor, item, q, po }
 }
@@ -36,14 +36,18 @@ async function choosePoStatus(page: Page, current: string, next: string): Promis
 
 test.describe("purchase order detail", () => {
   test("links, client card and totals come from the PO", async ({ page, seed }) => {
-    const { client, q, po } = await acceptedPo(seed, { discountPct: 10 })
+    // A client number with slashes shows whole.
+    const { client, q, po } = await acceptedPo(seed, {
+      discountPct: 10,
+      poNumber: `${seed.prefix}/PO/KLIEN/07`,
+    })
 
     await page.goto("/purchase-orders")
     await page.getByPlaceholder("Cari purchase order, klien, atau nomor...").fill(seed.prefix)
     const row = page.getByRole("row", { name: new RegExp(client.name) })
     await expect(row).toHaveCount(1)
     // Both PO routes are keyed by the quotation id.
-    const poLink = row.getByRole("link", { name: /^PO-/ })
+    const poLink = row.getByRole("link", { name: po.poNumber ?? "", exact: true })
     await expect(poLink).toHaveAttribute("href", `/purchase-orders/${q.id}`)
     await expect(row.getByRole("link", { name: client.name })).toHaveAttribute(
       "href",
@@ -201,16 +205,20 @@ test.describe("purchase order file", () => {
     page,
     seed,
   }) => {
-    const { q } = await acceptedPo(seed)
+    const { q } = await acceptedPo(seed, { poNumber: null })
     const clientPo = `${seed.prefix}-PO-KLIEN`
 
     await page.goto(`/purchase-orders/${q.id}`)
     await expect(page.getByRole("button", { name: "Pending", exact: true })).toBeVisible()
+    // An accepted quotation leaves the client's number to be entered.
+    await expect(
+      page.getByRole("heading", { name: "Purchase Order Belum ada No. PO" }),
+    ).toBeVisible()
     await page.getByRole("button", { name: "Unggah Berkas" }).click()
     const modal = page.getByRole("dialog", { name: /Upload Berkas Purchase Order/ })
     const upload = modal.getByRole("button", { name: "Upload" })
     await expect(upload).toBeDisabled()
-    await modal.getByLabel("Nomor PO *").fill(clientPo)
+    await modal.getByLabel("Nomor PO").fill(clientPo)
     await modal.locator('input[type="file"]').setInputFiles(pdfFile("po-klien.pdf"))
     await upload.click()
     await expect(modal).toBeHidden()
@@ -261,6 +269,38 @@ test.describe("purchase order status", () => {
     await modal.getByRole("button", { name: "Mengerti" }).click()
     await expect(modal).toBeHidden()
     expect((await seed.poByQuotation(q.id)).status).toBe("UPLOADED")
+  })
+
+  test("Dalam Progres asks for the client's PO number and its link opens the form", async ({
+    page,
+    seed,
+  }) => {
+    const { q, po } = await acceptedPo(seed, { poNumber: null })
+    await seed.attachPoFile(po)
+    const clientPo = `${seed.prefix}-PO-77`
+
+    await page.goto(`/purchase-orders/${q.id}`)
+    await choosePoStatus(page, "PO Diunggah", "Dalam Progres")
+    const gate = page.getByRole("dialog", { name: "Data Belum Lengkap" })
+    await expect(
+      gate.getByRole("listitem").getByText("No. PO Klien", { exact: true }),
+    ).toBeVisible()
+    await gate.getByRole("button", { name: "Isi No. PO" }).click()
+    await expect(gate).toBeHidden()
+
+    const details = page.getByRole("dialog", { name: /Ubah Detail Purchase Order/ })
+    await details.getByLabel("Nomor PO").fill(clientPo)
+    await details.getByRole("button", { name: "Simpan", exact: true }).click()
+    await expect(details).toBeHidden()
+    await expect(page.getByRole("heading", { name: `Purchase Order ${clientPo}` })).toBeVisible()
+
+    // The refused move is still picked; saving it now passes the gate.
+    await expect(page.getByRole("button", { name: "Dalam Progres", exact: true })).toBeVisible()
+    await page.getByRole("button", { name: "Simpan Data" }).click()
+    await expect(page).toHaveURL(/\/purchase-orders$/)
+    const saved = await seed.poByQuotation(q.id)
+    expect(saved.status).toBe("ON_PROGRESS")
+    expect(saved.poNumber).toBe(clientPo)
   })
 
   test("Dikirim is refused when client data emptied after Dalam Progres", async ({
@@ -495,7 +535,7 @@ test.describe("purchase order list", () => {
     await filter.getByRole("button", { name: "Terapkan" }).click()
     await expect(rows).toHaveCount(1)
     await expect(rows).toContainText("Dibatalkan")
-    await expect(rows.getByRole("link", { name: /^PO-/ })).toHaveAttribute(
+    await expect(rows.getByRole("link", { name: other.po.poNumber ?? "" })).toHaveAttribute(
       "href",
       `/purchase-orders/${other.q.id}`,
     )

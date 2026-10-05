@@ -26,6 +26,7 @@ import {
   upsertPoLine,
 } from "./adapters"
 import { usePoItems, usePurchaseOrderByQuotation, useUpdatePoItems } from "./hooks"
+import PoNumber from "./PoNumber"
 import { isPoLockRefusal } from "./PurchaseOrderDetail/helpers"
 
 type PurchaseOrderEditProps = {
@@ -240,7 +241,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
                 params={{ id: String(po.quotationId) }}
                 className={`${ui.breadcrumbLink} no-underline`}
               >
-                Detail {po.poNumber}
+                Detail <PoNumber value={po.poNumber} />
               </Link>
               <span className={ui.breadcrumbSep} aria-hidden="true">
                 &rsaquo;
@@ -250,7 +251,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
               </span>
             </nav>
             <h1 className="text-2xl font-bold leading-8 tracking-tight text-dark-900 [overflow-wrap:anywhere]">
-              Edit Purchase Order {po.poNumber}
+              Edit Purchase Order <PoNumber value={po.poNumber} />
             </h1>
           </div>
 

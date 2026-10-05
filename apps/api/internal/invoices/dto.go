@@ -13,12 +13,15 @@ const (
 )
 
 type Invoice struct {
-	ID              int64  `db:"id"                    json:"id"`
-	InvoiceNo       string `db:"invoice_no"            json:"invoiceNo"`
-	QuotationID     int64  `db:"quotation_id"          json:"quotationId"`
-	QuotationNo     string `db:"quotation_no"          json:"quotationNo"`
-	PoID            *int64 `db:"po_id"                 json:"poId,omitempty"`
-	CompanyClientID int64  `db:"company_client_id"     json:"companyClientId"`
+	ID        int64  `db:"id"                    json:"id"`
+	InvoiceNo string `db:"invoice_no"            json:"invoiceNo"`
+	// Number first issued under.
+	// Set by a re-import only; nil for app-created invoices.
+	LegacyNo        *string `db:"legacy_no"            json:"legacyNo,omitempty"`
+	QuotationID     int64   `db:"quotation_id"          json:"quotationId"`
+	QuotationNo     string  `db:"quotation_no"          json:"quotationNo"`
+	PoID            *int64  `db:"po_id"                 json:"poId,omitempty"`
+	CompanyClientID int64   `db:"company_client_id"     json:"companyClientId"`
 	// Buyer as invoiced.
 	// Snapshotted by fn_create_invoice; a client edit never restates it.
 	CompanyName         string     `db:"company_name"          json:"companyName"`

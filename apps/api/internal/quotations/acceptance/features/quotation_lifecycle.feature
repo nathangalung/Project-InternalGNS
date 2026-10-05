@@ -69,11 +69,10 @@ Feature: Quotation lifecycle
     And the user tries to transition the quotation to "sent"
     Then the response status is 422
 
-  Scenario: Clients whose numbers share a prefix get distinct quotation numbers
-    Given a client numbered "0901" already on quotation sequence 10
-    And a client numbered "0911"
+  Scenario: Quotations of every client draw from one running number
+    Given two clients numbered "0901" and "0911"
     When the user creates one quotation for each of those clients
-    Then the two quotation numbers differ
+    Then the second quotation number follows the first
 
   Scenario: List filters return matching rows
     Given an existing draft quotation

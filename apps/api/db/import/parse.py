@@ -1,626 +1,683 @@
-"""Parse historical Excel quotations into a normalized JSON staging file.
+"""Parse every quotation workbook under Data/Data/Quotation.
 
-Reads every .xlsx in SOURCE_DIRS (2024/2025/2026), extracts header
-(customer, date, contact, etc) and items from the DATA ENTRI sheet, plus
-discount info from the PRINT sheet, and writes everything to staged.json
-for downstream consumers (load*.py, generate_seed.py).
+Writes out/staged.json (one record per quotation, with its evidence) and
+out/parse_report.md (counts, exclusions, files that could not be parsed,
+duplicates, revisions and the totals reconciliation).
+
+Inputs: GNS_DATA_DIR (default <repo>/Data/Data) and, for the
+reconciliation, GNS_ORACLE_DIR (default ~/.cache/gns-reimport) with the
+survey's pdf.tsv and disc.json. Nothing under either is modified.
 """
+
 from __future__ import annotations
+
 import json
+import os
 import re
 import sys
-from collections import defaultdict
-from datetime import datetime
+from collections import Counter, defaultdict
 from pathlib import Path
+from typing import Any
 
-import openpyxl
+from dedup import resolve_duplicates
+from issued import apply_issued_pdfs
+from paths import OUT_DIR, data_dir
+from quotation import build_workbook, vessel_from_text
+from reconcile import (
+    attach_pdfs,
+    classify_unmatched,
+    compare_print_oracle,
+    compare_totals,
+    content_in_pdf,
+    fill_pdf_totals,
+    load_pdf_index,
+    pdf_grand_differs,
+    pdf_text,
+)
+from scan import discover, name_exclusion
 
-
-SOURCE_DIRS = [
-    Path(r"D:\quotation\2024_data"),
-    Path(r"D:\quotation\2025_data"),
-    Path(r"D:\quotation\2026_data"),
-]
-OUTPUT_FILE = Path(__file__).parent / "staged.json"
-
-
-# ---------------------------------------------------------------------------
-# Customer canonicalisation. Maps every observed variant to a canonical name
-# plus a 4-digit `number` that becomes company_client.number.
-# ---------------------------------------------------------------------------
-CANONICAL_CUSTOMERS: list[tuple[str, str, list[str]]] = [
-    # (canonical_name, number, list_of_match_substrings_uppercase)
-    ("PT. IMC Ship Management",            "4001", ["IMC SHIP", "IMC SHIPPING"]),
-    ("PT. Sentra Makmur Lines",            "4002", ["SENTRA MAKMUR"]),
-    ("PT. Pelita Global Logistik",         "4003", ["PELITA GLOBAL"]),
-    ("PT. Karunia Aman Sentosa",           "4004", ["KARUNIA AMAN SENTOSA"]),
-    ("PT. Karunia Aman Selalu",            "4005", ["KARUNIA AMAN SELALU"]),
-    ("PT. Niterra Mobility Indonesia",     "4006", ["NITERRA"]),
-    ("PT. Mitrabahtera Segara Sejati",     "4007", ["MITRABAHTERA"]),
-    ("PT. Aman Maritim Nusantara",         "4008", ["AMAN MARITIM"]),
-    ("PT. Kasen Maritim Logistik",         "4009", ["KASEN MARITIM"]),
-    ("PT. Adamaris Shipping Indonesia",    "4010", ["ADAMARIS"]),
-    # New entries appearing in 2025_data (note: "KARUNIA AMAN SEJAHTERA" must
-    # come BEFORE the catch-all "AMAN" entries; we already use full strings
-    # above so order within the group doesn't matter, but the more specific
-    # SEJAHTERA token avoids any future conflict).
-    ("PT. Solusi Pelayaran Nusantara",     "4011", ["SOLUSI PELAYARAN"]),
-    ("PT. Transcoal Pasific",              "4012", ["TRANSCOAL"]),
-    ("PT. Indobaruna Bulk Transport",      "4013", ["INDOBARUNA"]),
-    ("PT. Tara Jaya Cemerlang",            "4014", ["TARA JAYA"]),
-    ("PT. Karunia Aman Sejahtera",         "4015", ["KARUNIA AMAN SEJAHTERA"]),
-    # 2024 entries. ISNA AGUNG PERMATA covers the PERTAMA misspelling
-    # (verified: same PIC + email; user filename is just inconsistent).
-    ("PT. Isna Agung Permata",             "4016", ["ISNA AGUNG PERMATA",
-                                                     "ISNA AGUNG PERTAMA"]),
-    ("PT. Lumoso Pratama Line",            "4017", ["LUMOSO PRATAMA"]),
-    ("PT. Indoglas Jaya",                  "4018", ["INDOGLAS"]),
-]
+Record = dict[str, Any]
 
 
-def _match_canonical(part: str) -> tuple[str, str] | None:
-    """Match a single entity string against CANONICAL_CUSTOMERS."""
-    upper = part.upper().replace(".", " ").replace("PT ", "").replace("PT", "").strip()
-    for name, num, keys in CANONICAL_CUSTOMERS:
-        if any(k in upper for k in keys):
-            return (name, num)
-    return None
+def oracle_dir() -> Path:
+    return Path(os.environ.get("GNS_ORACLE_DIR", Path.home() / ".cache" / "gns-reimport"))
 
 
-def canonical_customer(raw: str | None) -> tuple[str, str] | None:
-    """Return (canonical_name, number) or None.
+# Vessel names
 
-    Broker pattern: when raw has slash entities AND multiple of them are
-    canonical customers (e.g. "PT Mitrabahtera Segara Sejati / PT Aman Maritim
-    Nusantara"), the FIRST canonical is the broker and the SECOND canonical is
-    the real billing customer. Prefer the second canonical match.
 
-    Otherwise the first match wins.
+def _vessel_key(name: str) -> str:
+    s = re.sub(r"\s+", " ", name.upper()).strip()
+    return re.sub(r"^(MV|M/V|TB|TUG ?BOAT|BG|FC|KM)\.? ", "", s)
+
+
+def resolve_vessels(records: list[Record]) -> None:
+    """Name each vessel the same way across records.
+
+    A bare name ("Marina 18") counts when it matches a vessel seen with a
+    prefix elsewhere, and every vessel takes its most common prefixed
+    spelling ("MV YUXIN SATU"); the text as found stays in vessel_raw.
     """
-    if not raw:
-        return None
-    parts = [p.strip() for p in raw.split("/") if p.strip()]
-    if not parts:
-        return None
-    matches = [_match_canonical(p) for p in parts]
-    canonicals = [m for m in matches if m is not None]
-    # Two canonicals → broker/customer pattern; prefer the second one.
-    if len(canonicals) >= 2:
-        return canonicals[1]
-    if canonicals:
-        return canonicals[0]
-    return None
+    forms: dict[str, Counter[str]] = defaultdict(Counter)
+    for r in records:
+        if r["vessel"]:
+            forms[_vessel_key(r["vessel"])][re.sub(r"\s+", " ", r["vessel"].upper()).strip()] += 1
+    canon = {
+        key: max([f for f in c if f != key] or list(c), key=lambda f, c=c: (c[f], f))
+        for key, c in forms.items()
+    }
+    for r in records:
+        if r["vessel"] is None:
+            for text in r["vessel_candidates"]:
+                if _vessel_key(text) in canon:
+                    r["vessel"] = text
+                    r["vessel_source"] = "file" if text in r["file_name"]["parts"] else "print"
+                    break
+        r["vessel_raw"] = r["vessel"]
+        vessel_key = _vessel_key(r["vessel"]) if r["vessel"] else None
+        if vessel_key:
+            r["vessel"] = canon[vessel_key]
+        parts = (
+            []
+            if "file_name_describes_other_quotation" in r.get("flags", [])
+            else r["file_name"]["parts"]
+        )
+        r["topic"] = (
+            " - ".join(
+                p for p in parts if _vessel_key(p) != vessel_key and vessel_from_text(p) is None
+            )
+            or None
+        )
+        del r["vessel_candidates"]
 
 
-def vessel_from_raw(raw: str | None) -> str | None:
-    """Extract second entity from multi-customer slash strings.
+# Run
 
-    'PT MBSS Tbk/PT Aman Maritim' → 'PT Aman Maritim'.
-    Returns None when the second entity itself resolves to a canonical
-    customer (broker pattern: customer is in slot 2, no vessel hint here).
+
+def parse_all(root: Path) -> tuple[list[Record], list[Record]]:
+    """Build records for every workbook; return (records, excluded files)."""
+    records: list[Record] = []
+    excluded: list[Record] = []
+    files = discover(root)
+    for i, path in enumerate(files, start=1):
+        rel = path.relative_to(root).as_posix()
+        reason = name_exclusion(path.name)
+        if reason is None:
+            built, reason = build_workbook(path, root)
+            records.extend(built)
+        if reason is not None:
+            excluded.append({"path": rel, "reason": reason})
+        if i % 100 == 0:
+            print(f"  {i}/{len(files)} files", file=sys.stderr)
+    resolve_vessels(records)
+    return records, excluded
+
+
+def check_pdf_content(kept: list[Record], root: Path) -> int:
+    """Read the PDF of every record whose total differs from it.
+
+    A record none of whose lines the PDF prints holds another
+    quotation's content (the Q-639 workbook): it is flagged for the
+    owner, and its PDF is the only copy of what the client received.
+    Returns how many PDFs were read.
     """
-    if not raw or "/" not in raw:
-        return None
-    parts = [p.strip() for p in raw.split("/") if p.strip()]
-    if len(parts) < 2:
-        return None
-    second = parts[1]
-    if _match_canonical(second) is not None:
-        return None
-    return second
+    checked = 0
+    for r in kept:
+        if not pdf_grand_differs(r):
+            continue
+        text = pdf_text(root / r["pdf"]["path"])
+        if not text:
+            continue
+        checked += 1
+        r["pdf_content"] = content_in_pdf(r, text)
+        if not r["pdf_content"]:
+            r["flags"].append("workbook_holds_other_content")
+    return checked
 
 
-# Indonesian + English month names (full and short) → number.
-# Lowercase keys; lookup normalises input to lowercase too.
-MONTHS_IN: dict[str, int] = {
-    "january": 1,  "januari": 1,   "jan": 1,
-    "february": 2, "februari": 2,  "feb": 2,
-    "march": 3,    "maret": 3,     "mar": 3,
-    "april": 4,    "apr": 4,
-    "may": 5,      "mei": 5,
-    "june": 6,     "juni": 6,      "jun": 6,
-    "july": 7,     "juli": 7,      "jul": 7,
-    "august": 8,   "agustus": 8,   "aug": 8,  "ags": 8,
-    "september": 9,                "sep": 9,  "sept": 9,
-    "october": 10, "oktober": 10,  "oct": 10, "okt": 10,
-    "november": 11,                "nov": 11,
-    "december": 12, "desember": 12, "dec": 12, "des": 12,
+def reconcile(kept: list[Record], oracles: Path, root: Path) -> Record:
+    """Attach PDFs and compare totals; return the reconciliation summary."""
+    summary: Record = {"oracle_dir": str(oracles), "pdf_index": False, "print_oracle": False}
+    pdf_tsv, disc_json = oracles / "pdf.tsv", oracles / "disc.json"
+    if pdf_tsv.exists():
+        pdfs = [p for p in load_pdf_index(pdf_tsv) if p["path"].startswith("Quotation")]
+        summary["pdf_index"] = True
+        summary["pdfs"] = len(pdfs)
+        summary["pdf_totals_read"] = fill_pdf_totals(pdfs, root)
+        summary["pdf_totals_missing"] = [p["path"] for p in pdfs if p["grand"] is None]
+        summary["unmatched_pdfs"] = attach_pdfs(kept, pdfs)
+        classify_unmatched(summary["unmatched_pdfs"], kept)
+        summary["pdf_content_checked"] = check_pdf_content(kept, root)
+    for r in kept:
+        r["reconciliation"] = compare_totals(r)
+    if disc_json.exists():
+        entries = {e["path"]: e for e in json.loads(disc_json.read_text(encoding="utf-8"))}
+        summary["print_oracle"] = True
+        diffs = []
+        compared = 0
+        for r in kept:
+            for path in r["source"]["files"]:
+                entry = entries.get(path)
+                if entry is None or r["source"]["sheet"] not in ("DATA ENTRI", "DATA ENTRY"):
+                    continue
+                compared += 1
+                diffs.extend(
+                    {"path": path, **d} for d in compare_print_oracle(r["print_totals"], entry)
+                )
+                break
+        summary["print_oracle_compared"] = compared
+        summary["print_oracle_diffs"] = diffs
+    return summary
+
+
+def run(data: Path, oracles: Path) -> tuple[Record, str]:
+    root = data / "Quotation"
+    records, excluded = parse_all(root)
+    kept, dropped = resolve_duplicates(records)
+    summary = reconcile(kept, oracles, root)
+    unread = apply_issued_pdfs(kept, summary.get("unmatched_pdfs", []), root)
+    staged = {
+        "source_root": "Data/Data/Quotation",
+        "quotations": kept,
+        "excluded_files": excluded,
+        "dropped_copies": dropped,
+        "unmatched_pdfs": summary.get("unmatched_pdfs", []),
+        "issued_pdfs_unread": unread,
+    }
+    return staged, render_report(staged, records, summary, root)
+
+
+# Report
+
+
+def _md_escape(s: object) -> str:
+    return str(s).replace("|", "\\|").replace("\n", " ")
+
+
+def _rp(v: float | None) -> str:
+    return "-" if v is None else f"{v:,.2f}"
+
+
+def render_report(staged: Record, built: list[Record], summary: Record, root: Path) -> str:
+    kept: list[Record] = staged["quotations"]
+    excluded: list[Record] = staged["excluded_files"]
+    dropped: list[Record] = staged["dropped_copies"]
+    files = discover(root)
+    by_reason = Counter(e["reason"] for e in excluded)
+    unparsed = [e for e in excluded if e["reason"] not in ("lock file",)]
+    lines = sum(len(r["lines"]) for r in kept)
+    out: list[str] = ["# Quotation parse report", ""]
+    out += [
+        "Generated by `apps/api/db/import/parse.py` from `Data/Data/Quotation`.",
+        "",
+        "## Summary",
+        "",
+        "| Item | Count |",
+        "|---|---|",
+        f"| .xlsx files found (recursive) | {len(files)} |",
+        f"| Files excluded (see below) | {len(excluded)} |",
+        f"| Workbooks parsed | {len(files) - len(excluded)} |",
+        f"| Quotation records built | {len(built)} |",
+        f"| Records dropped (identical copy, print export, stale sheet) | {len(dropped)} |",
+        f"| Quotations in staged.json | {len(kept)} |",
+        f"| Lines in staged.json | {lines} |",
+        f"| Revision chains | {len({r['revision']['group'] for r in kept if r['revision']})} |",
+        f"| Sheets not imported (see below) | {len(_excluded_sheets(kept))} |",
+        "",
+        "Every file is accounted for: parsed into a record, merged into another",
+        "record as a copy, or excluded with the reason below. Every sheet left out",
+        "of a parsed workbook is listed under Sheets not imported.",
+        "",
+    ]
+
+    per_year: dict[object, Counter[str]] = defaultdict(Counter)
+    for r in built:
+        per_year[r["year"]]["built"] += 1
+    for r in kept:
+        c = per_year[r["year"]]
+        c["kept"] += 1
+        c["lines"] += len(r["lines"])
+        c["unpriced"] += "unpriced" in r["flags"]
+        c["revisions"] += bool(r["revision"] and r["revision"]["index"] > 0)
+        c["print_only"] += r["source"]["kind"] == "print_only"
+    for d in dropped:
+        year = next((r["year"] for r in built if r["id"] == d["id"]), None)
+        per_year[year]["dropped"] += 1
+    out += [
+        "## Counts per year",
+        "",
+        "| Year | Records built | Copies dropped | Quotations | Revisions (Rev.n) "
+        "| Print-only source | Unpriced | Lines |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for year in sorted(per_year, key=str):
+        c = per_year[year]
+        out.append(
+            f"| {year} | {c['built']} | {c['dropped']} | {c['kept']} | {c['revisions']} "
+            f"| {c['print_only']} | {c['unpriced']} | {c['lines']} |"
+        )
+    out += ["", "## Exclusions per reason", "", "| Reason | Files |", "|---|---|"]
+    out += [f"| {_md_escape(k)} | {v} |" for k, v in by_reason.most_common()]
+    out += ["", "## Files not parsed into a quotation", ""]
+    out += ["Lock files (`~$…`) are Excel's open-file markers and hold no data.", ""]
+    out += ["| File | Reason |", "|---|---|"]
+    out += [f"| {_md_escape(e['path'])} | {_md_escape(e['reason'])} |" for e in unparsed]
+
+    out += ["", "## Sheets not imported", ""]
+    out += ["| Workbook | Sheet | Printed number | Client | Lines | Grand total | Reason |"]
+    out += ["|---|---|---|---|---|---|---|"]
+    out += [
+        f"| {_md_escape(path)} | {_md_escape(s['sheet'])} | {_md_escape(s['number'])} "
+        f"| {_md_escape(s['client'])} | {s['lines']} | {_rp(s['grand'])} "
+        f"| {_md_escape(s['reason'])} |"
+        for path, s in _excluded_sheets(kept)
+    ]
+
+    out += ["", "## Records dropped", ""]
+    out += ["A dropped copy stays on the kept record under `aliases`, with the fields"]
+    out += ["it carried differently (`differs`).", ""]
+    out += ["| Dropped | Kept | Reason | Differs |", "|---|---|---|---|"]
+    out += [
+        f"| {_md_escape(d['id'])} | {_md_escape(d['kept'] or '-')} | {_md_escape(d['reason'])} "
+        f"| {', '.join(d['differs']) or '-'} |"
+        for d in dropped
+    ]
+
+    chains: dict[str, list[Record]] = defaultdict(list)
+    for r in kept:
+        if r["revision"]:
+            chains[r["revision"]["group"]].append(r)
+    out += ["", "## Revision chains", "", "| Group | Rev | Date | Source | Grand total |"]
+    out += ["|---|---|---|---|---|"]
+    for key in sorted(chains):
+        for r in sorted(chains[key], key=lambda x: x["revision"]["index"]):
+            rev = r["revision"]["index"]
+            out.append(
+                f"| {_md_escape(key)} | {'base' if rev == 0 else f'Rev.{rev}'} | {r['date']} "
+                f"| {_md_escape(r['source']['files'][0])} | {_rp(r['computed_totals']['grand'])} |"
+            )
+
+    shared = [r for r in kept if "shared_number" in r["flags"]]
+    out += ["", "## Different quotations sharing a number (kept separate)", ""]
+    out += ["| Number | Client | Date | Source |", "|---|---|---|---|"]
+    for r in sorted(shared, key=lambda x: (x["number"]["original"] or "", x["id"])):
+        out.append(
+            f"| {_md_escape(r['number']['original'])} | {_md_escape(r['client']['name'])} "
+            f"| {r['date']} | {_md_escape(r['source']['files'][0])} |"
+        )
+
+    qflags = Counter(f.split(":")[0] for r in kept for f in r["flags"])
+    lflags = Counter(f for r in kept for ln in r["lines"] for f in ln["flags"])
+    out += ["", "## Flags", "", "| Quotation flag | Quotations |", "|---|---|"]
+    out += [f"| {k} | {v} |" for k, v in sorted(qflags.items())]
+    out += ["", "| Line flag | Lines |", "|---|---|"]
+    out += [f"| {k} | {v} |" for k, v in sorted(lflags.items())]
+    unknown = [r for r in kept if r["client"]["name"] is None]
+    if unknown:
+        out += ["", "Quotations whose client could not be resolved:", ""]
+        out += [f"- {_md_escape(r['id'])} ({_md_escape(r['client']['raw'])})" for r in unknown]
+    out += _report_owner_decisions(kept)
+    out += _report_issued(kept, staged.get("issued_pdfs_unread", []))
+    out += _report_reconciliation(kept, summary)
+    return "\n".join(out) + "\n"
+
+
+_ISSUED = {
+    "header_from_pdf": "header (number, date, reference, contact) from the PDF",
+    "lines_from_pdf": "lines, discount and header from the PDF",
+    "pdf_only_version": "issued version known only as a PDF, chained by date",
+    "pdf_lines_unread": "PDF differs but its table could not be read; total noted",
 }
 
 
-def parse_indo_date(s: str | None) -> str | None:
-    """Parse Indonesian/English date strings to ISO 'YYYY-MM-DD'.
-
-    Handles:
-    - 'Jakarta, 06 January 2026' / 'Jakarta, 19 Agustus 2024'
-    - Short month names ('Sept', 'Okt', 'Dec', 'Ags', etc.)
-    - Missing space between month and year ('February2026')
-    - Slash-numeric fallback 'Jakarta, 09/07/2024' → DD/MM/YYYY
-    """
-    if not s:
-        return None
-    s = s.strip().replace(",", " ")
-    # Try day-month-year with month as a name.
-    m = re.search(r"(\d{1,2})\s+([A-Za-z]+)\.?\s*(\d{4})", s)
-    if m:
-        day = int(m.group(1))
-        mon_name = m.group(2).strip(".").lower()
-        year = int(m.group(3))
-        mon = MONTHS_IN.get(mon_name)
-        if mon:
-            try:
-                return datetime(year, mon, day).date().isoformat()
-            except ValueError:
-                return None
-    # Slash-numeric fallback: DD/MM/YYYY (Indonesian convention).
-    m = re.search(r"(\d{1,2})/(\d{1,2})/(\d{4})", s)
-    if m:
-        day, mon, year = int(m.group(1)), int(m.group(2)), int(m.group(3))
-        try:
-            return datetime(year, mon, day).date().isoformat()
-        except ValueError:
-            return None
-    return None
-
-
-def parse_num(v) -> float | None:
-    """Coerce a cell value to float; return None for non-numeric/blank."""
-    if v is None:
-        return None
-    if isinstance(v, (int, float)):
-        return float(v)
-    s = str(v).strip()
-    if not s or s.upper() in {"#DIV/0!", "#N/A", "#REF!", "#VALUE!", "0"}:
-        return 0.0 if s == "0" else None
-    s = s.replace(",", "")
-    try:
-        return float(s)
-    except ValueError:
-        return None
-
-
-def is_int_str(v) -> bool:
-    """True if v can be parsed as integer (line number)."""
-    if v is None:
-        return False
-    if isinstance(v, int):
-        return True
-    if isinstance(v, float):
-        return v.is_integer()
-    s = str(v).strip()
-    return s.isdigit()
-
-
-def cell(ws, row: int, col: int):
-    """Return ws cell value or None."""
-    if row < 1 or col < 0:
-        return None
-    try:
-        v = ws.cell(row=row, column=col + 1).value
-        if v is None:
-            return None
-        if isinstance(v, str):
-            v = v.strip()
-            return v if v else None
-        return v
-    except Exception:
-        return None
-
-
-def find_print_sheet(wb):
-    for name in ("PRINT", "PRINT HORIZONTAL", "PRINT VERTIKAL"):
-        if name in wb.sheetnames:
-            return wb[name]
-    return None
-
-
-def parse_discount(print_ws) -> float:
-    """Scan PRINT sheet for 'Diskon X%' label; return X as float (0..100)."""
-    if not print_ws:
-        return 0.0
-    for row in print_ws.iter_rows(min_row=1, max_row=80, values_only=True):
-        for v in row:
-            if v is None:
-                continue
-            s = str(v)
-            if "diskon" in s.lower() or "discount" in s.lower():
-                m = re.search(r"(\d+(?:[.,]\d+)?)\s*%", s)
-                if m:
-                    return float(m.group(1).replace(",", "."))
-    return 0.0
-
-
-def parse_print_meta(print_ws) -> dict:
-    """Best-effort extract delivery place, payment, validity, your-ref, vessel from PRINT."""
-    out = {"place_of_delivery": None, "payment": None, "validity": None,
-           "your_ref": None, "vessel": None}
-    if not print_ws:
-        return out
-    rows = list(print_ws.iter_rows(min_row=1, max_row=100, values_only=True))
-    for r_idx, row in enumerate(rows):
-        for c_idx, v in enumerate(row):
-            if v is None:
-                continue
-            s = str(v).strip().upper()
-            # Match "DELIVERY TIME", "PLACE OF DELIVERY", etc, then take next non-empty cell.
-            if s == "PLACE OF DELIVERY" or s == "DELIVERY PLACE":
-                out["place_of_delivery"] = _value_after(rows, r_idx, c_idx)
-            elif s == "PAYMENT":
-                out["payment"] = _value_after(rows, r_idx, c_idx)
-            elif s == "VALIDITY":
-                out["validity"] = _value_after(rows, r_idx, c_idx)
-            elif s == "YOUR REF NO." or s.startswith("YOUR REF"):
-                out["your_ref"] = _value_after(rows, r_idx, c_idx)
-        # A vessel name cell often appears on a row by itself between header and items.
-        # Heuristic: a single-cell text on rows 13-16 of PRINT that starts with MV/TB/BG/KM.
-        if 12 <= r_idx <= 18:
-            for v in row:
-                if v is None:
-                    continue
-                s = str(v).strip()
-                if re.match(r"^(MV|TB|BG|KM|TUG BOAT|TUG)\b", s, re.IGNORECASE):
-                    out["vessel"] = s
-                    break
+def _report_issued(kept: list[Record], unread: list[Record]) -> list[str]:
+    """What the issued PDFs changed, and the PDFs that could not be used."""
+    out = ["", "## Issued PDFs", "", "| Quotation | Date | Change |", "|---|---|---|"]
+    for r in sorted(kept, key=lambda x: (x["number"]["original"] or "", x["id"])):
+        for flag, text in _ISSUED.items():
+            if flag in r["flags"]:
+                out.append(f"| {_md_escape(r['number']['original'])} | {r['date']} | {text} |")
+    out += ["", "PDFs not used (table unreadable, or no quotation to attach to):", ""]
+    out += [f"- {_md_escape(u['path'])} ({u['number']}; {u['why']})" for u in unread]
     return out
 
 
-def _value_after(rows, r_idx, c_idx):
-    """Walk right within the same row to find the next non-empty cell."""
-    row = rows[r_idx]
-    for c in range(c_idx + 1, len(row)):
-        v = row[c]
-        if v is not None and str(v).strip():
-            return str(v).strip()
-    return None
+def _excluded_sheets(kept: list[Record]) -> list[tuple[str, Record]]:
+    """Each sheet left out of a workbook, once per workbook."""
+    seen: set[tuple[str, str]] = set()
+    out = []
+    for r in kept:
+        path = r["source"]["files"][0]
+        for s in r.get("excluded_sheets", []):
+            if (path, s["sheet"]) not in seen:
+                seen.add((path, s["sheet"]))
+                out.append((path, s))
+    return out
 
 
-def detect_has_impa(data_ws) -> bool:
-    """Header row 11: True if column 4 says IMPA or column 5 says OFFER."""
-    h4 = cell(data_ws, 11, 4)
-    h5 = cell(data_ws, 11, 5)
-    return (h4 and "IMPA" in str(h4).upper()) or (h5 and "OFFER" in str(h5).upper())
+def _quote_row(r: Record, *extra: object) -> str:
+    cells = [
+        r["number"]["original"],
+        r["client"]["name"],
+        r["date"],
+        r["source"]["files"][0],
+        *extra,
+    ]
+    return "| " + " | ".join(_md_escape("-" if c is None else c) for c in cells) + " |"
 
 
-def detect_columns(ws) -> dict[str, int]:
-    """Map logical fields → 0-based col idx by scanning row 11 + 12 headers.
+def _flagged(kept: list[Record], flag: str) -> list[Record]:
+    return [r for r in kept if any(f.split(":")[0] == flag for f in r["flags"])]
 
-    Why: 2024 and 2025+ Excel templates put 'Nama Asli barang', 'Vendor', sell/cost
-    sections in different column positions. Hardcoded offsets misread 2024 files
-    (e.g. nama_asli at col 13 picks up the cost-price value instead).
 
-    2024 layout (row 11): No Qty Unit DESC . . JUAL . . . . BELI . . . %profit Laba NamaAsli Vendor Telp
-    2025 layout (row 11): No Qty Unit DESC . . HargaJual . Modal . %profit Laba NamaAsli Vendor Telp
-    """
-    cols: dict[str, int] = {}
-    SCAN = 25  # columns to inspect (A..Y is enough)
-    for c in range(0, SCAN):
-        v = cell(ws, 11, c)
-        if v is None:
+def _report_owner_decisions(kept: list[Record]) -> list[str]:
+    """Judgements the parser leaves to the owner, one table each."""
+    head = "| Number | Client | Date | Source |"
+    out = ["", "## Owner decisions", ""]
+    out += ["The parser keeps every record below and flags it; none is resolved by guessing.", ""]
+
+    left_out = [(r, ln) for r in kept for ln in r["lines"] if not ln["in_total"] and ln["sell"]]
+    out += ["### Priced lines kept out of the totals (`in_total: false`)", ""]
+    out += [
+        "The PRINT sheet did not total them: options, kit components, lines PRINT lacks",
+        "or prints without an amount. The app has no optional line, so plan step 5 must",
+        "drop them, import them as separate lines, or import them at zero.",
+        "",
+        f"{head} Row | Request | Unit price | Why |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    out += [
+        _quote_row(
+            r,
+            ln["row"],
+            (ln["request"] or "")[:60],
+            _rp(ln["sell"]),
+            ", ".join(
+                f
+                for f in ln["flags"]
+                if f
+                in (
+                    "not_on_print",
+                    "no_amount_on_print",
+                    "kit_component_not_totalled",
+                    "not_in_amount_column",
+                )
+            ),
+        )
+        for r, ln in left_out
+    ]
+
+    sections = [
+        (
+            "Price lists and options whose PRINT total is Rp 0",
+            "print_price_list",
+            "Every priced line is kept in the computed total; the client may have ordered "
+            "one option only.",
+        ),
+        (
+            "PRINT totals of Rp 0 beside priced lines",
+            "print_total_zero",
+            "The amount formulas were empty when printed; the lines are kept.",
+        ),
+        (
+            "Same-date revisions with no marker to order them",
+            "revision_order_undetermined",
+            "Only the file path decides which record is the base; the owner picks.",
+        ),
+        (
+            "Revision chains whose records print different numbers",
+            "revision_chain_crosses_numbers",
+            "",
+        ),
+        (
+            "Revisions filed under a new number",
+            "revision_of_other_number",
+            "Linked by `related_to` (same client, reference and lines), not chained: the "
+            "client may have ordered against the new number.",
+        ),
+        (
+            "One request answered by records with no line in common",
+            "same_request_other_lines",
+            "Kept as separate quotations and linked by `related_to` (a request "
+            "answered twice, or a workbook reused for another offer).",
+        ),
+        (
+            "Copies dropped although they print another number",
+            "copy_number_differs",
+            "The dropped number stays under `aliases`; clients may quote it on a PO.",
+        ),
+        (
+            "Copies dropped with a different reference, vessel, terms, cost or vendor",
+            "copy_differs",
+            "The survivor is the copy with the most evidence; the other values are under "
+            "`aliases`.",
+        ),
+        (
+            "PDFs printing another number than the workbook",
+            "pdf_number_ne_print",
+            "The PDF is what the client received.",
+        ),
+        (
+            "Workbooks holding another quotation than their PDF",
+            "workbook_holds_other_content",
+            "None of the record's lines is on its PDF: exclude the record or rebuild it "
+            "from the PDF.",
+        ),
+        (
+            "References in a format another client uses",
+            "client_ref_foreign_format",
+            "Left over from a copied workbook (Pelita's V-26 references on Ocean Maritim "
+            "and Karunia Aman Sentosa); kept as printed, ignored for matching.",
+        ),
+        (
+            "Printed references the file name contradicts",
+            "client_ref_conflicts_file_name",
+            "Kept as printed, ignored for matching.",
+        ),
+        (
+            "File names describing another quotation",
+            "file_name_describes_other_quotation",
+            "The name's number and client differ from the sheet's, so its vessel, "
+            "reference and topic are not used.",
+        ),
+        (
+            "Dates in another year than their folder",
+            "date_year_ne_folder",
+            "The number and year come from the date (a 2026-folder file dated 2025 that "
+            "prints a 2026 number).",
+        ),
+    ]
+    for title, flag, note in sections:
+        found = _flagged(kept, flag)
+        out += ["", f"### {title} (`{flag}`, {len(found)})", ""]
+        if note:
+            out += [note, ""]
+        if not found:
             continue
-        s = str(v).strip()
-        u = s.upper().replace(" ", "")
-        if u in ("NO.", "NO") and "no" not in cols:
-            cols["no"] = c
-        elif u == "QTY":
-            cols["qty"] = c
-        elif u == "UNIT" and "unit" not in cols:
-            cols["unit"] = c
-        elif u.startswith("DESCRIPTION") or "DESCRIPTION" in u or u == "DESC":
-            cols["desc"] = c
-        elif u == "IMPA":
-            cols["impa"] = c
-        elif "OFFER" in u and "desc" in cols:
-            cols["offer_desc"] = c
-        elif u in ("JUAL", "HARGAJUAL"):
-            cols["sell_section"] = c
-        elif u in ("BELI", "MODAL", "HARGABELI"):
-            cols["cost_section"] = c
-        elif u == "%PROFIT" or u == "PROFIT":
-            cols["profit_pct"] = c
-        elif u == "LABA":
-            cols["laba"] = c
-        elif "NAMAASLI" in u:
-            cols["nama_asli"] = c
-        elif u == "VENDOR":
-            cols["vendor"] = c
-        elif u == "TELP":
-            cols["vendor_telp"] = c
-
-    # Row 12 sub-headers ('Harga Jual'/'Unit Price'/'Harga Beli'/'Amount').
-    # Use them to locate the unit/amount columns within sell/cost sections.
-    sell_start = cols.get("sell_section")
-    cost_start = cols.get("cost_section")
-    profit_start = cols.get("profit_pct", SCAN)
-
-    sell_end = cost_start if cost_start is not None else profit_start
-    cost_end = profit_start
-
-    if sell_start is not None:
-        for c in range(sell_start, min(sell_end, SCAN)):
-            v = cell(ws, 12, c)
-            if v is None:
-                continue
-            u = str(v).upper().replace(" ", "")
-            if u in ("UNITPRICE", "HARGAJUAL") and "sell_unit" not in cols:
-                cols["sell_unit"] = c
-            elif u == "AMOUNT" and "sell_amt" not in cols:
-                cols["sell_amt"] = c
-        # Fallback when row 12 sub-headers are missing: assume section header
-        # itself sits above the unit price column (2025+ layout).
-        cols.setdefault("sell_unit", sell_start)
-
-    if cost_start is not None:
-        for c in range(cost_start, min(cost_end, SCAN)):
-            v = cell(ws, 12, c)
-            if v is None:
-                continue
-            u = str(v).upper().replace(" ", "")
-            if u in ("UNITPRICE", "HARGABELI", "MODAL") and "cost_unit" not in cols:
-                cols["cost_unit"] = c
-            elif u == "AMOUNT" and "cost_amt" not in cols:
-                cols["cost_amt"] = c
-        cols.setdefault("cost_unit", cost_start)
-
-    return cols
+        out += [f"{head} Detail |", "|---|---|---|---|---|"]
+        out += [_quote_row(r, _decision_detail(r, flag)) for r in found]
+    return out
 
 
-def first_numeric_in_span(ws, row: int, start_col: int, span: int = 2) -> float | None:
-    """Read first numeric cell within [start_col, start_col+span-1].
-
-    Why: 2024 template puts a literal 'Rp.' in the cell directly under the section
-    header, with the numeric value one column to the right. 2025+ has the number
-    directly under the header. Scanning a 2-col window handles both.
-    """
-    for c in range(start_col, start_col + span):
-        n = parse_num(cell(ws, row, c))
-        if n is not None:
-            return n
-    return None
-
-
-def first_text_in_span(ws, row: int, start_col: int, span: int = 2) -> str | None:
-    """Skip cells that are pure 'Rp.' / 'Rp' template residue; return first real text."""
-    for c in range(start_col, start_col + span):
-        v = cell(ws, row, c)
-        if v is None:
-            continue
-        s = str(v).strip()
-        if not s:
-            continue
-        if re.fullmatch(r"Rp\.?", s, re.IGNORECASE):
-            continue
-        return s
-    return None
+def _decision_detail(r: Record, flag: str) -> str:
+    if flag in ("revision_order_undetermined", "revision_chain_crosses_numbers"):
+        rev = r["revision"]
+        return f"{rev['group']} index {rev['index']}"
+    if flag in ("revision_of_other_number", "same_request_other_lines"):
+        return "; ".join(x["id"] for x in r["related_to"])
+    if flag in ("copy_number_differs", "copy_differs"):
+        return "; ".join(
+            f"{a['number']} ({', '.join(a['differs'])}) {a['path']}"
+            for a in r["aliases"]
+            if a["differs"]
+        )
+    if flag == "pdf_number_ne_print":
+        return f"PDF {r['number']['pdf']}: {r['pdf']['path']}"
+    if flag == "workbook_holds_other_content":
+        return f"PDF {r['pdf']['path']} ({_rp(r['pdf']['grand'])})"
+    if flag.startswith("client_ref"):
+        return f"{r['client_ref']} (file: {', '.join(r['file_name']['refs']) or '-'})"
+    if flag == "file_name_describes_other_quotation":
+        return f"file {r['number']['file']} for {r['file_name']['client_hint']}"
+    if flag == "date_year_ne_folder":
+        return f"printed {r['number']['print']}"
+    return ""
 
 
-def row_has_total(ws, row: int, scan_cols: int = 12) -> bool:
-    """True if any cell in row 'row' contains the word TOTAL.
-
-    Why: 2024 puts 'TOTAL' at a different column than 2025+. Scanning a small
-    range handles both without hardcoding.
-    """
-    for c in range(0, scan_cols):
-        v = cell(ws, row, c)
-        if v and isinstance(v, str) and "TOTAL" in v.upper():
-            return True
-    return False
-
-
-_VENDOR_NOISE_RE = re.compile(r"^\s*(?:Rp\.?|[\W_]+)\s*$")
-
-
-def is_vendor_noise(name) -> bool:
-    """True when a vendor cell value is template residue, not a real vendor.
-
-    Filters: blank, currency prefix 'Rp.' / 'Rp', pure punctuation/dashes,
-    and tokens shorter than 3 chars (after strip) — these have always been
-    Excel template artifacts, never real vendor names in observed data.
-    """
-    if name is None:
-        return True
-    s = str(name).strip()
-    if len(s) < 3:
-        return True
-    return bool(_VENDOR_NOISE_RE.match(s))
-
-
-def parse_items(data_ws, has_impa: bool, cols: dict[str, int] | None = None) -> list[dict]:
-    """Read data rows from DATA ENTRI starting after row 12.
-
-    Multi-page DATA ENTRI sheets duplicate the customer/qno/date/PIC header
-    every print page (rows like ``no='Customer :', desc='PT. ...'``). The
-    item-row gate requires `no` to be an integer (or `qty` to be a positive
-    number) so these label rows never reach the items list.
-    """
-    if cols is None:
-        cols = detect_columns(data_ws)
-
-    c_no       = cols.get("no", 0)
-    c_qty      = cols.get("qty", 1)
-    c_unit     = cols.get("unit", 2)
-    c_desc     = cols.get("desc", 3)
-    c_impa     = cols.get("impa")
-    c_offer    = cols.get("offer_desc")
-    c_sellu    = cols.get("sell_unit")
-    c_sella    = cols.get("sell_amt")
-    c_costu    = cols.get("cost_unit")
-    c_costa    = cols.get("cost_amt")
-    c_nama     = cols.get("nama_asli")
-    c_vendor   = cols.get("vendor")
-    c_telp     = cols.get("vendor_telp")
-
-    items: list[dict] = []
-    max_row = data_ws.max_row or 200
-    for r in range(13, max_row + 1):
-        if row_has_total(data_ws, r):
-            break
-        no = cell(data_ws, r, c_no)
-        qty = cell(data_ws, r, c_qty)
-        unit = cell(data_ws, r, c_unit)
-        desc = cell(data_ws, r, c_desc)
-        if not desc:
-            continue
-        qty_pos = isinstance(qty, (int, float)) and qty > 0
-        if not (is_int_str(no) or qty_pos):
-            continue
-
-        sell_unit = first_numeric_in_span(data_ws, r, c_sellu) if c_sellu is not None else None
-        sell_amt  = first_numeric_in_span(data_ws, r, c_sella) if c_sella is not None else None
-        cost_unit = first_numeric_in_span(data_ws, r, c_costu) if c_costu is not None else None
-        cost_amt  = first_numeric_in_span(data_ws, r, c_costa) if c_costa is not None else None
-        impa = cell(data_ws, r, c_impa) if (has_impa and c_impa is not None) else None
-        offer_desc = cell(data_ws, r, c_offer) if c_offer is not None else None
-        nama_asli = cell(data_ws, r, c_nama) if c_nama is not None else None
-        vendor_raw = cell(data_ws, r, c_vendor) if c_vendor is not None else None
-        vendor = None if is_vendor_noise(vendor_raw) else str(vendor_raw)
-        vendor_telp = cell(data_ws, r, c_telp) if c_telp is not None else None
-        items.append({
-            "row": r,
-            "no": str(no) if no is not None else None,
-            "qty": parse_num(qty) or 0.0,
-            "unit": str(unit) if unit else None,
-            "request_desc": str(desc) if desc else None,
-            "impa": str(impa) if impa else None,
-            "offer_desc": str(offer_desc) if offer_desc else None,
-            "selling_price": sell_unit,
-            "cost_price": cost_unit,
-            "vendor_name": vendor,
-            "vendor_telp": str(vendor_telp) if vendor_telp else None,
-            "nama_asli": str(nama_asli) if nama_asli else None,
-        })
-    return items
-
-
-def parse_one(fp: Path) -> dict | None:
-    try:
-        wb = openpyxl.load_workbook(fp, data_only=True, read_only=False)
-    except Exception as e:
-        return {"file": fp.name, "error": f"open failed: {e}"}
-    try:
-        # Tolerate the typo'd "DATA ENTRY" sheet name found in some 2025 files.
-        ws = None
-        for sheet_name in ("DATA ENTRI", "DATA ENTRY"):
-            if sheet_name in wb.sheetnames:
-                ws = wb[sheet_name]
-                break
-        if ws is None:
-            return {"file": fp.name, "error": "no DATA ENTRI/DATA ENTRY sheet"}
-        print_ws = find_print_sheet(wb)
-
-        # Header layout is identical in 2025 and 2026 templates: customer at
-        # openpyxl row 2 col 4, then qno/date/attn/etc on subsequent rows.
-        raw_customer = cell(ws, 2, 3)
-        raw_qno = cell(ws, 3, 3)
-        raw_tgl = cell(ws, 4, 3)
-        attn = cell(ws, 5, 3)
-        email = cell(ws, 6, 3)
-        telp = cell(ws, 7, 3)
-        deliv = cell(ws, 8, 3)
-
-        # Normalize qno typo
-        qno_norm = (str(raw_qno).replace("/6GNS/", "/GNS/")) if raw_qno else None
-
-        # Resolve customer; for prefix mismatch we trust the customer cell over Q-number
-        # (user said: prefix mismatch → fix by using new generated number anyway).
-        canon = canonical_customer(raw_customer)
-        if canon is None:
-            return {"file": fp.name, "error": f"unknown customer: {raw_customer!r}"}
-        cust_name, cust_number = canon
-        vessel_extra = vessel_from_raw(raw_customer)
-
-        date_iso = parse_indo_date(raw_tgl)
-        has_impa = detect_has_impa(ws)
-        items = parse_items(ws, has_impa)
-        discount_pct = parse_discount(print_ws)
-        print_meta = parse_print_meta(print_ws)
-
-        # Vessel: prefer PRINT-detected, else the second slash entity, else None.
-        vessel = print_meta.get("vessel") or vessel_extra
-
-        return {
-            "file": fp.name,
-            "raw_customer": raw_customer,
-            "raw_qno": raw_qno,
-            "raw_qno_norm": qno_norm,
-            "raw_date": raw_tgl,
-            "date_iso": date_iso,
-            "customer_name": cust_name,
-            "customer_number": cust_number,
-            "contact_name": attn,
-            "contact_email": email,
-            "contact_phone_raw": telp,
-            "delivery_time": deliv,
-            "discount_pct": discount_pct,
-            "place_of_delivery": print_meta.get("place_of_delivery"),
-            "payment_terms": print_meta.get("payment"),
-            "validity": print_meta.get("validity"),
-            "your_ref": print_meta.get("your_ref"),
-            "vessel_name": vessel,
-            "has_impa_column": has_impa,
-            "items": items,
-        }
-    finally:
-        wb.close()
-
-
-def main():
-    files: list[Path] = []
-    for d in SOURCE_DIRS:
-        if not d.exists():
-            print(f"[warn] missing source dir: {d}")
-            continue
-        files.extend(sorted(d.glob("*.xlsx")))
-    print(f"Parsing {len(files)} files from {len(SOURCE_DIRS)} dirs...")
-    results: list[dict] = []
-    errors: list[dict] = []
-    for i, fp in enumerate(files, 1):
-        out = parse_one(fp)
-        if out is None or out.get("error"):
-            errors.append(out or {"file": fp.name, "error": "unknown"})
-        else:
-            results.append(out)
-        if i % 25 == 0 or i == len(files):
-            print(f"  [{i}/{len(files)}] OK={len(results)} err={len(errors)}")
-
-    # Stats
-    print(f"\nParsed: {len(results)}, errors: {len(errors)}")
-    if errors:
-        print("First 10 errors:")
-        for e in errors[:10]:
-            print(f"  {e}")
-
-    # Distinct counts
-    cust_counts = defaultdict(int)
-    contact_counts = defaultdict(set)
-    item_total = 0
-    discount_dist = defaultdict(int)
-    no_date = 0
-    for r in results:
-        cust_counts[r["customer_name"]] += 1
-        if r["contact_name"]:
-            contact_counts[r["customer_name"]].add(r["contact_name"])
-        item_total += len(r["items"])
-        discount_dist[r["discount_pct"]] += 1
-        if not r["date_iso"]:
-            no_date += 1
-
-    print(f"\n=== By customer ===")
-    for k, v in sorted(cust_counts.items(), key=lambda x: -x[1]):
-        contacts = len(contact_counts[k])
-        print(f"  [{v:3} files, {contacts} contacts] {k}")
-    print(f"\nTotal items: {item_total}")
-    print(f"Files with no parseable date: {no_date}")
-    print(f"\n=== Discount distribution ===")
-    for d, n in sorted(discount_dist.items()):
-        print(f"  {d:5}% : {n}")
-
-    # Write JSON
-    OUTPUT_FILE.write_text(
-        json.dumps({"parsed": results, "errors": errors}, ensure_ascii=False, indent=2),
-        encoding="utf-8",
+def _report_reconciliation(kept: list[Record], summary: Record) -> list[str]:
+    out = ["", "## Totals reconciliation", ""]
+    with_print = [
+        r for r in kept if r["print_totals"] and r["print_totals"].get("grand") is not None
+    ]
+    with_pdf = [r for r in kept if r.get("pdf")]
+    mism = [(r, m) for r in kept for m in r.get("reconciliation", [])]
+    bad = {id(r) for r, _ in mism}
+    print_ok = sum(
+        1 for r in with_print if not any(m["source"] == "print" for m in r["reconciliation"])
     )
-    print(f"\nWrote {OUTPUT_FILE}")
+    pdf_ok = sum(1 for r in with_pdf if not any(m["source"] == "pdf" for m in r["reconciliation"]))
+    out += [
+        "Computed totals (lines, discount, DPP, PPN, charges) against the PRINT totals",
+        "block of the same workbook and the grand total printed on the archived PDF,",
+        "with a tolerance of Rp 1.",
+        "",
+        "| Check | Count |",
+        "|---|---|",
+        f"| Quotations with a PRINT grand total | {len(with_print)} |",
+        f"| ... all PRINT fields within Rp 1 | {print_ok} |",
+        f"| Quotations matched to a PDF | {len(with_pdf)} |",
+        f"| ... PDF grand total within Rp 1 (or equal to PRINT) | {pdf_ok} |",
+        f"| Quotations with any mismatch | {len(bad)} |",
+        "",
+    ]
+    causes = Counter((m["source"], m["cause"]) for _, m in mism)
+    quotes_by_cause: dict[str, set[int]] = defaultdict(set)
+    for r, m in mism:
+        quotes_by_cause[m["cause"]].add(id(r))
+    out += ["| Source | Cause | Field mismatches | Quotations |", "|---|---|---|---|"]
+    out += [
+        f"| {s} | {c} | {n} | {len(quotes_by_cause[c])} |" for (s, c), n in causes.most_common()
+    ]
+    out += ["", "Causes:", ""]
+    out += [f"- `{k}`: {v}" for k, v in CAUSES.items()]
+    out += ["", "### Every mismatch above Rp 1", ""]
+    out += ["| Quotation | Field | Against | Computed | Printed | Diff | Cause |"]
+    out += ["|---|---|---|---|---|---|---|"]
+    for r, m in sorted(mism, key=lambda x: (x[0]["id"], x[1]["source"], x[1]["field"])):
+        out.append(
+            f"| {_md_escape(r['id'])} | {m['field']} | {m['source']} | {_rp(m['computed'])} "
+            f"| {_rp(m['other'])} | {_rp(m['diff'])} | {m['cause']} |"
+        )
+    if summary.get("pdf_index"):
+        unmatched = summary.get("unmatched_pdfs", [])
+        out += ["", "### PDFs not attached to a record", ""]
+        out += ["| PDF | Printed number | Date | Grand total | Status |", "|---|---|---|---|---|"]
+        out += [
+            f"| {_md_escape(p['path'])} | {p['number']} | {p['date']} | {_rp(p['grand'])} "
+            f"| {_md_escape(p.get('status', '-'))} |"
+            for p in unmatched
+        ]
+        other = _flagged(kept, "workbook_holds_other_content")
+        out += ["", "### PDFs whose content has no workbook", ""]
+        out += [
+            f"Attached by number, but their workbook holds another quotation; "
+            f"{summary.get('pdf_content_checked', 0)} PDFs whose total differs were read.",
+            "",
+            "| PDF | Printed number | Date | Grand total | Workbook |",
+            "|---|---|---|---|---|",
+        ]
+        out += [
+            f"| {_md_escape(r['pdf']['path'])} | {r['pdf']['number']} | {r['pdf']['date']} "
+            f"| {_rp(r['pdf']['grand'])} | {_md_escape(r['source']['files'][0])} |"
+            for r in other
+        ]
+    else:
+        out += ["", f"pdf.tsv not found under {summary['oracle_dir']}; PDF check skipped."]
+    if summary.get("print_oracle"):
+        diffs = summary["print_oracle_diffs"]
+        out += [
+            "",
+            "### PRINT reader against the survey's totals blocks (disc.json)",
+            "",
+            f"{summary['print_oracle_compared']} workbooks compared on discount, DPP, PPN and",
+            f"grand total; {len({d['path'] for d in diffs})} differ. The survey read the last",
+            "number in each labelled row, so it misses values one column further right and",
+            "takes page subtotals for totals; each difference below was checked against the",
+            "sheet.",
+            "",
+            "| Workbook | Field | Ours | Survey | Survey label |",
+            "|---|---|---|---|---|",
+        ]
+        out += [
+            f"| {_md_escape(d['path'])} | {d['field']} | {_rp(d['ours'])} | {_rp(d['oracle'])} "
+            f"| {_md_escape(d['label'])} |"
+            for d in diffs
+        ]
+    return out
+
+
+CAUSES = {
+    "print_total_zero_price_list": "price list or options: PRINT shows unit prices but no "
+    "amounts, so its totals are Rp 0; the lines are kept and the owner decides how to "
+    "import them (the app has no optional line).",
+    "print_totals_zero": "the PRINT totals block is all zero (amount formulas empty when "
+    "printed); the PDF, where one exists, shows the same.",
+    "print_grand_is_dpp_plus_ppn": "the 2026 PRINT template adds PPN to DPP Nilai Lain "
+    "instead of to the Sub Total, so its Grand Total is short by Sub Total - DPP.",
+    "print_ppn_on_pre_discount_amount": "the PRINT block shows a discount but computes PPN "
+    "and the total on the amount before it.",
+    "print_line_amounts_differ": "PRINT shows different amounts than DATA ENTRI on the "
+    "lines listed in the record's print_line_diffs, and those lines account for the whole "
+    "difference (a PRINT cell typed over or pointing at another row).",
+    "line_amounts_differ": "the PRINT amounts or line set differ from DATA ENTRI and no "
+    "single set of lines explains it (PRINT formulas pointing at the wrong rows).",
+    "print_field_zero": "PRINT shows zero for this field while the others are filled.",
+    "pdf_total_zero": "the PDF prints its Grand Total as Rp - (amounts blank when printed).",
+    "follows_gross_difference": "follows from the gross difference on the same quotation.",
+    "discount_differs": "the printed discount differs from the computed one.",
+    "dpp_rule_differs": "the PRINT block and the computed totals disagree on DPP Nilai Lain.",
+    "workbook_holds_other_content": "the PDF prints none of the record's lines: the "
+    "workbook was reused for another quotation, so the PDF is the only copy of what the "
+    "client received under this number (flagged for the owner).",
+    "workbook_changed_after_pdf": "the workbook's PRINT total differs from the PDF the "
+    "client received; the workbook was edited after the PDF was made.",
+    "pdf_differs_no_print_total": "the PDF differs and the workbook has no PRINT total.",
+    "unexplained": "no known cause; listed for review.",
+}
+
+
+def dump_staged(staged: Record) -> str:
+    """JSON with one list item (a quotation) per line, so diffs stay readable."""
+
+    def enc(v: object) -> str:
+        return json.dumps(v, ensure_ascii=False, default=str)
+
+    parts = []
+    for key, value in staged.items():
+        if isinstance(value, list):
+            items = ",\n".join(enc(v) for v in value)
+            parts.append(f"{enc(key)}: [\n{items}\n]")
+        else:
+            parts.append(f"{enc(key)}: {enc(value)}")
+    return "{\n" + ",\n".join(parts) + "\n}\n"
+
+
+def main() -> int:
+    data = data_dir()
+    if not (data / "Quotation").is_dir():
+        print(f"no Quotation folder under {data}; set GNS_DATA_DIR", file=sys.stderr)
+        return 1
+    staged, report = run(data, oracle_dir())
+    OUT_DIR.mkdir(exist_ok=True)
+    (OUT_DIR / "staged.json").write_text(dump_staged(staged), encoding="utf-8")
+    (OUT_DIR / "parse_report.md").write_text(report, encoding="utf-8")
+    print(
+        f"{len(staged['quotations'])} quotations, {len(staged['excluded_files'])} files excluded, "
+        f"{len(staged['dropped_copies'])} copies dropped; wrote {OUT_DIR}",
+        file=sys.stderr,
+    )
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

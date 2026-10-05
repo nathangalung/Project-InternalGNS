@@ -356,8 +356,21 @@ func (s *scenarioState) changeNumber() error {
 	if err != nil {
 		return err
 	}
+	s.number = number
 	body := map[string]any{"name": s.name, "countryCode": "IDN", "isActive": true, "number": number}
 	return s.sendRequest(http.MethodPut, "/clients/"+strconv.FormatInt(s.clientID, 10), body)
+}
+
+// Client holds the sent number.
+func (s *scenarioState) numberIsChanged() error {
+	var c clients.Client
+	if err := json.Unmarshal(s.body, &c); err != nil {
+		return err
+	}
+	if c.Number == nil || *c.Number != s.number {
+		return fmt.Errorf("want client number %q body=%s", s.number, s.body)
+	}
+	return nil
 }
 
 var fourDigits = regexp.MustCompile(`^[0-9]{4}$`)
@@ -408,6 +421,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the client number error reads "([^"]+)"$`, state.numberErrorReads)
 		sc.Step(`^a quotation references the client$`, state.quoteClient)
 		sc.Step(`^the user changes the client number$`, state.changeNumber)
+		sc.Step(`^the client carries the new number$`, state.numberIsChanged)
 		registerRuleSteps(sc, state)
 	}
 }

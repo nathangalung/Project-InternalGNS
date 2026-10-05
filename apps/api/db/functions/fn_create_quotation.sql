@@ -1,4 +1,4 @@
--- Canonical current body of fn_create_quotation (deployed by migration 00092).
+-- Canonical current body of fn_create_quotation (deployed by migration 00098).
 CREATE OR REPLACE FUNCTION public.fn_create_quotation(p_company_client_id bigint, p_contact_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_created_by bigint, p_notes text DEFAULT NULL::text, p_status text DEFAULT 'draft'::text)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -30,6 +30,13 @@ BEGIN
     RAISE EXCEPTION 'Diskon harus antara 0 dan 100; nilai yang dikirim %.', p_discount_pct
       USING ERRCODE = 'P0014';
   END IF;
+
+  -- Number first, before any lock.
+  -- The counter row is then the first lock this transaction takes, so the
+  -- line preparation (fn_link_vendor_item, trg_fn_sync_vendor_cost) never
+  -- holds a row another creator needs while it waits for the counter. A
+  -- refused quotation rolls the number back with it.
+  v_quotation_no := fn_next_doc_no('Q');
 
   -- The pct the lines inherit, at column scale.
   v_pct := p_discount_pct;
@@ -81,9 +88,6 @@ BEGIN
     v_dpp   := v_dpp + fn_line_dpp(p_shipping_cost);
     v_ppn   := v_ppn + fn_line_ppn(p_shipping_cost);
   END IF;
-
-  -- 4. Generate quotation_no
-  v_quotation_no := fn_next_doc_no('Q', p_company_client_id);
 
   -- 5. INSERT header
   INSERT INTO quotations (

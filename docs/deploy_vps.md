@@ -346,9 +346,10 @@ ssh sysadmin@galung 'docker exec -i \
   < apps/api/db/seeds/01_master.sql
 ```
 
-The container supplies its own user and database name. Do **not** run any
-other seed on prod: `03_historical.sql` truncates the quotation, PO, invoice,
-catalog and client tables before rebuilding them, and 04 to 06 build on it.
+The container supplies its own user and database name. Do **not** load any
+other seed on prod directly: the historical data goes in only through the
+replacement in `docs/data_reimport_plan.md`, with a seed built on the
+operator's machine and copied over ssh (it is never in the repository).
 
 ## 8. MinIO buckets
 
@@ -740,12 +741,14 @@ older, takes three more things:
   merge that to `main`, where Dokploy reads it. Setting `TAG` alone keeps
   the enforcing label on the older SPA.
 
-That decision comes too late to protect the numbers. A document number is
-the client number plus a counter in `doc_sequences`, and new clients draw
-their number from `company_client_number_seq`. The restore rewinds both, so
-the first quotation, PO, delivery note or invoice after the rollback would
-reuse a number already filed with a client or DJP. Step 3 saves the counters
-the failed release reached, and step 6 raises them again before the Deploy.
+That decision comes too late to protect the numbers. Quotation, invoice and
+delivery-note numbers come from one counter per type in `doc_counters`
+(00098), and new clients draw their number from `company_client_number_seq`.
+The restore rewinds both, so the first quotation, delivery note or invoice
+after the rollback would reuse a number already filed with a client or DJP.
+Step 3 saves the counters the failed release reached, and step 6 raises them
+again before the Deploy. A PO's number is the client's own and needs no
+counter.
 
 ```bash
 set -a; . /etc/internalgns-backup.env; set +a
@@ -765,8 +768,7 @@ systemctl start internalgns-backup.service
 # 3. Save the counters the failed release reached, and the top version of
 #    each quotation chain. Stop if a command fails. If the failed release
 #    never started (its migrations failed), nothing was numbered: skip 3 and 6.
-q -c "COPY (SELECT s.doc_type, s.company_id, c.number, s.year, s.last_seq
-  FROM doc_sequences s JOIN company_client c ON c.id = s.company_id) TO STDOUT" >"$NUM.tsv"
+q -c "COPY (SELECT doc_type, last_seq FROM doc_counters) TO STDOUT" >"$NUM.tsv"
 q -F ' ' -c "SELECT last_value, is_called FROM company_client_number_seq" >"$NUM.seq"
 q -c "COPY (SELECT regexp_replace(quotation_no, ' Rev\.[0-9]+\$', ''), max(version)
   FROM quotations GROUP BY 1) TO STDOUT" >"$NUM.rev"
@@ -782,36 +784,41 @@ done
 # 5. Restore; the last line reads "restore ok: ...".
 /opt/internalgns-ops/restore.sh "$SNAP" "$DB"
 
-# 6. Raise the counters to the saved ones, never lower. A client matches a
-#    saved row by id or by number; an id survives the restore even where
-#    00052 padded the number. It prints each saved client number no client
-#    has now (clients entered after the deploy, which the restore removed)
-#    and each quotation revised after the deploy.
+# 6. Raise the counters to the saved ones, never lower. It prints each
+#    counter it raised, or that the restored release has no doc_counters
+#    (see below), and each quotation revised after the deploy.
 raise() {
   read -r last called <"$NUM.seq"
   { printf '%s\n' 'BEGIN;' \
-      'CREATE TEMP TABLE seen (doc_type text, company_id bigint, number text, year int, last_seq int);' \
+      'CREATE TEMP TABLE seen (doc_type text, last_seq int);' \
       'COPY seen FROM STDIN;'
     cat "$NUM.tsv"
     printf '%s\n' '\.' 'CREATE TEMP TABLE revs (base text, version int);' 'COPY revs FROM STDIN;'
     cat "$NUM.rev"
     printf '%s\n' '\.'
     cat <<SQL
-INSERT INTO doc_sequences AS d (doc_type, company_id, year, last_seq)
-SELECT s.doc_type, c.id, s.year, max(s.last_seq)
-FROM seen s JOIN company_client c ON c.id = s.company_id OR c.number = s.number
-GROUP BY s.doc_type, c.id, s.year
-ON CONFLICT (doc_type, company_id, year)
-DO UPDATE SET last_seq = greatest(d.last_seq, excluded.last_seq), updated_at = now();
+DO \$\$
+DECLARE r record;
+BEGIN
+  IF to_regclass('public.doc_counters') IS NULL THEN
+    RAISE NOTICE 'doc_counters missing: run raise again after 00098 is deployed';
+    RETURN;
+  END IF;
+  FOR r IN
+    UPDATE doc_counters d SET last_seq = s.last_seq, updated_at = now()
+    FROM seen s WHERE s.doc_type = d.doc_type AND s.last_seq > d.last_seq
+    RETURNING d.doc_type, d.last_seq
+  LOOP
+    RAISE NOTICE '% counter raised to %', r.doc_type, r.last_seq;
+  END LOOP;
+END
+\$\$;
 SELECT 'client number sequence raised to ' || setval(r, last, called)
 FROM (SELECT to_regclass('company_client_number_seq') AS r,
              $last AS last, '$called'::boolean AS called) x
 WHERE r IS NOT NULL
   AND last + called::int > coalesce(pg_sequence_last_value(r) + 1, 1);
 COMMIT;
-SELECT DISTINCT 'removed client ' || s.number FROM seen s
-WHERE NOT EXISTS (SELECT 1 FROM company_client c
-                  WHERE c.id = s.company_id OR c.number = s.number);
 SELECT 'revised after the deploy ' || r.base FROM revs r
 JOIN (SELECT regexp_replace(quotation_no, ' Rev\.[0-9]+$', '') AS base,
              max(version) AS version
@@ -830,14 +837,16 @@ raise
    client logo. Login writes a refresh token, the insert a tag-only rollback
    breaks.
 
-Keep the `removed client` lines from step 6. Their documents now exist only
-outside the database. v0.3.1 has no number generator, so client numbers are
-typed by hand there. When someone enters a client under a listed number,
-run `raise` again before that client's first document. In a new shell, run
-the whole preamble first (the env file, `NUM`, `svc`, `PG`, `q`) and paste
-the `raise` definition. Until then its counters start at 1 and reissue the
-numbers the removed client filed. A rollback target without
-`company_client_number_seq` (00056) skips the sequence line.
+A rollback target older than 00098 has no `doc_counters`; `raise` says so
+and changes no counter. Its own numbers embed the client number, so they
+cannot collide with the ones the failed release issued, but when 00098 is
+deployed again it starts each counter at the highest new-format number left
+in the database, which no longer holds the failed release's. Keep `$NUM.tsv`
+and run `raise` again right after that deploy, before anyone issues a
+quotation, delivery note or invoice. In a new shell, run the whole preamble
+first (the env file, `NUM`, `svc`, `PG`, `q`) and paste the `raise`
+definition. A rollback target without `company_client_number_seq` (00056)
+skips the sequence line.
 
 A revision takes its number from the quotation it revises (`Rev.<n>` on the
 base number), not from a counter, so no raise can protect it. Do not revise

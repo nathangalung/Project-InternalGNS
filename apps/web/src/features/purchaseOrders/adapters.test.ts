@@ -58,7 +58,7 @@ describe("poRowFromBackend", () => {
   const po = {
     id: 28,
     quotationId: 549,
-    quotationNo: "Q-1/GNS/IX/2026",
+    quotationNo: "Q-00001/GNS/IX/2026",
     poNumber: "PO-77",
     poDate: "2026-09-01T00:00:00+07:00",
     companyClientId: 4,
@@ -67,7 +67,7 @@ describe("poRowFromBackend", () => {
     quotationTotal: "999000.00",
     poGrandTotal: "799200.00",
     rowVersion: 3,
-    deliveryNoteNumber: "DN-1/GNS/IX/2026",
+    deliveryNoteNumber: "DN-00001/GNS/IX/2026",
   } as PurchaseOrderRow
 
   it("shows the PO total, not the quotation total", () => {
@@ -75,7 +75,7 @@ describe("poRowFromBackend", () => {
     expect(row.total).toBe(formatRupiah("799200.00"))
     expect(row.poDate).toBe("2026-09-01")
     expect(row.rowVersion).toBe(3)
-    expect(row.deliveryNoteNumber).toBe("DN-1/GNS/IX/2026")
+    expect(row.deliveryNoteNumber).toBe("DN-00001/GNS/IX/2026")
     expect(row.companyClientId).toBe(4)
   })
 })
@@ -90,6 +90,14 @@ describe("detailsChanged", () => {
     [{ poNumber: "PO-77", poDate: "2026-09-02" }, true],
   ])("%o -> %s", (next, changed) => {
     expect(detailsChanged(row, next)).toBe(changed)
+  })
+
+  // Numberless PO compares blank.
+  it.each([
+    [{ poNumber: "  ", poDate: "2026-09-01" }, false],
+    [{ poNumber: "PO-1", poDate: "2026-09-01" }, true],
+  ])("numberless %o -> %s", (next, changed) => {
+    expect(detailsChanged({ poDate: "2026-09-01" }, next)).toBe(changed)
   })
 })
 

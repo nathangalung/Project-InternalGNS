@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
-import { api, deactivate, idFrom, rupiah } from "./support/sales"
+import { wibDay } from "./support/finance"
+import { api, deactivate, idFrom, rupiah, setQuotationLegacyNo } from "./support/sales"
 import { expect, test } from "./support/seed"
 import { xlsx } from "./support/xlsx"
 
@@ -9,6 +10,8 @@ import { xlsx } from "./support/xlsx"
 // acceptance creates.
 
 type Request = { requestText: string; matchStatus: string }
+
+const ROMAN_MONTHS = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
 
 // Amount next to a label.
 function amountAfter(scope: Locator, label: string): Locator {
@@ -823,6 +826,43 @@ test.describe("quotation status", () => {
 })
 
 test.describe("quotation list", () => {
+  // Imports keep their old number.
+  test("a re-imported quotation is found and shown by its old number", async ({ page, seed }) => {
+    const client = await seed.client()
+    const item = await seed.item()
+    const q = await seed.quotation({ client, lines: [{ item, qty: 1, price: 30_000 }] })
+    const legacy = `Q-26${seed.prefix}/GNS/X/2025`
+    setQuotationLegacyNo(q.id, legacy)
+
+    await page.goto("/quotations")
+    await page.getByPlaceholder("Cari penawaran, klien, atau nomor...").fill(legacy)
+    await page.getByRole("link", { name: q.quotationNo }).click()
+    await expect(page.getByText(`No. lama: ${legacy}`)).toBeVisible()
+  })
+
+  // Numbers carry their period.
+  test("a search by month and year finds this month's numbers", async ({ page, seed }) => {
+    const client = await seed.client()
+    const item = await seed.item()
+    const q = await seed.quotation({ client, lines: [{ item, qty: 1, price: 30_000 }] })
+    const day = wibDay()
+    const year = day.slice(0, 4)
+    const roman = ROMAN_MONTHS[Number(day.slice(5, 7)) - 1]
+    expect(q.quotationNo).toMatch(new RegExp(`^Q-\\d{5,}/GNS/${roman}/${year}$`))
+
+    await page.goto("/quotations")
+    await page.getByRole("button", { name: /^\d+ Baris$/ }).click()
+    await page.getByRole("menuitemradio", { name: "15 Baris", exact: true }).click()
+    await page
+      .getByPlaceholder("Cari penawaran, klien, atau nomor...")
+      .fill(` ${day.slice(5, 7)}/${year} `)
+    await expect(page.getByRole("link", { name: q.quotationNo })).toBeVisible()
+    // Only that month: I/2026 never lists II/2026.
+    for (const no of await page.getByRole("link", { name: /^Q-\d{5,}\// }).allTextContents()) {
+      expect(no).toContain(`/GNS/${roman}/${year}`)
+    }
+  })
+
   // No match is not an empty list.
   test("a search with no match names the term, not Belum ada", async ({ page }) => {
     await page.goto("/quotations")

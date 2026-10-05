@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -154,6 +155,7 @@ func buildExportData(
 	hasShipping := false
 	// fn_create_quotation writes at most one shipping line.
 	deliveryTime := ""
+	shipTo := ""
 
 	for _, it := range d.Items {
 		unitCode := ""
@@ -164,6 +166,9 @@ func buildExportData(
 		if shipping {
 			if it.ShippingDays != nil {
 				deliveryTime = daysText(*it.ShippingDays)
+			}
+			if it.ShipDestination != nil {
+				shipTo = strings.TrimSpace(*it.ShipDestination)
 			}
 			// A line kept only for its address is no charge.
 			if !isPriced(it.SellingPrice) {
@@ -186,8 +191,10 @@ func buildExportData(
 		})
 	}
 
-	delivery := ""
-	if d.VesselName != nil {
+	// The shipping address is the delivery place; the vessel stands in
+	// when the quotation has none.
+	delivery := shipTo
+	if delivery == "" && d.VesselName != nil {
 		delivery = *d.VesselName
 	}
 	payment := ""

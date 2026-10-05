@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router"
 import EntityLink from "@/components/shared/EntityLink"
+import LegacyNo from "@/components/shared/LegacyNo"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { formatDate } from "@/lib/format"
 import { ui } from "@/lib/ui"
@@ -66,6 +67,7 @@ export default function Header({ inv, status, onDownloadPdf }: HeaderProps) {
           <div className="min-w-0">
             <h1 className={ui.detailTitle}>Invoice {inv.invoiceNo}</h1>
             <div className={ui.metaRow}>
+              <LegacyNo value={inv.legacyNo} />
               <span className={ui.metaText}>Dibuat pada: {formatDate(inv.createdAt)}</span>
               <span className={ui.metaSep}>|</span>
               <span className={ui.metaText}>

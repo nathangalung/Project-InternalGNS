@@ -49,15 +49,6 @@ func (s *scenarioState) acceptedQuotationWithoutAddresses() error {
 		return fmt.Errorf("insert client: %w", err)
 	}
 	s.cleaner.Client(f.clientID)
-	// Its document counters RESTRICT the client delete. Registered after
-	// the cleaner, so this runs first.
-	clientID := f.clientID
-	s.t.Cleanup(func() {
-		if _, err := pool.Exec(context.Background(),
-			`DELETE FROM doc_sequences WHERE company_id = $1`, clientID); err != nil {
-			s.t.Errorf("drop doc sequences of client %d: %v", clientID, err)
-		}
-	})
 	for i, id := range []*int64{&f.firstContact, &f.chosen} {
 		if err := pool.QueryRow(ctx, `
 			INSERT INTO company_contacts (company_id, name, email, country_code, created_by, updated_by)
@@ -228,9 +219,10 @@ func (s *scenarioState) gateListsExactly(table *godog.Table) error {
 // issueKey is its fields key.
 func issueKey(is purchaseorders.CompletenessIssue) string {
 	scope := map[purchaseorders.IssueKind]string{
-		purchaseorders.KindClient:   "klien",
-		purchaseorders.KindVendor:   "vendor",
-		purchaseorders.KindShipping: "pengiriman",
+		purchaseorders.KindPurchaseOrder: "po",
+		purchaseorders.KindClient:        "klien",
+		purchaseorders.KindVendor:        "vendor",
+		purchaseorders.KindShipping:      "pengiriman",
 	}[is.Kind]
 	return scope + ":" + strconv.FormatInt(is.ID, 10)
 }
@@ -238,6 +230,8 @@ func issueKey(is purchaseorders.CompletenessIssue) string {
 // gateKey resolves a table label.
 func (s *scenarioState) gateKey(label string) (string, error) {
 	switch label {
+	case "po":
+		return "po:" + strconv.FormatInt(s.poID, 10), nil
 	case "klien":
 		return "klien:" + strconv.FormatInt(s.gate.clientID, 10), nil
 	case "vendor":

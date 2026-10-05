@@ -1,4 +1,4 @@
--- Canonical current body of fn_create_invoice (deployed by migration 00095).
+-- Canonical current body of fn_create_invoice (deployed by migration 00098).
 -- Snapshots a delivered PO's items into a draft invoice. Line tax figures are
 -- rounded per line; the header tax figures are the SUM of those per-line values
 -- so the invoice matches what is filed with DJP per line via e-faktur.
@@ -43,7 +43,7 @@ BEGIN
   SELECT COALESCE(SUM(subtotal), 0) INTO v_dpp
   FROM purchase_order_items WHERE po_id = p_po_id;
 
-  v_inv_no := fn_next_doc_no('INV', v_company_id);
+  v_inv_no := fn_next_doc_no('INV');
 
   -- The buyer is stored as the client is now.
   INSERT INTO invoices (

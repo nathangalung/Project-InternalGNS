@@ -39,20 +39,24 @@ func (s *scenarioState) poNumberAndDate(number, date string) error {
 	if err != nil {
 		return err
 	}
-	if po.PoNumber != number || po.PoDate.Format(time.DateOnly) != date {
-		return fmt.Errorf("want %s dated %s got %s dated %s", number, date, po.PoNumber, po.PoDate.Format(time.DateOnly))
+	got := ""
+	if po.PoNumber != nil {
+		got = *po.PoNumber
+	}
+	if got != number || po.PoDate.Format(time.DateOnly) != date {
+		return fmt.Errorf("want %s dated %s got %s dated %s", number, date, got, po.PoDate.Format(time.DateOnly))
 	}
 	return nil
 }
 
-// The PO keeps fn_next_doc_no's number.
-func (s *scenarioState) poKeepsGeneratedNumber() error {
+// PO keeps accepted number.
+func (s *scenarioState) poKeepsClientNumber() error {
 	po, err := s.readPO()
 	if err != nil {
 		return err
 	}
-	if !strings.HasPrefix(po.PoNumber, "PO-") {
-		return fmt.Errorf("want the generated PO- number got %q", po.PoNumber)
+	if po.PoNumber == nil || *po.PoNumber != s.poNumber {
+		return fmt.Errorf("want the client number %q got %+v", s.poNumber, po)
 	}
 	return nil
 }
@@ -113,11 +117,11 @@ func (s *scenarioState) exportRowForPO() ([]string, error) {
 		return nil, err
 	}
 	for _, row := range rows[1:] {
-		if len(row) > exportPOCol && row[exportPOCol] == po.PoNumber {
+		if len(row) > exportPOCol && po.PoNumber != nil && row[exportPOCol] == *po.PoNumber {
 			return row, nil
 		}
 	}
-	return nil, fmt.Errorf("export has no row for %s: %v", po.PoNumber, rows)
+	return nil, fmt.Errorf("export has no row for PO %d: %v", po.ID, rows)
 }
 
 func (s *scenarioState) exportShowsPOTotal(want string) error {
@@ -161,7 +165,7 @@ func registerListDetailsSteps(sc *godog.ScenarioContext, s *scenarioState) {
 	sc.Step(`^the user edits PO details with number "([^"]+)" dated "([^"]+)"$`, s.editPODetailsDated)
 	sc.Step(`^the user edits PO details with a number of (\d+) characters$`, s.editPODetailsOfLength)
 	sc.Step(`^the PO number is "([^"]+)" dated "([^"]+)"$`, s.poNumberAndDate)
-	sc.Step(`^the PO keeps its generated number$`, s.poKeepsGeneratedNumber)
+	sc.Step(`^the PO keeps its client number$`, s.poKeepsClientNumber)
 	sc.Step(`^another PO of the same client holds the number "([^"]+)"$`, s.otherPOHoldsNumber)
 	sc.Step(`^the user lists POs with a total of at (least|most) "([^"]+)"$`, s.listPOsWithTotal)
 	sc.Step(`^the PO list (includes|excludes) the PO$`, s.poListHasPO)

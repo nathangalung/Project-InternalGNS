@@ -24,6 +24,8 @@ import {
   completenessIssues,
   isInvoiceFiled,
   isPoLockRefusal,
+  type PoDetailsErrors,
+  poDetailsErrors,
   poErrorMessage,
 } from "./PurchaseOrderDetail/helpers"
 import type { PoRow } from "./types"
@@ -140,7 +142,8 @@ export function useChangePoStatus() {
 
 // Stale version refetches the PO.
 //
-// The invoice shows No. PO and Tanggal PO, so it refreshes too.
+// The invoice shows No. PO and Tanggal PO, so it refreshes too. A 422 names
+// a field the upload modal shows, so only the rest is toasted.
 export function useUpdatePoDetails() {
   const qc = useQueryClient()
   return useMutation({
@@ -159,7 +162,10 @@ export function useUpdatePoDetails() {
       qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
       qc.invalidateQueries({ queryKey: queryKeys.invoices.all })
     },
-    onError: (err) => reportPoError(qc, err, "Gagal memperbarui detail PO."),
+    onError: (err) => {
+      if (poDetailsErrors(err)) return
+      reportPoError(qc, err, "Gagal memperbarui detail PO.")
+    },
   })
 }
 
@@ -220,11 +226,17 @@ export function useUpdatePoItems() {
   })
 }
 
+// Outcome of an upload save.
+//
+// Saved closes the modal; errors are the details refusal it shows inline.
+export type PoSaveResult = { saved: boolean; errors: PoDetailsErrors | null }
+
 // Upload modal: locks and save.
 //
 // Attaching a file bumps row_version, so the details write goes first while
-// the version the user loaded is still current. Both hooks toast their own
-// errors; save only says whether to close the modal.
+// the version the user loaded is still current. Both hooks toast the errors
+// the modal cannot show; save says whether to close the modal and returns
+// the details refusal for its fields.
 //
 // Number and date lock on a filed invoice. Roles that cannot read invoices
 // learn it from a refused save, which then locks the fields for that PO.
@@ -244,8 +256,8 @@ export function usePoUpload(row: PoRow | undefined) {
   async function save(
     file: File | null,
     details: { poNumber: string; poDate: string },
-  ): Promise<boolean> {
-    if (!row) return false
+  ): Promise<PoSaveResult> {
+    if (!row) return { saved: false, errors: null }
     let step: "details" | "file" = "details"
     try {
       if (detailsChanged(row, details)) {
@@ -253,10 +265,11 @@ export function usePoUpload(row: PoRow | undefined) {
       }
       step = "file"
       if (file) await uploadFile.mutateAsync({ id: row.id, file })
-      return true
+      return { saved: true, errors: null }
     } catch (err) {
-      if (step === "details" && isPoLockRefusal(err)) setRefusedId(row.id)
-      return false
+      if (step === "file") return { saved: false, errors: null }
+      if (isPoLockRefusal(err)) setRefusedId(row.id)
+      return { saved: false, errors: poDetailsErrors(err) }
     }
   }
 

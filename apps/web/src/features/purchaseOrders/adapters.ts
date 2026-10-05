@@ -78,7 +78,9 @@ type PoDetails = { poNumber: string; poDate: string }
 // Once the invoice is filed the server refuses any details write, even one
 // that repeats the stored values, so a file-only upload must not send it.
 export function detailsChanged(row: Pick<PoRow, "poNumber" | "poDate">, next: PoDetails): boolean {
-  return next.poNumber.trim() !== row.poNumber.trim() || next.poDate !== row.poDate.slice(0, 10)
+  return (
+    next.poNumber.trim() !== (row.poNumber ?? "").trim() || next.poDate !== row.poDate.slice(0, 10)
+  )
 }
 
 // Stored line, resent when untouched.

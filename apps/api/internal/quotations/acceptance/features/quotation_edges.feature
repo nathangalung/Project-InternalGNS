@@ -7,10 +7,12 @@ Feature: Quotation edges and access
     Given an authenticated user with id 1
     And the quotation domain is empty
 
+  # The shipping address is the delivery place; the vessel stands in
+  # only when the quotation has none.
   Scenario: The PDF prints the delivery place and the shipping days
     Given a draft quotation for vessel "MV GLOBAL STAR" shipped in 5 days
     When the user downloads the quotation PDF
-    Then the PDF prints "DELIVERY PLACE : MV GLOBAL STAR"
+    Then the PDF prints "DELIVERY PLACE : Tanjung Priok"
     And the PDF prints "DELIVERY TIME : 5 days"
 
   # PUT replaces the header: a field left out is cleared, so the edit

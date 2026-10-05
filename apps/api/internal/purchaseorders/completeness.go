@@ -29,6 +29,13 @@ type ClientCompleteness struct {
 	ContactInactive bool `db:"contact_inactive"`
 }
 
+// gateRow carries number and client.
+// The PO's own number, read in the same query as its client.
+type gateRow struct {
+	ClientCompleteness
+	PoNumber *string `db:"po_number"`
+}
+
 // VendorCompleteness is a line's vendor.
 type VendorCompleteness struct {
 	ID           int64   `db:"id"`
@@ -53,7 +60,8 @@ type CompletenessGap struct {
 }
 
 // CompletenessIssue is one record's gaps.
-// Kind and ID name the record to open (the PO itself for shipping), and
+// Kind and ID name the record to open (the PO itself for its number and
+// shipping), and
 // Message is the Indonesian sentence the problem's fields carry for it.
 type CompletenessIssue struct {
 	Kind    IssueKind         `json:"kind"`
@@ -78,15 +86,17 @@ const IncompleteCode = "po_incomplete"
 type IssueKind string
 
 const (
-	KindClient   IssueKind = "client"
-	KindVendor   IssueKind = "vendor"
-	KindShipping IssueKind = "shipping"
+	KindPurchaseOrder IssueKind = "po"
+	KindClient        IssueKind = "client"
+	KindVendor        IssueKind = "vendor"
+	KindShipping      IssueKind = "shipping"
 )
 
 // GapCode tags one missing field.
 type GapCode string
 
 const (
+	GapPoNumber        GapCode = "po_number"
 	GapClientNumber    GapCode = "client_number"
 	GapClientNpwp      GapCode = "client_npwp"
 	GapClientAddress   GapCode = "client_address"
@@ -101,12 +111,16 @@ const (
 // scopeWord names kinds in Indonesian.
 // It keys the legacy fields ("klien:<id>") and starts each sentence.
 var scopeWord = map[IssueKind]string{
-	KindClient:   "klien",
-	KindVendor:   "vendor",
-	KindShipping: "pengiriman",
+	KindPurchaseOrder: "po",
+	KindClient:        "klien",
+	KindVendor:        "vendor",
+	KindShipping:      "pengiriman",
 }
 
-const shippingMessage = "Alamat pengiriman belum diisi"
+const (
+	poNumberMessage = "No. PO klien belum diisi"
+	shippingMessage = "Alamat pengiriman belum diisi"
+)
 
 func filled(v *string) bool {
 	return v != nil && strings.TrimSpace(*v) != ""
@@ -166,6 +180,19 @@ func recordIssue(kind IssueKind, id int64, name string, missing []CompletenessGa
 		Kind: kind, ID: id, Name: name, Missing: missing,
 		Message: "Data " + scopeWord[kind] + " " + name + " belum lengkap: " + strings.Join(labels, ", "),
 	}
+}
+
+// poNumberIssues flags a numberless PO.
+// The PO number is the client's own, entered on the PO, so the gap is keyed
+// by the PO.
+func poNumberIssues(poID int64, number *string) []CompletenessIssue {
+	if filled(number) {
+		return nil
+	}
+	return []CompletenessIssue{{
+		Kind: KindPurchaseOrder, ID: poID, Message: poNumberMessage,
+		Missing: []CompletenessGap{{GapPoNumber, "No. PO Klien"}},
+	}}
 }
 
 // shippingIssues flags unaddressed goods.

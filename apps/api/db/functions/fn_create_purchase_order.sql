@@ -1,11 +1,10 @@
--- Canonical current body of fn_create_purchase_order (deployed by migration 00084).
+-- Canonical current body of fn_create_purchase_order (deployed by migration 00098).
 CREATE OR REPLACE FUNCTION public.fn_create_purchase_order(p_quotation_id bigint, p_user_id bigint)
  RETURNS bigint
  LANGUAGE plpgsql
 AS $function$
 DECLARE
   v_po_id        BIGINT;
-  v_po_no        TEXT;
   v_company_id   BIGINT;
   v_contact_id   BIGINT;
 BEGIN
@@ -23,13 +22,12 @@ BEGIN
       USING ERRCODE = 'P0011';
   END IF;
 
-  v_po_no := fn_next_doc_no('PO', v_company_id);
-
+  -- po_number is the client's own, entered later.
   INSERT INTO purchase_orders (
-    po_number, quotation_id, company_client_id, contact_id,
+    quotation_id, company_client_id, contact_id,
     po_date, status, created_by, updated_by
   ) VALUES (
-    v_po_no, p_quotation_id, v_company_id, v_contact_id,
+    p_quotation_id, v_company_id, v_contact_id,
     CURRENT_DATE, 'PENDING', p_user_id, p_user_id
   ) RETURNING id INTO v_po_id;
 

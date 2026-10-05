@@ -45,6 +45,7 @@ func acceptedQuotationForCompany(t *testing.T, tx pgx.Tx, companyID int64) int64
 
 	po, err := purchaseorders.NewRepo(tx, testutil.Store(t)).GetByQuotation(ctx, qid)
 	require.NoError(t, err)
+	testutil.EnterPONumber(t, ctx, tx, po.ID)
 	return po.ID
 }
 
@@ -83,4 +84,39 @@ func TestPurchaseOrders_ClientPoNumberScopedToClient(t *testing.T) {
 	_, samePoID := acceptedQuotationWithPO(t, tx)
 	err := repo.UpdateDetails(ctx, samePoID, shared, poDateFixture(), seedUserID, nil)
 	assert.ErrorIs(t, err, purchaseorders.ErrDuplicatePoNumber)
+}
+
+// Case variants are one number.
+func TestPurchaseOrders_ClientPoNumberIgnoresCase(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, first := acceptedQuotationWithPO(t, tx)
+	_, second := acceptedQuotationWithPO(t, tx)
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+	require.NoError(t, repo.UpdateDetails(ctx, first, "PO/Klien/0007", poDateFixture(), seedUserID, nil))
+
+	// A savepoint keeps the refusal from aborting the test tx.
+	sp, err := tx.Begin(ctx)
+	require.NoError(t, err)
+	err = purchaseorders.NewRepo(sp, testutil.Store(t)).
+		UpdateDetails(ctx, second, "  po/klien/0007 ", poDateFixture(), seedUserID, nil)
+	assert.ErrorIs(t, err, purchaseorders.ErrDuplicatePoNumber)
+	require.NoError(t, sp.Rollback(ctx))
+}
+
+// Cancelling frees the number.
+// The order that replaces a cancelled PO carries the same client number.
+func TestPurchaseOrders_ClientPoNumberReusedAfterCancel(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, cancelled := acceptedQuotationWithPO(t, tx)
+	_, next := acceptedQuotationWithPO(t, tx)
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+	const number = "PO/KLIEN/ULANG"
+	require.NoError(t, repo.UpdateDetails(ctx, cancelled, number, poDateFixture(), seedUserID, nil))
+	require.NoError(t, repo.Transition(ctx, cancelled, purchaseorders.StatusCancelled, "Pesanan diganti", seedUserID))
+
+	require.NoError(t, repo.UpdateDetails(ctx, next, number, poDateFixture(), seedUserID, nil))
+	po, err := repo.GetByID(ctx, next)
+	require.NoError(t, err)
+	require.NotNil(t, po.PoNumber)
+	assert.Equal(t, number, *po.PoNumber)
 }

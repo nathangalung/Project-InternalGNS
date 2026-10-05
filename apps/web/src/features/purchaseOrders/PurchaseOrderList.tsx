@@ -17,12 +17,15 @@ import { useListScreen, usePageWithin } from "@/lib/useListScreen"
 import { poRowFromBackend } from "./adapters"
 import * as purchaseOrdersApi from "./api"
 import { usePoUpload, usePurchaseOrders } from "./hooks"
+import PoNumber from "./PoNumber"
 import {
   canDownloadDeliveryNote,
   deliveryNoteFileName,
   isPoFileLocked,
   PO_LABEL,
+  PO_NUMBER_MISSING,
   PO_STATUS_CONFIG,
+  poRef,
   shortDocNo,
 } from "./PurchaseOrderDetail/helpers"
 import PurchaseOrderFilter, { type PoFilterValues } from "./PurchaseOrderFilter"
@@ -78,7 +81,9 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
     file: File | null,
     details: { poNumber: string; poDate: string },
   ) {
-    if (await upload.save(file, details)) setUploadPoId(null)
+    const result = await upload.save(file, details)
+    if (result.saved) setUploadPoId(null)
+    return result.errors
   }
 
   async function handleDownloadDN(row: PoRow) {
@@ -219,9 +224,17 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
                           {shortDocNo(row.quotationNo)}
                         </EntityLink>
                       </td>
-                      <td className={`${ui.tdCenter} font-bold`} title={row.poNumber}>
-                        <EntityLink kind="purchaseOrder" quotationId={row.quotationId}>
-                          {shortDocNo(row.poNumber)}
+                      <td
+                        className={`${ui.tdCenter} font-bold`}
+                        title={row.poNumber ?? PO_NUMBER_MISSING}
+                      >
+                        {/* Shown whole; only CSS clips a long one. */}
+                        <EntityLink
+                          kind="purchaseOrder"
+                          quotationId={row.quotationId}
+                          className="inline-block max-w-56 truncate align-bottom"
+                        >
+                          <PoNumber value={row.poNumber} />
                         </EntityLink>
                       </td>
                       <td className={`${ui.tdCenter} font-medium text-[#191C1E]`}>
@@ -241,7 +254,7 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
                           <button
                             type="button"
                             title="Lihat detail"
-                            aria-label={`Lihat detail ${row.poNumber}`}
+                            aria-label={`Lihat detail ${poRef(row)}`}
                             className={ui.iconAction}
                             onClick={() => onViewDetail?.(row.quotationId)}
                           >
@@ -250,7 +263,7 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
                           <button
                             type="button"
                             title={uploadLabel}
-                            aria-label={`${uploadLabel} ${row.poNumber}`}
+                            aria-label={`${uploadLabel} ${poRef(row)}`}
                             className={ui.iconAction}
                             onClick={() => setUploadPoId(row.id)}
                           >
@@ -277,7 +290,7 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
                                 ? "Unduh Surat Jalan"
                                 : "Surat Jalan tersedia setelah status Dalam Progres"
                             }
-                            aria-label={`Unduh Surat Jalan ${row.poNumber}`}
+                            aria-label={`Unduh Surat Jalan ${poRef(row)}`}
                             disabled={!dnReady}
                             className={
                               dnReady
@@ -332,7 +345,7 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
           detailsLocked={upload.detailsLocked}
           checking={upload.checking}
           onClose={() => setUploadPoId(null)}
-          onSubmit={(file, details) => void handleUploadSubmit(file, details)}
+          onSubmit={handleUploadSubmit}
         />
       )}
 

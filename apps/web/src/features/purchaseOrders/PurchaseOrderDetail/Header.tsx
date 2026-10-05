@@ -1,18 +1,23 @@
 import { Link } from "@tanstack/react-router"
 import EntityLink from "@/components/shared/EntityLink"
+import LegacyNo from "@/components/shared/LegacyNo"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { ui } from "@/lib/ui"
+import PoNumber from "../PoNumber"
 import type { PoStatus } from "../types"
 import { PO_LABEL, PO_STATUS_CONFIG } from "./helpers"
 
 type HeaderProps = {
-  poNumber: string
+  // None until entered
+  poNumber?: string
   quotationId: number
   quotationNo: string
   createdAt: string
   // Saved status, never the pending choice
   status: PoStatus
   deliveryNoteNumber?: string
+  // Delivery note first issued, if imported
+  legacyDnNo?: string
   // Issued at DELIVERED
   invoiceNo?: string
   // Undefined once lines are locked
@@ -29,6 +34,7 @@ export default function Header({
   createdAt,
   status,
   deliveryNoteNumber,
+  legacyDnNo,
   invoiceNo,
   onEdit,
   editLockReason,
@@ -49,14 +55,16 @@ export default function Header({
           &rsaquo;
         </span>
         <span className={ui.breadcrumbCurrent} aria-current="page">
-          Detail {poNumber}
+          Detail <PoNumber value={poNumber} />
         </span>
       </nav>
 
       <div className={ui.detailHeader}>
         <div className={ui.detailHeaderLeft}>
           <div className="min-w-0">
-            <h1 className={ui.detailTitle}>Purchase Order {poNumber}</h1>
+            <h1 className={ui.detailTitle}>
+              Purchase Order <PoNumber value={poNumber} />
+            </h1>
             <div className={ui.metaRow}>
               <span className={ui.metaText}>Dibuat pada: {createdAt}</span>
               <span className={ui.metaSep} aria-hidden="true">
@@ -76,6 +84,14 @@ export default function Header({
                   <span className={`${ui.metaText} [overflow-wrap:anywhere]`}>
                     Surat Jalan {deliveryNoteNumber}
                   </span>
+                </>
+              )}
+              {legacyDnNo && (
+                <>
+                  <span className={ui.metaSep} aria-hidden="true">
+                    |
+                  </span>
+                  <LegacyNo value={legacyDnNo} separated={false} />
                 </>
               )}
               {invoiceNo && (

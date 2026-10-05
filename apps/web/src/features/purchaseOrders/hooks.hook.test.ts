@@ -11,6 +11,7 @@ import { invalidated, renderQueryHook, seed, settle, until } from "@/test/query"
 import type { PoIncompleteProblem, Role } from "@/types/api"
 import * as api from "./api"
 import {
+  type PoSaveResult,
   useActorNames,
   useChangePoStatus,
   useInvoiceFiled,
@@ -68,6 +69,12 @@ const lockRefusal = () =>
     409,
     problem(409, { code: "po_locked", detail: "Invoice sudah terbit." }),
     "Invoice sudah terbit.",
+  )
+const numberRefused = () =>
+  new ApiError(
+    422,
+    problem(422, { fields: { poNumber: "sudah dipakai PO lain untuk klien ini" } }),
+    "Unprocessable",
   )
 const pdf = () => new File(["x"], "po.pdf", { type: "application/pdf" })
 
@@ -231,6 +238,16 @@ describe("PO writes", () => {
     expect(invalidated(qc, [poDetail, dash, invList])).toEqual([poDetail, invList])
   })
 
+  // Modal shows field refusals.
+  it("details leave a field refusal to the form", async () => {
+    m.updateDetails.mockRejectedValue(numberRefused())
+    const { result } = renderQueryHook(() => useUpdatePoDetails())
+    await settle(() =>
+      result.current.mutateAsync({ id: 3, poNumber: "PO-1", poDate: "2026-09-24", rowVersion: 4 }),
+    )
+    expect(toast.error).not.toHaveBeenCalled()
+  })
+
   it("remove file refreshes POs and dashboard", async () => {
     m.removeFile.mockResolvedValue(undefined)
     const { qc, result } = renderQueryHook(() => useRemovePoFile())
@@ -364,11 +381,11 @@ describe("usePoUpload", () => {
 
   async function save(r: PoRow | undefined, file: File | null, details: typeof same) {
     const hook = renderQueryHook(() => usePoUpload(r))
-    let ok = false
+    let res: PoSaveResult = { saved: false, errors: null }
     await act(async () => {
-      ok = await hook.result.current.save(file, details)
+      res = await hook.result.current.save(file, details)
     })
-    return { ok, hook }
+    return { ok: res.saved, errors: res.errors, hook }
   }
 
   // Details save before attaching.
@@ -420,16 +437,38 @@ describe("usePoUpload", () => {
 
   it("does not lock after a plain version conflict", async () => {
     m.updateDetails.mockRejectedValue(versionConflict())
-    const { ok, hook } = await save(row, null, changed)
+    const { ok, errors, hook } = await save(row, null, changed)
     expect(ok).toBe(false)
+    expect(errors).toBeNull()
+    expect(hook.result.current.detailsLocked).toBe(false)
+  })
+
+  // Field refusal returns to modal.
+  it("returns a refused number for the form, without attaching", async () => {
+    m.updateDetails.mockRejectedValue(numberRefused())
+    const { ok, errors, hook } = await save(row, pdf(), changed)
+    expect(ok).toBe(false)
+    expect(errors).toEqual({
+      fields: { poNumber: "sudah dipakai PO lain untuk klien ini" },
+      banner: null,
+    })
+    expect(m.updateFile).not.toHaveBeenCalled()
     expect(hook.result.current.detailsLocked).toBe(false)
   })
 
   it("does not lock the details when the file step is refused", async () => {
     m.updateFile.mockRejectedValue(lockRefusal())
-    const { ok, hook } = await save(row, pdf(), same)
+    const { ok, errors, hook } = await save(row, pdf(), same)
     expect(ok).toBe(false)
+    expect(errors).toBeNull()
     expect(hook.result.current.detailsLocked).toBe(false)
+  })
+
+  // Numberless PO sends typed number.
+  it("saves a first number on a PO without one", async () => {
+    const { ok } = await save({ ...row, poNumber: undefined }, null, { ...same, poNumber: "PO-9" })
+    expect(ok).toBe(true)
+    expect(m.updateDetails).toHaveBeenCalledWith(3, { poNumber: "PO-9", poDate: "2026-09-01" }, 4)
   })
 
   it("locks the details of a delivered PO once its invoice is filed", async () => {
@@ -457,7 +496,7 @@ describe("usePoUpload", () => {
     let finish: () => void = () => {}
     m.updateFile.mockReturnValue(new Promise<void>((r) => (finish = r)))
     const { result } = renderQueryHook(() => usePoUpload(row))
-    let run: Promise<boolean> = Promise.resolve(false)
+    let run: Promise<PoSaveResult> = Promise.resolve({ saved: false, errors: null })
     await act(async () => {
       run = result.current.save(pdf(), same)
     })

@@ -1,37 +1,27 @@
--- Canonical current body of fn_next_doc_no (deployed by migration 00072).
-CREATE OR REPLACE FUNCTION public.fn_next_doc_no(p_doc_type character varying, p_company_id bigint)
+-- Canonical current body of fn_next_doc_no (deployed by migration 00098).
+CREATE OR REPLACE FUNCTION public.fn_next_doc_no(p_doc_type character varying)
  RETURNS text
  LANGUAGE plpgsql
 AS $function$
 DECLARE
-  v_seq            INT;
-  v_company_no     VARCHAR(10);
-  v_year           INT := EXTRACT(YEAR FROM NOW());
-  v_yy             VARCHAR(2);
-  v_month          INT := EXTRACT(MONTH FROM NOW());
+  v_seq INTEGER;
 BEGIN
-  -- The share lock holds the number until this document commits.
-  SELECT number INTO v_company_no
-  FROM company_client WHERE id = p_company_id
-  FOR SHARE;
-
-  IF v_company_no IS NULL OR v_company_no = '' THEN
-    RAISE EXCEPTION 'Klien belum memiliki nomor. Isi Nomor Klien lalu coba lagi.'
-      USING ERRCODE = 'P0014';
-  END IF;
-
-  -- UPSERT atomic: increment seq or insert new row
-  INSERT INTO doc_sequences (doc_type, company_id, year, last_seq, updated_at)
-  VALUES (p_doc_type, p_company_id, v_year, 1, NOW())
-  ON CONFLICT (doc_type, company_id, year)
-  DO UPDATE SET
-    last_seq   = doc_sequences.last_seq + 1,
-    updated_at = NOW()
+  -- The row lock serialises callers; a rollback returns the number.
+  UPDATE doc_counters
+     SET last_seq   = last_seq + 1,
+         updated_at = NOW()
+   WHERE doc_type = p_doc_type
   RETURNING last_seq INTO v_seq;
 
-  v_yy := TO_CHAR(NOW(), 'YY');
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'unknown document type %', p_doc_type
+      USING ERRCODE = 'invalid_parameter_value';
+  END IF;
 
-  RETURN p_doc_type || '-' || v_yy || v_company_no || v_seq::TEXT ||
-         '/GNS/' || fn_month_to_roman(v_month) || '/' || v_year::TEXT;
+  -- Pad to five digits; lpad alone would cut a sixth.
+  RETURN p_doc_type || '-'
+      || lpad(v_seq::TEXT, GREATEST(5, length(v_seq::TEXT)), '0')
+      || '/GNS/' || fn_month_to_roman(EXTRACT(MONTH FROM CURRENT_DATE)::INTEGER)
+      || '/' || EXTRACT(YEAR FROM CURRENT_DATE)::INTEGER;
 END;
 $function$

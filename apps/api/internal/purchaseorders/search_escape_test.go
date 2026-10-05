@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/nathangalung/internalgns/apps/api/internal/pdfgen"
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
@@ -30,9 +31,10 @@ func TestRepo_List_EscapesLikeWildcards(t *testing.T) {
 		require.NoError(t, err)
 		out := make([]int64, 0, len(res.Rows))
 		for _, r := range res.Rows {
-			hit := strings.Contains(r.PoNumber, q) || strings.Contains(r.QuotationNo, q) ||
-				strings.Contains(r.CompanyName, q)
-			assert.Truef(t, hit, "%q matched %s / %s / %s", q, r.PoNumber, r.QuotationNo, r.CompanyName)
+			po, dn := pdfgen.StrDeref(r.PoNumber), pdfgen.StrDeref(r.DeliveryNoteNumber)
+			hit := strings.Contains(po, q) || strings.Contains(r.QuotationNo, q) ||
+				strings.Contains(dn, q) || strings.Contains(r.CompanyName, q)
+			assert.Truef(t, hit, "%q matched %s / %s / %s / %s", q, po, r.QuotationNo, dn, r.CompanyName)
 			out = append(out, r.ID)
 		}
 		return out

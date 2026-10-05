@@ -2,6 +2,7 @@
 SELECT po.id,
        po.po_number,
        po.delivery_note_number,
+       po.legacy_dn_no,
        po.delivery_note_date,
        (SELECT i.invoice_no FROM invoices i WHERE i.po_id = po.id
          ORDER BY i.status = 'cancelled', i.id DESC LIMIT 1) AS invoice_no,
@@ -52,6 +53,7 @@ WHERE 1=1;
 SELECT po.id,
        po.po_number,
        po.delivery_note_number,
+       po.legacy_dn_no,
        po.delivery_note_date,
        (SELECT i.invoice_no FROM invoices i WHERE i.po_id = po.id
          ORDER BY i.status = 'cancelled', i.id DESC LIMIT 1) AS invoice_no,
@@ -90,6 +92,7 @@ WHERE po.id = $1;
 SELECT po.id,
        po.po_number,
        po.delivery_note_number,
+       po.legacy_dn_no,
        po.delivery_note_date,
        (SELECT i.invoice_no FROM invoices i WHERE i.po_id = po.id
          ORDER BY i.status = 'cancelled', i.id DESC LIMIT 1) AS invoice_no,
@@ -156,11 +159,13 @@ WHERE poi.po_id = $1
 ORDER BY poi.line_number;
 
 -- name: purchase_orders.completeness_client
--- Client master data the PO's documents need; $1=po id.
+-- The PO's own number and the client master data its documents need;
+-- $1=po id.
 -- The narahubung is the quotation's chosen contact, even when it has since
 -- been deactivated, so the gate can say so; only a quotation with no chosen
 -- contact falls back to the client's first active one.
-SELECT cc.id,
+SELECT po.po_number,
+       cc.id,
        cc.name,
        cc.number,
        cc.npwp,
