@@ -2031,7 +2031,7 @@
         {
           "name": "quotations_status_check",
           "type": "CHECK",
-          "def": "CHECK (((status)::text = ANY ((ARRAY['draft'::character varying, 'sent'::character varying, 'accepted'::character varying, 'rejected'::character varying, 'revision'::character varying, 'expired'::character varying, 'cancelled'::character varying])::text[])))",
+          "def": "CHECK (((status)::text = ANY ((ARRAY['draft'::character varying, 'sent'::character varying, 'accepted'::character varying, 'rejected'::character varying, 'revision'::character varying, 'cancelled'::character varying])::text[])))",
           "table": "public.quotations",
           "referenced_table": "",
           "columns": [
@@ -4866,7 +4866,7 @@
           "name": "changed_by",
           "type": "bigint",
           "nullable": true,
-          "comment": "Acting user. NULL marks a system transition (fn_expire_quotations)."
+          "comment": "Acting user."
         },
         {
           "name": "changed_at",
@@ -7729,12 +7729,6 @@
       "name": "public.fn_revise_quotation",
       "return_type": "int8",
       "arguments": "p_quotation_id bigint, p_user_id bigint, p_note text DEFAULT NULL::text",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.fn_expire_quotations",
-      "return_type": "int4",
-      "arguments": "p_today date",
       "type": "FUNCTION"
     },
     {

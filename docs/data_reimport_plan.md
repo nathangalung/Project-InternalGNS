@@ -16,10 +16,10 @@ documents, and clean the product master. Owner decisions, October 2026.
 | Target | Dev first, then prod after a backup. User accounts are kept. |
 | Test data | Only records from `Data/` remain: no e2e, fixture or app-made demo rows. |
 | Revisions | A historical revision (same number with `-R`, `rev`, `revisi`, `(1)` and changed content) keeps its base number with `Rev.n`, as Buat Revisi does; identical copies are dropped. |
-| Status | Written directly with a status-history row (the send and accept gates are for live work, and historical lines often lack vendor or harga beli). Accepted where a client PO exists; Kedaluwarsa where the validity has passed and no PO exists; Dikirim otherwise. |
+| Status | Written directly with a status-history row (the send and accept gates are for live work, and historical lines often lack vendor or harga beli). Accepted where a client PO exists; Dikirim otherwise, whatever the validity: nothing expires on its own (migration 00100 retired Kedaluwarsa). |
 | Quotations without a harga jual | 2026: Draf. Older with a harga beli: Dibatalkan with the reason "Tidak pernah diberi harga jual". Older with no price at all: skipped. |
 | PO split and merge | One PO per quotation. A quotation ordered by two clients is copied into one quotation per client, each with its own share. A PO covering two quotations sits on the main one with the PO's real lines; the other stays as it was. |
-| Invoices | All imported as Dikirim (no payment evidence in the files). Amounts are the ones printed on the source workbooks. |
+| Invoices | Dibayar when dated before 2026-09-05, more than a month before the 2026-10-05 rebuild (`PAID_BEFORE` in `seed_model.py`): paid at 09:00 WIB on the due date (the invoice date when none is printed), with a sent to paid history row. Dikirim when dated later. Amounts are the ones printed on the source workbooks. |
 | Brokered names | The client is the first company in the customer cell; the second party goes to the notes. |
 | Freight-only quotations | Imported as ordinary quotations with service lines. |
 | What the client received | The issued PDF wins over a workbook edited after it: its lines, discount, number and date are imported when its table adds up to its printed total; otherwise the workbook stays and the PDF's grand total is noted. A version that exists only as a PDF joins its revision chain the same way, or is listed in the parse report. |
@@ -105,7 +105,7 @@ documents, and clean the product master. Owner decisions, October 2026.
 table plan rebuilds (users, refresh tokens, countries, units and goose
 state stay) and loads `apps/api/db/seeds/03_historical.sql` in the same
 transaction: an error anywhere rolls everything back. It refuses to run
-unless migration 00099 is applied. The seed itself refuses to load into
+unless migration 00100 is applied. The seed itself refuses to load into
 non-empty business tables, so a plain `make seed-dev` never doubles data.
 
 Data users entered in the app is carried over in the same transaction,
@@ -171,7 +171,7 @@ scp apps/api/db/seeds/01_master.sql apps/api/db/seeds/03_historical.sql \
 ```
 
 Then on the VPS, from a checkout of the deployed commit (the api migrates
-to 00099 on its first start):
+to 00100 on its first start):
 
 1. Take a backup and confirm it ends with `backup ok`:
    `/opt/internalgns-ops/backup.sh` (or `systemctl start
@@ -215,6 +215,28 @@ to 00099 on its first start):
 Photos, logos and PO files the carry-over could not place stay in MinIO
 without a row; `cmd/orphan-blobs` lists them (dry run first, after a
 fresh backup).
+
+### Databases loaded before the paid rule
+
+A database loaded with an older seed holds Kedaluwarsa quotations and
+imported invoices left Dikirim. Migration 00100 moves every expired
+quotation back to Dikirim on the api's first start. The invoices need
+the one-off `apps/api/db/import/fix_imported_invoices_paid.sql`, which
+holds no data, runs in one transaction, prints the counts before and
+after, and changes nothing on a second run. After a backup:
+
+```bash
+# dev
+psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f apps/api/db/import/fix_imported_invoices_paid.sql
+# prod, from a checkout of the deployed commit on the VPS
+PG=<project>-gns-postgres-1
+docker cp apps/api/db/import/fix_imported_invoices_paid.sql "$PG":/tmp/
+docker exec "$PG" sh -c \
+  'psql -X -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /tmp/fix_imported_invoices_paid.sql'
+docker exec "$PG" rm /tmp/fix_imported_invoices_paid.sql
+```
+
+`verify_seed.py` then passes as it does on a fresh load.
 
 ## Source and safety
 
