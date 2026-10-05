@@ -120,15 +120,16 @@ under them. The report counts them by kind, without names.
 
 | Old rows | Carried over |
 |---|---|
-| Clients | NPWP, address, country, TKU, email and logo fill what the seeded client lacks; the old four-digit number stays when no other client holds it. An invoice billed to its own client then takes the NPWP and address it printed none of; an invoice billed to another company keeps its printed buyer. A client the seed lacks that existed before the last historical quotation is kept as a client with no documents, with its master fields and contacts; its number stays when free, else it takes the next one. |
+| Clients | NPWP, address, country, TKU, email and logo fill what the seeded client lacks; the old four-digit number stays when no other client holds it. An invoice billed to its own client then takes the NPWP and address it printed none of; an invoice billed to another company keeps its printed buyer. A client the seed lacks that existed before the last historical quotation and owns no document created in the app is kept as a client with no documents, with its master fields and contacts; its number stays when free, else it takes the next one. |
 | Contacts | Added to the seeded client when it lacks the person (name without honorific, the email, or a shorter name only one seeded contact starts with); a matched contact gets the email, phone and title it lacks. An email is trimmed of stray separators and left out when it is not one plain mailbox (the app's rule) or another active contact uses it. The schema has no main-contact flag. |
 | Vendors | Location, contact info and logo of vendors users edited fill a seeded vendor's gaps. |
 | Products | Created after the last historical quotation, or holding photos: one matching a seeded product (IMPA code, then name) gives it its photos (8 at most, the cover first); one matching none is added again with its photos and vendor links, adding a vendor the seed lacks. |
 | PO files | Attached to the seeded PO with the same client and PO number. |
 
-What it cannot place is not loaded: clients created in the app after the
-last historical quotation that match no seeded client (and their
-contacts), edited vendors with no match, PO files with no matching
+What it cannot place is not loaded: clients that match no seeded client
+and were created after the last historical quotation or own a document
+created in the app (with their contacts and those documents), edited
+vendors with no match, PO files with no matching
 PO, and quotations, POs and invoices created in the app (an imported one
 carries `legacy_no` or an import note). The script ends with a carry-over
 report of counts, of the clients kept without documents (new id, number

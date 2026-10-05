@@ -11,10 +11,11 @@
 -- trailing Tbk dropped): client tax and contact fields, logos and
 -- numbers, contacts, vendor contact fields, products created in the app
 -- or holding photos, and PO files. A client the seed lacks that existed
--- before the last historical quotation carries over, with its contacts,
--- as a client with no documents. Rows the test suites created never
--- carry over. What cannot be placed (a client created in the app after
--- that, documents created in the app) is not loaded; the carry-over
+-- before the last historical quotation and owns no document created in
+-- the app carries over, with its contacts, as a client with no
+-- documents. Rows the test suites created never carry over. What cannot
+-- be placed (any other client the seed lacks, documents created in the
+-- app) is not loaded; the carry-over
 -- report at the end lists it with ids and names only, and counts the
 -- test rows left out.
 --
@@ -143,7 +144,8 @@ WHERE po.file_url IS NOT NULL;
 -- Documents an import wrote carry its number or its import note; the rest
 -- were created in the app.
 CREATE TEMP TABLE carry_quotation ON COMMIT DROP AS
-SELECT q.id, q.quotation_no, q.company_client_name, q.status, q.created_at,
+SELECT q.id, q.quotation_no, q.company_client_id, q.company_client_name, q.status,
+       q.created_at,
        (q.legacy_no IS NOT NULL
         OR COALESCE(q.notes LIKE 'Imported from Excel%', FALSE)
         OR COALESCE(q.notes LIKE 'Reverse-engineered from%', FALSE)
@@ -246,8 +248,10 @@ END $$;
 
 -- A client the seed lacks that existed before the last historical
 -- quotation (the cutoff the products use) is kept, without documents;
--- its contacts follow below. One created in the app after it is not.
--- Its number stays when free, else it takes the next one.
+-- its contacts follow below. One created in the app after it is not, nor
+-- one owning a quotation created in the app (with its PO and invoice):
+-- those documents are not loaded, so neither is their client. Its number
+-- stays when free, else it takes the next one.
 DO $$
 DECLARE
   v_cutoff TIMESTAMPTZ := (SELECT max(created_at) FROM quotations);
@@ -260,6 +264,9 @@ BEGIN
     FROM carry_client o
     WHERE o.created_at <= v_cutoff
       AND NOT EXISTS (SELECT 1 FROM client_map m WHERE m.old_id = o.id)
+      AND NOT EXISTS (SELECT 1 FROM carry_client s
+                      JOIN carry_quotation q ON q.company_client_id = s.id
+                      WHERE s.norm = o.norm AND NOT q.imported)
     ORDER BY o.norm, (o.npwp IS NOT NULL) DESC, (o.address IS NOT NULL) DESC, o.id
   LOOP
     v_number := CASE
@@ -536,8 +543,10 @@ JOIN company_client c ON c.id = l.new_id
 WHERE l.kind = 'client kept without documents'
 ORDER BY c.id;
 
-\echo 'Not loaded: clients created in the app after the historical data, with their contacts'
+\echo 'Not loaded: clients the seed lacks, created after the historical data or owning documents created in the app, with their contacts and those documents'
 SELECT o.id, o.number, o.name,
+       (SELECT count(*) FROM carry_quotation q
+        WHERE q.company_client_id = o.id AND NOT q.imported) AS app_quotations,
        (SELECT count(*) FROM carry_contact cc WHERE cc.client_norm = o.norm) AS contacts
 FROM carry_client o
 WHERE NOT EXISTS (SELECT 1 FROM client_map m WHERE m.old_id = o.id)

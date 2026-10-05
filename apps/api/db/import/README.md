@@ -220,7 +220,8 @@ so `updated_at` ends as the last status move.
 tokens, countries, units and goose state stay) and loads the seed in the
 same transaction, carrying over what users entered in the app (client tax
 fields, logos and numbers, clients the seed lacks that existed before the
-last historical quotation, kept without documents, contacts, vendor
+last historical quotation and own no document made in the app, kept
+without documents, contacts, vendor
 contact fields, products made in the app or holding photos, PO files;
 never rows the test suites created) and printing a carry-over report of what it could not place; `make reimport-dev` runs it on a local
 database and then `verify_seed.py`. The carry-over rules and the prod
