@@ -18,7 +18,7 @@ import (
 // of the rest are positions 8, 7, 6, 5 and 4.
 func TestRepo_RecentQuotations(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
-	d := testutil.SeedQuotationHistory(t, ctx, tx, "draft", "sent", "accepted", "cancelled", "revision", "rejected", "expired", "sent", "sent")
+	d := testutil.SeedQuotationHistory(t, ctx, tx, "draft", "sent", "accepted", "cancelled", "revision", "rejected", "accepted", "sent", "sent")
 	got, err := vendors.NewRepo(tx, testutil.Store(t)).RecentQuotations(ctx, d.Vendor)
 	require.NoError(t, err)
 

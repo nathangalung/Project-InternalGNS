@@ -100,13 +100,6 @@ describe("historyAction wording", () => {
   it("omits an empty note", () => {
     expect(historyAction(event({ fromStatus: "draft", toStatus: "sent" }))).toBe("Draf → Dikirim")
   })
-
-  it("does not repeat Kedaluwarsa for the expiry job", () => {
-    const note = "Kedaluwarsa otomatis: masa berlaku 7 hari sejak 01-03-2026 telah lewat."
-    expect(historyAction(event({ fromStatus: "sent", toStatus: "expired", note }))).toBe(
-      "Dikirim → Kedaluwarsa: masa berlaku 7 hari sejak 01-03-2026 telah lewat.",
-    )
-  })
 })
 
 describe("toQuotationData offered item", () => {
@@ -142,14 +135,14 @@ describe("status labels", () => {
     expect(toQuotationData(d, () => "").status).toBe("Dibatalkan")
   })
 
-  it("spells expired Kedaluwarsa in the table", () => {
+  it("spells sent Dikirim in the table", () => {
     const row = toTableRow({
       id: 1,
       quotationNo: "Q-1",
       version: 1,
       companyClientId: 4,
       companyName: "PT Laut",
-      status: "expired",
+      status: "sent",
       grandTotal: "10",
       subtotal: "10",
       totalDiscount: "0",
@@ -157,12 +150,12 @@ describe("status labels", () => {
       productCount: 1,
       createdAt: "2026-09-01T00:00:00Z",
     })
-    expect(row.status).toBe("Kedaluwarsa")
+    expect(row.status).toBe("Dikirim")
   })
 })
 
 describe("historyDate actor", () => {
-  it("marks the expiry job as Sistem", () => {
+  it("marks a move with no user as Sistem", () => {
     expect(historyDate(event({ changedBy: null }))).toMatch(/· Sistem$/)
   })
 

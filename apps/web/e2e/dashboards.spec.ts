@@ -118,7 +118,7 @@ test.describe("operational", () => {
     await expect(page.getByRole("heading", { name: "Dashboard Operasional" })).toBeVisible()
     const quotations = page.getByRole("region", { name: "Status Quotation" })
     const orders = page.getByRole("region", { name: "Status Purchase Order" })
-    for (const label of ["Draf", "Dikirim", "Revisi", "Disetujui", "Ditolak", "Kedaluwarsa"]) {
+    for (const label of ["Draf", "Dikirim", "Revisi", "Disetujui", "Ditolak", "Dibatalkan"]) {
       await expect(quotations.getByText(label, { exact: true })).toBeVisible()
     }
     await expect(orders.getByText("Dibatalkan", { exact: true })).toBeVisible()

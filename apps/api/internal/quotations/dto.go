@@ -70,7 +70,7 @@ type StatusHistoryEntry struct {
 	FromStatus *Status   `db:"from_status"  json:"fromStatus,omitempty"`
 	ToStatus   Status    `db:"to_status"    json:"toStatus"`
 	Note       *string   `db:"note"         json:"note,omitempty"`
-	ChangedBy  *int64    `db:"changed_by"   json:"changedBy"` // nil: expiry job
+	ChangedBy  *int64    `db:"changed_by"   json:"changedBy"` // nil: no acting user
 	ChangedAt  time.Time `db:"changed_at"   json:"changedAt"`
 }
 

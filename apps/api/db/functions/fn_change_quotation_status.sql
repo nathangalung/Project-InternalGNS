@@ -1,4 +1,4 @@
--- Canonical current body of fn_change_quotation_status (deployed by migration 00092).
+-- Canonical current body of fn_change_quotation_status (deployed by migration 00100).
 -- Validates the transition under a FOR UPDATE lock, blocks finalizing a
 -- quotation with unpriced products (ERRCODE P0100), records history, and
 -- creates the purchase order on acceptance.
@@ -39,10 +39,6 @@ BEGIN
       RAISE EXCEPTION 'Gunakan tombol Buat Revisi untuk merevisi quotation yang sudah dikirim.'
         USING ERRCODE = 'P0012';
     END IF;
-    IF p_new_status = 'expired' THEN
-      RAISE EXCEPTION 'Status Kedaluwarsa diberikan otomatis setelah masa berlaku quotation habis.'
-        USING ERRCODE = 'P0012';
-    END IF;
     RAISE EXCEPTION 'Status quotation tidak dapat diubah dari % ke %.',
       fn_quotation_status_label(v_old_status), fn_quotation_status_label(p_new_status)
       USING ERRCODE = 'P0012';
@@ -59,7 +55,7 @@ BEGIN
       USING ERRCODE = 'P0014';
   END IF;
 
-  -- What is sent must expire, so it needs a validity window.
+  -- The PDF prints the Validity, so what is sent needs one.
   IF p_new_status = 'sent' AND v_validity IS NULL THEN
     RAISE EXCEPTION 'Isi masa berlaku sebelum quotation dikirim.'
       USING ERRCODE = 'P0014';

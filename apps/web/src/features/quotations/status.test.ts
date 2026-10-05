@@ -28,8 +28,7 @@ describe("status labels", () => {
     }
   })
 
-  it("uses the KBBI spelling and names cancelled", () => {
-    expect(quotationStatusLabel("expired")).toBe("Kedaluwarsa")
+  it("names cancelled", () => {
     expect(quotationStatusLabel("cancelled")).toBe("Dibatalkan")
   })
 
@@ -41,7 +40,6 @@ describe("status labels", () => {
       "Disetujui",
       "Ditolak",
       "Dibatalkan",
-      "Kedaluwarsa",
     ])
   })
 

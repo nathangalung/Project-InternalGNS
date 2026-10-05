@@ -33,10 +33,10 @@ Feature: Dashboard financial figures
 
   Scenario: Ditolak counts only rejected quotations
     Given a quotation in status "rejected"
-    And a quotation in status "expired"
+    And a quotation in status "cancelled"
     When operational reads the dashboard summary
     Then the response status is 200
-    And the quotation tiles read "draft:0,sent:0,revision:0,accepted:0,rejected:1,cancelled:0,expired:1"
+    And the quotation tiles read "draft:0,sent:0,revision:0,accepted:0,rejected:1,cancelled:1"
     And the dashboard counts 1 rejected quotation
 
   Scenario: Operational sees operational tiles only

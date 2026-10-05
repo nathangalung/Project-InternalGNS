@@ -16,7 +16,7 @@ import (
 // quotationStatuses spans every quotation status.
 // Draft and cancelled never reached the client; the newest five of the rest
 // are positions 8, 7, 6, 5 and 4.
-var quotationStatuses = []string{"draft", "sent", "accepted", "cancelled", "revision", "rejected", "expired", "sent", "sent"}
+var quotationStatuses = []string{"draft", "sent", "accepted", "cancelled", "revision", "rejected", "accepted", "sent", "sent"}
 
 // Last quotations of one product.
 func TestRepo_RecentQuotations(t *testing.T) {
@@ -44,7 +44,7 @@ func TestRepo_RecentQuotations(t *testing.T) {
 	require.NotNil(t, first.CostPrice)
 	assert.Equal(t, "100.00", *first.CostPrice)
 	assert.Equal(t, "158.00", first.SellingPrice, "the offered line, not the Tidak Ditawarkan one")
-	assert.Equal(t, "expired", got[2].Status)
+	assert.Equal(t, "accepted", got[2].Status)
 }
 
 // No quotations, empty list.

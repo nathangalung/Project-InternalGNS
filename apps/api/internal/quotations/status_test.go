@@ -18,7 +18,6 @@ func TestAllowedTransitions(t *testing.T) {
 		{StatusAccepted, []Status{}},
 		{StatusRejected, []Status{}},
 		{StatusCancelled, []Status{}},
-		{StatusExpired, []Status{}},
 		{"unknown", []Status{}},
 	}
 	for _, tt := range tests {
@@ -45,7 +44,6 @@ func TestNoteRequired(t *testing.T) {
 		{StatusRejected, true},
 		{StatusCancelled, true},
 		{StatusRevision, false},
-		{StatusExpired, false},
 	}
 	for _, tt := range tests {
 		t.Run(string(tt.to), func(t *testing.T) {
@@ -60,8 +58,8 @@ func TestStatusesCoverTransitions(t *testing.T) {
 		_, ok := Transitions[s.Status]
 		assert.True(t, ok, "status %s missing from Transitions", s.Status)
 	}
-	assert.Equal(t, "Kedaluwarsa", StatusLabel(StatusExpired))
 	assert.Equal(t, "Dibatalkan", StatusLabel(StatusCancelled))
+	assert.Equal(t, "expired", StatusLabel("expired"), "a retired key has no label")
 	assert.Equal(t, "zzz", StatusLabel("zzz"))
 }
 

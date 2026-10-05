@@ -99,9 +99,6 @@ SELECT fn_change_quotation_status($1, $2, $3, $4);
 -- name: quotations.fn_revise
 SELECT fn_revise_quotation($1, $2, $3);
 
--- name: quotations.expire_due
-SELECT fn_expire_quotations($1::date);
-
 -- name: quotations.list_revisions
 WITH RECURSIVE chain AS (
     SELECT id, parent_id FROM quotations WHERE id = $1

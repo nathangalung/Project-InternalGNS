@@ -315,14 +315,11 @@ func TestRepo_ChangeStatus_RejectsInvalid(t *testing.T) {
 		{"draft", "accepted"},
 		{"draft", "rejected"},
 		{"draft", "revision"},
-		{"draft", "expired"},
 		{"sent", "draft"},
 		{"sent", "revision"},
-		{"sent", "expired"},
 		{"revision", "accepted"},
 		{"revision", "draft"},
 		{"revision", "sent"},
-		{"revision", "expired"},
 		{"accepted", "cancelled"},
 	}
 	for _, tc := range cases {
@@ -669,7 +666,6 @@ func TestRepo_UpdateContact_StatusGate(t *testing.T) {
 		{"revision", false},
 		{"rejected", false},
 		{"cancelled", false},
-		{"expired", false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.status, func(t *testing.T) {

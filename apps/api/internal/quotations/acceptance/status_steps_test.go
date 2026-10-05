@@ -253,21 +253,6 @@ func (s *scenarioState) latestHistoryReason(to string) error {
 	return nil
 }
 
-func (s *scenarioState) latestHistorySystem(want string) error {
-	d, err := s.detail()
-	if err != nil {
-		return err
-	}
-	last := d.History[len(d.History)-1]
-	if last.ChangedBy != nil {
-		return fmt.Errorf("latest history changed by %d, want the system", *last.ChangedBy)
-	}
-	if last.Note == nil || !strings.Contains(*last.Note, want) {
-		return fmt.Errorf("latest history note %v lacks %q", last.Note, want)
-	}
-	return nil
-}
-
 func (s *scenarioState) allowedAre(want string) error {
 	d, err := s.detail()
 	if err != nil {
@@ -465,60 +450,6 @@ func (s *scenarioState) statsCount(a int64, sa string, b int64, sb string) error
 	return nil
 }
 
-// sentAt moves the send instant.
-func (s *scenarioState) sentAt(at string, validity int) error {
-	when, err := time.Parse(time.RFC3339, at)
-	if err != nil {
-		return fmt.Errorf("parse send instant: %w", err)
-	}
-	ctx := context.Background()
-	pool := testutil.Pool(s.t)
-	if _, err := pool.Exec(ctx, `UPDATE quotations SET validity_days = $2 WHERE id = $1`, s.lastID, validity); err != nil {
-		return err
-	}
-	tag, err := pool.Exec(ctx, `
-		UPDATE quotation_status_history
-		   SET changed_at = $2
-		 WHERE quotation_id = $1 AND to_status = 'sent'`, s.lastID, when)
-	if err != nil {
-		return err
-	}
-	if tag.RowsAffected() != 1 {
-		return fmt.Errorf("moved %d sent rows, want 1", tag.RowsAffected())
-	}
-	return nil
-}
-
-// onceExpirer stops after one run.
-type onceExpirer struct {
-	repo   *quotations.Repo
-	cancel context.CancelFunc
-	err    error
-}
-
-func (o *onceExpirer) ExpireDue(ctx context.Context, asOf time.Time) (int64, error) {
-	defer o.cancel()
-	n, err := o.repo.ExpireDue(ctx, asOf)
-	o.err = err
-	return n, err
-}
-
-// runExpiryAt runs the loop once.
-// The clock is injected, so the WIB boundary is exact.
-func (s *scenarioState) runExpiryAt(at string) error {
-	now, err := time.Parse(time.RFC3339, at)
-	if err != nil {
-		return fmt.Errorf("parse job instant: %w", err)
-	}
-	ctx, cancel := context.WithCancel(context.Background())
-	once := &onceExpirer{
-		repo:   quotations.NewRepo(testutil.Pool(s.t), testutil.Store(s.t)),
-		cancel: cancel,
-	}
-	quotations.RunExpiryLoop(ctx, once, time.Hour, func() time.Time { return now })
-	return once.err
-}
-
 func registerStatusSteps(sc *godog.ScenarioContext, s *scenarioState) {
 	sc.Step(`^the user transitions the quotation through "([^"]+)" giving a reason$`, s.walkWithReason)
 	sc.Step(`^the user tries to transition the quotation to "([^"]+)" giving a reason$`, s.tryWithReason)
@@ -527,7 +458,6 @@ func registerStatusSteps(sc *godog.ScenarioContext, s *scenarioState) {
 	sc.Step(`^the problem detail mentions "([^"]+)"$`, s.detailMentions)
 	sc.Step(`^the problem names the field "([^"]+)"$`, s.fieldNamed)
 	sc.Step(`^the latest history entry moves to "([^"]+)" with the reason$`, s.latestHistoryReason)
-	sc.Step(`^the latest history entry is a system note mentioning "([^"]+)"$`, s.latestHistorySystem)
 	sc.Step(`^the allowed transitions are "([^"]+)"$`, s.allowedAre)
 	sc.Step(`^the quotation can be revised: (yes|no)$`, s.canRevise)
 	sc.Step(`^the user revises the quotation$`, s.reviseQuotation)
@@ -541,7 +471,5 @@ func registerStatusSteps(sc *godog.ScenarioContext, s *scenarioState) {
 	sc.Step(`^the stats list "([^"]+)"$`, s.statsList)
 	sc.Step(`^the stats labels are "([^"]+)"$`, s.statsLabels)
 	sc.Step(`^the stats count (\d+) "([^"]+)" and (\d+) "([^"]+)"$`, s.statsCount)
-	sc.Step(`^the quotation was sent at "([^"]+)" with a validity of (\d+) days$`, s.sentAt)
-	sc.Step(`^the expiry job runs at "([^"]+)"$`, s.runExpiryAt)
 	sc.Step(`^a "([^"]+)" user (cancels|revises|rejects) the quotation through the API$`, s.actAs)
 }

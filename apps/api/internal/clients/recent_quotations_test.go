@@ -18,7 +18,7 @@ import (
 // of the rest are positions 8, 7, 6, 5 and 4.
 func TestRepo_RecentQuotations(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
-	d := testutil.SeedQuotationHistory(t, ctx, tx, "draft", "sent", "accepted", "cancelled", "revision", "rejected", "expired", "sent", "sent")
+	d := testutil.SeedQuotationHistory(t, ctx, tx, "draft", "sent", "accepted", "cancelled", "revision", "rejected", "accepted", "sent", "sent")
 	got, err := clients.NewRepo(tx, testutil.Store(t)).RecentQuotations(ctx, d.Client)
 	require.NoError(t, err)
 
@@ -36,7 +36,7 @@ func TestRepo_RecentQuotations(t *testing.T) {
 	assert.Equal(t, 1, first.ProductCount, "only offered lines count")
 	// The header subtotal 300 plus its PPN, never total or subtotal alone.
 	assert.Equal(t, "333.00", first.GrandTotal)
-	assert.Equal(t, "expired", got[2].Status)
+	assert.Equal(t, "accepted", got[2].Status)
 }
 
 // The route checks the client.

@@ -12,7 +12,6 @@ export const QUOTATION_STATUSES = [
   "accepted",
   "rejected",
   "cancelled",
-  "expired",
 ] as const satisfies readonly QuotationStatus[]
 
 const LABEL = {
@@ -22,7 +21,6 @@ const LABEL = {
   accepted: "Disetujui",
   rejected: "Ditolak",
   cancelled: "Dibatalkan",
-  expired: "Kedaluwarsa",
 } as const satisfies Record<QuotationStatus, string>
 
 export type QuotationStatusLabel = (typeof LABEL)[QuotationStatus]
@@ -48,9 +46,8 @@ export function quotationStatusFromLabel(label: QuotationStatusLabel): Quotation
 // Badge colours per label.
 //
 // Badge text is 11px bold, so every text colour clears 4.5:1 on its fill.
-// Draf, Revisi and Kedaluwarsa were darkened from #DA6900 (2.71), #9333EA
-// (3.28) and #64748B (4.34) to 5.48, 5.31 and 6.92. Dibatalkan uses gray-700
-// on gray-100 (9.2:1).
+// Draf and Revisi were darkened from #DA6900 (2.71) and #9333EA (3.28) to
+// 5.48 and 5.31. Dibatalkan uses gray-700 on gray-100 (9.2:1).
 export const quotationBadge: Record<QuotationStatusLabel, { bg: string; color: string }> = {
   Draf: { bg: "var(--status-draf-bg)", color: "#92400E" },
   Dikirim: { bg: "var(--status-dikirim-bg)", color: "var(--status-dikirim-color)" },
@@ -58,7 +55,6 @@ export const quotationBadge: Record<QuotationStatusLabel, { bg: string; color: s
   Disetujui: { bg: "var(--status-disetujui-bg)", color: "var(--status-disetujui-color)" },
   Ditolak: { bg: "var(--status-ditolak-bg)", color: "var(--status-ditolak-color)" },
   Dibatalkan: { bg: "#F3F4F6", color: "#374151" },
-  Kedaluwarsa: { bg: "#F1F5F9", color: "#475569" },
 }
 
 export const BADGE_AKTIF = { label: "AKTIF", bg: "#D1FAE5", color: "#047857" }

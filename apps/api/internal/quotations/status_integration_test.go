@@ -13,12 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
-	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
-	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
-
-// Mirrors the key in fn_expire_quotations.
-const expiryLockKey int64 = 7_431_590_059
 
 // sqlState returns the pg code.
 // It is "" for a non-pg error.
@@ -82,6 +77,16 @@ func TestChangeStatus_UnknownQuotation(t *testing.T) {
 	assert.Equal(t, "P0011", sqlState(err))
 }
 
+// Expired is no status.
+// A sent quotation stays sent until a user moves it.
+func TestChangeStatus_RefusesExpired(t *testing.T) {
+	ctx, repo, _ := newRepo(t)
+	id := sentWithValidity(t, ctx, repo, intPtr(7))
+	err := repo.ChangeStatus(ctx, id, "expired", nil, seedUserID)
+	require.Error(t, err)
+	assert.Equal(t, "P0012", sqlState(err))
+}
+
 func TestChangeStatus_RequiresNote(t *testing.T) {
 	blank := "   "
 	reason := "Klien memilih pemasok lain"
@@ -128,29 +133,6 @@ func TestChangeStatus_RequiresNote(t *testing.T) {
 	}
 }
 
-// wib builds a WIB instant.
-func wib(month time.Month, day, hour, minute int) time.Time {
-	return time.Date(2026, month, day, hour, minute, 0, 0, tz.Jakarta())
-}
-
-// Expiry job's injected clock.
-var (
-	sentAt     = wib(time.March, 1, 10, 0)
-	longAfter  = wib(time.April, 20, 12, 0)
-	expiryNote = "Kedaluwarsa otomatis: masa berlaku 7 hari sejak 01-03-2026 telah lewat."
-)
-
-// setSentAt moves the send instant.
-func setSentAt(t *testing.T, ctx context.Context, tx pgx.Tx, id int64, at time.Time) {
-	t.Helper()
-	tag, err := tx.Exec(ctx, `
-		UPDATE quotation_status_history
-		   SET changed_at = $2
-		 WHERE quotation_id = $1 AND to_status = 'sent'`, id, at)
-	require.NoError(t, err)
-	require.EqualValues(t, 1, tag.RowsAffected())
-}
-
 // sentWithValidity creates a sent quotation.
 // It carries the given validity window.
 func sentWithValidity(t *testing.T, ctx context.Context, repo *quotations.Repo, validity *int) int64 {
@@ -161,137 +143,6 @@ func sentWithValidity(t *testing.T, ctx context.Context, repo *quotations.Repo, 
 	require.NoError(t, err)
 	require.NoError(t, repo.ChangeStatus(ctx, id, quotations.StatusSent, nil, seedUserID))
 	return id
-}
-
-func historyCount(t *testing.T, ctx context.Context, tx pgx.Tx, id int64) int {
-	t.Helper()
-	var n int
-	require.NoError(t, tx.QueryRow(ctx,
-		`SELECT COUNT(*) FROM quotation_status_history WHERE quotation_id = $1`, id).Scan(&n))
-	return n
-}
-
-// The boundary is WIB midnight.
-// Cases marked UTC fail if either date is read on the UTC calendar.
-func TestExpireDue_Boundaries(t *testing.T) {
-	seven := 7
-	tests := []struct {
-		name     string
-		validity *int
-		sent     time.Time
-		asOf     time.Time
-		want     quotations.Status
-	}{
-		{"within validity", &seven, sentAt, wib(time.March, 5, 12, 0), quotations.StatusSent},
-		{"last valid day, last minute", &seven, sentAt, wib(time.March, 8, 23, 59), quotations.StatusSent},
-		// UTC: still 8 March at 17:01Z.
-		{"first minute after validity", &seven, sentAt, wib(time.March, 9, 0, 1), quotations.StatusExpired},
-		// UTC: sent on 28 February.
-		{"sent just after WIB midnight", &seven, wib(time.March, 1, 0, 30), wib(time.March, 8, 17, 0), quotations.StatusSent},
-		{"missed many days", &seven, sentAt, longAfter, quotations.StatusExpired},
-		// Legacy rows only: sending now needs a validity.
-		{"no validity never expires", nil, sentAt, wib(time.December, 31, 12, 0), quotations.StatusSent},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ctx, repo, tx := newRepo(t)
-			validity := tt.validity
-			if validity == nil {
-				validity = &seven
-			}
-			id := sentWithValidity(t, ctx, repo, validity)
-			if tt.validity == nil {
-				_, err := tx.Exec(ctx, `UPDATE quotations SET validity_days = NULL WHERE id = $1`, id)
-				require.NoError(t, err)
-			}
-			setSentAt(t, ctx, tx, id, tt.sent)
-
-			_, err := repo.ExpireDue(ctx, tt.asOf.UTC())
-			require.NoError(t, err)
-
-			d, err := repo.GetDetail(ctx, id)
-			require.NoError(t, err, "detail must read a system history row")
-			assert.Equal(t, tt.want, d.Status)
-			if tt.want != quotations.StatusExpired {
-				return
-			}
-			last := d.History[len(d.History)-1]
-			assert.Equal(t, quotations.StatusExpired, last.ToStatus)
-			assert.Nil(t, last.ChangedBy, "the job is not a user")
-			require.NotNil(t, last.Note)
-			assert.Equal(t, expiryNote, *last.Note)
-		})
-	}
-}
-
-// Expiry moves only sent rows.
-// Even a long-lapsed window leaves other statuses alone.
-func TestExpireDue_OnlyTouchesSent(t *testing.T) {
-	for _, status := range []quotations.Status{
-		quotations.StatusDraft, quotations.StatusRevision,
-		quotations.StatusAccepted, quotations.StatusRejected,
-		quotations.StatusCancelled, quotations.StatusExpired,
-	} {
-		t.Run(string(status), func(t *testing.T) {
-			seven := 7
-			ctx, repo, tx := newRepo(t)
-			id := sentWithValidity(t, ctx, repo, &seven)
-			setSentAt(t, ctx, tx, id, sentAt)
-			forceStatus(t, ctx, tx, id, status)
-			before := historyCount(t, ctx, tx, id)
-
-			_, err := repo.ExpireDue(ctx, longAfter)
-			require.NoError(t, err)
-			d, err := repo.GetDetail(ctx, id)
-			require.NoError(t, err)
-			assert.Equal(t, status, d.Status)
-			assert.Equal(t, before, historyCount(t, ctx, tx, id), "no expiry history")
-		})
-	}
-}
-
-func TestExpireDue_RunsOnce(t *testing.T) {
-	seven := 7
-	ctx, repo, tx := newRepo(t)
-	id := sentWithValidity(t, ctx, repo, &seven)
-	setSentAt(t, ctx, tx, id, sentAt)
-
-	n, err := repo.ExpireDue(ctx, longAfter)
-	require.NoError(t, err)
-	assert.GreaterOrEqual(t, n, int64(1))
-	after := historyCount(t, ctx, tx, id)
-
-	n, err = repo.ExpireDue(ctx, longAfter)
-	require.NoError(t, err)
-	assert.Zero(t, n, "a second run finds nothing")
-	assert.Equal(t, after, historyCount(t, ctx, tx, id), "no duplicate history")
-}
-
-// Held lock means another replica.
-func TestExpireDue_SkipsWhenLocked(t *testing.T) {
-	seven := 7
-	ctx, repo, tx := newRepo(t)
-	id := sentWithValidity(t, ctx, repo, &seven)
-	setSentAt(t, ctx, tx, id, sentAt)
-
-	conn, err := testutil.Pool(t).Acquire(context.Background())
-	require.NoError(t, err)
-	defer conn.Release()
-	_, err = conn.Exec(context.Background(), `SELECT pg_advisory_lock($1)`, expiryLockKey)
-	require.NoError(t, err)
-
-	n, err := repo.ExpireDue(ctx, longAfter)
-	require.NoError(t, err)
-	assert.Zero(t, n)
-	d, err := repo.GetDetail(ctx, id)
-	require.NoError(t, err)
-	assert.Equal(t, quotations.StatusSent, d.Status)
-
-	_, err = conn.Exec(context.Background(), `SELECT pg_advisory_unlock($1)`, expiryLockKey)
-	require.NoError(t, err)
-	n, err = repo.ExpireDue(ctx, longAfter)
-	require.NoError(t, err)
-	assert.GreaterOrEqual(t, n, int64(1))
 }
 
 func TestRevise_ClonesSentIntoDraft(t *testing.T) {

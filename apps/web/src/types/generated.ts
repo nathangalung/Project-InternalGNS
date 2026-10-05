@@ -935,7 +935,7 @@ export type QuotationSendInput = {
 };
 
 // From quotations/status.go
-export type QuotationStatus = "accepted" | "cancelled" | "draft" | "expired" | "rejected" | "revision" | "sent";
+export type QuotationStatus = "accepted" | "cancelled" | "draft" | "rejected" | "revision" | "sent";
 
 // From quotations/dto.go
 export type QuotationStatusCount = {

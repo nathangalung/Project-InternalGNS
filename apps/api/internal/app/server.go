@@ -12,10 +12,8 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/db/queries"
 	"github.com/nathangalung/internalgns/apps/api/internal/auth"
-	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/live"
-	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
@@ -73,12 +71,6 @@ func NewServer(ctx context.Context, cfg Config) (*Server, error) {
 	s.stopPurge = cancel
 	go func() {
 		defer close(s.purgeDone)
-		// The expiry job shares the sweep's lifetime, so Close joins both.
-		expiryDone := make(chan struct{})
-		go func() {
-			defer close(expiryDone)
-			quotations.RunExpiryLoop(purgeCtx, quotations.NewRepo(pool, store), quotations.ExpiryInterval, tz.Now)
-		}()
 		// The listener holds a pool connection, so it shares this lifetime.
 		listenDone := make(chan struct{})
 		go func() {
@@ -86,7 +78,6 @@ func NewServer(ctx context.Context, cfg Config) (*Server, error) {
 			live.Listen(purgeCtx, pool, hub, time.Second)
 		}()
 		runRefreshPurgeLoop(purgeCtx, auth.NewRefreshRepo(pool, store), refreshPurgeInterval)
-		<-expiryDone
 		<-listenDone
 	}()
 	return s, nil

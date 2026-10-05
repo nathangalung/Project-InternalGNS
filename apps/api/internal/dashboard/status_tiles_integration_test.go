@@ -49,7 +49,7 @@ func TestRepo_Summary_TileOrder(t *testing.T) {
 	s, err := dashboard.NewRepo(tx, testutil.Store(t)).Summary(ctx)
 	require.NoError(t, err)
 
-	assert.Equal(t, []string{"draft", "sent", "revision", "accepted", "rejected", "cancelled", "expired"}, tileKeys(s.QuotationStatuses))
+	assert.Equal(t, []string{"draft", "sent", "revision", "accepted", "rejected", "cancelled"}, tileKeys(s.QuotationStatuses))
 	assert.Equal(t, []string{"PENDING", "UPLOADED", "ON_PROGRESS", "DELIVERED", "CANCELLED"}, tileKeys(s.PoStatuses))
 	assert.Equal(t, []string{"draft", "sent", "overdue", "paid", "cancelled"}, tileKeys(s.InvoiceStatuses))
 
@@ -59,19 +59,18 @@ func TestRepo_Summary_TileOrder(t *testing.T) {
 	}
 	assert.Equal(t, "Ditolak", labels["rejected"])
 	assert.Equal(t, "Dibatalkan", labels["cancelled"])
-	assert.Equal(t, "Kedaluwarsa", labels["expired"])
 }
 
 // Ditolak counts only rejected.
-// Kedaluwarsa is its own tile, never folded into Ditolak.
-func TestRepo_Summary_RejectedExcludesExpired(t *testing.T) {
+// Dibatalkan is its own tile, never folded into Ditolak.
+func TestRepo_Summary_RejectedExcludesCancelled(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := dashboard.NewRepo(tx, testutil.Store(t))
 	before, err := repo.Summary(ctx)
 	require.NoError(t, err)
 
 	insertQuotation(ctx, t, tx, "SQ-TILE-REJ", "rejected")
-	insertQuotation(ctx, t, tx, "SQ-TILE-EXP", "expired")
+	insertQuotation(ctx, t, tx, "SQ-TILE-CAN", "cancelled")
 
 	after, err := repo.Summary(ctx)
 	require.NoError(t, err)
@@ -79,8 +78,7 @@ func TestRepo_Summary_RejectedExcludesExpired(t *testing.T) {
 
 	b, a := tileCounts(before.QuotationStatuses), tileCounts(after.QuotationStatuses)
 	assert.Equal(t, int64(1), a["rejected"]-b["rejected"])
-	assert.Equal(t, int64(1), a["expired"]-b["expired"])
-	assert.Equal(t, int64(0), a["cancelled"]-b["cancelled"])
+	assert.Equal(t, int64(1), a["cancelled"]-b["cancelled"])
 }
 
 // Past-due sent is Terlambat.

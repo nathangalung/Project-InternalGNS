@@ -186,7 +186,7 @@ func (s *scenarioState) cancelAndReplace() error {
 }
 
 // quotationIn inserts a quotation.
-// Kedaluwarsa has no API path, so the row is written directly.
+// Written directly, skipping the send gates.
 func (s *scenarioState) quotationIn(status string) error {
 	_, err := testutil.Pool(s.t).Exec(context.Background(), `
 		INSERT INTO quotations (quotation_no, company_client_id, company_client_name,

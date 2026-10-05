@@ -3,10 +3,9 @@ package quotations
 // Quotation status model.
 //
 // Transitions mirrors the table inside fn_change_quotation_status; the
-// mirror test fails when the two disagree. Two moves live outside it on
+// mirror test fails when the two disagree. One move lives outside it on
 // purpose: sent -> revision happens only through fn_revise_quotation, which
-// clones the draft in the same transaction, and sent -> expired only through
-// fn_expire_quotations, the daily job.
+// clones the draft in the same transaction.
 
 // Status is a stored key.
 type Status string
@@ -19,7 +18,6 @@ const (
 	StatusAccepted  Status = "accepted"
 	StatusRejected  Status = "rejected"
 	StatusCancelled Status = "cancelled"
-	StatusExpired   Status = "expired"
 )
 
 // StatusInfo pairs status and label.
@@ -36,7 +34,6 @@ var Statuses = []StatusInfo{
 	{StatusAccepted, "Disetujui"},
 	{StatusRejected, "Ditolak"},
 	{StatusCancelled, "Dibatalkan"},
-	{StatusExpired, "Kedaluwarsa"},
 }
 
 // Transition is one manual move.
@@ -59,7 +56,6 @@ var Transitions = map[Status][]Transition{
 	StatusAccepted:  {},
 	StatusRejected:  {},
 	StatusCancelled: {},
-	StatusExpired:   {},
 }
 
 // AllowedTransitions copies the offered moves.

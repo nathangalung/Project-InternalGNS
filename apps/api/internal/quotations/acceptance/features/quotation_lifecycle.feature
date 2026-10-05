@@ -1,6 +1,6 @@
 Feature: Quotation lifecycle
   Operations team must move a quotation through draft, sent,
-  accepted, rejected, cancelled, revision and expired states under
+  accepted, rejected, cancelled and revision states under
   defined rules.
 
   Background:
