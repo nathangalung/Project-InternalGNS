@@ -15,7 +15,7 @@
 ]
 
 % A4 at every length; the content starts high.
-\usepackage[a4paper, includehead, headheight=12pt, headsep=6pt, top=0.8cm, bottom=1.5cm, left=1.5cm, right=1.5cm]{geometry}
+\usepackage[a4paper, includehead, headheight=12pt, headsep=6pt, top=0.8cm, bottom=1.5cm, left=1.8cm, right=1.8cm]{geometry}
 \usepackage{graphicx}
 \usepackage{longtable}
 \usepackage{array}
@@ -51,7 +51,8 @@
 \hfuzz=2pt
 \hbadness=2000
 
-\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash\DocCellSize}p{#1}}
+% Whole words only; English patterns would split Indonesian names.
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash\DocCellSize\hyphenpenalty=10000}p{#1}}
 \newcolumntype{C}[1]{>{\centering\arraybackslash\DocCellSize}p{#1}}
 \newcolumntype{R}[1]{>{\RaggedLeft\arraybackslash\DocCellSize}p{#1}}
 \renewcommand{\arraystretch}{1.2}
@@ -141,13 +142,18 @@
 \vspace{0.3cm}
 \setlength{\tabcolsep}{2pt}
 \setlength{\LTpre}{0pt}
+% Flush with the text on both sides.
+\setlength{\LTleft}{0pt}
+\setlength{\LTright}{0pt}
 
 \newlength{\INcol}\setlength{\INcol}{0.6cm}
 \newlength{\IQcol}\setlength{\IQcol}{0.8cm}
 \newlength{\IUcol}\setlength{\IUcol}{0.9cm}
-\newlength{\ILcol}\setlength{\ILcol}{4.6cm}
-\newlength{\IDcol}\setlength{\IDcol}{5.0cm}
 \newlength{\IMcol}\setlength{\IMcol}{2.5cm}
+% Item and description share what is left, so the table spans the text width.
+\newlength{\IFlex}\setlength{\IFlex}{\dimexpr\textwidth-\INcol-\IQcol-\IUcol-2\IMcol-14\tabcolsep-8\arrayrulewidth\relax}
+\newlength{\ILcol}\setlength{\ILcol}{0.48\IFlex}
+\newlength{\IDcol}\setlength{\IDcol}{\dimexpr\IFlex-\ILcol\relax}
 
 \begin{longtable}{|C{\INcol}|C{\IQcol}|C{\IUcol}|L{\ILcol}|L{\IDcol}|R{\IMcol}|R{\IMcol}|}
 \hline

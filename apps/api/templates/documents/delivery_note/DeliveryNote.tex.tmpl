@@ -45,7 +45,8 @@
 \hfuzz=2pt
 \hbadness=2000
 
-\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash\DocCellSize}p{#1}}
+% Whole words only; English patterns would split Indonesian names.
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash\DocCellSize\hyphenpenalty=10000}p{#1}}
 \newcolumntype{C}[1]{>{\centering\arraybackslash\DocCellSize}p{#1}}
 \renewcommand{\arraystretch}{1.2}
 
@@ -126,12 +127,17 @@
 \vspace{0.3cm}
 \setlength{\tabcolsep}{2pt}
 \setlength{\LTpre}{0pt}
+% Flush with the text on both sides.
+\setlength{\LTleft}{0pt}
+\setlength{\LTright}{0pt}
 
 \newlength{\DNcol}\setlength{\DNcol}{0.8cm}
 \newlength{\DQcol}\setlength{\DQcol}{1.2cm}
 \newlength{\DUcol}\setlength{\DUcol}{1.2cm}
-\newlength{\DIcol}\setlength{\DIcol}{8.3cm}
-\newlength{\DScol}\setlength{\DScol}{4.8cm}
+% Item and destination share what is left, so the table spans the text width.
+\newlength{\DFlex}\setlength{\DFlex}{\dimexpr\textwidth-\DNcol-\DQcol-\DUcol-10\tabcolsep-6\arrayrulewidth\relax}
+\newlength{\DIcol}\setlength{\DIcol}{0.62\DFlex}
+\newlength{\DScol}\setlength{\DScol}{\dimexpr\DFlex-\DIcol\relax}
 
 \begin{longtable}{|C{\DNcol}|C{\DQcol}|C{\DUcol}|L{\DIcol}|L{\DScol}|}
 \hline
