@@ -283,8 +283,8 @@ func (h *Handler) CreateContact(w http.ResponseWriter, r *http.Request) {
 	}
 	if !reachable(req.Email, req.Phone) {
 		// A missing client is a 404 before the reach rule.
-		if err := h.requireClient(r.Context(), id); errors.Is(err, ErrNotFound) {
-			httperr.Render(w, httperr.NotFound("client not found"))
+		if err := h.requireClient(r.Context(), id); err != nil {
+			renderClientErr(w, r, err)
 			return
 		}
 		httperr.Render(w, httperr.Unprocessable(needReach()))

@@ -27,6 +27,7 @@ import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import { validateAsset } from "@/lib/upload-validation"
 import {
+  CONTACT_REACH_ERROR,
   contactReachError,
   digitsOnly,
   optionalEmailError,
@@ -198,6 +199,14 @@ export default function ClientDetail({ client }: ClientDetailProps) {
     const errs: Partial<Record<ClientField, string>> = {}
     if (!name.trim()) errs.name = "Wajib diisi"
     if (phoneError) errs.phone = phoneError
+    // The main contact keeps a channel; the company email is not its own.
+    else if (
+      client.contactId &&
+      phone !== (client.contactPhone ?? "") &&
+      contactReachError(client.contactEmail ?? "", phone)
+    ) {
+      errs.phone = CONTACT_REACH_ERROR
+    }
     if (emailError) errs.email = emailError
     if (npwpError) errs.npwp = npwpError
     if (Object.keys(errs).length > 0) {

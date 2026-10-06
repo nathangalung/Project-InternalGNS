@@ -43,6 +43,9 @@ func TestHandler_ErrorPaths(t *testing.T) {
 			clients.CreateClientRequest{Name: "X"}, http.StatusInternalServerError},
 		{"create_contact", http.MethodPost, "/clients/1/contacts",
 			clients.CreateContactRequest{Name: "X", Phone: &errPhone}, http.StatusInternalServerError},
+		// The client check behind the reach rule must not turn a DB fault into a 422.
+		{"create_contact_unreachable", http.MethodPost, "/clients/1/contacts",
+			clients.CreateContactRequest{Name: "X"}, http.StatusInternalServerError},
 		{"update_contact", http.MethodPatch, "/clients/1/contacts/1",
 			map[string]any{"name": "X", "phone": errPhone}, http.StatusInternalServerError},
 	}

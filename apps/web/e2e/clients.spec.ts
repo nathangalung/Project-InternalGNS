@@ -429,3 +429,24 @@ test("a client status filter shows as a chip that removes it", async ({ page, se
   await page.getByRole("button", { name: "Hapus filter Status: Nonaktif" }).click()
   await expect(rows).toHaveCount(1)
 })
+
+// The main contact keeps a channel.
+// Clearing No HP when the main contact has no email is refused on the phone
+// field itself, never on the company email, and nothing is saved.
+test("clearing the only phone of the main contact is refused on No HP", async ({ page, seed }) => {
+  const client = await seed.client({ complete: false })
+  await api("POST", `/clients/${client.id}/contacts`, {
+    name: `${seed.prefix} Lewat HP`,
+    phone: "81355500077",
+    countryCode: "IDN",
+  })
+  await page.goto(`/clients/${client.id}`)
+  const phone = page.getByLabel("No HP").first()
+  await expect(phone).toHaveValue("81355500077")
+  await phone.fill("")
+  await page.getByRole("button", { name: "Simpan Perubahan" }).click()
+  await expect(phone).toHaveAttribute("aria-invalid", "true")
+  await expect(page.getByText(CONTACT_REACH_ERROR)).toHaveCount(1)
+  const [main] = await api<Contact[]>("GET", `/clients/${client.id}/contacts`)
+  expect(main.phone).toBe("81355500077")
+})
