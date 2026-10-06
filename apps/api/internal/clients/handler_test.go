@@ -206,7 +206,7 @@ func TestHandler_Create_AbsentCountryDefaultsIDN(t *testing.T) {
 	assert.Equal(t, "IDN", c.CountryCode)
 
 	path := "/clients/" + strconv.FormatInt(c.ID, 10) + "/contacts"
-	cres := doJSON(t, srv, http.MethodPost, path, map[string]any{"name": "Tanpa Negara"})
+	cres := doJSON(t, srv, http.MethodPost, path, map[string]any{"name": "Tanpa Negara", "phone": "81234567890"})
 	defer cres.Body.Close()
 	require.Equal(t, http.StatusCreated, cres.StatusCode)
 	var ct clients.Contact

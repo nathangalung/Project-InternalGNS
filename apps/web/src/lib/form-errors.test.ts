@@ -25,7 +25,7 @@ describe("isInlineFormError", () => {
 describe("formErrors", () => {
   it("puts 422 fields on their inputs", () => {
     const err = apiErr(422, {
-      detail: "Nama wajib diisi.; Format email tidak valid.",
+      detail: "Nama wajib diisi. Format email tidak valid.",
       fields: { name: "Nama wajib diisi.", email: "Format email tidak valid." },
     })
     expect(formErrors(err, KEYS, "gagal")).toEqual({

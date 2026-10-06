@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"slices"
 	"sort"
 	"strings"
 
@@ -115,9 +116,20 @@ func fieldsDetail(fields map[string]string) string {
 	sort.Strings(keys)
 	msgs := make([]string, 0, len(keys))
 	for _, k := range keys {
-		msgs = append(msgs, strings.TrimSpace(fields[k]))
+		if m := strings.TrimSpace(fields[k]); !slices.Contains(msgs, m) {
+			msgs = append(msgs, m)
+		}
 	}
-	return strings.Join(msgs, "; ")
+	if len(msgs) == 1 {
+		return msgs[0]
+	}
+	// Joined as sentences, so each one ends with a stop.
+	for i, m := range msgs {
+		if !strings.HasSuffix(m, ".") && !strings.HasSuffix(m, "?") && !strings.HasSuffix(m, "!") {
+			msgs[i] = m + "."
+		}
+	}
+	return strings.Join(msgs, " ")
 }
 func PayloadTooLarge(detail string) Error {
 	return Error{Type: "about:blank", Title: "Payload Too Large", Status: http.StatusRequestEntityTooLarge, Detail: detail}

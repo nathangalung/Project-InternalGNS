@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest"
 import type { ClientRow } from "@/types/api"
-import { type PickClient, resolveClient, visibleClients } from "./wizardClient"
+import {
+  defaultContact,
+  type PickClient,
+  resolveClient,
+  visibleClients,
+  withContact,
+} from "./wizardClient"
 
 function pick(id: string, name = `Klien ${id}`): PickClient {
   return { id, name, narahubung: "", country: "ID", initials: "KL" }
@@ -58,5 +64,46 @@ describe("visibleClients", () => {
 
   it("returns the first rows with no selection", () => {
     expect(visibleClients(sorted, undefined, 2).map((c) => c.id)).toEqual(["1", "2"])
+  })
+})
+
+describe("withContact", () => {
+  const client: PickClient = {
+    ...pick("6", "PT Kapal"),
+    narahubung: "Kontak Pertama",
+    email: "pertama@kapal.co.id",
+    phone: "81200000001",
+    contactId: 1,
+  }
+
+  it("shows the picked contact, not the client's first one", () => {
+    const got = withContact(client, { name: "Kontak Dipilih", phone: "81299999999" })
+    expect(got).toMatchObject({ id: "6", name: "PT Kapal", narahubung: "Kontak Dipilih" })
+    expect(got.phone).toBe("81299999999")
+    expect(got.email).toBeUndefined()
+  })
+
+  it("shows no contact when none is picked", () => {
+    const got = withContact(client, undefined)
+    expect(got.narahubung).toBe("")
+    expect(got.phone).toBeUndefined()
+    expect(got.email).toBeUndefined()
+  })
+})
+
+describe("defaultContact", () => {
+  const list = [{ id: 1 }, { id: 2 }, { id: 3 }]
+  it.each([
+    { name: "keeps a listed pick", current: 3, client: 2, want: 3 },
+    { name: "drops a pick of another client", current: 9, client: 2, want: 2 },
+    { name: "takes the client's contact first", current: undefined, client: 2, want: 2 },
+    { name: "falls back to the first listed", current: undefined, client: 8, want: 1 },
+  ])("$name", ({ current, client, want }) => {
+    expect(defaultContact(list, current, client)).toBe(want)
+  })
+
+  it("knows only the client's contact before the list loads", () => {
+    expect(defaultContact([], 3, 2)).toBe(2)
+    expect(defaultContact([], undefined, undefined)).toBeUndefined()
   })
 })

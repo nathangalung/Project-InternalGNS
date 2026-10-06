@@ -157,3 +157,34 @@ def test_owner_decisions_load_and_lookalikes_go_to_review(tmp_path: Path) -> Non
     out = tmp_path / "review.csv"
     write_review(rows, out)
     assert out.read_text().splitlines()[0] == "vendor_a,vendor_b,score,reason"
+
+
+def test_a_contact_of_two_clients_keeps_its_email_at_both() -> None:
+    contact = {"name": "Ibu Satu Contoh", "email": "satu@contoh.invalid", "phone": None}
+    model = build(
+        inputs(
+            [
+                staged(
+                    "a.xlsx#S",
+                    "Q-1/GNS/I/2026",
+                    "2026-10-01",
+                    [line(1, 10)],
+                    "PT. Contoh Laut",
+                    contact=contact,
+                ),
+                staged(
+                    "b.xlsx#S",
+                    "Q-2/GNS/I/2026",
+                    "2026-10-02",
+                    [line(1, 10)],
+                    "PT. Contoh Kapal",
+                    contact=contact,
+                ),
+            ]
+        )
+    )
+    got = sorted((c.client.name, c.email) for c in model.contacts)
+    assert got == [
+        ("PT. Contoh Kapal", "satu@contoh.invalid"),
+        ("PT. Contoh Laut", "satu@contoh.invalid"),
+    ]

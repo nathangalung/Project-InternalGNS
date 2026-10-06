@@ -81,6 +81,9 @@ type QuotationDetail struct {
 	History            []StatusHistoryEntry `json:"history"`
 	AllowedTransitions []Transition         `json:"allowedTransitions"`
 	CanRevise          bool                 `json:"canRevise"`
+	// The chosen contact's own email and phone
+	ContactEmail *string `json:"contactEmail,omitempty"`
+	ContactPhone *string `json:"contactPhone,omitempty"`
 	// Parts other users are editing now
 	Locks []EditLock `json:"locks"`
 }

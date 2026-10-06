@@ -265,7 +265,7 @@ Feature: Login, session refresh and session revocation
       {}
       """
     Then the response status is 422
-    And the problem detail is "Email wajib diisi.; Kata sandi wajib diisi."
+    And the problem detail is "Email wajib diisi. Kata sandi wajib diisi."
 
   Scenario Outline: Only a superadmin reaches user management
     Given a logged-in "<role>" account

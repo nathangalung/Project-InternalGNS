@@ -32,7 +32,7 @@ describe("extractErrorMessage", () => {
 
   it("joins field values only, in body order", () => {
     const body = problem(422, { fields: { name: "Nama wajib diisi", email: "Email tidak valid" } })
-    expect(extractErrorMessage(body, "fallback")).toBe("Nama wajib diisi; Email tidak valid")
+    expect(extractErrorMessage(body, "fallback")).toBe("Nama wajib diisi. Email tidak valid.")
   })
 
   it("matches the server's own detail for a real 422 login body", () => {
@@ -42,13 +42,19 @@ describe("extractErrorMessage", () => {
       type: "about:blank",
       title: "Unprocessable Entity",
       status: 422,
-      detail: "Email wajib diisi.; Kata sandi wajib diisi.",
+      detail: "Email wajib diisi. Kata sandi wajib diisi.",
       fields: { email: "Email wajib diisi.", password: "Kata sandi wajib diisi." },
     }
     const viaDetail = extractErrorMessage(body, "fallback")
     const viaFields = extractErrorMessage(problem(422, { fields: body.fields }), "fallback")
-    expect(viaDetail).toBe("Email wajib diisi.; Kata sandi wajib diisi.")
+    expect(viaDetail).toBe("Email wajib diisi. Kata sandi wajib diisi.")
     expect(viaDetail).toBe(viaFields)
+  })
+
+  it("prints a message two fields share once", () => {
+    const same = "Isi email atau nomor HP."
+    const body = problem(422, { fields: { email: same, phone: same } })
+    expect(extractErrorMessage(body, "fallback")).toBe(same)
   })
 
   it("skips blank field values instead of emitting empty segments", () => {

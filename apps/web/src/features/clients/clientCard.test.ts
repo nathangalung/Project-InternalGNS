@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { ClientRow, ContactRow } from "@/types/api"
-import { clientCardInfo } from "./clientCard"
+import { clientCardInfo, documentContact, pickedContact } from "./clientCard"
 
 const client: ClientRow = {
   id: 7,
@@ -33,59 +33,49 @@ const contact = (id: number, over: Partial<ContactRow> = {}): ContactRow => ({
   ...over,
 })
 
+const legal = {
+  nomorTKU: "0123456789012345000000",
+  npwp: "0123456789012345",
+  lokasi: "Jl. Pelabuhan Raya No. 12",
+}
+
 describe("clientCardInfo", () => {
   it.each([
     {
-      name: "the document's contact gives phone and email",
-      contacts: [contact(1), contact(2, { phone: "81299999999", email: "sari@samudra.co.id" })],
-      contactId: 2,
-      base: { narahubung: "Sari", referenceNumber: "REF-9" },
+      name: "the chosen contact gives name, phone and email",
+      base: { referenceNumber: "REF-9" },
+      picked: { name: "Sari", phone: "81299999999", email: "sari@samudra.co.id" },
       want: {
-        narahubung: "Sari",
         referenceNumber: "REF-9",
+        narahubung: "Sari",
         phone: "81299999999",
         email: "sari@samudra.co.id",
       },
     },
     {
-      name: "a contact without email falls back to the company email",
-      contacts: [contact(2, { phone: "81299999999" })],
-      contactId: 2,
+      name: "a contact without email never shows the company email",
       base: { narahubung: "Sari" },
-      want: { narahubung: "Sari", phone: "81299999999", email: "kantor@samudra.co.id" },
+      picked: { phone: "81299999999" },
+      want: { narahubung: "Sari", phone: "81299999999", email: undefined },
     },
     {
-      name: "a payload without the contact name takes it from the contact",
-      contacts: [contact(2, { phone: "81299999999", email: "sari@samudra.co.id" })],
-      contactId: 2,
+      name: "no chosen contact shows none, never the client's first contact",
       base: {},
-      want: { narahubung: "Kontak 2", phone: "81299999999", email: "sari@samudra.co.id" },
+      picked: undefined,
+      want: { narahubung: undefined, phone: undefined, email: undefined },
     },
     {
-      name: "no document contact uses the client's primary contact",
-      contacts: [],
-      contactId: undefined,
-      base: {},
-      want: { narahubung: "Budi", phone: "81200000001", email: "budi@samudra.co.id" },
+      name: "the payload name wins over the contact row",
+      base: { narahubung: "Sari Lama" },
+      picked: { name: "Sari Baru", email: "sari@samudra.co.id" },
+      want: { narahubung: "Sari Lama", phone: undefined, email: "sari@samudra.co.id" },
     },
-    {
-      name: "a document contact that is gone never borrows another's phone",
-      contacts: [contact(1, { phone: "81200000001" })],
-      contactId: 5,
-      base: { narahubung: "Lama" },
-      want: { narahubung: "Lama", phone: undefined, email: "kantor@samudra.co.id" },
-    },
-  ])("$name", ({ contacts, contactId, base, want }) => {
-    expect(clientCardInfo(base, client, contacts, contactId)).toEqual({
-      ...want,
-      nomorTKU: "0123456789012345000000",
-      npwp: "0123456789012345",
-      lokasi: "Jl. Pelabuhan Raya No. 12",
-    })
+  ])("$name", ({ base, picked, want }) => {
+    expect(clientCardInfo(base, client, picked)).toEqual({ ...want, ...legal })
   })
 
   it("keeps the payload while the client is still loading", () => {
-    expect(clientCardInfo({ narahubung: "Sari" }, undefined, undefined, 2)).toEqual({
+    expect(clientCardInfo({ narahubung: "Sari" }, undefined, undefined)).toEqual({
       narahubung: "Sari",
       phone: undefined,
       email: undefined,
@@ -93,5 +83,30 @@ describe("clientCardInfo", () => {
       npwp: undefined,
       lokasi: undefined,
     })
+  })
+})
+
+describe("pickedContact", () => {
+  const list = [contact(1, { email: "a@x.id" }), contact(2, { phone: "81299999999" })]
+
+  it.each([
+    { name: "finds the chosen id", id: 2, want: { name: "Kontak 2", phone: "81299999999" } },
+    { name: "no id is no contact", id: undefined, want: undefined },
+    { name: "an unlisted id is no contact", id: 5, want: undefined },
+  ])("$name", ({ id, want }) => {
+    expect(pickedContact(list, id)).toEqual(want)
+  })
+})
+
+describe("documentContact", () => {
+  it.each([
+    {
+      name: "a stored contact gives its channels",
+      d: { contactId: 4, contactEmail: "sari@samudra.co.id", contactPhone: "81299999999" },
+      want: { email: "sari@samudra.co.id", phone: "81299999999" },
+    },
+    { name: "no stored contact is none", d: { contactEmail: "x@y.id" }, want: undefined },
+  ])("$name", ({ d, want }) => {
+    expect(documentContact(d)).toEqual(want)
   })
 })

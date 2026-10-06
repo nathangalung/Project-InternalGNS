@@ -83,7 +83,7 @@ func TestUnprocessable_DetailKeepsFieldMessages(t *testing.T) {
 		"password": "Kata sandi wajib diisi.",
 	})
 	// Sorted by field name so the message never depends on map order.
-	assert.Equal(t, "Email wajib diisi.; Kata sandi wajib diisi.", e.Detail)
+	assert.Equal(t, "Email wajib diisi. Kata sandi wajib diisi.", e.Detail)
 	assert.NotContains(t, e.Detail, "email")
 	assert.NotContains(t, e.Detail, "password")
 }
@@ -404,4 +404,27 @@ func TestFromDBErr_EditLocked(t *testing.T) {
 	assert.Equal(t, EditLockedCode, got.Code)
 	assert.Equal(t, "edit_locked", got.Code)
 	assert.Equal(t, "Sedang diubah oleh Budi.", got.Detail)
+}
+
+// Detail reads as sentences.
+// A message shared by two fields prints once, and every joined message ends
+// with a full stop, never a semicolon.
+func TestUnprocessable_DetailJoinsSentences(t *testing.T) {
+	cases := []struct {
+		name   string
+		fields map[string]string
+		want   string
+	}{
+		{"shared message once", map[string]string{"email": "Isi email atau nomor HP.", "phone": "Isi email atau nomor HP."},
+			"Isi email atau nomor HP."},
+		{"bare messages get a stop", map[string]string{"a": "satu", "b": "dua"}, "satu. dua."},
+		{"single bare message kept", map[string]string{"a": "required"}, "required"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got := Unprocessable(c.fields).Detail
+			assert.Equal(t, c.want, got)
+			assert.NotContains(t, got, ";")
+		})
+	}
 }

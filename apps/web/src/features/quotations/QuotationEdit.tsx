@@ -5,7 +5,7 @@ import Modal from "@/components/shared/Modal"
 import NotFoundState from "@/components/shared/NotFoundState"
 import StateMessage from "@/components/shared/StateMessage"
 import { useMe } from "@/features/auth/hooks"
-import { clientCardInfo } from "@/features/clients/clientCard"
+import { clientCardInfo, documentContact, pickedContact } from "@/features/clients/clientCard"
 import { getCompanyInitials } from "@/features/clients/helpers"
 import { useClient, useClientContacts } from "@/features/clients/hooks"
 import ProductAdd from "@/features/items/ProductAdd"
@@ -126,13 +126,12 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
   const lockedClient: Client | undefined = useMemo(() => {
     if (!detail) return undefined
     const contactId = selectedContactId ?? detail.contactId
+    // The stored contact reads its server channels, a new pick its row.
+    const stored = contactId === detail.contactId
     const info = clientCardInfo(
-      {
-        narahubung: contactId === detail.contactId ? detail.contactName : undefined,
-      },
+      { narahubung: stored ? detail.contactName : undefined },
       clientRow,
-      contacts,
-      contactId,
+      stored ? documentContact(detail) : pickedContact(contacts, contactId),
     )
     return {
       id: String(detail.companyClientId),

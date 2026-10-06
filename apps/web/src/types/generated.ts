@@ -704,6 +704,8 @@ export type QuotationDetail = QuotationHeader & {
     history: QuotationStatusEvent[];
     allowedTransitions: QuotationTransition[];
     canRevise: boolean;
+    contactEmail?: string;
+    contactPhone?: string;
     locks: QuotationEditLock[];
 };
 

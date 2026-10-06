@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router"
 import { useEffect, useId, useRef, useState } from "react"
+import FieldError from "@/components/shared/FieldError"
 import Modal from "@/components/shared/Modal"
 import * as clientsApi from "@/features/clients/api"
 import {
@@ -26,6 +27,8 @@ import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import { validateAsset } from "@/lib/upload-validation"
 import {
+  CONTACT_REACH_ERROR,
+  contactReachError,
   digitsOnly,
   optionalEmailError,
   optionalNpwpError,
@@ -55,6 +58,8 @@ const inputBaseNoColor = `w-full border-[1.5px] bg-[#F2F4F6] px-4 py-3 font-sans
 
 // Responsive two column track sizing.
 const grid2 = "grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))]"
+// Reach rule hint, left of the buttons.
+const reachHintCls = "mr-auto self-center text-xs text-[#EF4444]"
 
 const contactCancelCls = `rounded-md px-4 py-2 text-[13px] font-semibold text-primary-700 ${ui.focusRing}`
 
@@ -72,16 +77,6 @@ function contactSaveCls(enabled: boolean): string {
 const CLIENT_FIELDS = ["name", "phone", "email", "npwp"] as const
 
 type ClientField = (typeof CLIENT_FIELDS)[number]
-
-// Inline field message.
-function FieldError({ id, message }: { id: string; message: string | null | undefined }) {
-  if (!message) return null
-  return (
-    <div id={id} className="mt-1.5 text-xs text-[#DC2626]">
-      {message}
-    </div>
-  )
-}
 
 export default function ClientDetail({ client }: ClientDetailProps) {
   const [name, setName] = useState(client.name)
@@ -171,10 +166,17 @@ export default function ClientDetail({ client }: ClientDetailProps) {
   const npwpError = fieldErrors.npwp || optionalNpwpError(npwp, countryCode)
   const newPhoneError = optionalPhoneError(newContactPhone)
   const newEmailError = newEmailTaken || optionalEmailError(newContactEmail)
-  const canAddContact = Boolean(newContactName.trim()) && !newPhoneError && !newEmailError
+  // Asked once a name is typed, so an empty form stays quiet.
+  const newReachError = newContactName.trim()
+    ? contactReachError(newContactEmail, newContactPhone)
+    : null
+  const canAddContact =
+    Boolean(newContactName.trim()) && !newPhoneError && !newEmailError && !newReachError
   const editPhoneError = optionalPhoneError(editPhone)
   const editEmailError = editEmailTaken || optionalEmailError(editEmail)
-  const canSaveContact = Boolean(editName.trim()) && !editPhoneError && !editEmailError
+  const editReachError = contactReachError(editEmail, editPhone)
+  const canSaveContact =
+    Boolean(editName.trim()) && !editPhoneError && !editEmailError && !editReachError
 
   const countryOption = countries?.find((c) => c.code === countryCode)
   const dialCode = countryOption?.dialCode ?? ""
@@ -197,6 +199,14 @@ export default function ClientDetail({ client }: ClientDetailProps) {
     const errs: Partial<Record<ClientField, string>> = {}
     if (!name.trim()) errs.name = "Wajib diisi"
     if (phoneError) errs.phone = phoneError
+    // The main contact keeps a channel; the company email is not its own.
+    else if (
+      client.contactId &&
+      phone !== (client.contactPhone ?? "") &&
+      contactReachError(client.contactEmail ?? "", phone)
+    ) {
+      errs.phone = CONTACT_REACH_ERROR
+    }
     if (emailError) errs.email = emailError
     if (npwpError) errs.npwp = npwpError
     if (Object.keys(errs).length > 0) {
@@ -702,6 +712,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                     </div>
                   </div>
                   <div className="flex justify-end gap-2">
+                    {editReachError && <span className={reachHintCls}>{editReachError}</span>}
                     <button
                       type="button"
                       onClick={() => setEditingContactId(null)}
@@ -850,6 +861,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
               </div>
             </div>
             <div className="flex justify-end gap-2">
+              {newReachError && <span className={reachHintCls}>{newReachError}</span>}
               <button type="button" onClick={closeAddContactForm} className={contactCancelCls}>
                 Batal
               </button>
