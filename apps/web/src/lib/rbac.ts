@@ -8,6 +8,7 @@ export type Section =
   | "quotation"
   | "purchase-orders"
   | "invoices"
+  | "cash-entries"
   | "users"
   | "clients"
   | "vendors"
@@ -24,12 +25,13 @@ const EXTRA: Record<Role, Section[]> = {
     "quotation",
     "purchase-orders",
     "invoices",
+    "cash-entries",
     "users",
   ],
   operational: ["dashboard-operational", "quotation", "purchase-orders"],
   operational_input: ["dashboard-operational", "quotation", "purchase-orders"],
-  finance: ["dashboard-financial", "invoices", "quotation", "purchase-orders"],
-  finance_input: ["invoices", "purchase-orders"],
+  finance: ["dashboard-financial", "invoices", "cash-entries", "quotation", "purchase-orders"],
+  finance_input: ["invoices", "cash-entries", "purchase-orders"],
 }
 
 // Unknown roles see common sections.
@@ -110,6 +112,8 @@ export function sectionFromPathname(pathname: string): Section {
       return "purchase-orders"
     case "invoices":
       return "invoices"
+    case "cash-entries":
+      return "cash-entries"
     case "users":
       return "users"
     case "clients":

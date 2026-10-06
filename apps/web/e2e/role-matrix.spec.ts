@@ -52,6 +52,7 @@ const routes: readonly RouteCase[] = [
   },
   { path: "/invoices", heading: "Daftar Invoice", allowed: money },
   { path: `/invoices/${MISSING}`, heading: "Invoice tidak ditemukan", allowed: money },
+  { path: "/cash-entries", heading: "Kas Lain", allowed: money },
   { path: "/clients", heading: "Daftar Klien", allowed: everyone },
   { path: `/clients/${MISSING}`, heading: "Klien tidak ditemukan", allowed: everyone },
   { path: "/vendors", heading: "Daftar Vendor", allowed: everyone },

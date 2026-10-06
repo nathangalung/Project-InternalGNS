@@ -23,6 +23,7 @@ const ALL: Section[] = [
   "quotation",
   "purchase-orders",
   "invoices",
+  "cash-entries",
   "users",
   "clients",
   "vendors",
@@ -39,12 +40,13 @@ const EXTRA: Record<Role, Section[]> = {
     "quotation",
     "purchase-orders",
     "invoices",
+    "cash-entries",
     "users",
   ],
   operational: ["dashboard-operational", "quotation", "purchase-orders"],
   operational_input: ["dashboard-operational", "quotation", "purchase-orders"],
-  finance: ["dashboard-financial", "quotation", "purchase-orders", "invoices"],
-  finance_input: ["purchase-orders", "invoices"],
+  finance: ["dashboard-financial", "quotation", "purchase-orders", "invoices", "cash-entries"],
+  finance_input: ["purchase-orders", "invoices", "cash-entries"],
 }
 
 describe("roleCanAccess", () => {
@@ -115,6 +117,7 @@ describe("sectionFromPathname every section", () => {
     ["/quotations/12/edit", "quotation"],
     ["/purchase-orders/9/edit", "purchase-orders"],
     ["/invoices/4", "invoices"],
+    ["/cash-entries", "cash-entries"],
     ["/users", "users"],
     ["/clients/2", "clients"],
     ["/vendors/3", "vendors"],

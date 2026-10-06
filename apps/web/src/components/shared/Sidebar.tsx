@@ -30,6 +30,7 @@ const navItems = [
     to: "/purchase-orders",
   },
   { label: "Invoices", icon: "file", page: "invoices", to: "/invoices" },
+  { label: "Kas Lain", icon: "wallet", page: "cash-entries", to: "/cash-entries" },
   { label: "Katalog Produk", icon: "package", page: "products", to: "/products" },
   { label: "Daftar Vendor", icon: "truck", page: "vendors", to: "/vendors" },
   { label: "Daftar Klien", icon: "users", page: "clients", to: "/clients" },
@@ -41,6 +42,13 @@ const iconWrap =
 
 function NavIcon({ name }: { name: string }) {
   const icons: Record<string, React.ReactElement> = {
+    wallet: (
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <path d="M20 7H5a2 2 0 0 1 0-4h13v4" />
+        <path d="M3 5v14a2 2 0 0 0 2 2h15V7" />
+        <circle cx="16" cy="14" r="1" />
+      </svg>
+    ),
     grid: (
       <svg aria-hidden="true" viewBox="0 0 24 24">
         <rect x="3" y="3" width="7" height="7" />

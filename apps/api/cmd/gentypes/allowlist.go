@@ -35,6 +35,12 @@ var allowlist = []pkg{
 		{Go: "UpdateUserRequest", TS: "UpdateUserInput", Input: true},
 		{Go: "ChangePasswordRequest", TS: "ChangeUserPasswordInput", Input: true},
 	}},
+	{"internal/cashentries", []entry{
+		{Go: "Direction", TS: "CashDirection"},
+		{Go: "Entry", TS: "CashEntryRow"},
+		{Go: "EntryInput", TS: "CashEntryInput", Input: true},
+		{Go: "Summary", TS: "CashSummary"},
+	}},
 	{"internal/clients", []entry{
 		{Go: "Client", TS: "ClientRow"},
 		{Go: "Contact", TS: "ContactRow"},
