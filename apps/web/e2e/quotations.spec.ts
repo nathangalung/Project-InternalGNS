@@ -1030,7 +1030,14 @@ test.describe("quotation list", () => {
     await page
       .getByPlaceholder("Cari penawaran, klien, atau nomor...")
       .fill(` ${day.slice(5, 7)}/${year} `)
-    await expect(page.getByRole("link", { name: q.quotationNo })).toBeVisible()
+    // Parallel workers fill this month past one page, so the server answers
+    // whether the period search holds this quotation; the page shows its rows.
+    const hits = await api<{ id: number }[]>(
+      "GET",
+      `/quotations?q=${encodeURIComponent(`${day.slice(5, 7)}/${year}`)}&limit=200`,
+    )
+    expect(hits.map((h) => h.id)).toContain(q.id)
+    await expect(page.getByRole("link", { name: /^Q-\d{5,}\// }).first()).toBeVisible()
     // Only that month: I/2026 never lists II/2026.
     for (const no of await page.getByRole("link", { name: /^Q-\d{5,}\// }).allTextContents()) {
       expect(no).toContain(`/GNS/${roman}/${year}`)
