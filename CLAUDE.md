@@ -667,4 +667,14 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
   within five words. No emoji and no decorative separator lines.
 - UI text is Indonesian, written inline; there is no i18n layer. Problem
   details a user can read (business rules, validation) are Indonesian too.
+- Copy a user reads is short plain sentences with no semicolon and no dash
+  (em or en), in the UI, problem details, raise messages and PDFs, and never
+  shows a database id, a row version, a raw status key or a date format.
+  Four tests hold it: `src/lib/copy-guard.test.ts` (web source),
+  `httperr.TestCopy_NoSemicolonOrDash` (Go strings), `db/functions`
+  `TestLiterals_NoSemicolonOrDash` (function literals) and
+  `TestLatexExports_DocumentHead` (printed text). One word per thing: Ubah
+  (not Edit), Unggah, berkas, narahubung for the person, Riwayat, Jumlah and
+  Satuan, Email. Field messages join as sentences (`joinFieldMessages`, the
+  same rule as `httperr.Unprocessable`).
 - Use conventional commits (`feat:`, `fix:`, `test:`, `docs:`).
