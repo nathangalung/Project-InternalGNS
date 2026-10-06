@@ -36,7 +36,8 @@ async function expectProductLinks(
 ): Promise<void> {
   const table = page.getByRole("heading", { name: "Detail Produk" }).locator("xpath=..")
   if (freeTextShown) {
-    await expect(table.getByRole("cell", { name: freeText })).toBeVisible()
+    // A free-text line offers what was asked, so both columns name it.
+    await expect(table.getByRole("cell", { name: freeText })).toHaveCount(2)
   } else {
     await expect(table.getByText(freeText)).toHaveCount(0)
   }

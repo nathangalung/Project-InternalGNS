@@ -11,6 +11,8 @@ type RequestOfferProps = {
   noOffer?: boolean
   // Table cells instead of a card row
   asCells?: boolean
+  // Offer cell only, for billing pages
+  hideRequest?: boolean
 }
 
 const label = "mb-1 text-[10px] font-bold uppercase tracking-[0.6px] text-[#6B7280]"
@@ -42,6 +44,7 @@ export default function RequestOffer({
   differs,
   noOffer = false,
   asCells = false,
+  hideRequest = false,
 }: RequestOfferProps) {
   const offerTone = differs ? differsText : ""
   const offerBody = (
@@ -53,9 +56,11 @@ export default function RequestOffer({
   if (asCells) {
     return (
       <>
-        <td className="p-5 align-middle">
-          <Line side={request} tone="" />
-        </td>
+        {!hideRequest && (
+          <td className="p-5 align-middle">
+            <Line side={request} tone="" />
+          </td>
+        )}
         <td className={`p-5 align-middle ${differs ? differsCell : ""}`}>{offerBody}</td>
       </>
     )
