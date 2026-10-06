@@ -99,11 +99,12 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 		Queries:       store,
 		TemplatesRoot: cfg.TemplatesRoot,
 		Pdf: deps.PdfSettings{
-			SignerName:    cfg.PdfSignerName,
-			BankName:      cfg.PdfBankName,
-			BankAccountNo: cfg.PdfBankAccountNo,
-			BankAccountNm: cfg.PdfBankAccountNm,
-			PaymentTerms:  cfg.PdfPaymentTerms,
+			SignerName:          cfg.PdfSignerName,
+			QuotationSignerName: cfg.PdfQuotationSignerName,
+			BankName:            cfg.PdfBankName,
+			BankAccountNo:       cfg.PdfBankAccountNo,
+			BankAccountNm:       cfg.PdfBankAccountNm,
+			PaymentTerms:        cfg.PdfPaymentTerms,
 		},
 		Coretax: deps.CoretaxSettings{
 			SellerTIN:   cfg.CoretaxSellerTIN,

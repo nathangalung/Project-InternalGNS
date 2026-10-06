@@ -193,7 +193,7 @@ func LatexEscape(s string) string {
 }
 
 // breakRun caps unbroken tokens.
-// Twenty characters fit the narrowest table cell at the A5 font size.
+// Twenty characters fit the narrowest table cell at the table font size.
 const breakRun = 20
 
 // LatexBreakable wraps long tokens.

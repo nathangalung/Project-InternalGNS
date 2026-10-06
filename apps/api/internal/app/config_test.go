@@ -40,6 +40,7 @@ func TestLoadConfig_DefaultValues(t *testing.T) {
 	assert.Equal(t, ":8080", c.HTTPAddr)
 	assert.Equal(t, 24*time.Hour, c.JWTExpiry)
 	assert.Equal(t, "Asia/Jakarta", c.TZ)
+	assert.Equal(t, "Seno Dwi Sasongko", c.PdfQuotationSignerName, "the scanned signature is his")
 }
 
 func TestLoadConfig_MissingRequired(t *testing.T) {
@@ -325,6 +326,9 @@ func TestConfig_ProductionRefusesPlaceholderSigner(t *testing.T) {
 		PdfSignerName:      "Budi",
 	}
 	require.NoError(t, c.validate())
+	c.PdfQuotationSignerName = "CHANGE_ME"
+	require.ErrorContains(t, c.validate(), "PDF_QUOTATION_SIGNER_NAME")
+	c.PdfQuotationSignerName = "Seno"
 	c.PdfSignerName = "CHANGE_ME Director"
 	require.ErrorContains(t, c.validate(), "PDF_SIGNER_NAME")
 	// Outside production the same value is tolerated.

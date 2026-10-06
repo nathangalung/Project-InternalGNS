@@ -95,13 +95,13 @@ func TestQuotationPaperSize(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// A4 at every length.
 	cases := []struct {
 		name      string
 		itemCount int
-		wantA4    bool
 	}{
-		{"3_items_A5", 3, false},
-		{"7_items_A4", 7, true},
+		{"3_items", 3},
+		{"7_items", 7},
 	}
 
 	for _, tc := range cases {
@@ -131,7 +131,6 @@ func TestQuotationPaperSize(t *testing.T) {
 				Payment:       "30 days",
 				Validity:      "14 days",
 				SignerName:    "Director",
-				UseA4:         tc.wantA4,
 			}
 
 			pdf, latexLog := renderQtexWithLog(t, root, data)
@@ -141,20 +140,13 @@ func TestQuotationPaperSize(t *testing.T) {
 
 			info, _ := exec.Command("pdfinfo", out).Output()
 			infoStr := string(info)
-			wantDesc := "A5"
-			if tc.wantA4 {
-				wantDesc = "A4"
-			}
 			hasA4 := strings.Contains(infoStr, "A4") || strings.Contains(infoStr, "841")
 			overfull := strings.Count(latexLog, "Overfull \\hbox")
-			t.Logf("want=%s  pdfinfo_A4=%v  overfull_hbox=%d  bytes=%d  path=%s",
-				wantDesc, hasA4, overfull, len(pdf), out)
+			t.Logf("pdfinfo_A4=%v  overfull_hbox=%d  bytes=%d  path=%s",
+				hasA4, overfull, len(pdf), out)
 
-			if tc.wantA4 && !hasA4 {
+			if !hasA4 {
 				t.Errorf("wanted A4 but pdfinfo shows: %s", infoStr)
-			}
-			if !tc.wantA4 && hasA4 {
-				t.Errorf("wanted A5 but pdfinfo shows A4: %s", infoStr)
 			}
 			if overfull > 0 {
 				for _, line := range strings.Split(latexLog, "\n") {

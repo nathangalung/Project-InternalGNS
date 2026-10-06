@@ -9,7 +9,6 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/internal/clients"
 	"github.com/nathangalung/internalgns/apps/api/internal/pdfgen"
-	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/assetproxy"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
@@ -45,7 +44,6 @@ func Routes(d deps.Deps) chi.Router {
 		dn := NewDeliveryNoteHandler(
 			repo,
 			clients.NewRepo(d.Pool, d.Queries),
-			quotations.NewRepo(d.Pool, d.Queries),
 			pdfgen.NewRenderer(d.TemplatesRoot),
 		)
 		r.Get("/{id}/delivery-note.pdf", dn.ExportPDF)

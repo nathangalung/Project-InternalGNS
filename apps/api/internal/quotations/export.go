@@ -67,7 +67,6 @@ type exportData struct {
 	Payment       string
 	Validity      string
 	SignerName    string
-	UseA4         bool
 }
 
 // ExportPDF streams the quotation PDF.
@@ -116,7 +115,7 @@ func (h *ExportHandler) buildData(ctx context.Context, d QuotationDetail) (expor
 		return exportData{}, err
 	}
 
-	return buildExportData(d, unitsByID, contactEmail, contactPhone, h.settings.SignerName, time.Now()), nil
+	return buildExportData(d, unitsByID, contactEmail, contactPhone, h.settings.QuotationSignerName, time.Now()), nil
 }
 
 // documentDate is the printed date.
@@ -151,7 +150,6 @@ func buildExportData(
 	// No Offer and adds nothing to total_produk; an unpriced offered line
 	// cannot be sent (fn_change_quotation_status).
 	items := make([]exportItem, 0, len(d.Items))
-	productCount := 0
 	hasShipping := false
 	// fn_create_quotation writes at most one shipping line.
 	deliveryTime := ""
@@ -175,8 +173,6 @@ func buildExportData(
 				continue
 			}
 			hasShipping = true
-		} else {
-			productCount++
 		}
 
 		items = append(items, exportItem{
@@ -233,7 +229,6 @@ func buildExportData(
 		Payment:       pdfgen.LatexEscape(payment),
 		Validity:      pdfgen.LatexEscape(validity),
 		SignerName:    pdfgen.LatexEscape(signerName),
-		UseA4:         productCount > 5,
 	}
 }
 

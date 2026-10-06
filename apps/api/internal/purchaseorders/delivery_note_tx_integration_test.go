@@ -61,8 +61,9 @@ func TestDeliveryNote_PrintsGoodsNotTheShippingCharge(t *testing.T) {
 
 	text := pdfText(t, pdf)
 	assert.Contains(t, text, "Tali Tambang Nilon")
-	assert.Contains(t, text, vessel)
-	assert.Contains(t, text, "Restu Umar Singgih", "Attn is the quotation contact")
+	// The note names no vessel and no attention.
+	assert.NotContains(t, text, vessel)
+	assert.NotContains(t, text, "Attn")
 	assert.NotContains(t, text, charge.ItemName, "the shipping charge is not a delivered line")
 	// The goods line has no address of its own, so it prints the shipping
 	// line's as its Tujuan, once, and no charge row repeats it.
@@ -106,12 +107,6 @@ func TestDeliveryNote_Faults(t *testing.T) {
 			// Never a note with a blank address.
 			"reading the client fails",
 			func(inner db.Executor) db.Executor { return &testutil.CountingExec{Inner: inner, FailAfter: 2} },
-			poTemplatesRoot,
-		},
-		{
-			// Never a note with a blank Attn and vessel.
-			"reading the quotation fails",
-			func(inner db.Executor) db.Executor { return &testutil.CountingExec{Inner: inner, FailAfter: 3} },
 			poTemplatesRoot,
 		},
 		{

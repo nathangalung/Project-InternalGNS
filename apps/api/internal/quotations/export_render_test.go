@@ -125,17 +125,16 @@ func badBoxes(log string) []string {
 	return out
 }
 
-// Both sizes print stored figures.
-// Each paper size prints them cleanly.
+// Short and long print stored figures.
+// Both lengths print them cleanly on A4.
 func TestQuotationPDF_PrintsStoredTotals(t *testing.T) {
 	cases := []struct {
 		name    string
 		lines   int
-		wantA4  bool
 		onePage bool
 	}{
-		{"A5", 1, false, true},
-		{"A4", 8, true, false},
+		{"one line", 1, true},
+		{"eight lines", 8, false},
 	}
 	wants := []struct{ label, amount string }{
 		{"Total Produk", "Rp 2.001,00"},
@@ -149,9 +148,6 @@ func TestQuotationPDF_PrintsStoredTotals(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			data := sampleExport(tc.lines)
-			if data.UseA4 != tc.wantA4 {
-				t.Fatalf("UseA4 = %v, want %v", data.UseA4, tc.wantA4)
-			}
 			text, pages, log := renderQuotation(t, data)
 
 			flat := strings.Join(strings.Fields(text), " ")
@@ -173,9 +169,9 @@ func TestQuotationPDF_PrintsStoredTotals(t *testing.T) {
 	}
 }
 
-// A5 fits five product lines.
-// A short quotation stays on one sheet.
-func TestQuotationPDF_A5FitsFiveLines(t *testing.T) {
+// One sheet fits five lines.
+// A short quotation stays on one A4 sheet, wrapped lines included.
+func TestQuotationPDF_OneSheetFitsFiveLines(t *testing.T) {
 	const longRequest = "MARINE RADIO HANDHELD VHF INTRINSICALLY SAFE WITH SPARE BATTERY AND CHARGER"
 	const longOffer = "ENTEL HT844 VHF PORTABLE RADIO, ATEX CERTIFIED, LI-ION 2500MAH BATTERY (370021)"
 	cases := []struct {
@@ -191,9 +187,6 @@ func TestQuotationPDF_A5FitsFiveLines(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			data := sampleExport(tc.lines)
-			if data.UseA4 {
-				t.Fatalf("%d lines must still be A5", tc.lines)
-			}
 			if tc.long {
 				for i := 0; i < tc.lines; i++ {
 					data.Items[i].Request = longRequest
@@ -223,7 +216,7 @@ func TestQuotationPDF_LongPartNumberWraps(t *testing.T) {
 	cases := []struct {
 		name  string
 		lines int
-	}{{"A5", 1}, {"A4", 8}}
+	}{{"one line", 1}, {"eight lines", 8}}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			items := make([]QuotationItem, 0, tc.lines)

@@ -212,29 +212,6 @@ func TestBuildExportData_OfferShowsOfferedItem(t *testing.T) {
 	}
 }
 
-// Six product lines need A4.
-// Five still fit A5.
-func TestBuildExportData_PaperSize(t *testing.T) {
-	cases := []struct {
-		products int
-		wantA4   bool
-	}{{1, false}, {5, false}, {6, true}}
-	for _, tc := range cases {
-		items := make([]QuotationItem, 0, tc.products+1)
-		for i := 0; i < tc.products; i++ {
-			items = append(items, productLine(int16(i+1), "ITEM", "1.00", "1000.00", "1000.00"))
-		}
-		items = append(items, shippingLine(int16(tc.products+1), "100.00"))
-		d := QuotationDetail{
-			Quotation: header("1000.00", "1100.00", "0.00", "1100.00", "1008.33", "121.00", "1221.00"),
-			Items:     items,
-		}
-		if got := buildExportData(d, qUnits, "", "", "Director", exportNow).UseA4; got != tc.wantA4 {
-			t.Errorf("%d products: UseA4 = %v, want %v", tc.products, got, tc.wantA4)
-		}
-	}
-}
-
 // Footer terms follow stored data.
 func TestBuildExportData_FooterTerms(t *testing.T) {
 	withDays := func(days *int) QuotationItem {

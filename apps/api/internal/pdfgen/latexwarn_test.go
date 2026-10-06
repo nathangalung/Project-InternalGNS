@@ -148,7 +148,7 @@ const (
 
 func quotationData(items []map[string]any) map[string]any {
 	return map[string]any{
-		"UseA4": false, "CompanyName": partyName, "AttnName": "Bapak Riza Chair",
+		"CompanyName": partyName, "AttnName": "Bapak Riza Chair",
 		"AttnEmail": "riza.chair@example.com", "AttnPhone": "0811-000-000",
 		"QuotationNo": "Q-26400393/GNS/IV/2026", "ClientRefNo": "V-26-2401-035-D", "DateLine": "Jakarta, 30 April 2026",
 		"Items": items, "TotalProduk": "Rp~45.200.000", "DiscountPct": "5", "TotalDiscount": "Rp~2.260.000",
@@ -169,8 +169,8 @@ func invoiceData(items []map[string]any) map[string]any {
 		withSen = append(withSen, c)
 	}
 	return map[string]any{
-		"UseA4": false, "CompanyName": partyName, "CompanyNPWP": "01.234.567.8-901.000",
-		"CompanyAddress": partyAddress, "VesselName": "MV Global Star", "InvoiceNo": "INV-26400393/GNS/IV/2026",
+		"CompanyName": partyName, "CompanyNPWP": "01.234.567.8-901.000",
+		"CompanyAddress": partyAddress, "InvoiceNo": "INV-26400393/GNS/IV/2026",
 		"PONo": "PO-778/2026", "PODate": "20 April 2026", "InvoiceDate": "30 April 2026", "DueDate": "30 May 2026",
 		"Items": withSen, "TotalProduk": "Rp~48.200.002,25", "Diskon": "Rp~2.410.000,11", "DiscountPct": "5", "DPP": "Rp~45.790.002,14",
 		"DPPNilaiLain": "Rp~41.974.168,63", "PPN": "Rp~5.036.900,24", "Total": "Rp~50.826.902,38", "PaymentTerms": "30 hari",
@@ -182,8 +182,8 @@ func deliveryNoteData(items []map[string]any) map[string]any {
 	return map[string]any{
 		"DeliveryNoteNo": "DN-26778001/GNS/IV/2026", "PONo": "PO-262641156/GNS/IV/2026", "PODate": "20 September 2026",
 		"CompanyName":    partyName,
-		"CompanyAddress": partyAddress, "AttnName": "Bapak Riza Chair", "VesselName": "MV Global Star",
-		"DateLine": "Jakarta, 30 April 2026", "Items": items,
+		"CompanyAddress": partyAddress,
+		"DateLine":       "Jakarta, 30 April 2026", "Items": items,
 	}
 }
 

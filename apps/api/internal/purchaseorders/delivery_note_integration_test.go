@@ -16,7 +16,6 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/clients"
 	"github.com/nathangalung/internalgns/apps/api/internal/pdfgen"
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
-	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
@@ -60,7 +59,6 @@ func TestDeliveryNote_NewHandler(t *testing.T) {
 	h := purchaseorders.NewDeliveryNoteHandler(
 		purchaseorders.NewRepo(pool, store),
 		clients.NewRepo(pool, store),
-		quotations.NewRepo(pool, store),
 		pdfgen.NewRenderer(t.TempDir()),
 	)
 	require.NotNil(t, h)

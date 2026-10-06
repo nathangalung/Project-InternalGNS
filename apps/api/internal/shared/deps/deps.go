@@ -12,12 +12,15 @@ import (
 )
 
 // PdfSettings carries hardcoded PDF defaults.
+// SignerName signs invoices by hand; QuotationSignerName prints under the
+// scanned signature on quotations.
 type PdfSettings struct {
-	SignerName    string
-	BankName      string
-	BankAccountNo string
-	BankAccountNm string
-	PaymentTerms  string
+	SignerName          string
+	QuotationSignerName string
+	BankName            string
+	BankAccountNo       string
+	BankAccountNm       string
+	PaymentTerms        string
 }
 
 // CoretaxSettings holds seller e-faktur identifiers.

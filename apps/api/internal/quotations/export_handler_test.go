@@ -7,7 +7,9 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
@@ -186,4 +188,32 @@ func TestExportHandler_ContactComm(t *testing.T) {
 		_, _, err := h.ContactComm(ctx, det)
 		assert.ErrorIs(t, err, testutil.ErrFake)
 	})
+}
+
+// Quotations have their own signer.
+// The quotation prints its signer under the scanned signature; the invoice
+// signer, who signs by hand, never appears on it.
+func TestQuotationExport_PDF_QuotationSigner(t *testing.T) {
+	requireXelatex(t)
+	bin, err := exec.LookPath("pdftotext")
+	if err != nil {
+		t.Skip("pdftotext unavailable")
+	}
+	_, tx, d := createInTx(t)
+	store := testutil.Store(t)
+	h := quotations.NewExportHandler(
+		quotations.NewRepo(tx, store), clients.NewRepo(tx, store), units.NewRepo(tx, store),
+		pdfgen.NewRenderer(quotationTemplatesRoot(t)),
+		deps.PdfSettings{SignerName: "Diah Arimurti", QuotationSignerName: "Seno Dwi Sasongko"},
+	)
+	rec := httptest.NewRecorder()
+	servePDF(h, rec, itoaQ(d.ID))
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+
+	path := filepath.Join(t.TempDir(), "q.pdf")
+	require.NoError(t, os.WriteFile(path, rec.Body.Bytes(), 0o600))
+	out, err := exec.Command(bin, path, "-").Output()
+	require.NoError(t, err)
+	assert.Contains(t, string(out), "Seno Dwi Sasongko")
+	assert.NotContains(t, string(out), "Diah Arimurti")
 }
