@@ -26,7 +26,7 @@ import {
   recommendationFields,
   withSavedVendors,
 } from "./autofill"
-import { COPY_MIN_SCORE, copyNote, copyRow, matchedCatalog } from "./copyOffer"
+import { copyNote, copyRow, matchedCatalog } from "./copyOffer"
 import {
   type CatalogItem,
   type DropdownKey,
@@ -423,9 +423,9 @@ export default function ProductAdd({
   }
 
   // Request as the offer, from the catalog.
-  // A catalog request copies as that item; typed text finds the same item
-  // by IMPA code or a near-exact name, or adds it to the catalog, so the
-  // offer is always a real product with its vendors and unit.
+  // A catalog request copies as that item; typed text is matched like an
+  // Excel row (IMPA code, then the closest name) or added to the catalog.
+  // Picking it then applies the line recommendation, vendor and prices.
   async function copyRequestToOffer() {
     setCopyMessage(null)
     if (requestedItem && requestedItem.id === form.requestedItemId) {
@@ -438,7 +438,8 @@ export default function ProductAdd({
     try {
       const res = await itemsApi.matchRows(
         [copyRow(form.requestedKodeImpaNama, form.jumlahProduk, form.satuan)],
-        { minScore: COPY_MIN_SCORE, autoCreate: true },
+        // Same matcher and threshold as the Excel import.
+        { autoCreate: true },
       )
       const row = res.rows[0]
       if (!row?.matched) {

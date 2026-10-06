@@ -199,9 +199,13 @@ test.describe("quotation wizard", () => {
     await expect(product.getByLabel("Harga Beli Satuan *")).toHaveValue("75000")
   })
 
-  test("Salin ke Offer on typed text finds the item by its IMPA code", async ({ page, seed }) => {
+  test("Salin ke Offer on typed text finds the item and its recommendation", async ({
+    page,
+    seed,
+  }) => {
     const client = await seed.client()
-    const item = await seed.item()
+    const vendor = await seed.vendor()
+    const item = await seed.item({ vendor, cost: 82_000 })
 
     await page.goto("/quotations/add")
     await page.getByLabel("Cari klien").fill(seed.prefix)
@@ -219,6 +223,9 @@ test.describe("quotation wizard", () => {
     await expect(product.getByLabel("Kode IMPA/Nama Produk *", { exact: true })).toHaveValue(
       `${item.impaCode} - ${item.name}`,
     )
+    // Like an Excel row: the recommendation fills the vendor and harga beli.
+    await expect(product.getByLabel("Nama Vendor *")).toHaveValue(vendor.name)
+    await expect(product.getByLabel("Harga Beli Satuan *")).toHaveValue("82000")
   })
 
   test("Salin ke Offer adds a product the catalog does not have", async ({ page, seed }) => {

@@ -15,13 +15,14 @@ export function matchedCatalog(m: MatchedItemWithVendor): CatalogItem {
   return { id: m.itemId, kode: m.impaCode ?? "", nama: m.itemName, defaultUnitId: m.defaultUnitId }
 }
 
-// What the copy did.
-export function copyNote(source: string): string {
-  return source === "CREATED"
-    ? "Produk baru ditambahkan ke katalog."
-    : "Memakai produk katalog yang sama."
-}
+// Match sources that name the same item.
+const EXACT_SOURCES = new Set(["IMPA_EXACT", "LEARNED_EXACT"])
 
-// Near-exact names only.
-// A looser match would offer a look-alike part the client did not ask for.
-export const COPY_MIN_SCORE = 0.95
+// What the copy did.
+// A look-alike match is the Excel import's own rule, so the user is asked
+// to check it before saving.
+export function copyNote(source: string): string {
+  if (source === "CREATED") return "Produk baru ditambahkan ke katalog."
+  if (EXACT_SOURCES.has(source)) return "Memakai produk katalog yang sama."
+  return "Memakai produk katalog yang paling mirip. Periksa sebelum disimpan."
+}

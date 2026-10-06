@@ -39,6 +39,10 @@ describe("copyNote", () => {
     { source: "CREATED", want: "Produk baru ditambahkan ke katalog." },
     { source: "IMPA_EXACT", want: "Memakai produk katalog yang sama." },
     { source: "LEARNED_EXACT", want: "Memakai produk katalog yang sama." },
+    {
+      source: "CATALOG_MATCH",
+      want: "Memakai produk katalog yang paling mirip. Periksa sebelum disimpan.",
+    },
   ])("$source", ({ source, want }) => {
     expect(copyNote(source)).toBe(want)
   })

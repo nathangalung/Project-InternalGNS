@@ -255,9 +255,11 @@ shows a missing one as Belum ada No. PO.
   client's newest deal, else any client's; an item never sold starts at 0.
   Salin ke Offer makes the request the offer as a real catalog item: a
   picked catalog request is that item, and typed text goes through
-  `POST /items/match-rows` with `autoCreate` and a near-exact name score
-  (`COPY_MIN_SCORE`), so the IMPA code or the same name reuses the item and
-  anything else is added to the catalog. Every product line shows the
+  `POST /items/match-rows` with `autoCreate`, the Excel import's own
+  matcher and threshold: the IMPA code, then the closest name, reuses an
+  item (a look-alike asks the user to check it), anything else is added to
+  the catalog, and the pick then applies the line recommendation as an
+  import does. Every product line shows the
   request and the offer side by side at one size (`RequestOffer`, in the
   wizard cards, the summary and the detail table), and an offer that is not
   what was asked turns orange. A line's Belum lengkap badge opens its editor.
