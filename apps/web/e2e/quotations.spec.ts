@@ -579,6 +579,11 @@ test.describe("quotation wizard import and requests", () => {
       .getByRole("button", { name: "Batal" })
       .click()
     await expectStatus(page, "Draf")
+    // The page says what blocks Dikirim and opens the editor to fix it.
+    const notice = page.getByRole("status").filter({ hasText: "1 produk belum lengkap." })
+    await expect(notice).toBeVisible()
+    await notice.getByRole("button", { name: "Lengkapi Sekarang" }).click()
+    await expect(page).toHaveURL(new RegExp(`/quotations/${q.id}/edit$`))
   })
 
   // Picking a product fills it in.

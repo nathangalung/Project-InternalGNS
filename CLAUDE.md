@@ -262,7 +262,10 @@ shows a missing one as Belum ada No. PO.
   import does. Every product line shows the
   request and the offer side by side at one size (`RequestOffer`, in the
   wizard cards, the summary and the detail table), and an offer that is not
-  what was asked turns orange. A line's Belum lengkap badge opens its editor.
+  what was asked turns orange. A line's Belum lengkap badge opens its editor,
+  and a draft's detail page counts the lines the send rule refuses
+  (`incompleteLines`, mirroring `fn_change_quotation_status`) with a
+  Lengkapi Sekarang button to the editor.
   Revisi is not a manual move: Buat Revisi (`POST /quotations/{id}/revise`,
   offered when `canRevise`, i.e. from sent) clones a new draft version with
   `parent_id` and a `Rev.n` number and moves the original to revision.

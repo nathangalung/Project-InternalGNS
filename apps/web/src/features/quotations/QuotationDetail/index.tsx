@@ -31,6 +31,8 @@ type QuotationDetailProps = {
   contactId?: number
   // Opened from the PO gate
   openContactPicker?: boolean
+  // Offered lines the send rule refuses
+  incomplete?: number
   onEdit: () => void
 }
 
@@ -43,6 +45,7 @@ export default function QuotationDetail({
   canRevise,
   contactId,
   openContactPicker = false,
+  incomplete = 0,
   onEdit,
 }: QuotationDetailProps) {
   const [picked, setPicked] = useState<QuotationTransition | null>(null)
@@ -90,6 +93,20 @@ export default function QuotationDetail({
         onPick={setPicked}
         onRevise={() => setRevising(true)}
       />
+      {/* What blocks Dikirim, with the way to fix it. */}
+      {isEditable(status) && incomplete > 0 && (
+        <div
+          role="status"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[rgba(245,158,11,0.4)] bg-[rgba(245,158,11,0.06)] px-5 py-3.5"
+        >
+          <span className="text-sm font-medium text-[#92400E]">
+            {incomplete} produk belum lengkap. Isi vendor dan harganya dulu sebelum dikirim.
+          </span>
+          <button type="button" onClick={onEdit} className={`${ui.btnPrimary} px-4`}>
+            Lengkapi Sekarang
+          </button>
+        </div>
+      )}
       <ClientSummaryCard
         clientName={q.client}
         clientId={q.clientId}
