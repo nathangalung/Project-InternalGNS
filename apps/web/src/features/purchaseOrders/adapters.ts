@@ -27,6 +27,7 @@ export function poItemsToProducts(items: PurchaseOrderItemRow[] | undefined): Po
         itemId: it.offeredItemId,
         vendorId: it.vendorId,
         vendor: it.vendorName,
+        storeUrl: it.productUrl,
         kode: it.itemCode ?? "",
         nama: it.itemName,
         qty,

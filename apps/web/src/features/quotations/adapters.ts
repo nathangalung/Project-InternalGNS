@@ -110,6 +110,8 @@ function toProductRow(it: ApiQuotationItem, unitName: string): ProductRow {
     hargaSatuan: Number.isFinite(sell) ? sell : 0,
     profitSatuan: Number.isFinite(sell) && Number.isFinite(cost) ? sell - cost : 0,
     vendor: it.vendorName,
+    vendorId: it.vendorId,
+    storeUrl: it.productUrl,
     noOffer: !it.isAvailable,
   }
 }

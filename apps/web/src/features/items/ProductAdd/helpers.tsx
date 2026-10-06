@@ -38,6 +38,8 @@ export type VendorOption = {
   harga: number
   vendorId?: number
   vendorProductId?: number
+  // Where this vendor sells the item
+  storeUrl?: string
 }
 
 export type HistorisOption = {

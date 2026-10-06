@@ -40,12 +40,17 @@ const units = new Map([
 describe("poItemsToProducts", () => {
   it("keeps the offered item and vendor for links", () => {
     const rows = poItemsToProducts([
-      line({ offeredItemId: 42, vendorId: 7, vendorName: "PT Laut" }),
+      line({
+        offeredItemId: 42,
+        vendorId: 7,
+        vendorName: "PT Laut",
+        productUrl: "https://toko.example/rope",
+      }),
       line({ id: 2 }),
     ])
-    expect(rows.map((r) => [r.itemId, r.vendorId, r.vendor])).toEqual([
-      [42, 7, "PT Laut"],
-      [undefined, undefined, undefined],
+    expect(rows.map((r) => [r.itemId, r.vendorId, r.vendor, r.storeUrl])).toEqual([
+      [42, 7, "PT Laut", "https://toko.example/rope"],
+      [undefined, undefined, undefined, undefined],
     ])
   })
 

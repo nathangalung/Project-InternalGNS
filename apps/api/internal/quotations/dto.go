@@ -51,6 +51,8 @@ type QuotationItem struct {
 	VendorProductID *int64  `db:"vendor_product_id"   json:"vendorProductId,omitempty"`
 	VendorID        *int64  `db:"vendor_id"           json:"vendorId,omitempty"`
 	VendorName      *string `db:"vendor_name"         json:"vendorName,omitempty"`
+	// The vendor's store link for this product
+	ProductURL      *string `db:"product_url"         json:"productUrl,omitempty"`
 	Qty             string  `db:"qty"                 json:"qty"`
 	UnitID          *int16  `db:"unit_id"             json:"unitId,omitempty"`
 	SellingPrice    string  `db:"selling_price"       json:"sellingPrice"`

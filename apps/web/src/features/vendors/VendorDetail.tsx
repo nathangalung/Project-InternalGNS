@@ -1,6 +1,7 @@
 import { useId, useRef, useState } from "react"
 import EntityLink from "@/components/shared/EntityLink"
 import Pagination from "@/components/shared/Pagination"
+import StoreLink from "@/components/shared/StoreLink"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useMe } from "@/features/auth/hooks"
 import {
@@ -530,22 +531,23 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
         </h3>
 
         <div className={ui.tableWrap}>
-          <table className="w-full border-collapse">
+          <table className="w-full min-w-[760px] border-collapse">
             <thead>
               <tr className={ui.theadRow}>
-                <th className={`${ui.thCenter} w-[360px]`}>Nama Produk</th>
-                <th className={`${ui.thCenter} w-[200px]`}>Kode IMPA</th>
-                <th className={`${ui.thCenter} w-[200px]`}>SKU Vendor</th>
-                <th className={`${ui.thCenter} w-[200px]`}>Harga Beli</th>
+                <th className={`${ui.thCenter} w-[320px]`}>Nama Produk</th>
+                <th className={`${ui.thCenter} w-[160px]`}>Kode IMPA</th>
+                <th className={`${ui.thCenter} w-[160px]`}>SKU Vendor</th>
+                <th className={`${ui.thCenter} w-[180px]`}>Harga Beli</th>
+                <th className={`${ui.thCenter} w-[180px]`}>Link Toko</th>
               </tr>
             </thead>
             <tbody>
-              {itemsLoading && <TableLoadingRow colSpan={4} />}
+              {itemsLoading && <TableLoadingRow colSpan={5} />}
               {!itemsLoading && itemsError && (
-                <TableEmptyRow colSpan={4}>Gagal memuat produk vendor.</TableEmptyRow>
+                <TableEmptyRow colSpan={5}>Gagal memuat produk vendor.</TableEmptyRow>
               )}
               {!itemsLoading && !itemsError && items.length === 0 && (
-                <TableEmptyRow colSpan={4}>Belum ada produk vendor.</TableEmptyRow>
+                <TableEmptyRow colSpan={5}>Belum ada produk vendor.</TableEmptyRow>
               )}
               {!itemsLoading &&
                 items.map((item) => (
@@ -559,6 +561,9 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
                     <td className={ui.tdCenter}>{item.vendorSku ?? "-"}</td>
                     <td className={`${ui.tdCenter} font-extrabold text-primary-700`}>
                       {formatRupiah(item.costPrice, "-")}
+                    </td>
+                    <td className={ui.tdCenter}>
+                      <StoreLink url={item.productUrl} fallback="-" />
                     </td>
                   </tr>
                 ))}

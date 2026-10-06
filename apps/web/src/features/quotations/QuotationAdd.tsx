@@ -24,7 +24,9 @@ import { WIZARD_STEPS as steps, validityInput } from "./wizard"
 import { qe, stepLabel, stepNum, stepPill } from "./wizard-styles"
 import {
   defaultContact,
+  PICKER_PAGE_SIZE,
   type PickClient,
+  pickerWindow,
   resolveClient,
   visibleClients,
   withContact,
@@ -93,8 +95,24 @@ export default function QuotationAdd() {
   // Search hits are active only; the first page must match. A failure shows
   // on the client step, never on the route error boundary, which would
   // discard every line already added.
-  const clientsQuery = useClients({ limit: 50, isActive: true }, INLINE_LOOKUP)
-  const searchQuery = useClientSearch(debouncedSearch, { limit: 30 }, INLINE_LOOKUP)
+  // Every active client, a page at a time by name; a search pages its hits.
+  const [pickerPageNo, setPickerPageNo] = useState(1)
+  // A new search starts on page 1
+  const changeSearch = (s: string) => {
+    setSearch(s)
+    setPickerPageNo(1)
+  }
+  const clientsQuery = useClients(
+    {
+      limit: PICKER_PAGE_SIZE,
+      offset: (pickerPageNo - 1) * PICKER_PAGE_SIZE,
+      isActive: true,
+      sortBy: "name",
+      sortDir: "asc",
+    },
+    INLINE_LOOKUP,
+  )
+  const searchQuery = useClientSearch(debouncedSearch, { limit: 50 }, INLINE_LOOKUP)
   const clientsData = clientsQuery.data
   const searchHits = searchQuery.data
   const createQuotation = useCreateQuotation()
@@ -127,9 +145,16 @@ export default function QuotationAdd() {
     [remoteClients, selectedClient, selectedRow],
   )
 
-  // The server already filtered by the search.
+  // The server pages the full list; search hits page here.
+  const searching = debouncedSearch.length > 0
   const sortedClients = [...remoteClients].sort((a, b) => a.name.localeCompare(b.name, "id"))
-  const filteredClients = visibleClients(sortedClients, currentClient, 10)
+  const pickerTotal = searching ? sortedClients.length : (clientsData?.total ?? 0)
+  const picker = pickerWindow(pickerTotal, pickerPageNo)
+  const pageRows = searching
+    ? sortedClients.slice(picker.start, picker.start + PICKER_PAGE_SIZE)
+    : sortedClients
+  // The picked client stays in view on any page.
+  const filteredClients = visibleClients(pageRows, currentClient, PICKER_PAGE_SIZE + 1)
 
   // Auto-select contact when client or contacts list changes.
   const clientContactId = currentClient?.contactId
@@ -298,8 +323,9 @@ export default function QuotationAdd() {
         {step === 1 && (
           <Step1Client
             search={search}
-            setSearch={setSearch}
+            setSearch={changeSearch}
             filteredClients={filteredClients}
+            picker={{ ...picker, total: pickerTotal, onPage: setPickerPageNo }}
             selectedClient={selectedClient}
             setSelectedClient={setSelectedClient}
             setShowClientAdd={setShowClientAdd}

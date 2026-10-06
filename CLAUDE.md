@@ -390,7 +390,17 @@ clients of a group. The client card on the quotation, PO and wizard pages
 shows the document's own contact: the quotation detail carries
 `contactEmail` and `contactPhone`, read by id like the PDF, and the card
 never borrows the company email or the client's first contact. The wizard's
-client rows name the client only.
+client rows name the client only, and its picker pages every active client
+by name ten at a time (`pickerWindow`), a search paging its hits the same way.
+
+A vendor link's `product_url` is where the vendor sells the item (Link
+Toko). `validate.ProductURL` keeps only an http or https address with a host
+(a 422 on `productUrl`), mirrored by `lib/store-link`, so the anchor never
+runs script. Only `POST /items/{id}/vendors` writes it: the Tambah Vendor
+and Ubah dialogs on the product page, where a cleared link is sent as null.
+`StoreLink` shows it in a new tab on the product and vendor pages, under
+each offer on the quotation and PO detail, and beside the picked vendor in
+the quotation product dialog.
 
 ## Frontend layout (`apps/web`)
 

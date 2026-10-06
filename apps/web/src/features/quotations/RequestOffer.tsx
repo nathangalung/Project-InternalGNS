@@ -13,6 +13,8 @@ type RequestOfferProps = {
   asCells?: boolean
   // Offer cell only, for billing pages
   hideRequest?: boolean
+  // Under the offer, such as its vendor
+  offerNote?: ReactNode
 }
 
 const label = "mb-1 text-[10px] font-bold uppercase tracking-[0.6px] text-[#6B7280]"
@@ -45,12 +47,14 @@ export default function RequestOffer({
   noOffer = false,
   asCells = false,
   hideRequest = false,
+  offerNote,
 }: RequestOfferProps) {
   const offerTone = differs ? differsText : ""
   const offerBody = (
     <>
       <Line side={offer} tone={offerTone} />
       {noOffer && <span className={noOfferChip}>Tidak Ditawarkan</span>}
+      {offerNote}
     </>
   )
   if (asCells) {

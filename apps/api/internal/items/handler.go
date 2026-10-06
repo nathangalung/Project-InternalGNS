@@ -175,6 +175,18 @@ func (h *Handler) AddVendor(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// A store link renders as a link, so only http or https is stored.
+	if req.ProductURL.Value != nil {
+		trimmed := strings.TrimSpace(*req.ProductURL.Value)
+		req.ProductURL.Value = &trimmed
+		if trimmed != "" {
+			if msg := validate.ProductURL(trimmed); msg != "" {
+				httperr.Render(w, httperr.Unprocessable(map[string]string{"productUrl": msg}))
+				return
+			}
+		}
+	}
+
 	userID := deps.CurrentUserID(r.Context())
 	row, err := h.repo.AddVendor(r.Context(), id, req, userID)
 	if err != nil {
