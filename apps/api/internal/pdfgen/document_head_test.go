@@ -3,6 +3,7 @@ package pdfgen
 import (
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -140,4 +141,22 @@ func pageWidth(words []pdfWord) float64 {
 		hi = max(hi, w.xMax)
 	}
 	return lo + hi
+}
+
+// Missing channels print a dash.
+// A contact without an email or a phone shows "-" on its row, like every
+// other empty party value, never a blank.
+func TestLatexExports_EmptyContactPrintsDash(t *testing.T) {
+	data := quotationData(sampleItems(1))
+	data["AttnEmail"], data["AttnPhone"] = "", ""
+	log, dir := compileDir(t, "quotation/Quotation.tex.tmpl", data)
+	if !producedOutput(log) {
+		t.Skip("xelatex produced no output")
+	}
+	text := pdfText(t, filepath.Join(dir, "doc.pdf"))
+	for _, row := range []string{`Email\s*:\s*-`, `Contact No\.\s*:\s*-`} {
+		if !regexp.MustCompile(row).MatchString(text) {
+			t.Errorf("no %q in:\n%s", row, text)
+		}
+	}
 }

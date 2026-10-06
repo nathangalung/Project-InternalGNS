@@ -137,13 +137,13 @@ func TestQuotationPDF_PrintsStoredTotals(t *testing.T) {
 		{"eight lines", 8, false},
 	}
 	wants := []struct{ label, amount string }{
-		{"Total Produk", "Rp 2.001,00"},
-		{"Diskon 10.00%", "-Rp 200,10"},
-		{"Pengiriman", "Rp 150,25"},
-		{"Sub Total", "Rp 1.951,15"},
-		{"DPP Nilai Lain", "Rp 1.788,55"},
-		{"PPN 12%", "Rp 214,63"},
-		{"Grand Total", "Rp 2.165,78"},
+		{"Total Produk", "Rp2.001"},
+		{"Diskon 10.00%", "-Rp200,10"},
+		{"Pengiriman", "Rp150,25"},
+		{"Sub Total", "Rp1.951,15"},
+		{"DPP Nilai Lain", "Rp1.788,55"},
+		{"PPN 12%", "Rp214,63"},
+		{"Grand Total", "Rp2.165,78"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

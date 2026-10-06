@@ -138,7 +138,7 @@ func (h *ExportHandler) buildData(det InvoiceDetail, items []InvoiceItem) export
 			Qty:         pdfgen.FormatQty(it.Qty),
 			Unit:        pdfgen.LatexEscape(unit),
 			Name:        pdfgen.LatexBreakable(it.ItemName),
-			Description: pdfgen.LatexBreakable(pdfgen.StrDeref(it.ShipDestination)),
+			Description: pdfgen.LatexAddress(pdfgen.StrDeref(it.ShipDestination), pdfgen.CellKeep),
 			UnitPrice:   pdfgen.FormatIDRCents(gross),
 			Amount:      pdfgen.FormatIDRCents(amt),
 		})
@@ -157,7 +157,7 @@ func (h *ExportHandler) buildData(det InvoiceDetail, items []InvoiceItem) export
 		PODate:            poDate,
 		CompanyName:       pdfgen.LatexBreakable(det.CompanyName),
 		CompanyNPWP:       pdfgen.LatexEscape(pdfgen.StrDeref(det.CompanyNpwp)),
-		CompanyAddress:    pdfgen.LatexBreakable(pdfgen.StrDeref(det.CompanyAddress)),
+		CompanyAddress:    pdfgen.LatexAddress(pdfgen.StrDeref(det.CompanyAddress), pdfgen.PartyKeep),
 		VesselName:        pdfgen.LatexEscape(pdfgen.StrDeref(det.VesselName)),
 		InvoiceDate:       det.InvoiceDate.Format("2 January 2006"),
 		DueDate:           dueDate,

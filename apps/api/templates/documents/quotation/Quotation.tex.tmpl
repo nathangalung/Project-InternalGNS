@@ -110,11 +110,11 @@
 \begin{minipage}[t]{0.52\textwidth}
   {\DocPartySize
   % Values wrap whole words; tops align.
-  \begin{tabularx}{\linewidth}[t]{@{}l@{\,}l@{\,}>{\RaggedRight\hyphenpenalty=10000\arraybackslash}X@{}}
+  \begin{tabularx}{\linewidth}[t]{@{}l@{\,}l@{\,}>{\raggedright\hyphenpenalty=10000\arraybackslash}X@{}}
     To           & : & [[.CompanyName]] \\[1pt]
-    Attn         & : & [[.AttnName]] \\[1pt]
+    Attn         & : & [[if .AttnName]][[.AttnName]][[else]]-[[end]] \\[1pt]
     Email        & : & [[if .AttnEmail]]\href{mailto:[[.AttnEmail]]}{[[.AttnEmail]]}[[else]]-[[end]] \\[1pt]
-    Contact No.  & : & [[.AttnPhone]] \\
+    Contact No.  & : & [[if .AttnPhone]][[.AttnPhone]][[else]]-[[end]] \\
   \end{tabularx}%
   }
 \end{minipage}%
@@ -140,7 +140,7 @@
 \newlength{\QNcol}\setlength{\QNcol}{0.6cm}
 \newlength{\QQcol}\setlength{\QQcol}{0.8cm}
 \newlength{\QUcol}\setlength{\QUcol}{0.9cm}
-\newlength{\QMcol}\setlength{\QMcol}{2.4cm}
+\newlength{\QMcol}\setlength{\QMcol}{2.5cm}
 % Request and offer share what is left, so the table spans the text width.
 \newlength{\QFlex}\setlength{\QFlex}{\dimexpr\textwidth-\QNcol-\QQcol-\QUcol-2\QMcol-14\tabcolsep-8\arrayrulewidth\relax}
 \newlength{\QLcol}\setlength{\QLcol}{0.48\QFlex}
@@ -208,12 +208,13 @@
 \noindent
 \begin{minipage}[t]{0.55\textwidth}
   \DocPartySize
-  \begin{tabular}[t]{@{}l@{\;}l@{\;}l@{}}
-    DELIVERY PLACE & : & [[.DeliveryPlace]] \\[3pt]
-    DELIVERY TIME  & : & [[.DeliveryTime]] \\[3pt]
-    PAYMENT        & : & [[.Payment]] \\[3pt]
-    VALIDITY       & : & [[.Validity]] \\
-  \end{tabular}
+  % A long delivery place wraps at its commas.
+  \begin{tabularx}{\linewidth}[t]{@{}l@{\;}l@{\;}>{\raggedright\hyphenpenalty=10000\arraybackslash}X@{}}
+    DELIVERY PLACE & : & [[if .DeliveryPlace]][[.DeliveryPlace]][[else]]-[[end]] \\[3pt]
+    DELIVERY TIME  & : & [[if .DeliveryTime]][[.DeliveryTime]][[else]]-[[end]] \\[3pt]
+    PAYMENT        & : & [[if .Payment]][[.Payment]][[else]]-[[end]] \\[3pt]
+    VALIDITY       & : & [[if .Validity]][[.Validity]][[else]]-[[end]] \\
+  \end{tabularx}
 \end{minipage}%
 \hfill
 \begin{minipage}[t]{0.40\textwidth}

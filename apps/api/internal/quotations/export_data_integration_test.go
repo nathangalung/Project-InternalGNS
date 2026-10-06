@@ -75,7 +75,7 @@ func TestBuildExportData_ReconcilesWithStoredQuotation(t *testing.T) {
 	for _, f := range fields {
 		assert.Equal(t, pdfgen.FormatIDRCents(f.stored), f.got, f.name)
 	}
-	assert.Equal(t, "Rp~150,37", got.Shipping)
+	assert.Equal(t, "Rp150,37", got.Shipping)
 	assert.True(t, got.HasShipping)
 
 	// Total Produk - Diskon + Pengiriman = Sub Total.

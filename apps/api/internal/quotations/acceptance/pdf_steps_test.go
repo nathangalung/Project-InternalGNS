@@ -91,7 +91,7 @@ func (s *scenarioState) downloadPDF() error {
 
 // printed mimics PDF figure text.
 func printed(numeric string) string {
-	return strings.Replace(pdfgen.FormatIDRCents(numeric), "Rp~", "Rp ", 1)
+	return pdfgen.FormatIDRCents(numeric)
 }
 
 func (s *scenarioState) pdfPrintsStoredTotals() error {
@@ -109,7 +109,7 @@ func (s *scenarioState) pdfPrintsStoredTotals() error {
 	text := strings.Join(strings.Fields(string(out)), " ")
 	wants := []string{
 		"Total Produk " + printed(d.TotalProduk),
-		"Pengiriman Rp 150,25",
+		"Pengiriman Rp150,25",
 		"Sub Total " + printed(d.Subtotal),
 		"DPP Nilai Lain " + printed(d.DppNilaiLain),
 		"PPN 12% " + printed(d.PpnAmount),

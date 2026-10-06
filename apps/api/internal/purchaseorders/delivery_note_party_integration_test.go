@@ -18,7 +18,8 @@ import (
 func TestDeliveryNote_PartyBreaksLongTokens(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	name := "PT.GlobalMaritimeServicesIndonesia & Co"
-	addr := "Komplek Pergudangan Jl.RayaCakung-Cilincing/Km.3-BlokC7 #12, Jakarta Utara"
+	// Typed with a line break and a stray comma space.
+	addr := "Komplek Pergudangan Jl.RayaCakung-Cilincing/Km.3-BlokC7 #12 ,\nJakarta Utara"
 	_, err := tx.Exec(ctx, `UPDATE company_client SET address = $1 WHERE id = $2`, addr, seedCompanyID)
 	require.NoError(t, err)
 	store := testutil.Store(t)
@@ -30,6 +31,7 @@ func TestDeliveryNote_PartyBreaksLongTokens(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, pdfgen.LatexBreakable(name), gotName)
-	assert.Equal(t, pdfgen.LatexBreakable(addr), gotAddr)
+	assert.Equal(t, pdfgen.LatexAddress(addr, pdfgen.PartyKeep), gotAddr)
+	assert.Contains(t, gotAddr, `\#12, Jakarta~Utara`, "parts meet at one comma and a short part never splits")
 	assert.Contains(t, gotAddr, `\discretionary{}{}{}`, "the long token carries break points")
 }
