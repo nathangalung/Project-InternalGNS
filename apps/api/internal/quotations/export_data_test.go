@@ -237,7 +237,7 @@ func TestBuildExportData_FooterTerms(t *testing.T) {
 			name:   "every term set",
 			vessel: qStr("MV Global Star & Co"), payment: qStr("30 hari"), validity: &three,
 			items:     []QuotationItem{product, withDays(&three)},
-			wantPlace: `MV Global Star \& Co`, wantTime: "3 days", wantPayment: "30 hari", wantValidity: "3 days",
+			wantPlace: `MV~Global~Star~\&~Co`, wantTime: "3 days", wantPayment: "30 hari", wantValidity: "3 days",
 		},
 		{
 			name:     "one day is singular",
@@ -290,11 +290,11 @@ func TestBuildExportData_DeliveryPlace(t *testing.T) {
 		items  []QuotationItem
 		want   string
 	}{
-		{"destination wins over vessel", qStr("MV CONTOH"), withDest(qStr("Franco Surabaya")), "Franco Surabaya"},
-		{"destination without vessel", nil, withDest(qStr("Cilegon Port")), "Cilegon Port"},
-		{"blank destination falls back", qStr("MV CONTOH"), withDest(qStr("   ")), "MV CONTOH"},
-		{"no destination falls back", qStr("MV CONTOH"), withDest(nil), "MV CONTOH"},
-		{"no shipping line falls back", qStr("MV CONTOH"), nil, "MV CONTOH"},
+		{"destination wins over vessel", qStr("MV CONTOH"), withDest(qStr("Franco Surabaya")), "Franco~Surabaya"},
+		{"destination without vessel", nil, withDest(qStr("Cilegon Port")), "Cilegon~Port"},
+		{"blank destination falls back", qStr("MV CONTOH"), withDest(qStr("   ")), "MV~CONTOH"},
+		{"no destination falls back", qStr("MV CONTOH"), withDest(nil), "MV~CONTOH"},
+		{"no shipping line falls back", qStr("MV CONTOH"), nil, "MV~CONTOH"},
 		{"neither prints nothing", nil, nil, ""},
 	}
 	for _, tc := range cases {

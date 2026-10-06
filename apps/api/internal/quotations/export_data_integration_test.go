@@ -115,5 +115,5 @@ func TestBuildExportData_DeliveryTimeFromStoredShipping(t *testing.T) {
 
 	got := quotations.BuildExportData(d, map[int16]string{}, "", "", "Director", time.Now())
 	assert.Equal(t, "5 days", got.DeliveryTime)
-	assert.Equal(t, "Tanjung Priok", got.DeliveryPlace, "the shipping address wins over the vessel")
+	assert.Equal(t, "Tanjung~Priok", got.DeliveryPlace, "the shipping address wins over the vessel")
 }
