@@ -55,7 +55,7 @@ export function canWriteCatalog(role: Role | undefined): boolean {
 const SELLING: readonly Role[] = ["superadmin", "operational", "finance", "finance_input"]
 const COST: readonly Role[] = ["superadmin", "operational", "operational_input", "finance"]
 
-// Harga jual and every figure built on it.
+// Harga jual and its figures.
 export function seesSelling(role: Role | undefined): boolean {
   return role !== undefined && SELLING.includes(role)
 }
@@ -85,7 +85,7 @@ export function canViewFinancial(role: Role | undefined): boolean {
   return role === "superadmin" || role === "finance"
 }
 
-// Client writes beyond NPWP and TKU.
+// Client writes beyond tax ids.
 const WHOLE_CLIENT: readonly Role[] = ["superadmin", "operational", "operational_input", "finance"]
 export function editsWholeClient(role: Role | undefined): boolean {
   return role !== undefined && WHOLE_CLIENT.includes(role)

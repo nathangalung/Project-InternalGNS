@@ -128,7 +128,7 @@ export default function Step2Product({
       onImportProducts(built)
       const unknownUnits = unitsReady ? countUnknownUnits(built, unitIdByCode) : 0
       // Stays up: it says which lines still need work.
-      setImportMsg({ text: importSummary(built, resp.rows, unknownUnits), ok: true })
+      setImportMsg({ text: importSummary(built, resp.rows, unknownUnits, pricing), ok: true })
     } catch (err) {
       setImportMsg({ text: `Gagal membaca berkas: ${(err as Error).message}`, ok: false })
     } finally {

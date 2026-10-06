@@ -20,12 +20,12 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// asRole acts as seed user in role.
+// asRole sets the acting role.
 func asRole(role string) map[string]string {
 	return map[string]string{roleHeader: role}
 }
 
-// getMap decodes a body by key.
+// getMap decodes by key.
 // A struct decode cannot tell an absent key from an empty one.
 func getMap(t *testing.T, res *http.Response) map[string]any {
 	t.Helper()
@@ -36,7 +36,7 @@ func getMap(t *testing.T, res *http.Response) map[string]any {
 	return m
 }
 
-// Operational input sees no selling figure.
+// Input sees no selling figure.
 // Harga beli stays, every selling figure and the moves go; the finance head
 // sees every figure but no move.
 func TestHandler_DetailByRole(t *testing.T) {
@@ -73,7 +73,7 @@ func TestHandler_DetailByRole(t *testing.T) {
 	assert.NotEmpty(t, admin["allowedTransitions"])
 }
 
-// The list hides totals and refuses probes.
+// The list hides totals.
 func TestHandler_ListByRole(t *testing.T) {
 	srv := liveServer(t, live.NewHub())
 	liveDraftOver(t, srv)

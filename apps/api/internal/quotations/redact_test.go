@@ -8,7 +8,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/roles"
 )
 
-// Each side hides on its own.
+// Each side hides alone.
 // Quotations never reach finance input today, but the rule is the same
 // one every feature applies, so a cost-blind role loses harga beli here too.
 func TestRedact_PerSide(t *testing.T) {

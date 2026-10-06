@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test"
 import { expect, test } from "./support/seed"
 
-// Store links and the client picker.
+// Store links, client picker.
 //
 // A vendor's store link is set on the product page and shows wherever the
 // item is bought from: the product, the vendor, the quotation and the PO.

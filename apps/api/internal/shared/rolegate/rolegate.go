@@ -16,7 +16,7 @@ func Refused(w http.ResponseWriter) {
 	httperr.Render(w, httperr.Forbidden(RefusedDetail))
 }
 
-// Deny refuses these roles a route.
+// Deny refuses roles a route.
 // Use the roles constants; an unknown role passes, so pair it with a mount
 // gate that admits only known roles.
 func Deny(denied ...string) func(http.Handler) http.Handler {

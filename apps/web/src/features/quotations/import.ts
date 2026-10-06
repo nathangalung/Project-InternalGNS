@@ -48,10 +48,11 @@ export function importSummary(
   lines: ProductItem[],
   rows: MatchRowResult[],
   unknownUnits: number,
+  pricing = true,
 ): string {
   const created = rows.filter((r) => r.source === "CREATED").length
   const matched = rows.filter((r) => r.matched && r.source !== "CREATED").length
-  const pending = lines.filter((l) => !isLineComplete(l)).length
+  const pending = lines.filter((l) => !isLineComplete(l, pricing)).length
   const filled = lines.length - pending
   const fill = pending
     ? `${filled} terisi otomatis. ${pending} perlu vendor dan harga sebelum dikirim.`

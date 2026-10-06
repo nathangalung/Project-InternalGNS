@@ -67,7 +67,7 @@ func (f ListFilter) probesSelling() bool {
 	return f.MinTotal != nil || f.MaxTotal != nil || sortable.Columns[f.SortBy].Expr == poTotalExpr
 }
 
-// errLinesChanged refuses an input line edit.
+// errLinesChanged refuses line changes.
 var errLinesChanged = errors.New("po lines added or removed by a role that sets no price")
 
 // msgLinesChanged says why.

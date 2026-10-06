@@ -18,7 +18,7 @@ import (
 
 func asRole(role string) map[string]string { return map[string]string{roleHeader: role} }
 
-// decodeMap reads a body by key.
+// decodeMap decodes by key.
 // A struct decode cannot tell an absent key from an empty one.
 func decodeMap[T any](t *testing.T, res *http.Response) T {
 	t.Helper()
@@ -29,7 +29,7 @@ func decodeMap[T any](t *testing.T, res *http.Response) T {
 	return v
 }
 
-// Each role sees its side of a PO.
+// PO figures per role.
 // Operational input sees harga beli, finance input harga jual, and only a
 // role with both sees profit.
 func TestHandler_POByRole(t *testing.T) {
@@ -83,7 +83,7 @@ func TestHandler_POByRole(t *testing.T) {
 	}
 }
 
-// Operational input cannot probe totals or cancel.
+// Input cannot probe or cancel.
 func TestHandler_POInputRefusals(t *testing.T) {
 	_, tx, srv := txServer(t)
 	_, poID := acceptedQuotationWithPO(t, tx)
@@ -101,7 +101,7 @@ func TestHandler_POInputRefusals(t *testing.T) {
 	assert.Equal(t, http.StatusForbidden, res.StatusCode)
 }
 
-// Operational input edits keep harga jual.
+// Input edits keep harga jual.
 // Its harga beli and qty are stored; harga jual, the discount and the
 // shipping charge stay as stored, and it cannot add or drop a line.
 func TestHandler_POInputKeepsPrices(t *testing.T) {

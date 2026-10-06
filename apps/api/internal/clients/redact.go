@@ -25,7 +25,7 @@ func (f ListFilter) probesSelling() bool {
 	return f.MinTotal != nil || sortable.Columns[f.SortBy].Expr == totalPurchaseExpr
 }
 
-// taxOnly keeps all but NPWP and TKU.
+// taxOnly keeps stored client fields.
 // The finance input form sends the whole client with only those two open,
 // so every other field is taken from the stored row.
 func taxOnly(stored Client, req UpdateClientRequest) UpdateClientRequest {
