@@ -168,6 +168,7 @@ export default function ProductAdd({
       harga: r.costPrice ? Number(r.costPrice) : 0,
       vendorId: r.vendorId,
       vendorProductId: r.vendorProductId,
+      storeUrl: r.productUrl,
     }))
     const sameItem = pickedItemId === (initialData?.itemId ?? null)
     return mergeVendorOptions(

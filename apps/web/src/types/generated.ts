@@ -628,6 +628,7 @@ export type PurchaseOrderItemRow = {
     vendorProductId?: number;
     vendorId?: number;
     vendorName?: string;
+    productUrl?: string;
 };
 
 // From purchaseorders/dto.go
@@ -843,6 +844,7 @@ export type QuotationItemRow = {
     vendorProductId?: number;
     vendorId?: number;
     vendorName?: string;
+    productUrl?: string;
     qty: string;
     unitId?: number;
     sellingPrice: string;

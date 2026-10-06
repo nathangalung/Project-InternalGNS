@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react"
 import EntityLink from "@/components/shared/EntityLink"
+import StoreLink from "@/components/shared/StoreLink"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useMe } from "@/features/auth/hooks"
 import AddVendorToItemModal from "@/features/items/AddVendorToItemModal"
@@ -14,7 +15,7 @@ import { formErrors } from "@/lib/form-errors"
 import { formatDate, formatRupiah } from "@/lib/format"
 import { canWriteCatalog } from "@/lib/rbac"
 import { ui } from "@/lib/ui"
-import type { ItemRow } from "@/types/api"
+import type { ItemRow, ItemVendorRow } from "@/types/api"
 
 type ProductDetailProps = {
   product: ItemRow
@@ -32,6 +33,7 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
   const { data: units } = useUnits()
   const { data: me } = useMe()
   const canWrite = canWriteCatalog(me?.role)
+  const vendorCols = canWrite ? 6 : 5
   const nameId = useId()
   const nameErrorId = useId()
   const impaId = useId()
@@ -55,6 +57,7 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [showAddVendor, setShowAddVendor] = useState(false)
+  const [editingVendor, setEditingVendor] = useState<ItemVendorRow | null>(null)
 
   const updateItem = useUpdateItem()
   const {
@@ -401,22 +404,24 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
           </div>
 
           <div className={ui.tableWrap}>
-            <table className="w-full min-w-[640px] border-collapse">
+            <table className="w-full min-w-[860px] border-collapse">
               <thead>
                 <tr className={ui.theadRow}>
                   <th className={`${ui.thCenter} w-[280px]`}>Nama Vendor</th>
                   <th className={`${ui.thCenter} w-[200px]`}>SKU Vendor</th>
                   <th className={`${ui.thCenter} w-[180px]`}>Harga Beli</th>
                   <th className={`${ui.thCenter} w-[200px]`}>Penawaran Terakhir</th>
+                  <th className={`${ui.thCenter} w-[180px]`}>Link Toko</th>
+                  {canWrite && <th className={`${ui.thCenter} w-[100px]`}>Aksi</th>}
                 </tr>
               </thead>
               <tbody>
-                {vendorsLoading && <TableLoadingRow colSpan={4} />}
+                {vendorsLoading && <TableLoadingRow colSpan={vendorCols} />}
                 {vendorsError && (
-                  <TableEmptyRow colSpan={4}>Gagal memuat vendor produk.</TableEmptyRow>
+                  <TableEmptyRow colSpan={vendorCols}>Gagal memuat vendor produk.</TableEmptyRow>
                 )}
                 {!vendorsLoading && !vendorsError && (itemVendors ?? []).length === 0 && (
-                  <TableEmptyRow colSpan={4}>
+                  <TableEmptyRow colSpan={vendorCols}>
                     {canWrite
                       ? 'Belum ada vendor terkait. Klik "Tambah Vendor" untuk menambah.'
                       : "Belum ada vendor terkait."}
@@ -452,6 +457,21 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                           {formattedPrice}
                         </td>
                         <td className={`${ui.tdCenter} font-medium`}>{formattedDate}</td>
+                        <td className={ui.tdCenter}>
+                          <StoreLink url={v.productUrl} fallback="-" />
+                        </td>
+                        {canWrite && (
+                          <td className={ui.tdCenter}>
+                            <button
+                              type="button"
+                              className={`rounded-sm text-sm font-semibold text-primary-700 hover:underline ${ui.focusRing}`}
+                              aria-label={`Ubah vendor ${v.vendorName}`}
+                              onClick={() => setEditingVendor(v)}
+                            >
+                              Ubah
+                            </button>
+                          </td>
+                        )}
                       </tr>
                     )
                   })}
@@ -464,9 +484,14 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
       </div>
 
       <AddVendorToItemModal
-        open={canWrite && showAddVendor}
+        key={editingVendor?.vendorProductId ?? "new"}
+        open={canWrite && (showAddVendor || editingVendor !== null)}
         itemId={product.id}
-        onOpenChange={setShowAddVendor}
+        edit={editingVendor ?? undefined}
+        onOpenChange={(open) => {
+          setShowAddVendor(open)
+          if (!open) setEditingVendor(null)
+        }}
       />
     </>
   )

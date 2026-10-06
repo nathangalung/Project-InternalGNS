@@ -26,6 +26,9 @@ export type ProductRow = {
   hargaSatuan: number
   profitSatuan: number
   vendor?: string
+  vendorId?: number
+  // Where the vendor sells it
+  storeUrl?: string
   // Requested but not offered
   noOffer?: boolean
 }

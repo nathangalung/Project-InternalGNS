@@ -149,7 +149,8 @@ SELECT poi.id,
        poi.is_available,
        poi.vendor_product_id,
        v.id   AS vendor_id,
-       v.name AS vendor_name
+       v.name AS vendor_name,
+       vp.product_url
 FROM purchase_order_items poi
 LEFT JOIN items i ON i.id = poi.offered_item_id
 LEFT JOIN units u ON u.id = poi.unit_id

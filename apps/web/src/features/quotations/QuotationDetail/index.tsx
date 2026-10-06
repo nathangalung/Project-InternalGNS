@@ -116,7 +116,7 @@ export default function QuotationDetail({
         onChangeContact={canChangeContact ? () => setChangingContact(true) : undefined}
       />
       {totalShip > 0 && <ShippingTable shipping={q.shipping} />}
-      <ProductTable products={q.products} />
+      <ProductTable products={q.products} showVendor />
       <CostBreakdown
         hasProducts={hasProducts}
         totalProduk={totalProduk}

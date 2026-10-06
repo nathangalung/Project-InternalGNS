@@ -1,5 +1,6 @@
 import type { ContactChannels } from "@/features/clients/clientCard"
 import { fromClientRow } from "@/features/clients/helpers"
+import { clampPage, pageCount } from "@/lib/pagination"
 import type { ClientRow } from "@/types/api"
 import type { Client } from "./Step1Client"
 
@@ -57,4 +58,23 @@ export function defaultContact(
   if (current !== undefined && ids.includes(current)) return current
   if (clientContactId !== undefined && ids.includes(clientContactId)) return clientContactId
   return contacts[0]?.id ?? clientContactId
+}
+
+// Clients per picker page.
+export const PICKER_PAGE_SIZE = 10
+
+// One picker page.
+// The page is clamped into range; from and to are the 1-based rows shown,
+// both 0 when there are none.
+export function pickerWindow(total: number, page: number, size = PICKER_PAGE_SIZE) {
+  const pages = pageCount(total, size)
+  const current = clampPage(page, pages)
+  const start = (current - 1) * size
+  return {
+    page: current,
+    pages,
+    start,
+    from: total === 0 ? 0 : start + 1,
+    to: Math.min(start + size, total),
+  }
 }

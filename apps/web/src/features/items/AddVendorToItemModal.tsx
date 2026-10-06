@@ -2,29 +2,35 @@ import { useId, useState } from "react"
 import LoadError from "@/components/shared/LoadError"
 import Modal from "@/components/shared/Modal"
 import SearchCombobox from "@/components/shared/SearchCombobox"
-import { addVendorError } from "@/features/items/helpers"
+import { addVendorError, wholeRupiah } from "@/features/items/helpers"
 import { useActiveVendorOptions, useAddVendorToItem } from "@/features/items/hooks"
 import VendorAddModal from "@/features/vendors/VendorAddModal"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
+import { storeUrlError } from "@/lib/store-link"
 import { ui } from "@/lib/ui"
-import type { VendorRow } from "@/types/api"
+import type { ItemVendorRow, VendorRow } from "@/types/api"
 
 type AddVendorToItemModalProps = {
   open: boolean
   itemId: number
   onOpenChange: (open: boolean) => void
+  // Stored link to change
+  edit?: ItemVendorRow
 }
 
 export default function AddVendorToItemModal({
   open,
   itemId,
   onOpenChange,
+  edit,
 }: AddVendorToItemModalProps) {
   // Picked vendor, kept while searches change
   const [vendor, setVendor] = useState<VendorRow | null>(null)
   const [vendorQuery, setVendorQuery] = useState("")
-  const [costPrice, setCostPrice] = useState("")
-  const [productUrl, setProductUrl] = useState("")
+  const [costPrice, setCostPrice] = useState(() => wholeRupiah(edit?.costPrice))
+  // An untouched stored price is not sent, so the server keeps it
+  const [costTouched, setCostTouched] = useState(false)
+  const [productUrl, setProductUrl] = useState(edit?.productUrl ?? "")
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [vendorError, setVendorError] = useState<string | null>(null)
   const [showCreateVendor, setShowCreateVendor] = useState(false)
@@ -33,6 +39,7 @@ export default function AddVendorToItemModal({
   const vendorErrorId = useId()
   const priceInputId = useId()
   const urlInputId = useId()
+  const urlErrorId = useId()
 
   // Server search reaches every active vendor.
   const debouncedQuery = useDebouncedValue(vendorQuery.trim(), 250)
@@ -43,16 +50,19 @@ export default function AddVendorToItemModal({
 
   if (!open) return null
 
-  const vendorId = vendor?.id ?? null
+  const vendorId = edit ? edit.vendorId : (vendor?.id ?? null)
+  const urlError = storeUrlError(productUrl)
 
-  const isValid = vendorId !== null && costPrice.length > 0 && Number(costPrice) > 0
+  const sendsCost = !edit || costTouched
+  const isValid = vendorId !== null && urlError === null && (!sendsCost || Number(costPrice) > 0)
 
   const reset = () => {
     setVendor(null)
     setVendorQuery("")
     setVendorListOpen(false)
-    setCostPrice("")
-    setProductUrl("")
+    setCostPrice(wholeRupiah(edit?.costPrice))
+    setCostTouched(false)
+    setProductUrl(edit?.productUrl ?? "")
     setSubmitError(null)
     setVendorError(null)
   }
@@ -73,8 +83,9 @@ export default function AddVendorToItemModal({
         itemId,
         input: {
           vendorId,
-          costPrice,
-          productUrl: trimmedUrl ? trimmedUrl : undefined,
+          costPrice: sendsCost ? costPrice : undefined,
+          // Clearing a stored link sends null
+          productUrl: trimmedUrl || (edit ? null : undefined),
         },
       })
       reset()
@@ -96,7 +107,7 @@ export default function AddVendorToItemModal({
   return (
     <>
       <Modal
-        title="Tambah Vendor Terkait"
+        title={edit ? "Ubah Vendor Terkait" : "Tambah Vendor Terkait"}
         onClose={handleCancel}
         footer={
           <>
@@ -120,7 +131,7 @@ export default function AddVendorToItemModal({
                 onClick={handleSubmit}
                 disabled={!isValid || addVendor.isPending}
               >
-                {addVendor.isPending ? "Menyimpan..." : "Tambahkan"}
+                {addVendor.isPending ? "Menyimpan..." : edit ? "Simpan" : "Tambahkan"}
               </button>
             </div>
           </>
@@ -131,89 +142,98 @@ export default function AddVendorToItemModal({
             <label htmlFor={vendorInputId} className={ui.fieldLabel}>
               Nama Vendor <span className="text-primary-700">*</span>
             </label>
-            <SearchCombobox<VendorRow>
-              items={vendorMatches}
-              value={vendor}
-              onValueChange={(v) => {
-                setVendor(v)
-                setVendorError(null)
-              }}
-              open={vendorListOpen}
-              onOpenChange={setVendorListOpen}
-              query={vendorQuery}
-              onQueryChange={(q) => {
-                setVendorQuery(q)
-                setVendorError(null)
-              }}
-              itemKey={(v) => v.id}
-              itemToString={(v) => v.name}
-              renderItem={(v) => (
-                <span className="flex min-w-0 flex-col">
-                  <span>{v.name}</span>
-                  {v.location && (
-                    <span className="text-[12px] font-normal leading-6 text-dark-500">
-                      {v.location}
-                    </span>
-                  )}
-                </span>
-              )}
-              inputId={vendorInputId}
-              placeholder="Cari vendor aktif..."
-              aria-invalid={vendorError ? true : undefined}
-              aria-describedby={vendorError ? vendorErrorId : undefined}
-              clearLabel="Bersihkan vendor"
-              inputClassName={`${ui.fieldInput} font-sans ${vendorQuery ? "pr-9" : ""} ${
-                vendorError ? "border-error" : ""
-              }`}
-              panelClassName="border-[rgba(204,195,216,0.4)] py-1"
-              status={
-                vendorSearch.isError ? (
-                  <LoadError
-                    message="Gagal memuat vendor."
-                    onRetry={() => void vendorSearch.refetch()}
-                    retrying={vendorSearch.isFetching}
-                    className="px-5 py-3"
-                  />
-                ) : searching && vendorMatches.length === 0 ? (
-                  <div className="px-5 py-3 text-center text-[13px] text-dark-500">
-                    Mencari vendor…
-                  </div>
-                ) : null
-              }
-              empty={
-                <div className="flex flex-col gap-2 p-3">
-                  <div className="px-0 py-1 text-center text-[13px] text-[#94A3B8]">
-                    Vendor "<strong className="text-[#4A4455]">{vendorQuery}</strong>" tidak
-                    ditemukan
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      // Nested modal returns focus to the field.
-                      document.getElementById(vendorInputId)?.focus()
-                      setVendorListOpen(false)
-                      setShowCreateVendor(true)
-                    }}
-                    className={`flex items-center justify-center gap-2 rounded-md border-[1.5px] border-dashed border-[rgba(99,14,212,0.4)] bg-[rgba(99,14,212,0.04)] px-3.5 py-2.5 text-[13px] font-bold text-primary-700 ${ui.focusRing}`}
-                  >
-                    <svg
-                      aria-hidden="true"
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
+            {edit ? (
+              <input
+                id={vendorInputId}
+                className={`${ui.fieldInput} font-sans`}
+                value={edit.vendorName}
+                readOnly
+              />
+            ) : (
+              <SearchCombobox<VendorRow>
+                items={vendorMatches}
+                value={vendor}
+                onValueChange={(v) => {
+                  setVendor(v)
+                  setVendorError(null)
+                }}
+                open={vendorListOpen}
+                onOpenChange={setVendorListOpen}
+                query={vendorQuery}
+                onQueryChange={(q) => {
+                  setVendorQuery(q)
+                  setVendorError(null)
+                }}
+                itemKey={(v) => v.id}
+                itemToString={(v) => v.name}
+                renderItem={(v) => (
+                  <span className="flex min-w-0 flex-col">
+                    <span>{v.name}</span>
+                    {v.location && (
+                      <span className="text-[12px] font-normal leading-6 text-dark-500">
+                        {v.location}
+                      </span>
+                    )}
+                  </span>
+                )}
+                inputId={vendorInputId}
+                placeholder="Cari vendor aktif..."
+                aria-invalid={vendorError ? true : undefined}
+                aria-describedby={vendorError ? vendorErrorId : undefined}
+                clearLabel="Bersihkan vendor"
+                inputClassName={`${ui.fieldInput} font-sans ${vendorQuery ? "pr-9" : ""} ${
+                  vendorError ? "border-error" : ""
+                }`}
+                panelClassName="border-[rgba(204,195,216,0.4)] py-1"
+                status={
+                  vendorSearch.isError ? (
+                    <LoadError
+                      message="Gagal memuat vendor."
+                      onRetry={() => void vendorSearch.refetch()}
+                      retrying={vendorSearch.isFetching}
+                      className="px-5 py-3"
+                    />
+                  ) : searching && vendorMatches.length === 0 ? (
+                    <div className="px-5 py-3 text-center text-[13px] text-dark-500">
+                      Mencari vendor…
+                    </div>
+                  ) : null
+                }
+                empty={
+                  <div className="flex flex-col gap-2 p-3">
+                    <div className="px-0 py-1 text-center text-[13px] text-[#94A3B8]">
+                      Vendor "<strong className="text-[#4A4455]">{vendorQuery}</strong>" tidak
+                      ditemukan
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // Nested modal returns focus to the field.
+                        document.getElementById(vendorInputId)?.focus()
+                        setVendorListOpen(false)
+                        setShowCreateVendor(true)
+                      }}
+                      className={`flex items-center justify-center gap-2 rounded-md border-[1.5px] border-dashed border-[rgba(99,14,212,0.4)] bg-[rgba(99,14,212,0.04)] px-3.5 py-2.5 text-[13px] font-bold text-primary-700 ${ui.focusRing}`}
                     >
-                      <line x1="12" y1="5" x2="12" y2="19" />
-                      <line x1="5" y1="12" x2="19" y2="12" />
-                    </svg>
-                    Tambah Vendor Baru
-                  </button>
-                </div>
-              }
-            />
+                      <svg
+                        aria-hidden="true"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                      >
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                      </svg>
+                      Tambah Vendor Baru
+                    </button>
+                  </div>
+                }
+              />
+            )}
             {vendorError && (
               <p id={vendorErrorId} className="text-[12px] text-error">
                 {vendorError}
@@ -238,7 +258,10 @@ export default function AddVendorToItemModal({
                 inputMode="numeric"
                 placeholder="0"
                 value={formatRupiah(costPrice)}
-                onChange={(e) => setCostPrice(e.target.value.replace(/\D/g, ""))}
+                onChange={(e) => {
+                  setCostPrice(e.target.value.replace(/\D/g, ""))
+                  setCostTouched(true)
+                }}
               />
             </div>
           </div>
@@ -247,19 +270,26 @@ export default function AddVendorToItemModal({
         <div className={ui.modalSection}>
           <div className={ui.field}>
             <label htmlFor={urlInputId} className={ui.fieldLabel}>
-              Link Produk{" "}
+              Link Toko{" "}
               <span className="font-normal normal-case tracking-normal text-[#9CA3AF]">
                 (opsional)
               </span>
             </label>
             <input
               id={urlInputId}
-              className={`${ui.fieldInput} font-sans`}
+              className={`${ui.fieldInput} font-sans ${urlError ? "border-error" : ""}`}
               type="url"
-              placeholder="https://vendor.com/produk/..."
+              placeholder="https://toko.com/produk/..."
               value={productUrl}
               onChange={(e) => setProductUrl(e.target.value)}
+              aria-invalid={urlError ? true : undefined}
+              aria-describedby={urlError ? urlErrorId : undefined}
             />
+            {urlError && (
+              <p id={urlErrorId} className="text-[12px] text-error">
+                {urlError}
+              </p>
+            )}
           </div>
         </div>
       </Modal>

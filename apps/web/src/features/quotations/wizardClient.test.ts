@@ -3,6 +3,7 @@ import type { ClientRow } from "@/types/api"
 import {
   defaultContact,
   type PickClient,
+  pickerWindow,
   resolveClient,
   visibleClients,
   withContact,
@@ -105,5 +106,31 @@ describe("defaultContact", () => {
   it("knows only the client's contact before the list loads", () => {
     expect(defaultContact([], 3, 2)).toBe(2)
     expect(defaultContact([], undefined, undefined)).toBeUndefined()
+  })
+})
+
+describe("pickerWindow", () => {
+  it.each([
+    {
+      name: "first page",
+      total: 23,
+      page: 1,
+      want: { page: 1, pages: 3, start: 0, from: 1, to: 10 },
+    },
+    {
+      name: "last partial page",
+      total: 23,
+      page: 3,
+      want: { page: 3, pages: 3, start: 20, from: 21, to: 23 },
+    },
+    {
+      name: "a page past the end clamps",
+      total: 23,
+      page: 9,
+      want: { page: 3, pages: 3, start: 20, from: 21, to: 23 },
+    },
+    { name: "no rows", total: 0, page: 1, want: { page: 1, pages: 1, start: 0, from: 0, to: 0 } },
+  ])("$name", ({ total, page, want }) => {
+    expect(pickerWindow(total, page)).toEqual(want)
   })
 })

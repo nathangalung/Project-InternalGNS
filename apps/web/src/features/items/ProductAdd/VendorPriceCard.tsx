@@ -1,6 +1,7 @@
 import { Menu } from "@base-ui/react/menu"
 import { useId } from "react"
 import LoadError from "@/components/shared/LoadError"
+import StoreLink from "@/components/shared/StoreLink"
 import {
   Autocomplete,
   AutocompleteContent,
@@ -136,6 +137,11 @@ export default function VendorPriceCard({
             <AddNewButton label="Tambah Vendor Baru" onClick={onAddVendorNew} />
           </AutocompleteContent>
         </Autocomplete>
+        {exactVendor?.storeUrl && (
+          <span className="flex items-center gap-1.5 text-xs text-dark-600">
+            Link toko <StoreLink url={exactVendor.storeUrl} />
+          </span>
+        )}
       </div>
 
       <div className={ui.row2}>

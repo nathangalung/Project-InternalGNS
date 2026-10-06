@@ -2,6 +2,7 @@ import { useState } from "react"
 import EntityLink from "@/components/shared/EntityLink"
 import PageButtons from "@/components/shared/PageButtons"
 import RowsPerPageMenu from "@/components/shared/RowsPerPageMenu"
+import StoreLink from "@/components/shared/StoreLink"
 import type { ProductRow } from "@/features/quotations/types"
 import { formatRupiah as formatRp } from "@/lib/format"
 import { clampPage, PAGE_SIZE_OPTIONS, pageCount } from "@/lib/pagination"
@@ -14,6 +15,8 @@ type ProductTableProps = {
   showProfit?: boolean
   // The quotation shows the request; a PO or invoice bills the offer only
   showRequest?: boolean
+  // Vendor and store link under the offer, for buying
+  showVendor?: boolean
   products: ProductRow[]
 }
 
@@ -26,11 +29,27 @@ const thProfit =
 const tdProfit =
   "truncate p-5 text-center align-middle text-sm font-bold text-primary-700 bg-[rgba(99,14,212,0.05)]"
 
+// Vendor, then its store.
+function VendorNote({ row }: { row: ProductRow }) {
+  if (!row.vendor && !row.storeUrl) return null
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[#6B7280]">
+      {row.vendor && (
+        <EntityLink kind="vendor" id={row.vendorId} tone="name">
+          {row.vendor}
+        </EntityLink>
+      )}
+      <StoreLink url={row.storeUrl} />
+    </div>
+  )
+}
+
 // Collapsible paginated product list.
 export default function ProductTable({
   products,
   showProfit = true,
   showRequest = true,
+  showVendor = false,
 }: ProductTableProps) {
   const [rawPage, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(5)
@@ -133,6 +152,7 @@ export default function ProductTable({
                         }}
                         differs={showRequest && offerDiffers(p)}
                         noOffer={p.noOffer}
+                        offerNote={showVendor && !p.noOffer ? <VendorNote row={p} /> : undefined}
                       />
                       <td className={`${ui.tdCenter} truncate`}>{p.qty}</td>
                       <td className={`${ui.tdCenter} truncate`}>{p.satuan}</td>

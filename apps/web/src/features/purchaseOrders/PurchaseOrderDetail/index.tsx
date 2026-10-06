@@ -210,7 +210,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
           </div>
         )}
         <div className="min-w-0 overflow-x-auto max-sm:*:min-w-max">
-          <ProductTable products={products} showProfit={hasCost} showRequest={false} />
+          <ProductTable products={products} showProfit={hasCost} showRequest={false} showVendor />
         </div>
         <CostBreakdown
           hasProducts={products.length > 0}

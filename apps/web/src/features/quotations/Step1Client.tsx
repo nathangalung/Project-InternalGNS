@@ -1,4 +1,5 @@
 import LoadError from "@/components/shared/LoadError"
+import PageButtons from "@/components/shared/PageButtons"
 import type { LookupFailure } from "@/lib/lookup"
 import { ui } from "@/lib/ui"
 import type { ContactRow } from "@/types/api"
@@ -47,6 +48,15 @@ type Step1ClientProps = {
   contactReadOnly?: boolean
   // Failed client lookup
   clientsFailure?: LookupFailure | null
+  // Add mode pages the list
+  picker?: {
+    page: number
+    pages: number
+    from: number
+    to: number
+    total: number
+    onPage: (p: number) => void
+  }
 }
 
 export default function Step1Client({
@@ -62,6 +72,7 @@ export default function Step1Client({
   lockClient = false,
   contactReadOnly = false,
   clientsFailure = null,
+  picker,
 }: Step1ClientProps) {
   const picked = contacts.find((c) => c.id === selectedContactId)
   return (
@@ -165,6 +176,20 @@ export default function Step1Client({
           )
         })}
       </div>
+
+      {picker && !lockClient && picker.total > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span className="text-xs font-medium text-[#6B7280]">
+            Menampilkan {picker.from}-{picker.to} dari {picker.total} klien
+          </span>
+          <PageButtons
+            currentPage={picker.page}
+            totalPages={picker.pages}
+            onPage={picker.onPage}
+            dimDisabled
+          />
+        </div>
+      )}
 
       {selectedClient && contacts.length > 0 && setSelectedContactId && (
         <div className="mt-6">
