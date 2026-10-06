@@ -200,15 +200,21 @@ export async function apiList<T>(input: RequestInput): Promise<PaginatedList<T>>
 //
 // `detail` is prose meant for the user, so it always wins. `fields` is keyed by
 // API field name, which is an identifier and not Indonesian, so only its
-// values are shown -- never `key: value`, which reads as debug output in a
+// values are shown, never `key: value`, which reads as debug output in a
 // toast.
 export function extractErrorMessage(problem: ProblemDetail | null, fallback: string): string {
   if (!problem) return fallback
   if (problem.detail) return problem.detail
-  const parts = Object.values(problem.fields ?? {})
-    .map((v) => v.trim())
-    .filter((v) => v.length > 0)
-  if (parts.length > 0) return parts.join("; ")
+  const parts = [
+    ...new Set(
+      Object.values(problem.fields ?? {})
+        .map((v) => v.trim())
+        .filter((v) => v.length > 0),
+    ),
+  ]
+  if (parts.length === 1) return parts[0]
+  // Sentences, like httperr: each ends with a stop, never a semicolon.
+  if (parts.length > 1) return parts.map((p) => (/[.!?]$/.test(p) ? p : `${p}.`)).join(" ")
   return problem.title || fallback
 }
 
