@@ -281,6 +281,15 @@ func (h *Handler) CreateContact(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
+	if !reachable(req.Email, req.Phone) {
+		// A missing client is a 404 before the reach rule.
+		if err := h.requireClient(r.Context(), id); errors.Is(err, ErrNotFound) {
+			httperr.Render(w, httperr.NotFound("client not found"))
+			return
+		}
+		httperr.Render(w, httperr.Unprocessable(needReach()))
+		return
+	}
 
 	userID := deps.CurrentUserID(r.Context())
 	c, err := h.repo.CreateContact(r.Context(), id, req, userID)
@@ -318,6 +327,25 @@ func (h *Handler) UpdateContact(w http.ResponseWriter, r *http.Request) {
 	// An absent email key is kept, so only a sent one is checked.
 	if fields := contactFields(req.Phone, req.Email.Value); fields != nil {
 		httperr.Render(w, httperr.Unprocessable(fields))
+		return
+	}
+	// A missing or deleted contact is a 404 before the reach rule, and an
+	// absent email keeps the stored one, which still reaches the contact.
+	stored, err := h.repo.GetContact(r.Context(), id, cid)
+	if errors.Is(err, ErrNotFound) || (err == nil && !stored.IsActive) {
+		httperr.Render(w, httperr.NotFound("contact not found"))
+		return
+	}
+	if err != nil {
+		httperr.RenderDBErrCtx(r.Context(), w, err)
+		return
+	}
+	email := stored.Email
+	if req.Email.Set {
+		email = req.Email.Value
+	}
+	if !reachable(email, req.Phone) {
+		httperr.Render(w, httperr.Unprocessable(needReach()))
 		return
 	}
 
@@ -368,9 +396,8 @@ func (h *Handler) requireClient(ctx context.Context, id int64) error {
 }
 
 // msgEmailTaken sits on email.
-// The unique index spans every client's active contacts, so the owner may be
-// another client.
-const msgEmailTaken = "Email ini sudah dipakai kontak aktif lain, di klien ini atau klien lain."
+// The unique index is per client, so the owner is another contact of it.
+const msgEmailTaken = "Email ini sudah dipakai kontak lain di klien ini."
 
 // renderContactErr maps save failures.
 func renderContactErr(w http.ResponseWriter, r *http.Request, err error) {

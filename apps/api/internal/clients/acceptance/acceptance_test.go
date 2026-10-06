@@ -185,7 +185,8 @@ func (s *scenarioState) searchContainsClient() error {
 }
 
 func (s *scenarioState) addContact(name string) error {
-	body := clients.CreateContactRequest{Name: name, CountryCode: "IDN"}
+	email := fmt.Sprintf("atdd.kontak.%d@uji.local", time.Now().UnixNano())
+	body := clients.CreateContactRequest{Name: name, Email: &email, CountryCode: "IDN"}
 	return s.sendRequest(http.MethodPost, "/clients/"+strconv.FormatInt(s.clientID, 10)+"/contacts", body)
 }
 
@@ -247,7 +248,7 @@ func (s *scenarioState) seedContactWithEmail() error {
 
 func (s *scenarioState) clearContactEmailAndTitle() error {
 	return s.sendRequest(http.MethodPatch, s.contactPath(),
-		map[string]any{"name": s.contact.Name, "email": "", "title": nil})
+		map[string]any{"name": s.contact.Name, "email": "", "title": nil, "phone": "81234567890"})
 }
 
 func (s *scenarioState) contactHasNoEmailOrTitle() error {
@@ -276,6 +277,24 @@ func (s *scenarioState) otherClientReusesEmail() error {
 	}
 	return s.sendRequest(http.MethodPost, "/clients/"+strconv.FormatInt(s.clientID, 10)+"/contacts",
 		map[string]any{"name": "Pemilik Baru", "email": email})
+}
+
+// sameClientReusesEmail adds a second holder.
+func (s *scenarioState) sameClientReusesEmail() error {
+	return s.sendRequest(http.MethodPost, "/clients/"+strconv.FormatInt(s.clientID, 10)+"/contacts",
+		map[string]any{"name": "Pemegang Kedua", "email": *s.contact.Email})
+}
+
+// addContactNoChannel sends a name only.
+func (s *scenarioState) addContactNoChannel() error {
+	return s.sendRequest(http.MethodPost, "/clients/"+strconv.FormatInt(s.clientID, 10)+"/contacts",
+		map[string]any{"name": "Tanpa Kontak"})
+}
+
+// clearOnlyEmail drops the last channel.
+func (s *scenarioState) clearOnlyEmail() error {
+	return s.sendRequest(http.MethodPatch, s.contactPath(),
+		map[string]any{"name": s.contact.Name, "email": nil})
 }
 
 // attachForeignLogo uses another client's upload.
@@ -413,6 +432,9 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the user deletes the contact$`, state.deleteContact)
 		sc.Step(`^the user renames the contact$`, state.renameContact)
 		sc.Step(`^another client adds a contact with the same email$`, state.otherClientReusesEmail)
+		sc.Step(`^the client adds a contact with the same email$`, state.sameClientReusesEmail)
+		sc.Step(`^the user adds a contact with only a name$`, func() error { return state.addContactNoChannel() })
+		sc.Step(`^the user clears the contact email without a phone$`, state.clearOnlyEmail)
 		sc.Step(`^the user attaches a logo stored under another client$`, state.attachForeignLogo)
 		sc.Step(`^the user creates a client without a number$`, func() error { return state.createClientNumbered(nil) })
 		sc.Step(`^the user creates a client with number "([^"]*)"$`, func(n string) error { return state.createClientNumbered(&n) })

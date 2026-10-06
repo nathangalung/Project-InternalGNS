@@ -41,3 +41,18 @@ func put(errs map[string]string, field, msg string) {
 		errs[field] = msg
 	}
 }
+
+// MsgContactReach asks for a channel.
+// It sits on both email and phone, since either one is enough.
+const MsgContactReach = "Isi email atau nomor HP."
+
+// reachable reports a usable channel.
+// A blank email counts as none; a sent phone already passed its rule.
+func reachable(email, phone *string) bool {
+	return (email != nil && *email != "") || phone != nil
+}
+
+// needReach builds the 422 fields.
+func needReach() map[string]string {
+	return map[string]string{"email": MsgContactReach, "phone": MsgContactReach}
+}

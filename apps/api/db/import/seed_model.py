@@ -1602,23 +1602,25 @@ class Builder:
         )
         for i, c in enumerate(clients, 1):
             c.id, c.number = i, f"{i:04d}"
-        used: dict[str, Contact] = {}
-        # An address shared across clients goes where it was used most.
+        used: dict[tuple[int, str], Contact] = {}
+        # An address is unique per client (idx_company_contacts_email), so a
+        # person of two group clients keeps it at both; within one client it
+        # goes to the contact that used it most.
         order = sorted(
             self.contacts.values(),
             key=lambda c: (-max(c.emails.values(), default=0), c.first_date, c.client.id, c.key),
         )
         for c in order:
             email = most_common(c.emails)
-            if email and email in used:
-                owner = used[email]
+            if email and (c.client.id, email) in used:
+                owner = used[(c.client.id, email)]
                 self.flag(
                     f"{c.name} ({c.client.name})",
                     f"email {email} already on {owner.name} ({owner.client.name}); left blank",
                 )
             elif email:
                 c.email = email
-                used[email] = c
+                used[(c.client.id, email)] = c
         contacts = sorted(self.contacts.values(), key=lambda c: (c.client.id, c.first_date, c.key))
         for i, c in enumerate(contacts, 1):
             c.id = i

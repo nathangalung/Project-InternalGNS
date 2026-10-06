@@ -60,7 +60,8 @@ func TestHandler_UpdateContact_ClearsEmailAndTitle(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			clientID := newClient(t)
 			seeded := seedContact(t, clientID)
-			body := map[string]any{"name": "Kontak Uji"}
+			// The phone keeps the contact reachable once the email goes.
+			body := map[string]any{"name": "Kontak Uji", "phone": "81234567890"}
 			for k, v := range c.patch {
 				body[k] = v
 			}
@@ -106,20 +107,34 @@ func TestHandler_UpdateContact_DeletedIsNotFound(t *testing.T) {
 // It covers MD-08.
 func TestHandler_CreateContact_ReusesDeletedEmail(t *testing.T) {
 	srv := newSrv(t)
-	firstClient := newClient(t)
-	seeded := seedContact(t, firstClient)
+	clientID := newClient(t)
+	seeded := seedContact(t, clientID)
 
-	del := doJSON(t, srv, http.MethodDelete, contactPath(firstClient, seeded.ID), nil)
+	del := doJSON(t, srv, http.MethodDelete, contactPath(clientID, seeded.ID), nil)
 	del.Body.Close()
 	require.Equal(t, http.StatusNoContent, del.StatusCode)
 
-	otherClient := newClient(t)
-	res := doJSON(t, srv, http.MethodPost, "/clients/"+strconv.FormatInt(otherClient, 10)+"/contacts",
+	res := doJSON(t, srv, http.MethodPost, "/clients/"+strconv.FormatInt(clientID, 10)+"/contacts",
 		map[string]any{"name": "Pemilik Baru", "email": *seeded.Email})
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusCreated, res.StatusCode)
+}
 
-	// An active contact still owns its email, in any case.
+// Emails are unique per client.
+// One person may be the contact of two clients of the same group, so another
+// client's active contact never blocks the email. Within one client an
+// active contact still owns it, in any case.
+func TestHandler_ContactEmail_UniquePerClient(t *testing.T) {
+	srv := newSrv(t)
+	firstClient := newClient(t)
+	seeded := seedContact(t, firstClient)
+
+	otherClient := newClient(t)
+	res := doJSON(t, srv, http.MethodPost, "/clients/"+strconv.FormatInt(otherClient, 10)+"/contacts",
+		map[string]any{"name": "Kontak Grup", "email": strings.ToUpper(*seeded.Email)})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusCreated, res.StatusCode)
+
 	dup := doJSON(t, srv, http.MethodPost, "/clients/"+strconv.FormatInt(firstClient, 10)+"/contacts",
 		map[string]any{"name": "Penyalin", "email": strings.ToUpper(*seeded.Email)})
 	defer dup.Body.Close()
@@ -139,6 +154,6 @@ func requireEmailTaken(t *testing.T, res *http.Response) {
 	var p httperr.Error
 	require.NoError(t, json.NewDecoder(res.Body).Decode(&p))
 	assert.Equal(t, map[string]string{
-		"email": "Email ini sudah dipakai kontak aktif lain, di klien ini atau klien lain.",
+		"email": "Email ini sudah dipakai kontak lain di klien ini.",
 	}, p.Fields)
 }

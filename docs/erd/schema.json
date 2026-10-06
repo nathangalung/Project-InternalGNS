@@ -700,9 +700,10 @@
         },
         {
           "name": "idx_company_contacts_email",
-          "def": "CREATE UNIQUE INDEX idx_company_contacts_email ON public.company_contacts USING btree (lower((email)::text)) WHERE ((email IS NOT NULL) AND is_active)",
+          "def": "CREATE UNIQUE INDEX idx_company_contacts_email ON public.company_contacts USING btree (company_id, lower((email)::text)) WHERE ((email IS NOT NULL) AND is_active)",
           "table": "public.company_contacts",
           "columns": [
+            "company_id",
             "lower"
           ]
         }

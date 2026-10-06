@@ -72,8 +72,34 @@ Feature: Client lifecycle
     Given an existing client
     And the client has a contact with an email and a title
     When the user deletes the contact
-    And another client adds a contact with the same email
+    And the client adds a contact with the same email
     Then the response status is 201
+
+  Scenario: Two clients of one group share a contact email
+    Given an existing client
+    And the client has a contact with an email and a title
+    When another client adds a contact with the same email
+    Then the response status is 201
+
+  Scenario: One client cannot hold an email twice
+    Given an existing client
+    And the client has a contact with an email and a title
+    When the client adds a contact with the same email
+    Then the response status is 422
+    And the email field error reads "Email ini sudah dipakai kontak lain di klien ini."
+
+  Scenario: A contact needs an email or a phone
+    Given an existing client
+    When the user adds a contact with only a name
+    Then the response status is 422
+    And the phone field error reads "Isi email atau nomor HP."
+
+  Scenario: Clearing the last channel is refused
+    Given an existing client
+    And the client has a contact with an email and a title
+    When the user clears the contact email without a phone
+    Then the response status is 422
+    And the email field error reads "Isi email atau nomor HP."
 
   Scenario: Logo PATCH rejects a key outside the entity prefix
     Given an existing client
