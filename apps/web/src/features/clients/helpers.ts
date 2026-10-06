@@ -124,7 +124,7 @@ export function contactUpdateBody(f: ContactFormValues, countryCode: string): Up
 
 // Server email refusal, if any.
 //
-// A contact email another active contact owns, at this client or another,
+// A contact email another active contact of the same client owns
 // comes back as 422 on fields.email; the contact form shows it on its email
 // input instead of a toast.
 export function contactEmailError(err: unknown): string | undefined {

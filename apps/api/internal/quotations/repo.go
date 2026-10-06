@@ -189,6 +189,13 @@ func (r *Repo) GetDetail(ctx context.Context, id int64) (QuotationDetail, error)
 	}
 	// Always a list, so the web never reads null.
 	d.Locks = append([]EditLock{}, locks...)
+	if q.ContactID != nil {
+		err := r.db.QueryRow(ctx, r.store.Get("quotations.get_contact_channels"), *q.ContactID, q.CompanyClientID).
+			Scan(&d.ContactEmail, &d.ContactPhone)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return d, err
+		}
+	}
 	d.AllowedTransitions = AllowedTransitions(q.Status)
 	d.CanRevise = CanRevise(q.Status)
 

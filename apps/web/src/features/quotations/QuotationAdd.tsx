@@ -1,6 +1,7 @@
 import { useNavigate } from "@tanstack/react-router"
 import { useEffect, useMemo, useState } from "react"
 import ClientAdd from "@/features/clients/ClientAdd"
+import { pickedContact } from "@/features/clients/clientCard"
 import { dedupeByCompany, fromClientHit, fromClientRow } from "@/features/clients/helpers"
 import { useClient, useClientContacts, useClientSearch, useClients } from "@/features/clients/hooks"
 import ProductAdd from "@/features/items/ProductAdd"
@@ -21,7 +22,13 @@ import Step4Summary from "./Step4Summary"
 import { useQuotationWizard } from "./useQuotationWizard"
 import { WIZARD_STEPS as steps, validityInput } from "./wizard"
 import { qe, stepLabel, stepNum, stepPill } from "./wizard-styles"
-import { type PickClient, resolveClient, visibleClients } from "./wizardClient"
+import {
+  defaultContact,
+  type PickClient,
+  resolveClient,
+  visibleClients,
+  withContact,
+} from "./wizardClient"
 
 export default function QuotationAdd() {
   const navigate = useNavigate()
@@ -127,19 +134,17 @@ export default function QuotationAdd() {
   // Auto-select contact when client or contacts list changes.
   const clientContactId = currentClient?.contactId
   useEffect(() => {
-    if (!selectedClient) {
-      setSelectedContactId(undefined)
-      return
-    }
-    const ids = contacts.map((c) => c.id)
-    if (clientContactId && ids.includes(clientContactId)) {
-      setSelectedContactId(clientContactId)
-    } else if (contacts.length > 0) {
-      setSelectedContactId(contacts[0].id)
-    } else {
-      setSelectedContactId(clientContactId)
-    }
-  }, [selectedClient, contacts, clientContactId, setSelectedContactId])
+    setSelectedContactId(
+      selectedClient ? defaultContact(contacts, selectedContactId, clientContactId) : undefined,
+    )
+  }, [selectedClient, contacts, selectedContactId, clientContactId, setSelectedContactId])
+
+  // The summary names the picked contact, never the client's first one.
+  const picked = pickedContact(contacts, selectedContactId)
+  const summaryClient = currentClient ? withContact(currentClient, picked) : undefined
+  // A listed contact with no channel is completed in step 1 first; one not
+  // loaded yet never flickers the button.
+  const contactUnreachable = step === 1 && picked !== undefined && !picked.email && !picked.phone
 
   const canSubmit =
     Number.isFinite(numericClientId) &&
@@ -243,7 +248,7 @@ export default function QuotationAdd() {
                 type="button"
                 className={`${ui.btnPrimary} w-[148px]`}
                 onClick={() => setStep(step + 1)}
-                disabled={isNextDisabled}
+                disabled={isNextDisabled || contactUnreachable}
               >
                 Lanjut{" "}
                 <svg
@@ -355,7 +360,7 @@ export default function QuotationAdd() {
               clientRefNo,
               setClientRefNo,
             }}
-            currentClient={currentClient}
+            currentClient={summaryClient}
             shippingAddress={shippingAddress}
             shippingTime={shippingTime}
             shippingCost={shippingCost}

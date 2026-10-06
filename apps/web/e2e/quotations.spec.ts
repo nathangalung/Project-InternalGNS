@@ -1,6 +1,13 @@
 import type { Locator, Page } from "@playwright/test"
 import { wibDay } from "./support/finance"
-import { api, deactivate, idFrom, rupiah, setQuotationLegacyNo } from "./support/sales"
+import {
+  api,
+  deactivate,
+  idFrom,
+  insertUnreachableContact,
+  rupiah,
+  setQuotationLegacyNo,
+} from "./support/sales"
 import { expect, test } from "./support/seed"
 import { xlsx } from "./support/xlsx"
 
@@ -628,6 +635,89 @@ test.describe("quotation status", () => {
     await page.goto(`/quotations/${q.id}/edit`)
     await expect(page.getByText("Quotation tidak dapat diubah")).toBeVisible()
     await expect(page.getByText("Gunakan Buat Revisi di halaman detail")).toBeVisible()
+  })
+
+  test("the summary and the detail show the picked contact's own channels", async ({
+    page,
+    seed,
+  }) => {
+    const client = await seed.client()
+    const vendor = await seed.vendor()
+    const item = await seed.item({ vendor, cost: 100_000 })
+    const second = `${seed.prefix} Narahubung Kedua`
+    await seed.contact(client, second)
+    const [picked] = (
+      await api<{ name: string; email: string; phone: string }[]>(
+        "GET",
+        `/clients/${client.id}/contacts`,
+      )
+    ).filter((c) => c.name === second)
+
+    await page.goto("/quotations/add")
+    await page.getByLabel("Cari klien").fill(seed.prefix)
+    // The row names the client only, never its first contact.
+    const row = page.getByRole("button", { name: new RegExp(client.name) })
+    await expect(row).not.toContainText("Narahubung")
+    await row.click()
+    await page.getByRole("button", { name: new RegExp(`^${second}`) }).click()
+    await page.getByRole("button", { name: "Lanjut" }).click()
+
+    await page.getByRole("button", { name: "Tambah Produk" }).click()
+    const product = page.getByRole("dialog", { name: "Tambah Produk ke Quotation" })
+    await product.getByLabel("Kode IMPA/Nama Produk Request *").fill(item.name)
+    await page.getByRole("option", { name: `${item.impaCode} - ${item.name}` }).click()
+    await product.getByRole("button", { name: "Salin ke Offer" }).click()
+    await product.getByLabel("Jumlah Produk *").fill("1")
+    await product.getByRole("button", { name: "Simpan Data" }).click()
+    await expect(product).toBeHidden()
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Lanjut" }).click()
+
+    const card = page.getByRole("heading", { name: "Ringkasan Klien" }).locator("xpath=..")
+    await expect(card).toContainText(second)
+    await expect(card).toContainText(picked.email)
+    await expect(card).toContainText(picked.phone)
+    await expect(card).not.toContainText(client.contactEmail ?? "-")
+    await page.getByLabel("JATUH TEMPO PEMBAYARAN (HARI) *").fill("30")
+    await page.getByLabel("BERLAKU SAMPAI (HARI) *").fill("14")
+    await page.getByRole("button", { name: "Buat Penawaran" }).click()
+
+    await expect(page).toHaveURL(/\/quotations$/)
+    await page.getByPlaceholder("Cari penawaran, klien, atau nomor...").fill(seed.prefix)
+    const link = page
+      .getByRole("row", { name: new RegExp(client.name) })
+      .getByRole("link")
+      .first()
+    seed.track("quotation", idFrom(await link.getAttribute("href")))
+    await link.click()
+    const detail = page.getByRole("heading", { name: "Ringkasan Klien" }).locator("xpath=..")
+    await expect(detail).toContainText(second)
+    await expect(detail).toContainText(picked.email)
+    await expect(detail).not.toContainText(client.contactEmail ?? "-")
+  })
+
+  test("a picked contact with no email or phone is completed on step 1", async ({ page, seed }) => {
+    const client = await seed.client()
+    const name = `${seed.prefix} Tanpa Kontak`
+    const id = insertUnreachableContact(client.id, name)
+
+    await page.goto("/quotations/add")
+    await page.getByLabel("Cari klien").fill(seed.prefix)
+    await page.getByRole("button", { name: new RegExp(client.name) }).click()
+    const contact = page.getByRole("button", { name: new RegExp(`^${name}`) })
+    await expect(contact).toContainText("Belum ada email atau nomor HP")
+    await contact.click()
+    await expect(page.getByText(`${name} belum punya email atau nomor HP.`)).toBeVisible()
+    await expect(page.getByRole("button", { name: "Lanjut" })).toBeDisabled()
+
+    await page.getByLabel("Nomor HP").fill("81355500099")
+    await page.getByRole("button", { name: "Simpan Kontak" }).click()
+    await expect(contact).toContainText("81355500099")
+    await expect(page.getByRole("button", { name: "Lanjut" })).toBeEnabled()
+    const [saved] = (
+      await api<{ id: number; phone?: string }[]>("GET", `/clients/${client.id}/contacts`)
+    ).filter((c) => c.id === id)
+    expect(saved.phone).toBe("81355500099")
   })
 
   test("the editor switches a draft to another contact", async ({ page, seed }) => {

@@ -533,3 +533,33 @@ export async function deactivate(kind: "client" | "vendor" | "item", id: number)
   const row = await api<Record<string, unknown>>("GET", path)
   await api("PUT", path, { ...row, isActive: false })
 }
+
+// Imported contact with no channel.
+//
+// The API refuses a contact without an email or phone, but imported rows
+// may lack both, so the row goes in straight through psql.
+export function insertUnreachableContact(clientId: number, name: string): number {
+  const dsn = process.env.DATABASE_URL
+  if (!dsn) throw new Error("DATABASE_URL must name the database the API under test uses")
+  const out = execFileSync(
+    "psql",
+    [
+      dsn,
+      "-X",
+      "-q",
+      "-t",
+      "-A",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-v",
+      `cid=${clientId}`,
+      "-v",
+      `name=${name}`,
+    ],
+    {
+      input:
+        "INSERT INTO company_contacts (company_id, name, created_by, updated_by) VALUES (:cid, :'name', 1, 1) RETURNING id;\n",
+    },
+  )
+  return Number(String(out).trim())
+}

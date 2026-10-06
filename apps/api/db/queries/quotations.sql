@@ -14,6 +14,11 @@ SELECT id, quotation_no, legacy_no, version, company_client_id, company_client_n
 FROM quotations
 WHERE id = $1;
 
+-- name: quotations.get_contact_channels
+-- The chosen contact's email and phone, read by id even once it is
+-- deactivated, as the PDF prints them. $1=contact id, $2=client id.
+SELECT email, phone FROM company_contacts WHERE id = $1 AND company_id = $2;
+
 -- name: quotations.get_items
 SELECT qi.id, qi.quotation_id, qi.line_number, qi.item_type,
        qi.requested_item_id, qi.requested_impa, qi.requested_name,

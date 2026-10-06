@@ -3,8 +3,8 @@ import { useMemo } from "react"
 import LoadingState from "@/components/shared/LoadingState"
 import NotFoundState from "@/components/shared/NotFoundState"
 import RouteErrorFallback from "@/components/shared/RouteErrorFallback"
-import { clientCardInfo } from "@/features/clients/clientCard"
-import { useClient, useClientContacts } from "@/features/clients/hooks"
+import { clientCardInfo, documentContact } from "@/features/clients/clientCard"
+import { useClient } from "@/features/clients/hooks"
 import { usePurchaseOrderByQuotation } from "@/features/purchaseOrders/hooks"
 import PurchaseOrderDetail from "@/features/purchaseOrders/PurchaseOrderDetail"
 import { toQuotationData } from "@/features/quotations/adapters"
@@ -28,7 +28,6 @@ function PurchaseOrderDetailRoute() {
   const { data: detail } = useQuotation(po ? quotationId : undefined)
   const { data: units } = useUnits()
   const { data: client } = useClient(po?.companyClientId)
-  const { data: contacts } = useClientContacts(po?.companyClientId)
 
   const unitOf = useMemo(() => {
     const map = new Map<number, string>()
@@ -41,9 +40,9 @@ function PurchaseOrderDetailRoute() {
     const q = toQuotationData(detail, unitOf)
     return {
       ...q,
-      clientInfo: clientCardInfo(q.clientInfo ?? {}, client, contacts, detail.contactId),
+      clientInfo: clientCardInfo(q.clientInfo ?? {}, client, documentContact(detail)),
     }
-  }, [detail, unitOf, client, contacts])
+  }, [detail, unitOf, client])
 
   if (!po) {
     if (isLoading) return <LoadingState label="Memuat data Purchase Order…" />

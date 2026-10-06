@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test"
+import { CONTACT_REACH_ERROR } from "../src/lib/validation"
 import type { PurchaseOrderItemRow } from "../src/types/generated"
 import { api, deactivate, idFrom, rupiah } from "./support/sales"
 import { expect, test } from "./support/seed"
@@ -166,7 +167,7 @@ test("a logo over 2 MB is refused and a small one is saved", async ({ page, seed
 // Phone takes 9-12 digits.
 const PHONE_ERROR = "Nomor telepon harus 9–12 digit angka."
 // Taken contact email copy.
-const EMAIL_TAKEN = "Email ini sudah dipakai kontak aktif lain, di klien ini atau klien lain."
+const EMAIL_TAKEN = "Email ini sudah dipakai kontak lain di klien ini."
 
 test("a refused Tambah Klien is reported once, in the form", async ({ page, seed }) => {
   const detail = "Nomor klien sudah digunakan."
@@ -206,7 +207,12 @@ test("a refused Tambah Narahubung is reported once, as a toast", async ({ page, 
   const card = contactsCard(page)
   await card.getByRole("button", { name: "Tambah Narahubung" }).click()
   await card.getByLabel("Nama *").fill(`${seed.prefix} Ditolak`)
-  await card.getByRole("button", { name: "Simpan", exact: true }).click()
+  // A contact needs an email or a phone before Simpan opens.
+  const save = card.getByRole("button", { name: "Simpan", exact: true })
+  await expect(save).toBeDisabled()
+  await expect(card.getByText(CONTACT_REACH_ERROR)).toBeVisible()
+  await card.getByLabel("No HP").fill("81234567890")
+  await save.click()
   await expect(page.getByRole("alert").filter({ hasText: detail })).toBeVisible()
   await expect(page.getByText(detail)).toHaveCount(1)
   // The form stays open with its input.
@@ -266,20 +272,28 @@ test("a contact edit refuses a 13-digit phone", async ({ page, seed }) => {
 })
 
 // Taken email sits on Email.
-test("a contact email another client's contact owns is refused on the field", async ({
-  page,
-  seed,
-}) => {
+// Unique per client: another client may hold the same address, since one
+// person can serve two clients of a group.
+test("a contact email is unique per client, not across clients", async ({ page, seed }) => {
   const owner = await seed.client()
-  const client = await seed.client()
-  const taken = owner.contactEmail ?? ""
-  expect(taken).not.toBe("")
-  await page.goto(`/clients/${client.id}`)
-  const card = contactsCard(page)
+  const other = await seed.client()
+  const shared = owner.contactEmail ?? ""
+  expect(shared).not.toBe("")
+
+  await page.goto(`/clients/${other.id}`)
+  let card = contactsCard(page)
+  await card.getByRole("button", { name: "+ Tambah Narahubung" }).click()
+  await card.getByLabel("Nama *").fill(`${seed.prefix} Grup`)
+  await card.getByLabel("Email").fill(shared.toUpperCase())
+  await card.getByRole("button", { name: "Simpan", exact: true }).click()
+  await expect(card.getByText(`${seed.prefix} Grup`)).toBeVisible()
+
+  await page.goto(`/clients/${owner.id}`)
+  card = contactsCard(page)
   await card.getByRole("button", { name: "+ Tambah Narahubung" }).click()
   await card.getByLabel("Nama *").fill(`${seed.prefix} Penyalin`)
   const email = card.getByLabel("Email")
-  await email.fill(taken.toUpperCase())
+  await email.fill(shared.toUpperCase())
   await card.getByRole("button", { name: "Simpan", exact: true }).click()
 
   await expect(email).toHaveAttribute("aria-invalid", "true")
@@ -289,32 +303,21 @@ test("a contact email another client's contact owns is refused on the field", as
   await expect(page.getByText(EMAIL_TAKEN)).toHaveCount(0)
 })
 
-// Taken email on Tambah Klien.
-test("Tambah Klien shows a taken contact email on its field", async ({ page, seed }) => {
+// Shared email on Tambah Klien.
+test("Tambah Klien saves a contact whose email another client uses", async ({ page, seed }) => {
   const owner = await seed.client()
-  const taken = owner.contactEmail ?? ""
-  expect(taken).not.toBe("")
+  const shared = owner.contactEmail ?? ""
+  expect(shared).not.toBe("")
   const name = seed.name("Klien Email")
   await page.goto("/clients")
   await page.getByRole("button", { name: "Tambah Klien" }).click()
   const modal = page.getByRole("dialog", { name: "Tambah Klien" })
-  const save = modal.getByRole("button", { name: "Simpan Data" })
   await modal.getByLabel("Nama Perusahaan *").fill(name)
   await modal.getByLabel("Nama Narahubung *").fill(`${seed.prefix} Rina`)
-  const email = modal.getByLabel("Email (Opsional)")
-  await email.fill(taken.toUpperCase())
-  await save.click()
-
-  // The client is saved; only its contact waits for a free email.
-  await expect(modal.getByRole("status")).toContainText("Klien sudah tersimpan tanpa kontak.")
-  await seed.adopt("client", name)
-  await expect(email).toHaveAttribute("aria-invalid", "true")
-  await expect(modal.getByText(EMAIL_TAKEN)).toHaveCount(1)
-  await expect(save).toBeDisabled()
-  await email.fill(`baru.${Date.now()}@example.com`)
-  await expect(modal.getByText(EMAIL_TAKEN)).toHaveCount(0)
-  await save.click()
+  await modal.getByLabel("Email (Opsional)").fill(shared)
+  await modal.getByRole("button", { name: "Simpan Data" }).click()
   await expect(modal).toBeHidden()
+  await seed.adopt("client", name)
 })
 
 // Failed summary shows a dash.

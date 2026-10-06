@@ -4,6 +4,7 @@ import { contactEmailError } from "@/features/clients/helpers"
 import { useCreateClient, useCreateContact, useUploadClientLogo } from "@/features/clients/hooks"
 import { ui } from "@/lib/ui"
 import {
+  CONTACT_REACH_ERROR,
   optionalAddressError,
   optionalEmailError,
   optionalNpwpError,
@@ -111,9 +112,7 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
         <>
           {submitError && <span className="flex-1 text-xs text-[#EF4444]">{submitError}</span>}
           {!submitError && isNamaKontakFilled && !hasContactWay && (
-            <span className="flex-1 text-xs text-[#EF4444]">
-              Isi minimal nomor telepon atau email.
-            </span>
+            <span className="flex-1 text-xs text-[#EF4444]">{CONTACT_REACH_ERROR}</span>
           )}
           <button
             type="button"

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest"
 import {
   ADDRESS_ERROR,
+  CONTACT_REACH_ERROR,
+  contactReachError,
   digitsOnly,
   EMAIL_ERROR,
   isValidAddress,
@@ -129,5 +131,16 @@ describe("optionalNpwpError", () => {
     ["T08LL1234A", "SGP", null],
   ])("%j for %j is %j", (value, country, want) => {
     expect(optionalNpwpError(value, country)).toBe(want)
+  })
+})
+
+describe("contactReachError", () => {
+  it.each([
+    { name: "email only", email: "a@b.id", phone: "", want: null },
+    { name: "phone only", email: "", phone: "81234567890", want: null },
+    { name: "both", email: "a@b.id", phone: "81234567890", want: null },
+    { name: "neither", email: " ", phone: "", want: CONTACT_REACH_ERROR },
+  ])("$name", ({ email, phone, want }) => {
+    expect(contactReachError(email, phone)).toBe(want)
   })
 })

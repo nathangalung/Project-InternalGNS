@@ -2,6 +2,7 @@ import LoadError from "@/components/shared/LoadError"
 import type { LookupFailure } from "@/lib/lookup"
 import { ui } from "@/lib/ui"
 import type { ContactRow } from "@/types/api"
+import ContactCompletion from "./ContactCompletion"
 import { qe } from "./wizard-styles"
 
 const searchWrapper = "relative w-full"
@@ -62,6 +63,7 @@ export default function Step1Client({
   contactReadOnly = false,
   clientsFailure = null,
 }: Step1ClientProps) {
+  const picked = contacts.find((c) => c.id === selectedContactId)
   return (
     <div className={qe.stepContent}>
       <div className={qe.sectionHeader}>
@@ -144,7 +146,7 @@ export default function Step1Client({
               </div>
               <div className="flex flex-1 flex-col gap-1">
                 <span className="text-base font-bold leading-6 tracking-[-0.4px] text-dark-900">
-                  {client.name} - {client.narahubung}
+                  {client.name}
                 </span>
                 <span className="flex items-center gap-1 text-[0.6875rem] font-normal leading-4 text-dark-600">
                   <svg aria-hidden="true" width="9" height="12" viewBox="0 0 9 12" fill="none">
@@ -193,9 +195,13 @@ export default function Step1Client({
                         <span className="ml-2 text-xs font-normal text-dark-500">{c.title}</span>
                       )}
                     </div>
-                    {(c.phone || c.email) && (
+                    {c.phone || c.email ? (
                       <div className="mt-0.5 text-xs text-dark-500">
                         {[c.phone, c.email].filter(Boolean).join(" · ")}
+                      </div>
+                    ) : (
+                      <div className="mt-0.5 text-xs text-[#B45309]">
+                        Belum ada email atau nomor HP
                       </div>
                     )}
                   </div>
@@ -203,6 +209,9 @@ export default function Step1Client({
               )
             })}
           </div>
+          {picked && !picked.email && !picked.phone && !contactReadOnly && (
+            <ContactCompletion key={picked.id} clientId={Number(selectedClient)} contact={picked} />
+          )}
         </div>
       )}
     </div>

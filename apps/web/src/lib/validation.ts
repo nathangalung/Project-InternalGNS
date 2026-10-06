@@ -73,3 +73,11 @@ export function optionalNpwpError(s: string, countryCode: string): string | null
   if (t === "" || !indonesian) return null
   return /^[0-9. -]+$/.test(t) && digitsOnly(t).length === 16 ? null : NPWP_ERROR
 }
+
+// Mirrors clients.MsgContactReach.
+export const CONTACT_REACH_ERROR = "Isi email atau nomor HP."
+
+// Email or phone, at least one.
+export function contactReachError(email: string, phone: string): string | null {
+  return email.trim() === "" && phone.trim() === "" ? CONTACT_REACH_ERROR : null
+}

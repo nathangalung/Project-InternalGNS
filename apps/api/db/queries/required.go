@@ -101,6 +101,7 @@ var RequiredKeys = []string{
 	"quotations.fn_revise",
 	"quotations.fn_update",
 	"quotations.fn_update_versioned",
+	"quotations.get_contact_channels",
 	"quotations.get_header",
 	"quotations.get_history",
 	"quotations.get_items",

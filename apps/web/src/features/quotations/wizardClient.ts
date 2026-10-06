@@ -1,3 +1,4 @@
+import type { ContactChannels } from "@/features/clients/clientCard"
 import { fromClientRow } from "@/features/clients/helpers"
 import type { ClientRow } from "@/types/api"
 import type { Client } from "./Step1Client"
@@ -29,4 +30,31 @@ export function visibleClients(
   const top = sorted.slice(0, limit)
   if (!selected || top.some((c) => c.id === selected.id)) return top
   return [selected, ...top.slice(0, limit - 1)]
+}
+
+// Client with the picked contact.
+// The picker row carries the client's first contact; the summary must show
+// the one the quotation will name, or none.
+export function withContact(client: PickClient, contact: ContactChannels | undefined): PickClient {
+  return {
+    ...client,
+    narahubung: contact?.name ?? "",
+    phone: contact?.phone,
+    email: contact?.email,
+  }
+}
+
+// Contact the wizard selects.
+// A pick still listed stays, so a list refresh never undoes the user's
+// choice; otherwise the client's own contact, then the first listed. Before
+// the list loads only the client's contact is known.
+export function defaultContact(
+  contacts: { id: number }[],
+  current: number | undefined,
+  clientContactId: number | undefined,
+): number | undefined {
+  const ids = contacts.map((c) => c.id)
+  if (current !== undefined && ids.includes(current)) return current
+  if (clientContactId !== undefined && ids.includes(clientContactId)) return clientContactId
+  return contacts[0]?.id ?? clientContactId
 }
