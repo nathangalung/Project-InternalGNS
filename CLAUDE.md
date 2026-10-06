@@ -365,6 +365,20 @@ as digits only (`validate.StoredNPWP`; the printed form overflows the
 refuses ON_PROGRESS and DELIVERED on a malformed Indonesian NPWP, since the
 invoice issued at DELIVERED would fail the Coretax export.
 
+A contact needs an email or a phone. Create, and a PATCH whose result keeps
+neither (a stored email the body leaves out still counts), is a 422 with
+`clients.MsgContactReach` on both fields, mirrored by `contactReachError` in
+the web; a missing client or contact is a 404 first. Imported contacts may
+lack both: they stay listed and deletable, and the quotation wizard
+completes a picked one in place (`ContactCompletion`, step 1 waits for it).
+An active contact's email is unique within its client only
+(`idx_company_contacts_email`, 00102), since one person can serve two
+clients of a group. The client card on the quotation, PO and wizard pages
+shows the document's own contact: the quotation detail carries
+`contactEmail` and `contactPhone`, read by id like the PDF, and the card
+never borrows the company email or the client's first contact. The wizard's
+client rows name the client only.
+
 ## Frontend layout (`apps/web`)
 
 Feature-based with file-based routing:
