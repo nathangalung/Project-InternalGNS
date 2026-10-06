@@ -1695,15 +1695,20 @@ $function$
 ;
 -- +goose StatementEnd
 
+-- A rename, not an edit: no row_version bump, so no open draft goes stale.
+ALTER TABLE quotation_items DISABLE TRIGGER trg_quotation_items_updated_at;
 UPDATE quotation_items
    SET requested_name = replace(requested_name, 'SHIPPING — ', 'SHIPPING - ')
  WHERE item_type = 'shipping' AND requested_name LIKE 'SHIPPING — %';
+ALTER TABLE quotation_items ENABLE TRIGGER trg_quotation_items_updated_at;
 
 -- +goose Down
 
+ALTER TABLE quotation_items DISABLE TRIGGER trg_quotation_items_updated_at;
 UPDATE quotation_items
    SET requested_name = replace(requested_name, 'SHIPPING - ', 'SHIPPING — ')
  WHERE item_type = 'shipping' AND requested_name LIKE 'SHIPPING - %';
+ALTER TABLE quotation_items ENABLE TRIGGER trg_quotation_items_updated_at;
 
 -- +goose StatementBegin
 CREATE OR REPLACE FUNCTION public.fn_attach_po_file(p_po_id bigint, p_file_name text, p_file_size bigint, p_file_url text, p_user_id bigint)
