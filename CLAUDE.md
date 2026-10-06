@@ -35,20 +35,49 @@ Bun-managed monorepo.
 
 ## Roles
 
-Three roles, enforced in the frontend (`src/lib/rbac.ts` plus route guards) and
-the backend (`requireRole` and `readOnlyFor` middleware in `internal/app`):
+Five roles (migration 00104), named in `shared/roles` with what each may see
+or change. The backend enforces them at the router mount (`requireRole`,
+`readOnlyFor` in `internal/app`), per route (`rolegate.Deny` inside a
+feature's `Routes`), and in the handlers that hide figures or keep stored
+prices. The frontend mirrors them in `src/lib/rbac.ts`, whose capability
+checks fail closed for an unknown role, and in the route guard
+(`roleCanOpen`, which also keeps read-only roles out of the editors). User
+management picks a role from a dropdown with an Indonesian label and hint
+(`features/users/helpers`).
 
-- superadmin: everything, including user management.
-- operational: quotations, purchase orders, and the shared master data. No
-  invoices, financial dashboard, or user management.
-- finance: invoices and the financial dashboard. Reads products and vendors
-  but cannot change them (`readOnlyFor("finance")`, mirrored by
-  `canWriteCatalog`); keeps client writes for NPWP and TKU. No quotations or
-  purchase orders.
+- superadmin (Super Admin): everything, including user management.
+- operational (Kepala Operasional): quotations, purchase orders, the catalog
+  and vendors, harga beli and harga jual. Only this role and superadmin move
+  a quotation, revise it, set a selling price or discount, and cancel a PO.
+- operational_input (Input Data Operasional): client data, client requests,
+  harga beli and the catalog (products, photos, vendors, store links). It
+  writes quotation drafts and POs but never sees or sets a selling figure:
+  no harga jual, discount, shipping charge, totals, tax or profit, no harga
+  jual history, no quotation PDF and no quotation or PO export. Its line and
+  header saves keep the stored harga jual, discount and shipping charge
+  (`quotations/price_guard.go`), its new lines start at harga jual 0 for a
+  head to price, and in Ubah PO it edits harga beli, vendor and qty of the
+  stored lines only (each line carries its PO line `id`; adding or dropping
+  one is a 403). It moves a PO to any state but Dibatalkan.
+- finance (Kepala Keuangan): invoices and the financial dashboard, and reads
+  quotations, POs, products and vendors without changing them. Keeps client
+  writes.
+- finance_input (Input Data Keuangan): invoices and POs, with what is billed
+  but no harga beli or profit. It records payment only (Lunas is its one
+  move, with the proof), downloads Coretax, and changes a client's NPWP and
+  TKU alone (`clients.taxOnly` takes every other field from the stored row).
+  No quotations, no dashboards beyond the overview, no Pengganti, no invoice
+  dates or attachment.
 
-Everyone reaches the overview dashboard, clients, vendors, and products.
-Financial figures (revenue, expenses, profit, PPN, invoice totals) are limited
-to superadmin and finance at both layers, including the dashboard endpoints.
+A hidden figure is left out of the JSON, never zeroed: each money field
+carries `omitempty`, each feature's `redact(role)` blanks what the role may
+not see, and the web gates on the field being present (`seesSelling` on a
+quotation, `poGrandTotal` on a PO, `hasCost` for profit). A total filter or
+sort on a figure the role cannot see is a 403, so it cannot be probed. The
+dashboard overview is open to everyone with financial fields zeroed;
+financial figures reach only superadmin and the finance head.
+`TestRouter_RoutePolicy` (`internal/app`) checks every role against the
+gated routes, and `TestRouter_MasterDataByRole` the hidden keys.
 
 Sessions end on expiry or by version. Every access and refresh token carries
 the `users.session_version` it was minted under, and the auth middleware
@@ -603,12 +632,13 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
 4. Go errors are wrapped with `fmt.Errorf("...: %w", err)`; tests are
    table-driven.
 5. SQL is snake_case, parameterized, and hand-written in `db/queries`.
-6. RBAC is enforced at the router mount (`requireRole` on the quotations,
-   purchase-orders, invoices, and users subtrees; `readOnlyFor("finance")` on
-   items and vendors) and mirrored in the frontend. The dashboard has mixed
-   access, so its financial gating lives in the handlers — the overview is
-   open with financial fields stripped, timeseries gates per metric, the XLSX
-   export is finance-only — each covered by a negative test.
+6. RBAC is enforced at the router mount (`requireRole` on every subtree,
+   `readOnlyFor` for the roles that only read one), per route with
+   `rolegate.Deny`, and in the handlers that hide figures (`redact`) or keep
+   stored prices, and is mirrored in the frontend (`lib/rbac`). The dashboard
+   gates its financial figures in the handlers: the overview is open with
+   them zeroed, timeseries gates per metric, and the XLSX export is for
+   superadmin and the finance head. Each rule has a negative test.
 7. Dates resolve to WIB. The pool session timezone is pinned from `Config.TZ`
    (Asia/Jakarta) in `shared/db.NewPool`, so `CURRENT_DATE`/`NOW()`, invoice
    dates, and document-number periods are business-zone. Go-side date

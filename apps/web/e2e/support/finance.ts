@@ -6,6 +6,7 @@ import type {
   UnitRow,
 } from "../../src/types/generated"
 import { call, expectOk, generatePassword, type User } from "./api"
+import type { Role } from "./env"
 import { uploadPoFile } from "./sales"
 
 // Finance and admin spec data.
@@ -202,11 +203,7 @@ export function wibDay(offsetDays = 0): string {
 export type SeedUser = User & { password: string }
 
 // Throwaway account for one test.
-export async function createUser(
-  token: string,
-  role: "superadmin" | "operational" | "finance",
-  tag: string,
-): Promise<SeedUser> {
+export async function createUser(token: string, role: Role, tag: string): Promise<SeedUser> {
   const password = generatePassword()
   const user = await json<User>(
     call("/users", {

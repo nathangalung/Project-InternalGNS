@@ -10,7 +10,7 @@ import { signedInContext, submitLogin } from "./support/session"
 // touches is a throwaway one: ending its sessions must never sign out the
 // users the other specs share.
 
-type Role = "superadmin" | "operational" | "finance"
+type Role = "superadmin" | "operational" | "operational_input" | "finance" | "finance_input"
 type Reader = { user: SeedUser; page: Page }
 
 const test = base.extend<{
@@ -83,15 +83,10 @@ test("an admin creates a least-privilege user who can sign in", async ({ page, a
   const dialog = page.getByRole("dialog", { name: "Tambah Pengguna" })
 
   try {
-    await test.step("the form starts on Operasional and holds a weak password", async () => {
-      await expect(dialog.getByRole("button", { name: "Operasional" })).toHaveAttribute(
-        "aria-pressed",
-        "true",
-      )
-      await expect(dialog.getByRole("button", { name: "Super Admin" })).toHaveAttribute(
-        "aria-pressed",
-        "false",
-      )
+    await test.step("the form starts on Input Data Operasional and holds a weak password", async () => {
+      const role = dialog.getByRole("combobox", { name: /^Peran/ })
+      await expect(role).toContainText("Input Data Operasional")
+      await expect(dialog.getByText("Tidak melihat harga jual atau profit.")).toBeVisible()
       await dialog.getByLabel(/^Nama Lengkap/).fill(`Pengguna ${tag}`)
       await dialog.getByLabel(/^Alamat Email/).fill(email)
       await dialog.getByLabel(/^Kata Sandi/).fill("lemah")
@@ -105,10 +100,10 @@ test("an admin creates a least-privilege user who can sign in", async ({ page, a
       await page.getByPlaceholder("Cari nama atau email...").fill(email)
       const row = page.getByRole("row").filter({ hasText: email })
       await expect(row).toContainText(`Pengguna ${tag}`)
-      await expect(row).toContainText(/operasional/i)
+      await expect(row).toContainText(/input data operasional/i)
     })
 
-    await test.step("the account signs in with the operational role", async () => {
+    await test.step("the account signs in with the operational input role", async () => {
       const res = await call("/auth/login", {
         method: "POST",
         ip: ownIp(),
@@ -117,7 +112,7 @@ test("an admin creates a least-privilege user who can sign in", async ({ page, a
       expect(res.status).toBe(200)
       const { token } = (await res.json()) as { token: string }
       const me = (await (await call("/auth/me", { token })).json()) as { role: string }
-      expect(me.role).toBe("operational")
+      expect(me.role).toBe("operational_input")
     })
   } finally {
     const made = await findUser(admin, email).catch(() => null)
@@ -204,9 +199,9 @@ test("a role change ends the open session and the next sign-in carries it (AU-2)
 
   await openUser(page, victim.user.id)
   await page.getByRole("combobox", { name: /^Peran/ }).click()
-  await page.getByRole("option", { name: "Finance", exact: true }).click()
+  await page.getByRole("option", { name: "Input Data Keuangan", exact: true }).click()
   await save(page)
-  await expect(page.getByRole("combobox", { name: /^Peran/ })).toContainText("Finance")
+  await expect(page.getByRole("combobox", { name: /^Peran/ })).toContainText("Input Data Keuangan")
 
   // The change bumps the session version, so the open access token and its
   // refresh token both stop working at once.

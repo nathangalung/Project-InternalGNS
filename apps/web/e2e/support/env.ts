@@ -4,7 +4,13 @@
 export const baseURL = process.env.E2E_BASE_URL ?? "http://localhost:5174"
 export const apiURL = process.env.E2E_API_URL ?? `${baseURL}/api/v1`
 
-export const roles = ["superadmin", "operational", "finance"] as const
+export const roles = [
+  "superadmin",
+  "operational",
+  "operational_input",
+  "finance",
+  "finance_input",
+] as const
 export type Role = (typeof roles)[number]
 
 // Fixed e2e user addresses.
@@ -13,6 +19,11 @@ export type Role = (typeof roles)[number]
 export const e2eUsers = {
   operational: { email: "e2e.operational@globalsakti.com", name: "E2E Operasional" },
   finance: { email: "e2e.finance@globalsakti.com", name: "E2E Keuangan" },
+  operational_input: {
+    email: "e2e.operational.input@globalsakti.com",
+    name: "E2E Input Operasional",
+  },
+  finance_input: { email: "e2e.finance.input@globalsakti.com", name: "E2E Input Keuangan" },
 } as const satisfies Record<Exclude<Role, "superadmin">, { email: string; name: string }>
 
 // Superadmin credentials from environment.
