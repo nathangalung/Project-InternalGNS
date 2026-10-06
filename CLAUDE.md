@@ -589,29 +589,36 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    dates, and document-number periods are business-zone. Go-side date
    formatting goes through `shared/tz`, never `time.Local`. Do not remove the
    pin or the startup timezone assertion.
-8. All three PDF templates print the same letterhead and running header; only
-   the title differs. Each `.tex.tmpl` carries its own copy (`_base/` is
-   empty), so change all three together. Quotations and invoices are landscape
-   and switch between A5 and A4 on `productCount > 5`. The delivery note is A4
-   portrait only: it carries two signature blocks the others do not, and A5
-   cannot hold the letterhead, the table and those blocks at any item count.
+8. All three PDF templates print the same letterhead, running header and
+   head: A4 portrait at every length, content from the top, the title with
+   the document number centred and large under it (`\DocTitle`), then the
+   party block and the table with no lead-in sentence. Each `.tex.tmpl`
+   carries its own copy of the shared sizes (`\Doc*`, `_base/` is empty), so
+   change all three together. The quotation addresses To, Attn, Email and
+   Contact No.; the delivery note To and Address only, with no vessel or
+   attention; the invoice its Client, NPWP and Address, with no vessel.
+   The terms and the signature sit clear of the table. The quotation prints
+   `PDF_QUOTATION_SIGNER_NAME` under the scanned `Signature.jpg`; the
+   invoice prints `PDF_SIGNER_NAME` over blank space, signed by hand.
+   No printed text carries a dash or a semicolon, and `TestLatexExports_
+   DocumentHead` checks all of it with `pdfinfo` and `pdftotext`.
    Geometry uses `includehead` so the running header prints on the sheet
-   instead of off its top edge. The party block (To, Address and the rest)
-   is a top-aligned `tabularx` whose value column is ragged-right `X` with
-   hyphenation off (English patterns would split Indonesian names), and
-   the client name and address go through `pdfgen.LatexBreakable`, so a long
-   name or address wraps instead of printing over the number and date block.
-   The layout fixtures carry a long name and a full office address, and
+   instead of off its top edge. The party block is a top-aligned `tabularx`
+   whose value column is ragged-right `X` with hyphenation off (English
+   patterns would split Indonesian names), and the client name and address
+   go through `pdfgen.LatexBreakable`, so a long name or address wraps
+   instead of printing over the right-hand block. The layout fixtures carry
+   a long name and a full office address, and
    `TestLatexExports_LongPartyWraps` checks with `pdftotext -bbox` that they
    stay left of that block. `TestLatexExports_Clean` and `_MultiPage`
    fail on any overfull or underfull box, which is what keeps text from being
    cut. A cancelled invoice still downloads, marked DIBATALKAN beside its
    title, in its running header and as a page watermark (a kernel
    `shipout/background` hook, no extra package); a Pengganti prints
-   `Pengganti dari <no>` under its Invoice No. The export reads the one
-   detail row (`invoices.get_detail_by_id`), so a failed read is a 5xx, never
-   a PDF with a blank party; `TestLatexExports_InvoiceMarks` keeps both
-   marks on one clean A5 sheet.
+   `Pengganti dari <no>` at the top of its right-hand block. The export reads
+   the one detail row (`invoices.get_detail_by_id`), so a failed read is a
+   5xx, never a PDF with a blank party; `TestLatexExports_InvoiceMarks` keeps
+   both marks on one clean sheet with five products and shipping.
 9. Invoice tax figures are rounded per line, then summed to the header (matching
    DJP e-faktur), and `ppn_amount` is computed from the already-rounded DPP
    base. The quotation (`fn_line_dpp`, `fn_line_ppn`, stored by the functions
