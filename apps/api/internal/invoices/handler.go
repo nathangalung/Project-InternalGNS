@@ -313,7 +313,7 @@ func (h *Handler) proofUploaded(w http.ResponseWriter, r *http.Request, req Chan
 		return true
 	}
 	if h.proofs == nil {
-		httperr.Render(w, httperr.ServiceUnavailable("Penyimpanan berkas belum dikonfigurasi."))
+		httperr.Render(w, httperr.ServiceUnavailable("Berkas belum bisa disimpan saat ini. Hubungi administrator."))
 		return false
 	}
 	key := strings.TrimSpace(*req.PaymentProofKey)

@@ -177,7 +177,7 @@ func FromDBErr(err error) Error {
 		case db.SQLStateNotNullViolation:
 			return UnprocessableDetail("Ada isian wajib yang masih kosong. Lengkapi data lalu simpan kembali.", nil)
 		case db.SQLStateCheckViolation:
-			return UnprocessableDetail("Ada isian yang melanggar aturan validasi. Periksa nilai yang dimasukkan.", nil)
+			return UnprocessableDetail("Ada isian yang tidak sesuai. Periksa lagi isian Anda.", nil)
 		case db.SQLStateInvalidTextRepresentation:
 			return UnprocessableDetail("Format salah satu isian tidak sesuai. Periksa tanggal, angka, dan pilihan yang dipilih.", nil)
 		case db.SQLStateNumericOutOfRange:

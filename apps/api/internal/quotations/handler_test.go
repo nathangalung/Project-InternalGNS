@@ -295,7 +295,7 @@ func TestHandler_Update_DBRejects(t *testing.T) {
 	decodeBody(t, res, &e)
 	assert.Equal(t, http.StatusConflict, res.StatusCode)
 	assert.Equal(t, http.StatusConflict, e.Status)
-	assert.Equal(t, "Hanya quotation berstatus Draf yang dapat diubah; status saat ini Dikirim.", e.Detail)
+	assert.Equal(t, "Hanya quotation berstatus Draf yang dapat diubah. Status saat ini Dikirim.", e.Detail)
 }
 
 func TestHandler_ChangeStatus(t *testing.T) {
@@ -473,7 +473,7 @@ func TestHandler_QIR_LockedParentConflicts(t *testing.T) {
 			decodeBody(t, res, &e)
 			assert.Equal(t, http.StatusConflict, res.StatusCode)
 			assert.Equal(t, http.StatusConflict, e.Status)
-			assert.Contains(t, e.Detail, "status saat ini Dikirim")
+			assert.Contains(t, e.Detail, "Status saat ini Dikirim")
 			assert.Contains(t, e.Detail, "Hanya quotation berstatus Draf yang dapat diubah")
 		})
 	}
@@ -491,5 +491,5 @@ func TestHandler_QIR_UnknownParentNotFound(t *testing.T) {
 	decodeBody(t, res, &e)
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 	assert.Equal(t, http.StatusNotFound, e.Status)
-	assert.Contains(t, e.Detail, "Quotation 9999999 tidak ditemukan.")
+	assert.Contains(t, e.Detail, "Quotation tidak ditemukan. Muat ulang halaman.")
 }

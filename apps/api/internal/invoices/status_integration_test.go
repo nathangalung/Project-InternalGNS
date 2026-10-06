@@ -180,7 +180,7 @@ func TestChangeStatus_RepaidWithProofRefused(t *testing.T) {
 	assert.Equal(t, "P0012", sqlState(err))
 	e := httperr.FromDBErr(err)
 	assert.Equal(t, http.StatusUnprocessableEntity, e.Status)
-	assert.Equal(t, "Invoice sudah ditandai Dibayar. Muat ulang halaman; bukti pembayaran tidak tersimpan.", e.Detail)
+	assert.Equal(t, "Invoice sudah ditandai Dibayar. Muat ulang halaman. Bukti pembayaran tidak tersimpan.", e.Detail)
 	_, err = tx.Exec(ctx, "ROLLBACK TO SAVEPOINT repaid")
 	require.NoError(t, err)
 

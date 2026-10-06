@@ -145,9 +145,9 @@ func TestCoretaxXLSX_RefusesInvoicesWithoutNPWP(t *testing.T) {
 	rec := serve(coretaxRouter(t, tx, coretaxSettings, templatesRoot(t)), "/invoices/coretax.xlsx")
 	require.Equal(t, http.StatusUnprocessableEntity, rec.Code, rec.Body.String())
 	assert.Equal(t,
-		"Ekspor Coretax memerlukan NPWP 16 digit untuk pembeli Indonesia. "+
-			"Invoice memakai data klien saat invoice dibuat, jadi lengkapi NPWP klien, "+
-			"lalu batalkan dan terbitkan invoice pengganti untuk: "+numbers+".",
+		"Ekspor Coretax butuh NPWP 16 digit untuk pembeli Indonesia. "+
+			"Lengkapi NPWP klien, "+
+			"lalu batalkan dan terbitkan ulang invoice berikut: "+numbers+".",
 		problemDetail(t, rec))
 }
 

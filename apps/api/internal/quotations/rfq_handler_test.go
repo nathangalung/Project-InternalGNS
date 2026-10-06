@@ -93,7 +93,7 @@ func TestUploadRFQ_ProductCap(t *testing.T) {
 			name:   "one over the cap",
 			rows:   items.MaxMatchRows + 1,
 			status: http.StatusUnprocessableEntity,
-			detail: "Berkas berisi 501 baris produk; paling banyak 500 per unggahan. Bagi berkas lalu unggah ulang.",
+			detail: "Berkas berisi 501 baris produk, padahal paling banyak 500 per unggahan. Bagi berkas lalu unggah ulang.",
 		},
 	}
 	srv := rfqServer(t)

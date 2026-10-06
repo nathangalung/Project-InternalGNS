@@ -11,7 +11,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-const deliveredLockedMsg = "PO yang sudah dikirim hanya dapat diubah setelah invoicenya dibatalkan dan sebelum invoice pengganti diterbitkan."
+const deliveredLockedMsg = "PO yang sudah dikirim hanya bisa diubah jika invoicenya dibatalkan dan invoice pengganti belum diterbitkan."
 
 // Invoice states of a delivered PO.
 func cancelInvoice(t *testing.T, tx pgx.Tx, qID int64) {

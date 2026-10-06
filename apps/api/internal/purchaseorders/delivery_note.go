@@ -71,7 +71,7 @@ func (h *DeliveryNoteHandler) ExportPDF(w http.ResponseWriter, r *http.Request) 
 	dnNo, ok := issuedDeliveryNote(po)
 	if !ok {
 		httperr.Render(w, httperr.Conflict(
-			"Surat jalan baru terbit setelah pekerjaan PO dimulai (ON_PROGRESS)."))
+			"Surat jalan tersedia setelah status PO Dalam Progres."))
 		return
 	}
 

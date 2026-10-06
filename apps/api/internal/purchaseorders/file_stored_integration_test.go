@@ -59,7 +59,7 @@ func TestHandler_UpdateFile_ObjectMustExist(t *testing.T) {
 		{
 			name:   "storage not configured",
 			status: http.StatusServiceUnavailable,
-			detail: "Penyimpanan berkas belum dikonfigurasi.",
+			detail: "Berkas belum bisa disimpan saat ini. Hubungi administrator.",
 		},
 		{
 			name:   "never uploaded",

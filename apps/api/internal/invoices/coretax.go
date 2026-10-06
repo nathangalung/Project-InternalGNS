@@ -304,9 +304,8 @@ func invoiceBuyer(inv Invoice, c clients.Client) clients.Client {
 // Every invoice keeps the buyer it was created with, so the fix is the
 // client's NPWP and then a Pengganti, which copies the client again.
 func buyerIdentityMessage(invoiceNos []string) string {
-	return "Ekspor Coretax memerlukan NPWP 16 digit untuk pembeli Indonesia. " +
-		"Invoice memakai data klien saat invoice dibuat, jadi lengkapi NPWP klien, " +
-		"lalu batalkan dan terbitkan invoice pengganti untuk: " + strings.Join(invoiceNos, ", ") + "."
+	return "Ekspor Coretax butuh NPWP 16 digit untuk pembeli Indonesia. " +
+		"Lengkapi NPWP klien, lalu batalkan dan terbitkan ulang invoice berikut: " + strings.Join(invoiceNos, ", ") + "."
 }
 
 func strDeref(p *string) string {

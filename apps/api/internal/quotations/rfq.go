@@ -881,7 +881,7 @@ func (h *Handler) UploadRFQ(w http.ResponseWriter, r *http.Request) {
 	// The wizard matches the rows in one match-rows call.
 	if len(rows) > items.MaxMatchRows {
 		httperr.Render(w, httperr.UnprocessableDetail(fmt.Sprintf(
-			"Berkas berisi %d baris produk; paling banyak %d per unggahan. Bagi berkas lalu unggah ulang.",
+			"Berkas berisi %d baris produk, padahal paling banyak %d per unggahan. Bagi berkas lalu unggah ulang.",
 			len(rows), items.MaxMatchRows), nil))
 		return
 	}

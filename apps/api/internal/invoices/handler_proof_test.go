@@ -45,7 +45,7 @@ func TestHandler_ChangeStatus_ProofMustExist(t *testing.T) {
 			name:   "storage not configured",
 			key:    uploaded,
 			status: http.StatusServiceUnavailable,
-			detail: "Penyimpanan berkas belum dikonfigurasi.",
+			detail: "Berkas belum bisa disimpan saat ini. Hubungi administrator.",
 		},
 		{
 			name:   "the attachment folder",

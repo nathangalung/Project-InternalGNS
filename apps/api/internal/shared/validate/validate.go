@@ -9,7 +9,7 @@ import "regexp"
 
 // Field messages, shown inline.
 const (
-	PhoneMessage = "Nomor telepon harus 9–12 digit angka."
+	PhoneMessage = "Nomor telepon harus 9 sampai 12 digit angka."
 	EmailMessage = "Format email tidak valid."
 )
 

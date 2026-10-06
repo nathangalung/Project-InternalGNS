@@ -179,7 +179,7 @@ func TestRepo_UpdateItems_DeliveredIsLocked(t *testing.T) {
 	}, seedUserID, &rowVersion)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, purchaseorders.ErrLocked)
-	assert.Equal(t, "PO yang sudah dikirim hanya dapat diubah setelah invoicenya dibatalkan dan sebelum invoice pengganti diterbitkan.", err.Error())
+	assert.Equal(t, "PO yang sudah dikirim hanya bisa diubah jika invoicenya dibatalkan dan invoice pengganti belum diterbitkan.", err.Error())
 }
 
 // Out-of-range discount is 422.

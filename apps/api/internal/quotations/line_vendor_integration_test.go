@@ -13,7 +13,7 @@ import (
 // Another product's link passed the send gate and the PO then dropped
 // the vendor; every write path goes through fn_prepare_quotation_lines.
 func TestRepo_LineVendorMustMatchProduct(t *testing.T) {
-	const want = "Vendor yang dipilih bukan pemasok produk ini. Pilih ulang vendor."
+	const want = "Vendor ini tidak menyediakan produk tersebut. Pilih vendor lain."
 	mismatch := func(other int64) quotations.CreateItem {
 		line := offered()
 		line.OfferedItemID = &other

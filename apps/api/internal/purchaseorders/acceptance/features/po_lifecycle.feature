@@ -62,9 +62,9 @@ Feature: Purchase order lifecycle
       |           | 1024     | po/{po}/1-po.pdf    | fileName  | Nama berkas wajib diisi     |
       | virus.exe | 1024     | po/{po}/1-po.pdf    | fileName  | Jenis berkas tidak didukung |
       | po        | 1024     | po/{po}/1-po.pdf    | fileName  | Jenis berkas tidak didukung |
-      | po.pdf    | -1       | po/{po}/1-po.pdf    | fileSize  | Ukuran berkas               |
-      | po.pdf    | 0        | po/{po}/1-po.pdf    | fileSize  | Ukuran berkas               |
-      | po.pdf    | 20971521 | po/{po}/1-po.pdf    | fileSize  | Ukuran berkas               |
+      | po.pdf    | -1       | po/{po}/1-po.pdf    | fileSize  | Berkas kosong atau lebih    |
+      | po.pdf    | 0        | po/{po}/1-po.pdf    | fileSize  | Berkas kosong atau lebih    |
+      | po.pdf    | 20971521 | po/{po}/1-po.pdf    | fileSize  | Berkas kosong atau lebih    |
       | po.pdf    | 1024     |                     | objectKey | Berkas PO wajib diunggah    |
       | po.pdf    | 1024     | po/{po}/1-virus.exe | objectKey | Berkas tidak dikenali       |
       | po.pdf    | 1024     | ../../etc/x         | objectKey | Berkas tidak dikenali       |
@@ -99,7 +99,7 @@ Feature: Purchase order lifecycle
     Given an accepted quotation
     And the PO has reached "DELIVERED"
     When the user edits PO items with discount "0" and selling price "100000"
-    Then the PO is refused as locked with "PO yang sudah dikirim hanya dapat diubah setelah invoicenya dibatalkan dan sebelum invoice pengganti diterbitkan."
+    Then the PO is refused as locked with "PO yang sudah dikirim hanya bisa diubah jika invoicenya dibatalkan dan invoice pengganti belum diterbitkan."
 
   Scenario: A shipping charge without an address is kept
     Given an accepted quotation

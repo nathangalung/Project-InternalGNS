@@ -299,7 +299,7 @@ func TestHandler_Send_UnknownQuotation(t *testing.T) {
 	res := doJSON(t, srv, http.MethodPost, "/quotations/9999999/send", nil)
 	e := problemOf(t, res)
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
-	assert.Equal(t, "Quotation 9999999 tidak ditemukan.", e.Detail)
+	assert.Equal(t, "Quotation tidak ditemukan. Muat ulang halaman.", e.Detail)
 }
 
 // Send notes reach the history.

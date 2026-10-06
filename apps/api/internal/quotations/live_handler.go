@@ -62,7 +62,7 @@ func (h *Handler) Lock(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if strings.TrimSpace(req.Part) == "" {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"part": "wajib diisi"}))
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"part": "Bagian quotation wajib dipilih."}))
 		return
 	}
 	until, err := h.repo.Lock(r.Context(), id, req.Part, deps.CurrentUserID(r.Context()))
@@ -104,7 +104,7 @@ func (h *Handler) AddLines(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(req.Items) == 0 {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"items": "minimal satu baris"}))
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"items": "Tambahkan minimal satu baris produk."}))
 		return
 	}
 	if fields := validateLines(req.Items); fields != nil {
