@@ -9,7 +9,6 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/clients"
 	"github.com/nathangalung/internalgns/apps/api/internal/pdfgen"
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
-	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -24,8 +23,7 @@ func TestDeliveryNote_PartyBreaksLongTokens(t *testing.T) {
 	require.NoError(t, err)
 	store := testutil.Store(t)
 	h := purchaseorders.NewDeliveryNoteHandler(
-		purchaseorders.NewRepo(tx, store), clients.NewRepo(tx, store),
-		quotations.NewRepo(tx, store), pdfgen.NewRenderer(t.TempDir()),
+		purchaseorders.NewRepo(tx, store), clients.NewRepo(tx, store), pdfgen.NewRenderer(t.TempDir()),
 	)
 
 	gotName, gotAddr, err := h.PDFPartyForTest(ctx, purchaseorders.PurchaseOrder{CompanyClientID: seedCompanyID, CompanyName: name})

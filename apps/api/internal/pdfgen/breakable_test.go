@@ -32,20 +32,15 @@ func TestLatexBreakable(t *testing.T) {
 // Q-16: long tokens wrap.
 func TestLatexExports_LongTokenWraps(t *testing.T) {
 	long := "SUPERLONGUNBROKENPARTNUMBERWITHOUTANYSPACESXYZ1234567890ABCDEFGH"
-	for _, a4 := range []bool{false, true} {
-		items := sampleItems(2)
-		// Priced rows only: an A4 No Offer row is underfull on its own.
-		items[1]["HasOffer"] = true
-		items[0]["Request"] = LatexBreakable(long)
-		items[0]["Offer"] = LatexBreakable(long + " (" + long + ")")
-		d := quotationData(items)
-		d["UseA4"] = a4
-		log := compileLog(t, "quotation/Quotation.tex.tmpl", d)
-		if !producedOutput(log) {
-			t.Skip("xelatex produced no output")
-		}
-		if over, under, warn := badBoxes(log); over != 0 || under != 0 || warn != 0 {
-			t.Errorf("A4=%v: overfull=%d underfull=%d warnings=%d, want all 0", a4, over, under, warn)
-		}
+	// The second row is No Offer, whose filled price cells stay clean too.
+	items := sampleItems(2)
+	items[0]["Request"] = LatexBreakable(long)
+	items[0]["Offer"] = LatexBreakable(long + " (" + long + ")")
+	log := compileLog(t, "quotation/Quotation.tex.tmpl", quotationData(items))
+	if !producedOutput(log) {
+		t.Skip("xelatex produced no output")
+	}
+	if over, under, warn := badBoxes(log); over != 0 || under != 0 || warn != 0 {
+		t.Errorf("overfull=%d underfull=%d warnings=%d, want all 0", over, under, warn)
 	}
 }

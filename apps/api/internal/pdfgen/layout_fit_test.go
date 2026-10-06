@@ -8,18 +8,17 @@ import (
 )
 
 // Void and Pengganti marks fit.
-// A cancelled Pengganti carries both marks; the tightest A5 sheet still
-// holds five products and shipping on one clean page, A4 and long tables
-// stay clean, and the text layer carries both marks.
+// A cancelled Pengganti carries both marks; one A4 sheet still holds five
+// products and shipping on one clean page, long tables stay clean, and the
+// text layer carries both marks.
 func TestLatexExports_InvoiceMarks(t *testing.T) {
 	withShipping := sampleItems(5)
 	withShipping = append(withShipping, map[string]any{
 		"No": 6, "Qty": "1", "Unit": "", "Name": "Pengiriman", "Description": "Pelabuhan Tanjung Priok",
 		"UnitPrice": "Rp~50.000", "Amount": "Rp~50.000",
 	})
-	marked := func(items []map[string]any, a4 bool) map[string]any {
+	marked := func(items []map[string]any) map[string]any {
 		d := invoiceData(items)
-		d["UseA4"] = a4
 		d["Cancelled"] = true
 		d["ReplacesInvoiceNo"] = "INV-26400393 1/GNS/IV/2026"
 		return d
@@ -29,9 +28,9 @@ func TestLatexExports_InvoiceMarks(t *testing.T) {
 		data      map[string]any
 		wantPages int
 	}{
-		{"A5 five products and shipping", marked(withShipping, false), 1},
-		{"A4", marked(sampleItems(7), true), 0},
-		{"A4 multi-page", marked(sampleItems(60), true), 0},
+		{"five products and shipping", marked(withShipping), 1},
+		{"seven products", marked(sampleItems(7)), 1},
+		{"multi-page", marked(sampleItems(60)), 0},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -67,10 +66,10 @@ func TestLatexExports_InvoiceMarks(t *testing.T) {
 	}
 }
 
-// A5 invoice fits one sheet.
-// UseA4 flips above five products, so an A5 invoice holds up to five
-// product lines plus a shipping line, with the Diskon row printed.
-func TestLatexExports_InvoiceA5OnePage(t *testing.T) {
+// A short invoice fits one sheet.
+// Five product lines plus a shipping line, with the Diskon row printed,
+// stay on one A4 sheet.
+func TestLatexExports_InvoiceOnePage(t *testing.T) {
 	withShipping := sampleItems(5)
 	withShipping = append(withShipping, map[string]any{
 		"No": 6, "Qty": "1", "Unit": "", "Name": "Pengiriman", "Description": "Pelabuhan Tanjung Priok",

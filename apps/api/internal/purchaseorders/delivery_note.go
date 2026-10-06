@@ -13,7 +13,6 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/internal/clients"
 	"github.com/nathangalung/internalgns/apps/api/internal/pdfgen"
-	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 )
@@ -21,19 +20,17 @@ import (
 // DeliveryNoteHandler renders delivery note PDFs.
 // The note mirrors its PO.
 type DeliveryNoteHandler struct {
-	repo       *Repo
-	clients    *clients.Repo
-	quotations *quotations.Repo
-	renderer   *pdfgen.Renderer
+	repo     *Repo
+	clients  *clients.Repo
+	renderer *pdfgen.Renderer
 }
 
 func NewDeliveryNoteHandler(
 	repo *Repo,
 	c *clients.Repo,
-	q *quotations.Repo,
 	r *pdfgen.Renderer,
 ) *DeliveryNoteHandler {
-	return &DeliveryNoteHandler{repo: repo, clients: c, quotations: q, renderer: r}
+	return &DeliveryNoteHandler{repo: repo, clients: c, renderer: r}
 }
 
 type dnItem struct {
@@ -50,8 +47,6 @@ type dnData struct {
 	PODate         string
 	CompanyName    string
 	CompanyAddress string
-	AttnName       string
-	VesselName     string
 	DateLine       string
 	Items          []dnItem
 }
@@ -117,22 +112,12 @@ func issuedDeliveryNote(po PurchaseOrder) (string, bool) {
 }
 
 // buildData maps the note.
-// A failed client or quotation read is an error, never a note with a blank
-// address, Attn or vessel; only a missing row prints blank.
+// A failed client read is an error, never a note with a blank address;
+// only a missing row prints blank.
 func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, dnNo string, items []PurchaseOrderItem) (dnData, error) {
 	client, err := h.clients.GetByID(ctx, po.CompanyClientID)
 	if err != nil && !errors.Is(err, clients.ErrNotFound) {
 		return dnData{}, fmt.Errorf("delivery note client: %w", err)
-	}
-
-	attn, vessel := "", ""
-	q, err := h.quotations.GetDetail(ctx, po.QuotationID)
-	switch {
-	case errors.Is(err, quotations.ErrNotFound):
-	case err != nil:
-		return dnData{}, fmt.Errorf("delivery note quotation: %w", err)
-	default:
-		attn, vessel = pdfgen.StrDeref(q.ContactName), pdfgen.StrDeref(q.VesselName)
 	}
 
 	return dnData{
@@ -141,8 +126,6 @@ func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, d
 		PODate:         po.PoDate.In(tz.Jakarta()).Format("2 January 2006"),
 		CompanyName:    pdfgen.LatexBreakable(po.CompanyName),
 		CompanyAddress: pdfgen.LatexBreakable(pdfgen.StrDeref(client.Address)),
-		AttnName:       pdfgen.LatexEscape(attn),
-		VesselName:     pdfgen.LatexEscape(vessel),
 		DateLine:       pdfgen.JakartaDateLine(deliveryNoteDate(po).In(tz.Jakarta())),
 		Items:          deliveryNoteItems(items),
 	}, nil

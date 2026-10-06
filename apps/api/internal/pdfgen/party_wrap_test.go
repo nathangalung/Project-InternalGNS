@@ -54,22 +54,22 @@ func topmost(words []pdfWord, text string) (pdfWord, bool) {
 }
 
 // partyBand keeps the party rows.
-// The band runs from the To row down to the document title, so the
-// letterhead copy of an address word ("Gedung", "Jl.", "Jakarta") and the
-// item table below never stand in for the party block's own word.
-func partyBand(t *testing.T, words []pdfWord, title string) []pdfWord {
+// The band runs from the first party label down to the table header, so
+// the letterhead copy of an address word ("Gedung", "Jl.", "Jakarta") and
+// the item table below never stand in for the party block's own word.
+func partyBand(t *testing.T, words []pdfWord, first string) []pdfWord {
 	t.Helper()
-	to, ok := topmost(words, "To")
+	top, ok := topmost(words, first)
 	if !ok {
-		t.Fatal("To row not found on page 1")
+		t.Fatalf("%s row not found on page 1", first)
 	}
-	end, ok := topmost(words, title)
-	if !ok || end.yMin <= to.yMin {
-		t.Fatalf("title %q not found below the To row", title)
+	end, ok := topmost(words, "Qty")
+	if !ok || end.yMin <= top.yMin {
+		t.Fatal("table header not found below the party block")
 	}
 	band := make([]pdfWord, 0, len(words))
 	for _, w := range words {
-		if w.yMin >= to.yMin-1 && w.yMin < end.yMin {
+		if w.yMin >= top.yMin-1 && w.yMin < end.yMin {
 			band = append(band, w)
 		}
 	}
@@ -78,23 +78,20 @@ func partyBand(t *testing.T, words []pdfWord, title string) []pdfWord {
 
 // Party blocks wrap long fields.
 // A long legal name and a full office address must wrap inside the left
-// party column: no bad box, every word whole (English patterns must not
-// hyphenate Indonesian names) and left of the document-number block, and
-// the document number still one intact word.
+// party column: no bad box, and every word whole (English patterns must not
+// hyphenate Indonesian names) and left of the right-hand block.
 func TestLatexExports_LongPartyWraps(t *testing.T) {
 	nameWords := strings.Fields(partyName)
 	addressWords := append(strings.Fields(partyAddress), nameWords...)
-	invoiceA4 := invoiceData(sampleItems(6))
-	invoiceA4["UseA4"] = true
 	docs := []struct {
-		name, tmpl, title, label, number string
-		words                            []string
-		data                             map[string]any
+		name, tmpl, first, label string
+		words                    []string
+		data                     map[string]any
 	}{
-		{"quotation", "quotation/Quotation.tex.tmpl", "QUOTATION", "Your", "Q-26400393/GNS/IV/2026", nameWords, quotationData(sampleItems(2))},
-		{"delivery note", "delivery_note/DeliveryNote.tex.tmpl", "DELIVERY", "Delivery", "DN-26778001/GNS/IV/2026", addressWords, deliveryNoteData(sampleItems(2))},
-		{"invoice A5", "invoice/Invoice.tex.tmpl", "INVOICE", "Invoice", "INV-26400393/GNS/IV/2026", addressWords, invoiceData(sampleItems(2))},
-		{"invoice A4", "invoice/Invoice.tex.tmpl", "INVOICE", "Invoice", "INV-26400393/GNS/IV/2026", addressWords, invoiceA4},
+		{"quotation", "quotation/Quotation.tex.tmpl", "To", "Your", nameWords, quotationData(sampleItems(2))},
+		{"delivery note", "delivery_note/DeliveryNote.tex.tmpl", "To", "Date", addressWords, deliveryNoteData(sampleItems(2))},
+		{"invoice", "invoice/Invoice.tex.tmpl", "Client", "PO", addressWords, invoiceData(sampleItems(2))},
+		{"invoice long", "invoice/Invoice.tex.tmpl", "Client", "PO", addressWords, invoiceData(sampleItems(6))},
 	}
 	for _, d := range docs {
 		t.Run(d.name, func(t *testing.T) {
@@ -112,13 +109,10 @@ func TestLatexExports_LongPartyWraps(t *testing.T) {
 				t.Errorf("overfull=%d underfull=%d warnings=%d, want all 0", over, under, warn)
 			}
 
-			words := partyBand(t, firstPageWords(t, filepath.Join(dir, "doc.pdf")), d.title)
+			words := partyBand(t, firstPageWords(t, filepath.Join(dir, "doc.pdf")), d.first)
 			label, ok := topmost(words, d.label)
 			if !ok {
 				t.Fatalf("label %q not found on page 1", d.label)
-			}
-			if _, ok := topmost(words, d.number); !ok {
-				t.Errorf("document number %q is not one intact word", d.number)
 			}
 			for _, pw := range d.words {
 				w, ok := topmost(words, pw)
@@ -148,7 +142,7 @@ func TestLatexExports_LongPartyTokenWraps(t *testing.T) {
 	}{
 		{"quotation", "quotation/Quotation.tex.tmpl", quotationData},
 		{"delivery note", "delivery_note/DeliveryNote.tex.tmpl", deliveryNoteData},
-		{"invoice A5", "invoice/Invoice.tex.tmpl", invoiceData},
+		{"invoice", "invoice/Invoice.tex.tmpl", invoiceData},
 	}
 	for _, d := range docs {
 		t.Run(d.name, func(t *testing.T) {

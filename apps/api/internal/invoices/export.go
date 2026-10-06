@@ -62,7 +62,6 @@ type exportData struct {
 	BankAccountName   string
 	DateLine          string
 	SignerName        string
-	UseA4             bool
 }
 
 func (h *ExportHandler) ExportPDF(w http.ResponseWriter, r *http.Request) {
@@ -119,7 +118,6 @@ func (h *ExportHandler) buildData(det InvoiceDetail, items []InvoiceItem) export
 
 	expItems := make([]exportItem, 0, len(items))
 	totalProdukStr := "0"
-	productCount := 0
 	for i, it := range items {
 		unit := ""
 		if it.UnitCode != nil {
@@ -135,9 +133,6 @@ func (h *ExportHandler) buildData(det InvoiceDetail, items []InvoiceItem) export
 		// HARGA TOTAL spans every line, shipping included, so that
 		// TotalProduk - Diskon lands exactly on DPP.
 		totalProdukStr = pdfgen.BigAdd(totalProdukStr, amt)
-		if it.LineType == "product" {
-			productCount++
-		}
 		expItems = append(expItems, exportItem{
 			No:          i + 1,
 			Qty:         pdfgen.FormatQty(it.Qty),
@@ -179,6 +174,5 @@ func (h *ExportHandler) buildData(det InvoiceDetail, items []InvoiceItem) export
 		BankAccountName:   pdfgen.LatexEscape(h.settings.BankAccountNm),
 		DateLine:          pdfgen.JakartaDateLine(det.InvoiceDate.In(tz.Jakarta())),
 		SignerName:        pdfgen.LatexEscape(h.settings.SignerName),
-		UseA4:             productCount > 5,
 	}
 }
