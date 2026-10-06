@@ -89,7 +89,7 @@ export default function CompletenessModal({
                     {/* A deactivated narahubung is re-picked on the quotation. */}
                     {gap.code === "contact_inactive" && (
                       <>
-                        {" — "}
+                        {": "}
                         <Link
                           to="/quotations/$id"
                           params={{ id: String(quotationId) }}

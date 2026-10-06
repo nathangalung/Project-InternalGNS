@@ -221,7 +221,7 @@ export default function ProductGallery({ product, canWrite }: ProductGalleryProp
         >
           <p className="m-0 pb-4 text-sm text-[#4A4455]">
             {image?.isCover
-              ? `Foto utama ${product.name} akan dihapus; foto berikutnya menjadi foto utama.`
+              ? `Foto utama ${product.name} akan dihapus. Foto berikutnya menjadi foto utama.`
               : `Foto ini akan dihapus dari galeri ${product.name}.`}
           </p>
         </Modal>

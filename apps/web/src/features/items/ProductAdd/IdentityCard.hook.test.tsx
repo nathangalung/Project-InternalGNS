@@ -103,7 +103,7 @@ describe("IdentityCard pickers", () => {
     const request = field("Kode IMPA/Nama Produk Request")
     await type(request, "Permintaan khusus")
     expect(document.body.textContent).toContain(
-      "Tidak ada rekomendasi — input akan disimpan apa adanya.",
+      "Tidak ada yang cocok di katalog. Teks ini disimpan apa adanya.",
     )
     await press("Escape", request)
     expect(form().requestedKodeImpaNama).toBe("Permintaan khusus")

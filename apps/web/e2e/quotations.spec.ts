@@ -389,7 +389,7 @@ test.describe("quotation wizard import and requests", () => {
     })
     await expect(
       page.getByText(
-        "2 produk diimport (1 cocok katalog, 1 produk baru). 0 terisi otomatis; 2 perlu vendor dan harga sebelum dikirim.",
+        "2 produk diimpor (1 cocok dengan katalog, 1 produk baru). 0 terisi otomatis. 2 perlu vendor dan harga sebelum dikirim.",
       ),
     ).toBeVisible()
     await seed.adopt("item", fresh)
@@ -434,7 +434,7 @@ test.describe("quotation wizard import and requests", () => {
     })
     await expect(
       page.getByText(
-        "2 produk diimport (1 cocok katalog, 1 produk baru). 0 terisi otomatis; 2 perlu vendor dan harga sebelum dikirim.",
+        "2 produk diimpor (1 cocok dengan katalog, 1 produk baru). 0 terisi otomatis. 2 perlu vendor dan harga sebelum dikirim.",
       ),
     ).toBeVisible()
     await seed.adopt("item", fresh)
@@ -450,7 +450,7 @@ test.describe("quotation wizard import and requests", () => {
       mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       buffer: Buffer.from("bukan workbook"),
     })
-    await expect(page.getByText(/Gagal memproses file: Format berkas tidak didukung/)).toBeVisible()
+    await expect(page.getByText(/Gagal membaca berkas: Format berkas tidak didukung/)).toBeVisible()
 
     // More products than one match call takes is refused before matching.
     await input.setInputFiles({
@@ -460,7 +460,7 @@ test.describe("quotation wizard import and requests", () => {
     })
     await expect(
       page.getByText(
-        "Gagal memproses file: Berkas berisi 501 baris produk; paling banyak 500 per unggahan. Bagi berkas lalu unggah ulang.",
+        "Gagal membaca berkas: Berkas berisi 501 baris produk, padahal paling banyak 500 per unggahan. Bagi berkas lalu unggah ulang.",
       ),
     ).toBeVisible()
   })
@@ -499,7 +499,7 @@ test.describe("quotation wizard import and requests", () => {
     })
     await expect(
       page.getByText(
-        "2 produk diimport (1 cocok katalog, 1 produk baru). 1 terisi otomatis; 1 perlu vendor dan harga sebelum dikirim. 1 produk perlu satuan yang dikenal; pilih lewat tombol edit.",
+        "2 produk diimpor (1 cocok dengan katalog, 1 produk baru). 1 terisi otomatis. 1 perlu vendor dan harga sebelum dikirim. 1 produk perlu satuan yang dikenal. Pilih satuannya lewat tombol Ubah.",
       ),
     ).toBeVisible()
     await seed.adopt("item", fresh)
@@ -514,8 +514,8 @@ test.describe("quotation wizard import and requests", () => {
     ).toBeVisible()
 
     // A known unit is the one thing a draft cannot do without.
-    await page.getByRole("button", { name: "Edit produk 2" }).click()
-    const product = page.getByRole("dialog", { name: "Edit Produk Quotation" })
+    await page.getByRole("button", { name: "Ubah produk 2" }).click()
+    const product = page.getByRole("dialog", { name: "Ubah Produk Quotation" })
     await product.getByRole("combobox", { name: "Satuan *" }).click()
     await page.getByRole("option", { name: /^PCS/ }).click()
     await product.getByRole("button", { name: "Simpan Perubahan" }).click()
@@ -795,7 +795,7 @@ test.describe("quotation status", () => {
     await expect(page.getByRole("button", { name: "Lanjut" })).toBeDisabled()
 
     await page.getByLabel("Nomor HP").fill("81355500099")
-    await page.getByRole("button", { name: "Simpan Kontak" }).click()
+    await page.getByRole("button", { name: "Simpan Narahubung" }).click()
     await expect(contact).toContainText("81355500099")
     await expect(page.getByRole("button", { name: "Lanjut" })).toBeEnabled()
     const [saved] = (
@@ -925,7 +925,7 @@ test.describe("quotation status", () => {
     await dialog.getByRole("button", { name: "Buat Revisi" }).click()
 
     await expect(page).toHaveURL(/\/quotations\/\d+\/edit$/)
-    await expect(page.getByRole("heading", { name: "Edit Quotation" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Ubah Quotation" })).toBeVisible()
     const draftId = idFrom(page.url())
     seed.track("quotation", draftId)
     expect(draftId).not.toBe(q.id)

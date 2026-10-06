@@ -124,7 +124,7 @@ export default function Step2Product({
       // Stays up: it says which lines still need work.
       setImportMsg({ text: importSummary(built, resp.rows, unknownUnits), ok: true })
     } catch (err) {
-      setImportMsg({ text: `Gagal memproses file: ${(err as Error).message}`, ok: false })
+      setImportMsg({ text: `Gagal membaca berkas: ${(err as Error).message}`, ok: false })
     } finally {
       setImporting(false)
     }
@@ -265,7 +265,7 @@ export default function Step2Product({
               rowClassName="px-4"
             />
             <span className="text-xs font-medium text-[#6B7280]">
-              Menampilkan {totalProds === 0 ? 0 : start + 1}–
+              Menampilkan {totalProds === 0 ? 0 : start + 1}-
               {Math.min(start + prodPageSize, totalProds)} dari {totalProds} produk
             </span>
           </div>
@@ -364,8 +364,8 @@ export default function Step2Product({
                           onClick={() => openEditor(p)}
                           disabled={Boolean(editor)}
                           className={`${cardIconBtn} text-primary-700`}
-                          title="Edit Produk"
-                          aria-label={`Edit produk ${globalIndex}`}
+                          title="Ubah Produk"
+                          aria-label={`Ubah produk ${globalIndex}`}
                         >
                           <svg
                             aria-hidden="true"

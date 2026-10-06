@@ -39,7 +39,7 @@ export default function ProductPhoto({ product, canWrite, children }: ProductPho
     if (files.length === 0) return
     const { take, skipped } = filesToAdd(files, have, max)
     if (skipped > 0)
-      toast.info(`Maksimal ${max} foto per produk; ${skipped} foto tidak ditambahkan.`)
+      toast.info(`Maksimal ${max} foto per produk. ${skipped} foto tidak ditambahkan.`)
     if (take.length > 0) add.mutate({ id: product.id, files: take })
   }
 

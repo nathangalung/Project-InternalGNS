@@ -220,7 +220,7 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
               <tr className={ui.theadRow}>
                 <th className={`${ui.thCenter} w-[110px]`}>Kode IMPA</th>
                 <th className={`${ui.thCenter} w-auto`}>Nama Produk</th>
-                <th className={`${ui.thCenter} w-[140px]`}>Unit</th>
+                <th className={`${ui.thCenter} w-[140px]`}>Satuan</th>
                 <th className={`${ui.thCenter} w-[160px]`}>Status</th>
                 <th className={`${ui.thCenter} w-[80px]`}>Aksi</th>
               </tr>

@@ -89,6 +89,6 @@ export function validateAsset(kind: AssetKind, file: File): void {
   }
   // Treat empty MIME as octet-stream; rely on extension allowlist.
   if (file.type && !policy.mimeTypes.has(file.type)) {
-    throw new Error(`Tipe file ${policy.label} tidak didukung.`)
+    throw new Error(`Jenis berkas ${policy.label} tidak didukung.`)
   }
 }

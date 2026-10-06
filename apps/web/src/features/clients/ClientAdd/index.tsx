@@ -144,7 +144,7 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
       </fieldset>
       {isClientSaved && (
         <p role="status" className="text-sm text-dark-600">
-          Klien sudah tersimpan tanpa kontak. Perbaiki kontak, lalu simpan lagi.
+          Klien sudah tersimpan tanpa narahubung. Perbaiki data narahubung, lalu simpan lagi.
         </p>
       )}
       <ContactCard

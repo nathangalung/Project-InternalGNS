@@ -165,9 +165,9 @@ test("a logo over 2 MB is refused and a small one is saved", async ({ page, seed
 })
 
 // Phone takes 9-12 digits.
-const PHONE_ERROR = "Nomor telepon harus 9–12 digit angka."
+const PHONE_ERROR = "Nomor telepon harus 9 sampai 12 digit angka."
 // Taken contact email copy.
-const EMAIL_TAKEN = "Email ini sudah dipakai kontak lain di klien ini."
+const EMAIL_TAKEN = "Email ini sudah dipakai narahubung lain di klien ini."
 
 test("a refused Tambah Klien is reported once, in the form", async ({ page, seed }) => {
   const detail = "Nomor klien sudah digunakan."
@@ -331,7 +331,7 @@ test("the KPI cards show a dash, not zero, without a summary", async ({ page }) 
   )
   await page.goto("/clients")
   const card = page.getByText("Total Klien", { exact: true }).locator("xpath=..")
-  await expect(card).toContainText("–")
+  await expect(card).toContainText("-")
   await expect(card).not.toContainText("0")
 })
 

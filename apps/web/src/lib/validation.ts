@@ -5,7 +5,7 @@
 // so change the Go rule and that table first. The address rule has no server
 // counterpart and is a form rule only.
 
-export const PHONE_ERROR = "Nomor telepon harus 9–12 digit angka."
+export const PHONE_ERROR = "Nomor telepon harus 9 sampai 12 digit angka."
 
 export const EMAIL_ERROR = "Format email tidak valid."
 

@@ -4,7 +4,7 @@ import { JAKARTA_TZ } from "@/lib/date-range"
 //
 // KPI cards show it until their summary arrives, or for good when it fails,
 // so zero is never shown as data.
-export const PENDING_FIGURE = "–"
+export const PENDING_FIGURE = "-"
 
 // NaN-safe string/null → number coercion.
 export function toNum(v: string | number | null | undefined): number {

@@ -72,7 +72,7 @@ export default function Step1Client({
           <p className={qe.sectionDesc}>
             {lockClient
               ? "Klien tidak dapat diganti setelah quotation dibuat. Narahubung masih dapat diubah."
-              : "Tentukan mitra bisnis untuk penawaran harga ini."}
+              : "Pilih klien untuk quotation ini."}
           </p>
         </div>
         {!lockClient && (

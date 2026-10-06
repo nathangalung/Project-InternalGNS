@@ -117,7 +117,7 @@ export function useUpdateContact() {
     },
     // A taken email sits on the form's email input.
     onError: (err) => {
-      if (!contactEmailError(err)) toast.error(errorMessage(err, "Gagal memperbarui kontak."))
+      if (!contactEmailError(err)) toast.error(errorMessage(err, "Gagal memperbarui narahubung."))
     },
   })
 }
@@ -153,7 +153,7 @@ export function useDeleteContact() {
       // Removing the main contact promotes the next one.
       void qc.invalidateQueries({ queryKey: queryKeys.clients.detail(companyId) })
     },
-    onError: (err) => toast.error(errorMessage(err, "Gagal menghapus kontak.")),
+    onError: (err) => toast.error(errorMessage(err, "Gagal menonaktifkan narahubung.")),
   })
 }
 

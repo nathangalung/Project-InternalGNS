@@ -407,11 +407,11 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
                 &rsaquo;
               </span>
               <span className={ui.breadcrumbCurrent} aria-current="page">
-                Edit
+                Ubah
               </span>
             </nav>
             <div className={qe.titleRow}>
-              <h1 className={qe.title}>Edit Quotation {detail.quotationNo}</h1>
+              <h1 className={qe.title}>Ubah Quotation {detail.quotationNo}</h1>
             </div>
           </div>
 

@@ -43,7 +43,7 @@ export function useDashboardExport() {
     try {
       await dashboardApi.exportXlsx(year)
     } catch {
-      toast.error("Gagal mengunduh file Excel dashboard. Coba lagi.")
+      toast.error("Gagal mengunduh Excel dashboard. Coba lagi.")
     } finally {
       setExporting(false)
     }

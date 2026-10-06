@@ -61,7 +61,7 @@ describe("useDashboardExport", () => {
     m.exportXlsx.mockRejectedValue(new Error("Forbidden"))
     const { result } = renderQueryHook(() => useDashboardExport())
     await act(() => result.current.exportXlsx(2026))
-    expect(toast.error).toHaveBeenCalledWith("Gagal mengunduh file Excel dashboard. Coba lagi.")
+    expect(toast.error).toHaveBeenCalledWith("Gagal mengunduh Excel dashboard. Coba lagi.")
     expect(result.current.exporting).toBe(false)
   })
 })

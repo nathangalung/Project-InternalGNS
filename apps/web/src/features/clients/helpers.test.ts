@@ -44,9 +44,9 @@ describe("clientKpis", () => {
   it("shows a dash without a base or data", () => {
     expect(clientKpis(undefined)).toEqual({
       total: undefined,
-      growth: "–",
+      growth: "-",
       newThisMonth: undefined,
-      activeShare: "–",
+      activeShare: "-",
     })
     const k = clientKpis({
       total: 3,

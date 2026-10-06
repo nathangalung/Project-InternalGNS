@@ -46,9 +46,9 @@ test("a malformed email is caught before any request", async ({ page }) => {
   page.on("request", (req) => {
     if (req.url().endsWith("/auth/login")) sent = true
   })
-  await page.getByLabel("Surel").fill("bukan-email")
+  await page.getByLabel("Email").fill("bukan-email")
   await page.getByLabel("Kata Sandi", { exact: true }).fill("Sembarang1!")
-  await expect(page.getByText("Format surel tidak valid")).toBeVisible()
+  await expect(page.getByText("Format email tidak valid.")).toBeVisible()
   await expect(page.getByRole("button", { name: "Masuk" })).toBeDisabled()
   expect(sent).toBe(false)
 })
@@ -60,8 +60,8 @@ test("a malformed email is caught before any request", async ({ page }) => {
 // send it and show the server's answer.
 test("an address the write rule refuses still reaches the server", async ({ page }) => {
   const email = `${uniqueTag().toLowerCase()}@x.c`
-  await page.getByLabel("Surel").fill(email)
-  await expect(page.getByText("Format surel tidak valid")).toHaveCount(0)
+  await page.getByLabel("Email").fill(email)
+  await expect(page.getByText("Format email tidak valid.")).toHaveCount(0)
   expect((await submitLogin(page, email, "Sembarang1!")).status()).toBe(401)
   await expect(page.getByText(WRONG)).toBeVisible()
 })

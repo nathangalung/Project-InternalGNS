@@ -10,7 +10,7 @@ const columns = [
   { label: "Klien" },
   { label: "Narahubung" },
   { label: "Vendor" },
-  { label: "Qty" },
+  { label: "Jumlah" },
   { label: "Harga Beli" },
   { label: "Harga Jual" },
   { label: "Status" },

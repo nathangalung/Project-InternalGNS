@@ -36,7 +36,7 @@ export default function ContactCard({
           id={`${id}-name`}
           className={inputCls}
           type="text"
-          placeholder="Nama lengkap kontak"
+          placeholder="Nama lengkap narahubung"
           value={form.namaKontak}
           onChange={(e) => onChange("namaKontak", e.target.value)}
           disabled={!isCompanyReady}

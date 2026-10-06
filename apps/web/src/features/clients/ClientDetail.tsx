@@ -885,7 +885,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                       onError: (err) => {
                         const taken = contactEmailError(err)
                         setNewEmailTaken(taken ?? "")
-                        if (!taken) toast.error(errorMessage(err, "Gagal menyimpan kontak."))
+                        if (!taken) toast.error(errorMessage(err, "Gagal menyimpan narahubung."))
                       },
                     },
                   )

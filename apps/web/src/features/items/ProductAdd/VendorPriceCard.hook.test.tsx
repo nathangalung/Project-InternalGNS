@@ -73,7 +73,7 @@ describe("VendorPriceCard lookups", () => {
     )
     expect(alerts()).toEqual([
       "Gagal memuat rekomendasi vendor dan harga.Coba Lagi",
-      "Gagal memuat historis harga jual.Coba Lagi",
+      "Gagal memuat riwayat harga jual.Coba Lagi",
     ])
     const [rec, history] = byRole("alert").map((a) => a.querySelector("button") as HTMLElement)
     await click(rec)

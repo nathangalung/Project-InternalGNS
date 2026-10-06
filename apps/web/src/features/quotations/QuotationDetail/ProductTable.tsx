@@ -151,7 +151,7 @@ export default function ProductTable({
           </div>
           <div className="flex items-center justify-between border-t border-dark-200 p-6">
             <span className="text-sm text-[#4A4455]">
-              Menampilkan {total === 0 ? 0 : start + 1}–{Math.min(start + pageSize, total)} dari{" "}
+              Menampilkan {total === 0 ? 0 : start + 1}-{Math.min(start + pageSize, total)} dari{" "}
               {total} Produk
             </span>
           </div>

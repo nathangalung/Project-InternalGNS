@@ -54,10 +54,10 @@ export function importSummary(
   const pending = lines.filter((l) => !isLineComplete(l)).length
   const filled = lines.length - pending
   const fill = pending
-    ? `${filled} terisi otomatis; ${pending} perlu vendor dan harga sebelum dikirim.`
+    ? `${filled} terisi otomatis. ${pending} perlu vendor dan harga sebelum dikirim.`
     : "Semua terisi otomatis."
   const units = unknownUnits
-    ? ` ${unknownUnits} produk perlu satuan yang dikenal; pilih lewat tombol edit.`
+    ? ` ${unknownUnits} produk perlu satuan yang dikenal. Pilih satuannya lewat tombol Ubah.`
     : ""
-  return `${lines.length} produk diimport (${matched} cocok katalog, ${created} produk baru). ${fill}${units}`
+  return `${lines.length} produk diimpor (${matched} cocok dengan katalog, ${created} produk baru). ${fill}${units}`
 }

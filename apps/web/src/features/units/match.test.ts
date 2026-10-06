@@ -31,7 +31,7 @@ describe("matchUnits", () => {
 
 describe("unitLabel", () => {
   it.each([
-    [units[0], "PCS — Piece"],
+    [units[0], "PCS - Piece"],
     [units[2], "SET"],
   ])("labels %o", (unit, label) => {
     expect(unitLabel(unit)).toBe(label)

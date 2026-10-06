@@ -78,7 +78,7 @@ describe("poEditLockReason", () => {
     [
       "DELIVERED",
       true,
-      "PO yang sudah dikirim hanya dapat diubah setelah invoicenya dibatalkan dan sebelum invoice pengganti diterbitkan.",
+      "PO yang sudah dikirim hanya bisa diubah jika invoicenya dibatalkan dan invoice pengganti belum diterbitkan.",
     ],
     ["CANCELLED", true, "PO yang dibatalkan tidak dapat diubah."],
     ["UPLOADED", true, "PO ini tidak dapat diubah."],
@@ -291,7 +291,7 @@ describe("PO number", () => {
       problem(422, {
         fields: {
           poNumber: PO_NUMBER_REQUIRED_MESSAGE,
-          poDate: "Tanggal PO harus berformat YYYY-MM-DD.",
+          poDate: "Tanggal PO tidak valid. Pilih tanggal dari kalender.",
           other: "x",
         },
       }),
@@ -300,7 +300,7 @@ describe("PO number", () => {
     expect(poDetailsErrors(err)).toEqual({
       fields: {
         poNumber: PO_NUMBER_REQUIRED_MESSAGE,
-        poDate: "Tanggal PO harus berformat YYYY-MM-DD.",
+        poDate: "Tanggal PO tidak valid. Pilih tanggal dari kalender.",
       },
       banner: "x",
     })

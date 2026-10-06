@@ -89,7 +89,7 @@ export default function ActionModal({
         {kind === "pay" && (
           <>
             <p>
-              Invoice <strong className="text-dark-900">{invoiceNo}</strong> akan ditandai lunas.
+              Invoice <strong className="text-dark-900">{invoiceNo}</strong> akan ditandai Dibayar.
               Tanggal pembayaran dicatat otomatis saat disimpan. Setelah itu status dan tanggal
               invoice tidak dapat diubah lagi.
             </p>
@@ -143,7 +143,7 @@ export default function ActionModal({
           <p>
             Invoice pengganti berstatus Draf akan diterbitkan untuk PO yang sama, menggantikan{" "}
             <strong className="text-dark-900">{invoiceNo}</strong>, dengan baris dan data klien saat
-            ini. Pastikan PO sudah diperbaiki; setelah pengganti terbit, baris PO terkunci lagi.
+            ini. Pastikan PO sudah diperbaiki. Setelah pengganti terbit, baris PO terkunci lagi.
           </p>
         )}
       </div>

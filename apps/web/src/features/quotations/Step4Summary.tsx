@@ -207,7 +207,7 @@ export default function Step4Summary({
           {incompleteCount > 0 && (
             <div role="status" className={`${noticeBox} mt-2.5`}>
               {incompleteCount} produk belum lengkap (vendor atau harga). Quotation tetap tersimpan
-              sebagai Draf; lengkapi sebelum dikirim.
+              sebagai Draf. Lengkapi sebelum dikirim.
             </div>
           )}
           {unknownUnitCount > 0 && (
@@ -218,7 +218,7 @@ export default function Step4Summary({
           )}
           {terms && !termsFilled(terms) && (
             <div className={`${alertBox} mt-2.5`}>
-              Jatuh tempo pembayaran dan berlaku sampai wajib diisi sebelum menyimpan.
+              Isi jatuh tempo pembayaran dan masa berlaku sebelum menyimpan.
             </div>
           )}
         </div>
@@ -232,7 +232,7 @@ export default function Step4Summary({
           <div className="flex items-center gap-4 border-b border-[rgba(204,195,216,0.15)] bg-[linear-gradient(135deg,rgba(99,14,212,0.04)_0%,rgba(99,14,212,0.01)_100%)] px-6 py-5">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[rgba(99,14,212,0.12)]">
               <span className="text-base font-extrabold tracking-[-0.5px] text-primary-700">
-                {currentClient?.initials || "—"}
+                {currentClient?.initials || "-"}
               </span>
             </div>
             <div>
