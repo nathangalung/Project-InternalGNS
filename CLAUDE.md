@@ -619,7 +619,9 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    not hyphenate. The quotation prints
    `PDF_QUOTATION_SIGNER_NAME` under the scanned `Signature.jpg`; the
    invoice prints `PDF_SIGNER_NAME` over blank space, signed by hand.
-   No printed text carries a dash or a semicolon, and `TestLatexExports_
+   No printed text carries a dash, a minus or a semicolon (the font's
+   contextual alternates are off, `RawFeature = -calt`, since they swap a
+   hyphen between digits for a minus sign), and `TestLatexExports_
    DocumentHead` checks all of it with `pdfinfo` and `pdftotext`.
    Geometry uses `includehead` so the running header prints on the sheet
    instead of off its top edge. The party block is a top-aligned `tabularx`

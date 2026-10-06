@@ -8,7 +8,9 @@
 \documentclass[a4paper]{article}
 
 \usepackage{fontspec}
+% No contextual alternates: they swap a hyphen between digits for a minus.
 \setmainfont{Plus Jakarta Sans}[
+  RawFeature     = -calt,
   BoldFont       = Plus Jakarta Sans Bold,
   ItalicFont     = Plus Jakarta Sans Italic,
   BoldItalicFont = Plus Jakarta Sans Bold Italic,
