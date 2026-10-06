@@ -117,6 +117,8 @@ var RequiredKeys = []string{
 	"quotations.row_version",
 	"quotations.set_line_offer",
 	"quotations.stats",
+	"quotations.stored_header_prices",
+	"quotations.stored_line_price",
 	"quotations.unlock",
 	"quotations.update_contact",
 	"quotations.update_header",

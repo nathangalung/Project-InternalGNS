@@ -14,6 +14,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/listq"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/live"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/rolegate"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/roles"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/sheet"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/validate"
@@ -56,13 +58,21 @@ func parseListFilter(r *http.Request) ListFilter {
 }
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+	role := deps.CurrentUserRole(r.Context())
 	f := parseListFilter(r)
+	if !roles.SeesSelling(role) && f.probesSelling() {
+		rolegate.Refused(w)
+		return
+	}
 	f.Limit, f.Offset = paginate.Parse(r)
 
 	res, err := h.repo.List(r.Context(), f)
 	if err != nil {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
+	}
+	for i := range res.Rows {
+		res.Rows[i].redact(role)
 	}
 	w.Header().Set("X-Total-Count", strconv.FormatInt(res.Total, 10))
 	httpx.WriteJSON(w, http.StatusOK, res.Rows)
@@ -126,6 +136,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
+	d.redact(deps.CurrentUserRole(r.Context()))
 	httpx.WriteJSON(w, http.StatusOK, d)
 }
 
@@ -140,6 +151,9 @@ func (h *Handler) Revisions(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
+	}
+	for i := range revs {
+		revs[i].redact(deps.CurrentUserRole(r.Context()))
 	}
 	httpx.WriteJSON(w, http.StatusOK, revs)
 }
@@ -209,6 +223,10 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req CreateRequest
 	if !httpx.DecodeJSON(w, r, &req) {
 		return
+	}
+	if !roles.SetsPrices(deps.CurrentUserRole(r.Context())) {
+		unpriced(req.Items)
+		req.DiscountPct, req.ShippingCost = "0", nil
 	}
 	// DB function does rest.
 	if req.CompanyClientID == 0 {

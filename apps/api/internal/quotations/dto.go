@@ -22,14 +22,14 @@ type Quotation struct {
 	Status            Status    `db:"status"              json:"status"`
 	PaymentTerms      *string   `db:"payment_terms"       json:"paymentTerms,omitempty"`
 	ValidityDays      *int      `db:"validity_days"       json:"validityDays,omitempty"`
-	DiscountPct       string    `db:"discount_pct"        json:"discountPct"`
-	TotalProduk       string    `db:"total_produk"        json:"totalProduk"`
-	Total             string    `db:"total"               json:"total"`
-	TotalDiscount     string    `db:"total_discount"      json:"totalDiscount"`
-	Subtotal          string    `db:"subtotal"            json:"subtotal"`
-	DppNilaiLain      string    `db:"dpp_nilai_lain"      json:"dppNilaiLain"`
-	PpnAmount         string    `db:"ppn_amount"          json:"ppnAmount"`
-	GrandTotal        string    `db:"grand_total"         json:"grandTotal"`
+	DiscountPct       string    `db:"discount_pct"        json:"discountPct,omitempty"`
+	TotalProduk       string    `db:"total_produk"        json:"totalProduk,omitempty"`
+	Total             string    `db:"total"               json:"total,omitempty"`
+	TotalDiscount     string    `db:"total_discount"      json:"totalDiscount,omitempty"`
+	Subtotal          string    `db:"subtotal"            json:"subtotal,omitempty"`
+	DppNilaiLain      string    `db:"dpp_nilai_lain"      json:"dppNilaiLain,omitempty"`
+	PpnAmount         string    `db:"ppn_amount"          json:"ppnAmount,omitempty"`
+	GrandTotal        string    `db:"grand_total"         json:"grandTotal,omitempty"`
 	Notes             *string   `db:"notes"               json:"notes,omitempty"`
 	RowVersion        int32     `db:"row_version"         json:"rowVersion"`
 	CreatedAt         time.Time `db:"created_at"          json:"createdAt"`
@@ -55,12 +55,12 @@ type QuotationItem struct {
 	ProductURL      *string `db:"product_url"         json:"productUrl,omitempty"`
 	Qty             string  `db:"qty"                 json:"qty"`
 	UnitID          *int16  `db:"unit_id"             json:"unitId,omitempty"`
-	SellingPrice    string  `db:"selling_price"       json:"sellingPrice"`
+	SellingPrice    string  `db:"selling_price"       json:"sellingPrice,omitempty"`
 	CostPrice       *string `db:"cost_price"          json:"costPrice,omitempty"`
-	DiscountPct     string  `db:"discount_pct"        json:"discountPct"`
-	TotalSelling    string  `db:"total_selling"       json:"totalSelling"`
-	DiscountAmount  string  `db:"discount_amount"     json:"discountAmount"`
-	Subtotal        string  `db:"subtotal"            json:"subtotal"`
+	DiscountPct     string  `db:"discount_pct"        json:"discountPct,omitempty"`
+	TotalSelling    string  `db:"total_selling"       json:"totalSelling,omitempty"`
+	DiscountAmount  string  `db:"discount_amount"     json:"discountAmount,omitempty"`
+	Subtotal        string  `db:"subtotal"            json:"subtotal,omitempty"`
 	IsAvailable     bool    `db:"is_available"        json:"isAvailable"`
 	ShipDestination *string `db:"ship_destination"    json:"shipDestination,omitempty"`
 	ShippingDays    *int    `db:"shipping_days"       json:"shippingDays,omitempty"`
@@ -98,8 +98,8 @@ type RevisionRow struct {
 	QuotationNo string    `db:"quotation_no"  json:"quotationNo"`
 	Version     int16     `db:"version"       json:"version"`
 	Status      Status    `db:"status"        json:"status"`
-	GrandTotal  string    `db:"grand_total"   json:"grandTotal"`
-	TotalProduk string    `db:"total_produk"  json:"totalProduk"`
+	GrandTotal  string    `db:"grand_total"   json:"grandTotal,omitempty"`
+	TotalProduk string    `db:"total_produk"  json:"totalProduk,omitempty"`
 	CreatedAt   time.Time `db:"created_at"    json:"createdAt"`
 	UpdatedAt   time.Time `db:"updated_at"    json:"updatedAt"`
 }
@@ -113,10 +113,10 @@ type ListRow struct {
 	CompanyClientID int64     `db:"company_client_id" json:"companyClientId"`
 	CompanyName     string    `db:"company_name"      json:"companyName"`
 	Status          Status    `db:"status"            json:"status"`
-	GrandTotal      string    `db:"grand_total"       json:"grandTotal"`
-	Subtotal        string    `db:"subtotal"          json:"subtotal"`
-	TotalDiscount   string    `db:"total_discount"    json:"totalDiscount"`
-	TotalHargaBeli  string    `db:"total_harga_beli"  json:"totalHargaBeli"`
+	GrandTotal      string    `db:"grand_total"       json:"grandTotal,omitempty"`
+	Subtotal        string    `db:"subtotal"          json:"subtotal,omitempty"`
+	TotalDiscount   string    `db:"total_discount"    json:"totalDiscount,omitempty"`
+	TotalHargaBeli  string    `db:"total_harga_beli"  json:"totalHargaBeli,omitempty"`
 	ProductCount    int64     `db:"product_count"     json:"productCount"`
 	CreatedAt       time.Time `db:"created_at"        json:"createdAt"`
 }
