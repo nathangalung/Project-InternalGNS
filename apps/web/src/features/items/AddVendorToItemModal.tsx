@@ -28,7 +28,7 @@ export default function AddVendorToItemModal({
   const [vendor, setVendor] = useState<VendorRow | null>(null)
   const [vendorQuery, setVendorQuery] = useState("")
   const [costPrice, setCostPrice] = useState(() => wholeRupiah(edit?.costPrice))
-  // An untouched stored price goes back as stored
+  // An untouched stored price is not sent, so the server keeps it
   const [costTouched, setCostTouched] = useState(false)
   const [productUrl, setProductUrl] = useState(edit?.productUrl ?? "")
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -53,8 +53,8 @@ export default function AddVendorToItemModal({
   const vendorId = edit ? edit.vendorId : (vendor?.id ?? null)
   const urlError = storeUrlError(productUrl)
 
-  const isValid =
-    vendorId !== null && costPrice.length > 0 && Number(costPrice) > 0 && urlError === null
+  const sendsCost = !edit || costTouched
+  const isValid = vendorId !== null && urlError === null && (!sendsCost || Number(costPrice) > 0)
 
   const reset = () => {
     setVendor(null)
@@ -83,7 +83,7 @@ export default function AddVendorToItemModal({
         itemId,
         input: {
           vendorId,
-          costPrice: edit?.costPrice && !costTouched ? edit.costPrice : costPrice,
+          costPrice: sendsCost ? costPrice : undefined,
           // Clearing a stored link sends null
           productUrl: trimmedUrl || (edit ? null : undefined),
         },

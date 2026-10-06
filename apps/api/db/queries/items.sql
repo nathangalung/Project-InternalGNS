@@ -59,8 +59,10 @@ SELECT fn_item_image_set_cover($1, $2, $3);
 -- the vendor is missing or inactive; items.vendor_active tells which.
 -- Relinking updates the offer in place: $7 and $8 say whether the SKU and
 -- the URL were sent, an unsent one keeps the stored value, and a sent null
--- or blank clears it. The quote stamp moves only with the price, so
--- updating the SKU or the URL alone does not date a quote.
+-- or blank clears it. $9 says the same of the price: an unsent one keeps the
+-- stored price (a new link starts at 0) and a blank one stores 0. The quote
+-- stamp moves only with a sent price that differs, so updating the SKU or
+-- the URL alone neither zeroes the price nor dates a quote.
 WITH ins AS (
     INSERT INTO vendor_products
         (vendor_id, item_id, vendor_sku, cost_price, product_url, last_quoted_at, created_by, updated_by)
@@ -70,10 +72,12 @@ WITH ins AS (
     ON CONFLICT (vendor_id, item_id) DO UPDATE
        SET vendor_sku     = CASE WHEN $7::boolean THEN EXCLUDED.vendor_sku
                                  ELSE vendor_products.vendor_sku END,
-           cost_price     = EXCLUDED.cost_price,
+           cost_price     = CASE WHEN $9::boolean THEN EXCLUDED.cost_price
+                                 ELSE vendor_products.cost_price END,
            product_url    = CASE WHEN $8::boolean THEN EXCLUDED.product_url
                                  ELSE vendor_products.product_url END,
-           last_quoted_at = CASE WHEN EXCLUDED.cost_price IS DISTINCT FROM vendor_products.cost_price
+           last_quoted_at = CASE WHEN $9::boolean
+                                  AND EXCLUDED.cost_price IS DISTINCT FROM vendor_products.cost_price
                                  THEN EXCLUDED.last_quoted_at
                                  ELSE vendor_products.last_quoted_at END,
            is_active      = TRUE,

@@ -46,3 +46,41 @@ func TestHandler_AddVendor_ProductURL(t *testing.T) {
 	require.NoError(t, json.NewDecoder(clear.Body).Decode(&cleared))
 	assert.Nil(t, cleared.ProductURL)
 }
+
+// A link-only relink keeps the price.
+// Changing only the store link must not zero harga beli or date a quote,
+// and a new link without a price still starts at zero.
+func TestHandler_AddVendor_LinkKeepsPrice(t *testing.T) {
+	srv := newSrv(t)
+	it := createItem(t, items.CreateItemRequest{Name: fmt.Sprintf("Barang Harga %d", time.Now().UnixNano())})
+	vendor := createVendor(t, true)
+	path := fmt.Sprintf("/items/%d/vendors", it.ID)
+
+	post := func(body map[string]any) items.VendorForItem {
+		t.Helper()
+		resp := doJSON(t, srv, http.MethodPost, path, body)
+		defer resp.Body.Close()
+		require.Equal(t, http.StatusCreated, resp.StatusCode)
+		var row items.VendorForItem
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&row))
+		return row
+	}
+
+	priced := post(map[string]any{"vendorId": vendor, "costPrice": "150000"})
+	require.NotNil(t, priced.CostPrice)
+	require.NotNil(t, priced.LastQuotedAt)
+
+	linked := post(map[string]any{"vendorId": vendor, "productUrl": "https://toko.example/barang"})
+	require.NotNil(t, linked.CostPrice)
+	assert.Equal(t, "150000.00", *linked.CostPrice)
+	assert.Equal(t, *priced.LastQuotedAt, *linked.LastQuotedAt)
+
+	other := createVendor(t, true)
+	fresh := doJSON(t, srv, http.MethodPost, path, map[string]any{"vendorId": other})
+	defer fresh.Body.Close()
+	require.Equal(t, http.StatusCreated, fresh.StatusCode)
+	var row items.VendorForItem
+	require.NoError(t, json.NewDecoder(fresh.Body).Decode(&row))
+	require.NotNil(t, row.CostPrice)
+	assert.Equal(t, "0.00", *row.CostPrice)
+}

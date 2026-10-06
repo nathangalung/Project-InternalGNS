@@ -112,7 +112,8 @@ export default function QuotationAdd() {
     },
     INLINE_LOOKUP,
   )
-  const searchQuery = useClientSearch(debouncedSearch, { limit: 50 }, INLINE_LOOKUP)
+  // Every hit up to the API cap, paged here
+  const searchQuery = useClientSearch(debouncedSearch, { limit: 200 }, INLINE_LOOKUP)
   const clientsData = clientsQuery.data
   const searchHits = searchQuery.data
   const createQuotation = useCreateQuotation()

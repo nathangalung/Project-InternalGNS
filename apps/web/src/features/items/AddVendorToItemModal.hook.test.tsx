@@ -124,14 +124,14 @@ describe("AddVendorToItemModal edit", () => {
     expect(button("Simpan").disabled).toBe(true)
   })
 
-  it("keeps the stored price and clears the link with null", async () => {
+  it("leaves the stored price out and clears the link with null", async () => {
     vi.mocked(itemsApi.addVendor).mockResolvedValue(stored)
     await mount(<Harness edit={stored} />)
     await type(input("Link Toko"), "  ")
     await click(button("Simpan"))
     expect(itemsApi.addVendor).toHaveBeenCalledWith(1, {
       vendorId: 7,
-      costPrice: "150000.50",
+      costPrice: undefined,
       productUrl: null,
     })
   })
@@ -145,6 +145,26 @@ describe("AddVendorToItemModal edit", () => {
       vendorId: 7,
       costPrice: "175000",
       productUrl: "https://toko.example/rope",
+    })
+  })
+})
+
+describe("AddVendorToItemModal edit unpriced", () => {
+  it("saves a link on an offer stored without a price", async () => {
+    vi.mocked(itemsApi.addVendor).mockResolvedValue({
+      vendorProductId: 6,
+      vendorId: 8,
+      vendorName: "PT Dermaga",
+    })
+    await mount(<Harness edit={{ vendorProductId: 6, vendorId: 8, vendorName: "PT Dermaga" }} />)
+    const url = document.querySelector<HTMLInputElement>('input[type="url"]')
+    if (!url) throw new Error("no link input")
+    await type(url, "https://toko.example/dermaga")
+    await click(button("Simpan"))
+    expect(itemsApi.addVendor).toHaveBeenLastCalledWith(1, {
+      vendorId: 8,
+      costPrice: undefined,
+      productUrl: "https://toko.example/dermaga",
     })
   })
 })

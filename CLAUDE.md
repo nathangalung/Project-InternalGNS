@@ -398,6 +398,8 @@ Toko). `validate.ProductURL` keeps only an http or https address with a host
 (a 422 on `productUrl`), mirrored by `lib/store-link`, so the anchor never
 runs script. Only `POST /items/{id}/vendors` writes it: the Tambah Vendor
 and Ubah dialogs on the product page, where a cleared link is sent as null.
+An unsent `costPrice` keeps the stored harga beli and its quote date, so Ubah
+sends the price only when it was changed.
 `StoreLink` shows it in a new tab on the product and vendor pages, under
 each offer on the quotation and PO detail, and beside the picked vendor in
 the quotation product dialog.

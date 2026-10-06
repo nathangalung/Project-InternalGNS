@@ -190,12 +190,14 @@ func (r *Repo) Recommend(ctx context.Context, clientID *int64, itemIDs []int64) 
 // Upsert vendor_products row.
 func (r *Repo) AddVendor(ctx context.Context, itemID int64, req AddVendorToItemRequest, userID int64) (VendorForItem, error) {
 	cost := "0"
-	if req.CostPrice != nil && strings.TrimSpace(*req.CostPrice) != "" {
+	// An unsent price keeps the stored one; a blank one stores zero
+	priced := req.CostPrice != nil
+	if priced && strings.TrimSpace(*req.CostPrice) != "" {
 		cost = strings.TrimSpace(*req.CostPrice)
 	}
 	rows, err := r.db.Query(ctx, r.store.Get("items.add_vendor"),
 		req.VendorID, itemID, req.VendorSKU.Value, cost, req.ProductURL.Value, userID,
-		req.VendorSKU.Set, req.ProductURL.Set,
+		req.VendorSKU.Set, req.ProductURL.Set, priced,
 	)
 	if err != nil {
 		return VendorForItem{}, err
