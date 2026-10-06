@@ -253,6 +253,19 @@ shows a missing one as Belum ada No. PO.
   on this client's newest sent or accepted deal for the item at its current
   harga beli, else the cheapest active vendor, and the harga jual of this
   client's newest deal, else any client's; an item never sold starts at 0.
+  Salin ke Offer makes the request the offer as a real catalog item: a
+  picked catalog request is that item, and typed text goes through
+  `POST /items/match-rows` with `autoCreate`, the Excel import's own
+  matcher and threshold: the IMPA code, then the closest name, reuses an
+  item (a look-alike asks the user to check it), anything else is added to
+  the catalog, and the pick then applies the line recommendation as an
+  import does. Every product line shows the
+  request and the offer side by side at one size (`RequestOffer`, in the
+  wizard cards, the summary and the detail table), and an offer that is not
+  what was asked turns orange. A line's Belum lengkap badge opens its editor,
+  and a draft's detail page counts the lines the send rule refuses
+  (`incompleteLines`, mirroring `fn_change_quotation_status`) with a
+  Lengkapi Sekarang button to the editor.
   Revisi is not a manual move: Buat Revisi (`POST /quotations/{id}/revise`,
   offered when `canRevise`, i.e. from sent) clones a new draft version with
   `parent_id` and a `Rev.n` number and moves the original to revision.

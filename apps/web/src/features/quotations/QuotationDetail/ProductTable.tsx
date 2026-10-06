@@ -6,14 +6,17 @@ import type { ProductRow } from "@/features/quotations/types"
 import { formatRupiah as formatRp } from "@/lib/format"
 import { clampPage, PAGE_SIZE_OPTIONS, pageCount } from "@/lib/pagination"
 import { ui } from "@/lib/ui"
+import RequestOffer from "../RequestOffer"
 import { qe } from "../wizard-styles"
+import { offerDiffers } from "./helpers"
 
 type ProductTableProps = {
   showProfit?: boolean
+  // The quotation shows the request; a PO or invoice bills the offer only
+  showRequest?: boolean
   products: ProductRow[]
 }
 
-const requestedNote = "mt-0.5 text-[11px] text-[#B45309]"
 // Profit column classes.
 //
 // Legacy qd-th--profit / qd-td--profit, written standalone so no ui.* colour
@@ -24,7 +27,11 @@ const tdProfit =
   "truncate p-5 text-center align-middle text-sm font-bold text-primary-700 bg-[rgba(99,14,212,0.05)]"
 
 // Collapsible paginated product list.
-export default function ProductTable({ products, showProfit = true }: ProductTableProps) {
+export default function ProductTable({
+  products,
+  showProfit = true,
+  showRequest = true,
+}: ProductTableProps) {
   const [rawPage, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(5)
   const [expanded, setExpanded] = useState(true)
@@ -91,8 +98,14 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
             <table className="w-full min-w-full table-auto border-collapse max-lg:min-w-[760px] lg:table-fixed">
               <thead>
                 <tr className={ui.theadRow}>
-                  <th className={`${ui.thCenter} w-[110px]`}>Kode IMPA</th>
-                  <th className={`${ui.thCenter} w-[220px]`}>Nama Produk</th>
+                  {showRequest ? (
+                    <>
+                      <th className={`${ui.thCenter} w-[220px]`}>Permintaan Klien</th>
+                      <th className={`${ui.thCenter} w-[220px]`}>Penawaran</th>
+                    </>
+                  ) : (
+                    <th className={`${ui.thCenter} w-[440px]`}>Produk</th>
+                  )}
                   <th className={`${ui.thCenter} w-[80px]`}>Jumlah</th>
                   <th className={`${ui.thCenter} w-[80px]`}>Satuan</th>
                   <th className={`${ui.thCenter} w-[140px]`}>Harga Jual Satuan</th>
@@ -102,37 +115,25 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
               </thead>
               <tbody>
                 {slice.map((p, i) => {
-                  const reqKode = p.requestedKode ?? ""
-                  const reqNama = p.requestedNama ?? ""
-                  const kodeDiffers = reqKode.length > 0 && reqKode !== p.kode
-                  const namaDiffers = reqNama.length > 0 && reqNama !== p.nama
+                  const reqKode = p.requestedKode || p.kode
+                  const reqNama = p.requestedNama || p.nama
                   return (
                     <tr key={p.lineId ?? start + i} className={ui.tr}>
-                      <td className={`${ui.tdCenter} truncate font-bold text-primary-700`}>
-                        <div>{p.kode || "-"}</div>
-                        {kodeDiffers && (
-                          <div className={requestedNote} title="Kode IMPA yang diminta klien">
-                            Diminta: {reqKode}
-                          </div>
-                        )}
-                      </td>
-                      <td className={`${ui.tdCenter} truncate font-medium text-dark-900`}>
-                        <div className="truncate">
-                          <EntityLink kind="product" id={p.itemId} tone="name">
-                            {p.nama}
-                          </EntityLink>
-                        </div>
-                        {namaDiffers && (
-                          <div className={requestedNote} title="Nama produk yang diminta klien">
-                            Diminta: {reqNama}
-                          </div>
-                        )}
-                        {p.noOffer && (
-                          <span className="mt-1 inline-block rounded-[4px] bg-[#F3F4F6] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.4px] text-[#374151]">
-                            Tidak Ditawarkan
-                          </span>
-                        )}
-                      </td>
+                      <RequestOffer
+                        asCells
+                        hideRequest={!showRequest}
+                        request={{ kode: reqKode, nama: reqNama }}
+                        offer={{
+                          kode: p.kode,
+                          nama: (
+                            <EntityLink kind="product" id={p.itemId} tone="name">
+                              {p.nama}
+                            </EntityLink>
+                          ),
+                        }}
+                        differs={showRequest && offerDiffers(p)}
+                        noOffer={p.noOffer}
+                      />
                       <td className={`${ui.tdCenter} truncate`}>{p.qty}</td>
                       <td className={`${ui.tdCenter} truncate`}>{p.satuan}</td>
                       <td className={`${ui.tdCenter} truncate`}>{formatRp(p.hargaSatuan)}</td>

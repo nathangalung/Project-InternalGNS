@@ -9,6 +9,7 @@ import { parseRfq } from "./api"
 import { importedLines, importSummary } from "./import"
 import { lineGaps, qtyIssue, requestDiffers, requestedCode } from "./lines"
 import QuotationReviewCard from "./QuotationReviewCard"
+import RequestOffer from "./RequestOffer"
 import { countUnknownUnits, type ProductItem, unitIssue } from "./wizard"
 import { qe, qep } from "./wizard-styles"
 
@@ -127,6 +128,13 @@ export default function Step2Product({
     } finally {
       setImporting(false)
     }
+  }
+
+  // The edit page claims the line first; the add page opens the dialog.
+  function openEditor(p: ProductItem) {
+    if (editProduct) return editProduct(p)
+    setEditingProduct(p)
+    setShowProductAdd(true)
   }
 
   const totalProds = products.length
@@ -321,15 +329,19 @@ export default function Step2Product({
                     <div className={qep.cardHeader}>
                       <div className={qep.cardMeta}>
                         <span className={qep.cardLabel}>PRODUK {globalIndex}</span>
-                        <span className={qep.cardName}>{p.nama}</span>
-                        {p.kodeImpa && (
-                          <span className={qep.cardCode}>KODE IMPA: {p.kodeImpa}</span>
-                        )}
                         {p.noOffer ? (
                           <span className={noOfferBadge}>Tidak Ditawarkan</span>
                         ) : (
                           gaps.length > 0 && (
-                            <span className={gapBadge}>Belum lengkap: {gaps.join(", ")}</span>
+                            // Opens the line, so the missing fields are one click away.
+                            <button
+                              type="button"
+                              onClick={() => openEditor(p)}
+                              disabled={Boolean(editor)}
+                              className={`${gapBadge} cursor-pointer text-left underline-offset-2 hover:underline disabled:cursor-default disabled:no-underline ${ui.focusRing}`}
+                            >
+                              Belum lengkap: {gaps.join(", ")}. Lengkapi
+                            </button>
                           )
                         )}
                         {editor && <span className={editorBadge}>Sedang diedit oleh {editor}</span>}
@@ -349,11 +361,7 @@ export default function Step2Product({
                         )}
                         <button
                           type="button"
-                          onClick={() => {
-                            if (editProduct) return editProduct(p)
-                            setEditingProduct(p)
-                            setShowProductAdd(true)
-                          }}
+                          onClick={() => openEditor(p)}
                           disabled={Boolean(editor)}
                           className={`${cardIconBtn} text-primary-700`}
                           title="Edit Produk"
@@ -398,36 +406,11 @@ export default function Step2Product({
                         </button>
                       </div>
                     </div>
-                    <div
-                      className={`border-y border-[rgba(204,195,216,0.2)] px-5 py-3 ${
-                        isDifferent ? "bg-[rgba(245,158,11,0.04)]" : "bg-[rgba(99,14,212,0.02)]"
-                      }`}
-                    >
-                      <div className="mb-1.5 flex items-center gap-2">
-                        <span
-                          className={`text-[10px] font-bold uppercase tracking-[0.6px] ${
-                            isDifferent ? "text-[#B45309]" : "text-[#6B7280]"
-                          }`}
-                        >
-                          Permintaan Klien
-                        </span>
-                        {isDifferent && (
-                          <span className="rounded-[4px] bg-[rgba(245,158,11,0.15)] px-1.5 py-0.5 text-[10px] font-semibold text-[#B45309]">
-                            Berbeda dari Offer
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap gap-x-6 gap-y-1 text-[13px] text-[#374151]">
-                        <div>
-                          <span className="mr-1.5 text-[#9CA3AF]">Kode IMPA:</span>
-                          <span className="font-semibold">{requestKode || "-"}</span>
-                        </div>
-                        <div>
-                          <span className="mr-1.5 text-[#9CA3AF]">Nama:</span>
-                          <span className="font-semibold">{requestNama || "-"}</span>
-                        </div>
-                      </div>
-                    </div>
+                    <RequestOffer
+                      request={{ kode: requestKode, nama: requestNama }}
+                      offer={{ kode: p.kodeImpa, nama: p.nama }}
+                      differs={isDifferent}
+                    />
                     <div className={qep.cardBody}>
                       <div className={qep.col}>
                         <div className={qep.field}>

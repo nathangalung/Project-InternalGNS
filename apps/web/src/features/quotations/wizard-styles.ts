@@ -56,8 +56,6 @@ export const qep = {
   cardHeader: "flex items-start justify-between",
   cardMeta: "flex flex-col gap-0.5",
   cardLabel: "text-caption font-semibold uppercase tracking-[0.05em] text-dark-500",
-  cardName: "text-base font-bold tracking-tight text-[#111827]",
-  cardCode: "text-caption font-semibold uppercase tracking-[0.05em] text-dark-500",
   cardBody: "flex gap-6 max-sm:flex-col",
   col: "flex min-w-0 flex-1 flex-col gap-3",
   field: "flex flex-col gap-1.5",

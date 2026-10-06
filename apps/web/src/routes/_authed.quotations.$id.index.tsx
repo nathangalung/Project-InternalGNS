@@ -7,6 +7,7 @@ import { clientCardInfo, documentContact } from "@/features/clients/clientCard"
 import { useClient } from "@/features/clients/hooks"
 import { toQuotationData } from "@/features/quotations/adapters"
 import { useQuotation } from "@/features/quotations/hooks"
+import { incompleteLines } from "@/features/quotations/lines"
 import QuotationDetail from "@/features/quotations/QuotationDetail"
 import { useUnits } from "@/features/units/hooks"
 import { isMissing } from "@/lib/errors"
@@ -79,6 +80,7 @@ function QuotationDetailRoute() {
       canRevise={detail.canRevise === true}
       contactId={detail.contactId}
       openContactPicker={narahubung === true}
+      incomplete={incompleteLines(detail.items)}
       onEdit={() => void navigate({ to: "/quotations/$id/edit", params: { id } })}
     />
   )

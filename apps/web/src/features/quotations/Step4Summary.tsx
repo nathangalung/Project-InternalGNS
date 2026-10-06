@@ -5,6 +5,7 @@ import { clampPage, pageCount } from "@/lib/pagination"
 import { ui } from "@/lib/ui"
 import { isValidAddress, optionalAddressError } from "@/lib/validation"
 import { requestDiffers, requestedCode } from "./lines"
+import RequestOffer from "./RequestOffer"
 import type { Client } from "./Step1Client"
 import type { ProductItem } from "./wizard"
 import { qe, qep } from "./wizard-styles"
@@ -406,42 +407,13 @@ export default function Step4Summary({
                         <div className={qep.cardHeader}>
                           <div className={qep.cardMeta}>
                             <span className={qep.cardLabel}>PRODUK {globalIndex}</span>
-                            <span className={qep.cardName}>{p.nama}</span>
-                            {p.kodeImpa && (
-                              <span className={qep.cardCode}>KODE IMPA: {p.kodeImpa}</span>
-                            )}
                           </div>
                         </div>
-                        <div
-                          className={`border-y border-[rgba(204,195,216,0.2)] px-5 py-3 ${
-                            isDifferent ? "bg-[rgba(245,158,11,0.04)]" : "bg-[rgba(99,14,212,0.02)]"
-                          }`}
-                        >
-                          <div className="mb-1.5 flex items-center gap-2">
-                            <span
-                              className={`text-[10px] font-bold uppercase tracking-[0.6px] ${
-                                isDifferent ? "text-[#B45309]" : "text-[#6B7280]"
-                              }`}
-                            >
-                              Permintaan Klien
-                            </span>
-                            {isDifferent && (
-                              <span className="rounded-[4px] bg-[rgba(245,158,11,0.15)] px-1.5 py-0.5 text-[10px] font-semibold text-[#B45309]">
-                                Berbeda dari Offer
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex flex-wrap gap-x-6 gap-y-1 text-[13px] text-[#374151]">
-                            <div>
-                              <span className="mr-1.5 text-[#9CA3AF]">Kode IMPA:</span>
-                              <span className="font-semibold">{requestKode || "-"}</span>
-                            </div>
-                            <div>
-                              <span className="mr-1.5 text-[#9CA3AF]">Nama:</span>
-                              <span className="font-semibold">{requestNama || "-"}</span>
-                            </div>
-                          </div>
-                        </div>
+                        <RequestOffer
+                          request={{ kode: requestKode, nama: requestNama }}
+                          offer={{ kode: p.kodeImpa, nama: p.nama }}
+                          differs={isDifferent}
+                        />
                         <div className={qep.cardBody}>
                           <div className={qep.col}>
                             <div className={qep.field}>

@@ -30,7 +30,7 @@ export type SeedItem = {
   cost?: number
 }
 // Catalog item or free text.
-export type SeedLine = ({ item: SeedItem } | { freeText: string }) & {
+export type SeedLine = ({ item: SeedItem; requested?: string } | { freeText: string }) & {
   qty: number
   price: number
   cost?: number
@@ -135,9 +135,10 @@ async function quotationBody(
     items: opts.lines.map((l) => ({
       ...("item" in l
         ? {
-            requestedItemId: l.item.id,
-            requestedImpa: l.item.impaCode,
-            requestedName: l.item.name,
+            // A different request names text, not the catalog item.
+            requestedItemId: l.requested ? undefined : l.item.id,
+            requestedImpa: l.requested ? undefined : l.item.impaCode,
+            requestedName: l.requested ?? l.item.name,
             offeredItemId: l.item.id,
             vendorProductId: l.item.vendorProductId,
             vendorId: l.item.vendorProductId === undefined ? fallbackVendor : undefined,

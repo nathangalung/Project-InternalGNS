@@ -183,7 +183,7 @@ export default function InvoiceDetail({ inv }: InvoiceDetailProps) {
         shippingAlamat={shipping.alamat}
       />
       {totalShip > 0 && <ShippingTable shipping={shipping} />}
-      <ProductTable products={products} showProfit={hasCost} />
+      <ProductTable products={products} showProfit={hasCost} showRequest={false} />
       <CostBreakdown
         hasProducts={products.length > 0}
         totalProduk={totalProduk}

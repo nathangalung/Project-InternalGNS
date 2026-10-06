@@ -199,6 +199,83 @@ test.describe("quotation wizard", () => {
     await expect(product.getByLabel("Harga Beli Satuan *")).toHaveValue("75000")
   })
 
+  test("Salin ke Offer on typed text finds the item and its recommendation", async ({
+    page,
+    seed,
+  }) => {
+    const client = await seed.client()
+    const vendor = await seed.vendor()
+    const item = await seed.item({ vendor, cost: 82_000 })
+
+    await page.goto("/quotations/add")
+    await page.getByLabel("Cari klien").fill(seed.prefix)
+    await page.getByRole("button", { name: new RegExp(client.name) }).click()
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Tambah Produk" }).click()
+
+    const product = page.getByRole("dialog", { name: "Tambah Produk ke Quotation" })
+    // Typed as the client wrote it, not picked from the list.
+    const request = product.getByLabel("Kode IMPA/Nama Produk Request *")
+    await request.fill(`${item.impaCode} - nama dari klien`)
+    await request.press("Escape")
+    await product.getByRole("button", { name: "Salin ke Offer" }).click()
+    await expect(product.getByText("Memakai produk katalog yang sama.")).toBeVisible()
+    await expect(product.getByLabel("Kode IMPA/Nama Produk *", { exact: true })).toHaveValue(
+      `${item.impaCode} - ${item.name}`,
+    )
+    // Like an Excel row: the recommendation fills the vendor and harga beli.
+    await expect(product.getByLabel("Nama Vendor *")).toHaveValue(vendor.name)
+    await expect(product.getByLabel("Harga Beli Satuan *")).toHaveValue("82000")
+  })
+
+  test("Salin ke Offer adds a product the catalog does not have", async ({ page, seed }) => {
+    const client = await seed.client()
+    const name = seed.name("Produk Baru Dari Request")
+
+    await page.goto("/quotations/add")
+    await page.getByLabel("Cari klien").fill(seed.prefix)
+    await page.getByRole("button", { name: new RegExp(client.name) }).click()
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Tambah Produk" }).click()
+
+    const product = page.getByRole("dialog", { name: "Tambah Produk ke Quotation" })
+    const request = product.getByLabel("Kode IMPA/Nama Produk Request *")
+    await request.fill(name)
+    await request.press("Escape")
+    await product.getByRole("button", { name: "Salin ke Offer" }).click()
+    await expect(product.getByText("Produk baru ditambahkan ke katalog.")).toBeVisible()
+    await expect(product.getByLabel("Kode IMPA/Nama Produk *", { exact: true })).toHaveValue(name)
+    expect(await seed.adopt("item", name)).toBeGreaterThan(0)
+  })
+
+  test("the detail shows request and offer side by side, a different offer marked", async ({
+    page,
+    seed,
+  }) => {
+    const client = await seed.client()
+    const same = await seed.item()
+    const other = await seed.item()
+    const asked = `${seed.prefix} permintaan lain`
+    const q = await seed.quotation({
+      client,
+      lines: [
+        { item: same, qty: 1, price: 25_000 },
+        { item: other, requested: asked, qty: 1, price: 30_000 },
+      ],
+    })
+
+    await page.goto(`/quotations/${q.id}`)
+    const table = page.getByRole("table")
+    await expect(table.getByRole("columnheader", { name: "Permintaan Klien" })).toBeVisible()
+    await expect(table.getByRole("columnheader", { name: "Penawaran" })).toBeVisible()
+    const plain = table.getByRole("row", { name: new RegExp(same.name) })
+    const marked = table.getByRole("row", { name: new RegExp(asked) })
+    await expect(marked).toContainText(other.name)
+    // Only the different offer cell carries the orange fill.
+    await expect(marked.locator("td").nth(1)).toHaveClass(/245,158,11/)
+    await expect(plain.locator("td").nth(1)).not.toHaveClass(/245,158,11/)
+  })
+
   test("a failed catalog search stays in the dialog and keeps the lines", async ({
     page,
     seed,
@@ -318,7 +395,8 @@ test.describe("quotation wizard import and requests", () => {
     await seed.adopt("item", fresh)
 
     const main = page.locator("main")
-    await expect(main).toContainText(`KODE IMPA: ${item.impaCode}`)
+    // The offer prints its code beside the name.
+    await expect(main.getByText(item.impaCode, { exact: true }).first()).toBeVisible()
     await expect(main).toContainText(fresh)
     // MD-01: the deactivated cheaper vendor never supplies the price.
     await expect(main).toContainText(active.name)
@@ -361,7 +439,8 @@ test.describe("quotation wizard import and requests", () => {
     ).toBeVisible()
     await seed.adopt("item", fresh)
     const main = page.locator("main")
-    await expect(main).toContainText(`KODE IMPA: ${item.impaCode}`)
+    // The offer prints its code beside the name.
+    await expect(main.getByText(item.impaCode, { exact: true }).first()).toBeVisible()
     await expect(main).toContainText(fresh)
     await expect(main).not.toContainText("DECK STORES")
 
@@ -500,6 +579,11 @@ test.describe("quotation wizard import and requests", () => {
       .getByRole("button", { name: "Batal" })
       .click()
     await expectStatus(page, "Draf")
+    // The page says what blocks Dikirim and opens the editor to fix it.
+    const notice = page.getByRole("status").filter({ hasText: "1 produk belum lengkap." })
+    await expect(notice).toBeVisible()
+    await notice.getByRole("button", { name: "Lengkapi Sekarang" }).click()
+    await expect(page).toHaveURL(new RegExp(`/quotations/${q.id}/edit$`))
   })
 
   // Picking a product fills it in.

@@ -1,4 +1,5 @@
 import { ApiError } from "@/lib/api-client"
+import type { QuotationItemRow } from "@/types/api"
 import type { ProductItem } from "./wizard"
 
 // Wizard line quantity rules.
@@ -102,4 +103,32 @@ export function lineGaps(p: ProductItem): string[] {
 // Ready to be sent.
 export function isLineComplete(p: ProductItem): boolean {
   return lineGaps(p).length === 0
+}
+
+// Stored line, as the send rule reads it.
+export type StoredLine = Pick<
+  QuotationItemRow,
+  | "itemType"
+  | "isAvailable"
+  | "offeredItemId"
+  | "unitId"
+  | "vendorProductId"
+  | "costPrice"
+  | "sellingPrice"
+>
+
+// Offered lines the send rule refuses.
+// Mirrors fn_change_quotation_status: a product, a unit, a linked vendor,
+// harga beli and harga jual above zero. Tidak Ditawarkan lines never count.
+export function incompleteLines(items: StoredLine[]): number {
+  return items.filter(
+    (it) =>
+      it.itemType === "product" &&
+      it.isAvailable &&
+      (it.offeredItemId === undefined ||
+        it.unitId === undefined ||
+        it.vendorProductId === undefined ||
+        !(Number(it.costPrice ?? 0) > 0) ||
+        !(Number(it.sellingPrice) > 0)),
+  ).length
 }

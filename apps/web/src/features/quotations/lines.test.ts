@@ -4,6 +4,7 @@ import { problem } from "@/test/problem"
 import type { ProblemDetail } from "@/types/api"
 import {
   countInvalidQty,
+  incompleteLines,
   isLineComplete,
   isValidQty,
   lineGaps,
@@ -15,6 +16,7 @@ import {
   qtyIssue,
   requestDiffers,
   requestedCode,
+  type StoredLine,
 } from "./lines"
 import type { ProductItem } from "./wizard"
 
@@ -183,5 +185,33 @@ describe("line completeness", () => {
     const line = { ...base, ...over }
     expect(lineGaps(line)).toEqual(want)
     expect(isLineComplete(line)).toBe(want.length === 0)
+  })
+})
+
+describe("incompleteLines", () => {
+  const done: StoredLine = {
+    itemType: "product",
+    isAvailable: true,
+    offeredItemId: 1,
+    unitId: 2,
+    vendorProductId: 3,
+    costPrice: "1000",
+    sellingPrice: "1500",
+  }
+  it.each([
+    { name: "a complete line", line: done, want: 0 },
+    { name: "no product", line: { ...done, offeredItemId: undefined }, want: 1 },
+    { name: "no unit", line: { ...done, unitId: undefined }, want: 1 },
+    { name: "no vendor", line: { ...done, vendorProductId: undefined }, want: 1 },
+    { name: "no harga beli", line: { ...done, costPrice: "0" }, want: 1 },
+    { name: "no harga jual", line: { ...done, sellingPrice: "0" }, want: 1 },
+    { name: "Tidak Ditawarkan", line: { ...done, isAvailable: false, sellingPrice: "0" }, want: 0 },
+    {
+      name: "the shipping line",
+      line: { ...done, itemType: "shipping", offeredItemId: undefined },
+      want: 0,
+    },
+  ])("$name", ({ line, want }) => {
+    expect(incompleteLines([line])).toBe(want)
   })
 })

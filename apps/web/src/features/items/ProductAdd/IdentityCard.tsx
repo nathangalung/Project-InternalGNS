@@ -45,6 +45,9 @@ type IdentityCardProps = {
   onPickProduct?: (item: CatalogItem) => void
   onPickRequestSuggestion?: (item: CatalogItem) => void
   onCopyRequestToOffer?: () => void
+  // Salin ke Offer in flight, and what it did
+  copying?: boolean
+  copyMessage?: { text: string; ok: boolean } | null
   // Lowest qty the document takes
   minQty?: number
   // Failed catalog lookups
@@ -70,6 +73,8 @@ export default function IdentityCard({
   onPickProduct,
   onPickRequestSuggestion,
   onCopyRequestToOffer,
+  copying = false,
+  copyMessage = null,
   minQty = 1,
   requestFailure = null,
   productFailure = null,
@@ -78,7 +83,7 @@ export default function IdentityCard({
   const offerId = useId()
   const unitId = useId()
   const qtyId = useId()
-  const canCopy = form.requestedKodeImpaNama.trim().length > 0
+  const canCopy = form.requestedKodeImpaNama.trim().length > 0 && !copying
   const activeRequestLabel = form.requestedKodeImpaNama.trim()
   // Per-field open and close.
   const openProps = (key: DropdownKey) => ({
@@ -170,14 +175,23 @@ export default function IdentityCard({
           </div>
           <div className="min-w-0 flex-1">
             <div className="text-caption font-semibold leading-[1.4] text-[#4A4455]">
-              Salin produk request langsung sebagai offer.
+              Salin produk request sebagai offer. Produk yang sama di katalog dipakai, kalau belum
+              ada langsung ditambahkan.
             </div>
+            {copyMessage && (
+              <div
+                role={copyMessage.ok ? "status" : "alert"}
+                className={`mt-1 text-[12px] ${copyMessage.ok ? "text-[#15803D]" : "text-error"}`}
+              >
+                {copyMessage.text}
+              </div>
+            )}
           </div>
           <button
             type="button"
             onClick={onCopyRequestToOffer}
             disabled={!canCopy}
-            title="Pakai nilai request sebagai offer (untuk produk baru di luar katalog)"
+            title="Pakai produk request sebagai offer"
             className={`inline-flex flex-shrink-0 items-center gap-1.5 rounded-sm px-3.5 py-2 text-[12px] font-semibold transition-colors duration-150 ${ui.focusRing} ${
               canCopy
                 ? "cursor-pointer bg-primary-700 text-white"
@@ -198,7 +212,7 @@ export default function IdentityCard({
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
             </svg>
-            Salin ke Offer
+            {copying ? "Menyalin..." : "Salin ke Offer"}
           </button>
         </div>
       )}
