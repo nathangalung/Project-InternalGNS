@@ -26,6 +26,10 @@ linters:
     - unused
 
   settings:
+    misspell:
+      # Indonesian UI text
+      ignore-rules:
+        - operasional
     errcheck:
       check-type-assertions: true
       check-blank: false

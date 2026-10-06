@@ -27,8 +27,9 @@ func asRole(role string) map[string]string {
 
 // getMap decodes by key.
 // A struct decode cannot tell an absent key from an empty one.
-func getMap(t *testing.T, res *http.Response) map[string]any {
+func getMap(t *testing.T, srv *httptest.Server, path, role string) map[string]any {
 	t.Helper()
+	res := doJSONWithHeaders(t, srv, http.MethodGet, path, nil, asRole(role))
 	defer res.Body.Close()
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	var m map[string]any
@@ -47,7 +48,7 @@ func TestHandler_DetailByRole(t *testing.T) {
 	selling := []string{"discountPct", "totalProduk", "total", "totalDiscount", "subtotal", "dppNilaiLain", "ppnAmount", "grandTotal"}
 	lineSelling := []string{"sellingPrice", "discountPct", "totalSelling", "discountAmount", "subtotal"}
 
-	in := getMap(t, doJSONWithHeaders(t, srv, http.MethodGet, path, nil, asRole(roles.OperationalInput)))
+	in := getMap(t, srv, path, roles.OperationalInput)
 	for _, k := range selling {
 		assert.NotContains(t, in, k)
 	}
@@ -63,13 +64,13 @@ func TestHandler_DetailByRole(t *testing.T) {
 	assert.Empty(t, in["allowedTransitions"])
 	assert.Equal(t, false, in["canRevise"])
 
-	head := getMap(t, doJSONWithHeaders(t, srv, http.MethodGet, path, nil, asRole(roles.Finance)))
+	head := getMap(t, srv, path, roles.Finance)
 	for _, k := range selling {
 		assert.Contains(t, head, k)
 	}
 	assert.Empty(t, head["allowedTransitions"], "the finance head only reads")
 
-	admin := getMap(t, doJSONWithHeaders(t, srv, http.MethodGet, path, nil, asRole(roles.Superadmin)))
+	admin := getMap(t, srv, path, roles.Superadmin)
 	assert.NotEmpty(t, admin["allowedTransitions"])
 }
 
@@ -94,6 +95,7 @@ func TestHandler_ListByRole(t *testing.T) {
 	for _, q := range []string{"?minTotal=1", "?maxTotal=1", "?sortBy=grandTotal", "?sortBy=total"} {
 		res := doJSONWithHeaders(t, srv, http.MethodGet, "/quotations/"+q, nil, asRole(roles.OperationalInput))
 		p := problemOf(t, res)
+		res.Body.Close()
 		assert.Equal(t, http.StatusForbidden, p.Status, q)
 		assert.Equal(t, rolegate.RefusedDetail, p.Detail, q)
 	}
@@ -185,6 +187,7 @@ func TestRoutes_PDFRefusedToInput(t *testing.T) {
 	srv := httptest.NewServer(r)
 	t.Cleanup(srv.Close)
 	res := doJSON(t, srv, http.MethodGet, "/quotations/1/pdf", nil)
+	defer res.Body.Close()
 	p := problemOf(t, res)
 	assert.Equal(t, http.StatusForbidden, p.Status)
 	assert.Equal(t, rolegate.RefusedDetail, p.Detail)

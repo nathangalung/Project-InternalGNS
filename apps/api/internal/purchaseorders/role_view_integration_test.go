@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"testing"
 
@@ -20,8 +21,9 @@ func asRole(role string) map[string]string { return map[string]string{roleHeader
 
 // decodeMap decodes by key.
 // A struct decode cannot tell an absent key from an empty one.
-func decodeMap[T any](t *testing.T, res *http.Response) T {
+func decodeMap[T any](t *testing.T, srv *httptest.Server, path, role string) T {
 	t.Helper()
+	res := doJSONWithHeaders(t, srv, http.MethodGet, path, nil, asRole(role))
 	defer res.Body.Close()
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	var v T
@@ -52,7 +54,7 @@ func TestHandler_POByRole(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.role, func(t *testing.T) {
-			po := decodeMap[map[string]any](t, doJSONWithHeaders(t, srv, http.MethodGet, path, nil, asRole(tt.role)))
+			po := decodeMap[map[string]any](t, srv, path, tt.role)
 			for _, k := range selling {
 				assert.Equal(t, tt.selling, po[k] != nil, k)
 			}
@@ -63,7 +65,7 @@ func TestHandler_POByRole(t *testing.T) {
 			}
 			assert.Equal(t, tt.cancels, cancels, "Dibatalkan offered")
 
-			lines := decodeMap[[]map[string]any](t, doJSONWithHeaders(t, srv, http.MethodGet, path+"/items", nil, asRole(tt.role)))
+			lines := decodeMap[[]map[string]any](t, srv, path+"/items", tt.role)
 			require.NotEmpty(t, lines)
 			for _, l := range lines {
 				if l["itemType"] != "product" {
@@ -75,7 +77,7 @@ func TestHandler_POByRole(t *testing.T) {
 				assert.Equal(t, tt.profit, l["profitAmount"] != nil, "profitAmount")
 			}
 
-			rows := decodeMap[[]map[string]any](t, doJSONWithHeaders(t, srv, http.MethodGet, "/purchase-orders/", nil, asRole(tt.role)))
+			rows := decodeMap[[]map[string]any](t, srv, "/purchase-orders/", tt.role)
 			for _, row := range rows {
 				assert.Equal(t, tt.selling, row["poGrandTotal"] != nil, "list total")
 			}

@@ -68,8 +68,9 @@ func TestHandler_InvoiceByRole(t *testing.T) {
 			srv := roleServer(t, tx, tt.role)
 			d := getJSON[map[string]any](t, srv, fmt.Sprintf("/invoices/%d", inv.ID))
 			assert.Contains(t, d, "total", "billed figures stay")
-			var moves []string
-			for _, m := range d["allowedTransitions"].([]any) {
+			offered := d["allowedTransitions"].([]any)
+			moves := make([]string, 0, len(offered))
+			for _, m := range offered {
 				moves = append(moves, m.(map[string]any)["to"].(string))
 			}
 			assert.ElementsMatch(t, tt.moves, moves)
