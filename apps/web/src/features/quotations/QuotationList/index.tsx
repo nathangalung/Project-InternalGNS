@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react"
 import ActiveFiltersBar, { type FilterChip } from "@/components/shared/ActiveFilters"
 import Pagination from "@/components/shared/Pagination"
+import { useMe } from "@/features/auth/hooks"
 import { toTableRow } from "@/features/quotations/adapters"
 import {
   downloadQuotationPdf,
@@ -9,6 +10,7 @@ import {
 } from "@/features/quotations/hooks"
 import { resolveRange } from "@/lib/date-range"
 import { emptyListText } from "@/lib/list-empty"
+import { exportsQuotation, seesCost, seesSelling, writesQuotation } from "@/lib/rbac"
 import { ui } from "@/lib/ui"
 import { useListScreen, usePageWithin } from "@/lib/useListScreen"
 import type { QuotationSortKey } from "@/types/api"
@@ -132,6 +134,7 @@ export default function QuotationList({ onViewDetail }: QuotationListProps) {
   }
 
   // Download the quotation PDF.
+  const role = useMe().data?.role
   const handleDownload = (row: QuotationRow) => {
     void downloadQuotationPdf(Number(row.id), row.displayNo)
   }
@@ -139,7 +142,10 @@ export default function QuotationList({ onViewDetail }: QuotationListProps) {
   return (
     <>
       <div className={ui.pageContent}>
-        <PageHeader onExport={() => exportQuotationsXlsx(queryParams)} />
+        <PageHeader
+          onExport={exportsQuotation(role) ? () => exportQuotationsXlsx(queryParams) : undefined}
+          canCreate={writesQuotation(role)}
+        />
         <SummaryCards />
         <SearchBar
           search={list.search}
@@ -157,7 +163,9 @@ export default function QuotationList({ onViewDetail }: QuotationListProps) {
             sortDir={sortConfig?.direction ?? null}
             onSort={requestSort}
             onViewDetail={onViewDetail}
-            onDownload={handleDownload}
+            onDownload={exportsQuotation(role) ? handleDownload : undefined}
+            showHargaBeli={seesCost(role)}
+            showTotal={seesSelling(role)}
             emptyText={emptyListText(list, "Belum ada Quotation.")}
           />
           <Pagination
@@ -178,6 +186,7 @@ export default function QuotationList({ onViewDetail }: QuotationListProps) {
           onClose={() => setShowFilter(false)}
           initialValues={activeFilters ?? undefined}
           onApply={list.applyFilters}
+          showTotalRange={seesSelling(role)}
         />
       )}
     </>

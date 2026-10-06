@@ -15,6 +15,8 @@ export type Section =
 
 const COMMON: Section[] = ["dashboard", "clients", "vendors", "products"]
 
+// Mirrors the API mount gates (apps/api/internal/app/router.go). The
+// finance head reads quotations and POs; finance input reads POs.
 const EXTRA: Record<Role, Section[]> = {
   superadmin: [
     "dashboard-financial",
@@ -25,7 +27,9 @@ const EXTRA: Record<Role, Section[]> = {
     "users",
   ],
   operational: ["dashboard-operational", "quotation", "purchase-orders"],
-  finance: ["dashboard-financial", "invoices"],
+  operational_input: ["dashboard-operational", "quotation", "purchase-orders"],
+  finance: ["dashboard-financial", "invoices", "quotation", "purchase-orders"],
+  finance_input: ["invoices", "purchase-orders"],
 }
 
 // Unknown roles see common sections.
@@ -35,13 +39,61 @@ export function roleCanAccess(role: Role | undefined, section: Section): boolean
   return EXTRA[role]?.includes(section) ?? false
 }
 
-// Catalog write access.
+// Capabilities per role.
 //
-// Mirrors the API's readOnlyFor("finance") on /items and /vendors. An
-// unknown role fails closed, so write actions never flash in before
-// /auth/me loads.
+// Each mirrors apps/api/internal/shared/roles or a route gate. An unknown
+// role fails closed, so an action never flashes in before /auth/me loads,
+// and the server refuses it anyway.
+
+const OPS_WRITE: readonly Role[] = ["superadmin", "operational", "operational_input"]
+
+// Catalog, vendor and PO writes.
 export function canWriteCatalog(role: Role | undefined): boolean {
+  return role !== undefined && OPS_WRITE.includes(role)
+}
+
+const SELLING: readonly Role[] = ["superadmin", "operational", "finance", "finance_input"]
+const COST: readonly Role[] = ["superadmin", "operational", "operational_input", "finance"]
+
+// Harga jual and every figure built on it.
+export function seesSelling(role: Role | undefined): boolean {
+  return role !== undefined && SELLING.includes(role)
+}
+
+// Harga beli.
+export function seesCost(role: Role | undefined): boolean {
+  return role !== undefined && COST.includes(role)
+}
+
+// Sets harga jual and discount.
+export function setsPrices(role: Role | undefined): boolean {
   return role === "superadmin" || role === "operational"
+}
+
+// Creates and edits quotation drafts.
+export function writesQuotation(role: Role | undefined): boolean {
+  return canWriteCatalog(role)
+}
+
+// Downloads and exports quotations.
+export function exportsQuotation(role: Role | undefined): boolean {
+  return role === "superadmin" || role === "operational" || role === "finance"
+}
+
+// Financial dashboard figures.
+export function canViewFinancial(role: Role | undefined): boolean {
+  return role === "superadmin" || role === "finance"
+}
+
+// Client writes beyond NPWP and TKU.
+const WHOLE_CLIENT: readonly Role[] = ["superadmin", "operational", "operational_input", "finance"]
+export function editsWholeClient(role: Role | undefined): boolean {
+  return role !== undefined && WHOLE_CLIENT.includes(role)
+}
+
+// Invoice writes beyond payment.
+export function managesInvoices(role: Role | undefined): boolean {
+  return role === "superadmin" || role === "finance"
 }
 
 // Pathname to its section.
@@ -69,4 +121,16 @@ export function sectionFromPathname(pathname: string): Section {
     default:
       return "dashboard"
   }
+}
+
+// Draft and PO editors.
+const WRITE_PAGE = /^\/(quotations\/add|quotations\/[^/]+\/edit|purchase-orders\/[^/]+\/edit)\/?$/
+
+// Page the role may open.
+//
+// The section gate, plus the editors, which a read-only role is never sent
+// to: the finance head reads quotations and POs, finance input reads POs.
+export function roleCanOpen(role: Role | undefined, pathname: string): boolean {
+  if (!roleCanAccess(role, sectionFromPathname(pathname))) return false
+  return !WRITE_PAGE.test(pathname) || canWriteCatalog(role)
 }

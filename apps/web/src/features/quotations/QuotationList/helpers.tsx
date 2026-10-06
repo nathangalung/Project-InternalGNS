@@ -14,7 +14,8 @@ export type QuotationRow = {
   client: string
   clientId: number
   date: string
-  hargaBeli: string
-  total: string
+  // Absent for a role that may not see it
+  hargaBeli?: string
+  total?: string
   status: Status
 }

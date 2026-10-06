@@ -20,6 +20,7 @@ import {
 } from "@/features/quotations/hooks"
 import { useUnits } from "@/features/units/hooks"
 import { formatNumber as formatRp } from "@/lib/format"
+import { setsPrices } from "@/lib/rbac"
 import { ui } from "@/lib/ui"
 import type { QuotationDetail } from "@/types/api"
 import { toItemInput } from "./adapters"
@@ -54,6 +55,8 @@ const ignore = () => undefined
 export default function QuotationEdit({ quotationId }: QuotationEditProps) {
   const navigate = useNavigate()
   const { data: unitsData } = useUnits()
+  // A role that sets no harga jual sees and sends none
+  const pricing = setsPrices(useMe().data?.role)
   const {
     step,
     setStep,
@@ -98,7 +101,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     incompleteLines,
     seed,
     syncFromServer,
-  } = useQuotationWizard(unitsData)
+  } = useQuotationWizard(unitsData, pricing)
 
   const numericQuotationId = Number(quotationId)
   const hasNumericQuotationId = Number.isInteger(numericQuotationId) && numericQuotationId > 0
@@ -225,7 +228,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
   }
 
   function lineInput(p: ProductItem) {
-    return toItemInput(p, unitIdByCode.get(p.satuan.toUpperCase()) ?? 0)
+    return toItemInput(p, unitIdByCode.get(p.satuan.toUpperCase()) ?? 0, pricing)
   }
 
   // Claim a line, then open it.
@@ -513,6 +516,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
         )}
         {step === 2 && (
           <Step2Product
+            pricing={pricing}
             products={products}
             unitIdByCode={unitIdByCode}
             clientId={detail?.companyClientId}
@@ -543,6 +547,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
         )}
         {step === 3 && (
           <Step3Shipping
+            pricing={pricing}
             shippingAddress={shippingAddress}
             setShippingAddress={setShippingAddress}
             shippingTime={shippingTime}
@@ -557,6 +562,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
         )}
         {step === 4 && (
           <Step4Summary
+            pricing={pricing}
             terms={{
               jatuhTempo,
               setJatuhTempo,
@@ -598,6 +604,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
         onSuccess={saveDiscount}
       />
       <ProductAdd
+        pricing={pricing}
         open={showProductAdd}
         initialData={editingProduct}
         onOpenChange={setLineOpen}

@@ -1,10 +1,12 @@
 Feature: Role gates at the router mounts
-  Quotations and purchase orders belong to superadmin and operational,
-  invoices to superadmin and finance, and user management to superadmin
-  alone. Finance reads the catalog and vendors but does not change them.
-  Everyone reaches the shared master data. The gate sits at the mount, so
-  it answers before any handler looks at the request, and it answers in
-  Indonesian like every other refusal.
+  Quotations belong to superadmin and the operational roles, read by the
+  finance head; purchase orders are read by every role and changed by the
+  operational ones. Invoices belong to superadmin and the finance roles,
+  and user management to superadmin alone. The finance roles read the
+  catalog and vendors but do not change them. Operational input never
+  moves a quotation or exports selling totals, and finance input records
+  payment only. The gate answers before any handler looks at the request,
+  in Indonesian like every other refusal.
 
   Scenario Outline: A role outside a mount is refused, whatever the method
     Given I am signed in as "<role>"
@@ -12,24 +14,35 @@ Feature: Role gates at the router mounts
     Then the response status is 403
     And the problem detail is "Peran Anda tidak memiliki akses ke fitur ini."
 
-    Examples: quotations refuse finance
-      | role    | method | path                                  |
-      | finance | GET    | /api/v1/quotations/                   |
-      | finance | POST   | /api/v1/quotations/                   |
-      | finance | GET    | /api/v1/quotations/export.xlsx        |
-      | finance | PUT    | /api/v1/quotations/999999             |
-      | finance | PATCH  | /api/v1/quotations/999999/status      |
-      | finance | POST   | /api/v1/quotations/999999/send        |
-      | finance | GET    | /api/v1/quotations/999999/pdf         |
-
-    Examples: purchase orders refuse finance
+    Examples: the finance head reads quotations and POs but changes neither
       | role    | method | path                                      |
-      | finance | GET    | /api/v1/purchase-orders/                  |
-      | finance | GET    | /api/v1/purchase-orders/export.xlsx       |
-      | finance | GET    | /api/v1/purchase-orders/999999            |
+      | finance | POST   | /api/v1/quotations/                       |
+      | finance | PUT    | /api/v1/quotations/999999                 |
+      | finance | PATCH  | /api/v1/quotations/999999/status          |
+      | finance | POST   | /api/v1/quotations/999999/send            |
       | finance | PATCH  | /api/v1/purchase-orders/999999/status     |
       | finance | PATCH  | /api/v1/purchase-orders/999999/details    |
       | finance | GET    | /api/v1/purchase-orders/999999/upload-url |
+
+    Examples: operational input stays off quotation moves and selling exports
+      | role              | method | path                                |
+      | operational_input | GET    | /api/v1/quotations/export.xlsx      |
+      | operational_input | PUT    | /api/v1/quotations/999999           |
+      | operational_input | PATCH  | /api/v1/quotations/999999/status    |
+      | operational_input | POST   | /api/v1/quotations/999999/send      |
+      | operational_input | POST   | /api/v1/quotations/999999/revise    |
+      | operational_input | GET    | /api/v1/purchase-orders/export.xlsx |
+      | operational_input | GET    | /api/v1/invoices/                   |
+
+    Examples: finance input records payment only
+      | role          | method | path                                    |
+      | finance_input | GET    | /api/v1/quotations/                     |
+      | finance_input | POST   | /api/v1/invoices/999999/replacement     |
+      | finance_input | PATCH  | /api/v1/invoices/999999/dates           |
+      | finance_input | POST   | /api/v1/items/                          |
+      | finance_input | POST   | /api/v1/clients/                        |
+      | finance_input | POST   | /api/v1/clients/999999/contacts         |
+      | finance_input | PATCH  | /api/v1/purchase-orders/999999/status   |
 
     Examples: invoices refuse operational
       | role        | method | path                                          |
@@ -48,6 +61,8 @@ Feature: Role gates at the router mounts
       | finance     | PATCH  | /api/v1/users/1/password       |
       | operational | GET    | /api/v1/users/1                |
       | operational | PUT    | /api/v1/users/1                |
+      | operational_input | GET | /api/v1/users/                 |
+      | finance_input | GET    | /api/v1/users/                 |
 
     Examples: finance reads but does not change the catalog and vendors
       | role    | method | path                                               |

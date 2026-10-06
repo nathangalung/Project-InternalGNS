@@ -24,7 +24,7 @@ import {
   PENDING_FIGURE,
   toNum,
 } from "@/lib/format"
-import { roleCanAccess } from "@/lib/rbac"
+import { canViewFinancial } from "@/lib/rbac"
 import { pill, ui } from "@/lib/ui"
 import type { DashboardMetric } from "@/types/api"
 import { YEAR_OPTIONS } from "./DashboardFinancialFilter"
@@ -55,7 +55,8 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState("Quotation")
   const { data: me } = useMe()
-  const canFinance = roleCanAccess(me?.role, "invoices")
+  // Mirrors the API: financial figures for superadmin and the finance head
+  const canFinance = canViewFinancial(me?.role)
   const visibleTabs = canFinance ? chartTabs : chartTabs.filter((tab) => tab.metric === "quotation")
   const { data: summary, isError: summaryError } = useDashboardSummary()
   const { exporting, exportXlsx } = useDashboardExport()

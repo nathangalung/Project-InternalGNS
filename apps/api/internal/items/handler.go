@@ -334,6 +334,9 @@ func (h *Handler) ListVendorsForItem(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
+	for i := range vendors {
+		vendors[i].redact(deps.CurrentUserRole(r.Context()))
+	}
 	httpx.WriteJSON(w, http.StatusOK, vendors)
 }
 
@@ -406,6 +409,9 @@ func (h *Handler) Recommendations(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
+	for i := range recs {
+		recs[i].redact(deps.CurrentUserRole(r.Context()))
+	}
 	httpx.WriteJSON(w, http.StatusOK, recs)
 }
 
@@ -447,6 +453,9 @@ func (h *Handler) RecentQuotations(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
+	}
+	for i := range rows {
+		rows[i].redact(deps.CurrentUserRole(r.Context()))
 	}
 	httpx.WriteJSON(w, http.StatusOK, rows)
 }

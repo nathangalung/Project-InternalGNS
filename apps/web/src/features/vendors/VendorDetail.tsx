@@ -14,7 +14,7 @@ import { useObjectUrl } from "@/hooks/useObjectUrl"
 import { logoBackground } from "@/lib/avatar"
 import { errorMessage } from "@/lib/errors"
 import { formatRupiah } from "@/lib/format"
-import { canWriteCatalog } from "@/lib/rbac"
+import { canWriteCatalog, seesCost } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import { validateAsset } from "@/lib/upload-validation"
@@ -87,6 +87,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
 
   const { data: me } = useMe()
   const canWrite = canWriteCatalog(me?.role)
+  const showCost = seesCost(me?.role)
 
   const updateVendor = useUpdateVendor()
   const uploadLogo = useUploadVendorLogo()
@@ -537,17 +538,19 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
                 <th className={`${ui.thCenter} w-[320px]`}>Nama Produk</th>
                 <th className={`${ui.thCenter} w-[160px]`}>Kode IMPA</th>
                 <th className={`${ui.thCenter} w-[160px]`}>SKU Vendor</th>
-                <th className={`${ui.thCenter} w-[180px]`}>Harga Beli</th>
+                {showCost && <th className={`${ui.thCenter} w-[180px]`}>Harga Beli</th>}
                 <th className={`${ui.thCenter} w-[180px]`}>Link Toko</th>
               </tr>
             </thead>
             <tbody>
-              {itemsLoading && <TableLoadingRow colSpan={5} />}
+              {itemsLoading && <TableLoadingRow colSpan={showCost ? 5 : 4} />}
               {!itemsLoading && itemsError && (
-                <TableEmptyRow colSpan={5}>Gagal memuat produk vendor.</TableEmptyRow>
+                <TableEmptyRow colSpan={showCost ? 5 : 4}>
+                  Gagal memuat produk vendor.
+                </TableEmptyRow>
               )}
               {!itemsLoading && !itemsError && items.length === 0 && (
-                <TableEmptyRow colSpan={5}>Belum ada produk vendor.</TableEmptyRow>
+                <TableEmptyRow colSpan={showCost ? 5 : 4}>Belum ada produk vendor.</TableEmptyRow>
               )}
               {!itemsLoading &&
                 items.map((item) => (
@@ -559,9 +562,11 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
                     </td>
                     <td className={ui.tdCenter}>{item.impaCode ?? "-"}</td>
                     <td className={ui.tdCenter}>{item.vendorSku ?? "-"}</td>
-                    <td className={`${ui.tdCenter} font-extrabold text-primary-700`}>
-                      {formatRupiah(item.costPrice, "-")}
-                    </td>
+                    {showCost && (
+                      <td className={`${ui.tdCenter} font-extrabold text-primary-700`}>
+                        {formatRupiah(item.costPrice, "-")}
+                      </td>
+                    )}
                     <td className={ui.tdCenter}>
                       <StoreLink url={item.productUrl} fallback="-" />
                     </td>

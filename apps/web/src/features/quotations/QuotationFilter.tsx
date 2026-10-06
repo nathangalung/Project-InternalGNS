@@ -28,6 +28,8 @@ type QuotationFilterProps = {
     minHarga: string
     maxHarga: string
   }
+  // Hidden for a role that sees no total
+  showTotalRange?: boolean
 }
 
 // Legacy amount input trio.
@@ -40,7 +42,12 @@ const amountPrefix =
 const amountInput =
   "min-w-0 flex-1 border-none bg-transparent px-3 text-sm text-dark-900 outline-none placeholder:text-dark-500"
 
-export default function QuotationFilter({ onClose, onApply, initialValues }: QuotationFilterProps) {
+export default function QuotationFilter({
+  onClose,
+  onApply,
+  initialValues,
+  showTotalRange = true,
+}: QuotationFilterProps) {
   const seed = presetRange("30-hari")
   const [preset, setPreset] = useState<DatePreset>(initialValues?.preset ?? "semua")
   const [startDate, setStartDate] = useState<string>(initialValues?.startDate ?? seed.start)
@@ -200,32 +207,34 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
       </div>
 
       {/* Rentang Total Penawaran */}
-      <div className={ui.modalSection}>
-        <div className={ui.modalSectionHeading}>Rentang Total Penawaran</div>
-        <div className={ui.row2}>
-          {[
-            { key: "min", label: "Min Total", value: minHarga, set: setMinHarga },
-            { key: "max", label: "Max Total", value: maxHarga, set: setMaxHarga },
-          ].map(({ key, label, value, set }) => (
-            <div className={ui.field} key={key}>
-              <label htmlFor={`${amountId}-${key}`} className={ui.fieldLabel}>
-                {label}
-              </label>
-              <div className={amountWrapper}>
-                <span className={amountPrefix}>IDR</span>
-                <input
-                  id={`${amountId}-${key}`}
-                  className={amountInput}
-                  type="text"
-                  inputMode="numeric"
-                  value={value}
-                  onChange={(e) => set(e.target.value)}
-                />
+      {showTotalRange && (
+        <div className={ui.modalSection}>
+          <div className={ui.modalSectionHeading}>Rentang Total Penawaran</div>
+          <div className={ui.row2}>
+            {[
+              { key: "min", label: "Min Total", value: minHarga, set: setMinHarga },
+              { key: "max", label: "Max Total", value: maxHarga, set: setMaxHarga },
+            ].map(({ key, label, value, set }) => (
+              <div className={ui.field} key={key}>
+                <label htmlFor={`${amountId}-${key}`} className={ui.fieldLabel}>
+                  {label}
+                </label>
+                <div className={amountWrapper}>
+                  <span className={amountPrefix}>IDR</span>
+                  <input
+                    id={`${amountId}-${key}`}
+                    className={amountInput}
+                    type="text"
+                    inputMode="numeric"
+                    value={value}
+                    onChange={(e) => set(e.target.value)}
+                  />
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </Modal>
   )
 }

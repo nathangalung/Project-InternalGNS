@@ -9,6 +9,8 @@ type DatesCardProps = {
   pending: boolean
   // Resolves on success only.
   onSave: (input: { invoiceDate?: string; dueDate?: string }) => Promise<void>
+  // A role that records payment only reads the dates
+  readOnly?: boolean
 }
 
 const dateInput = `${ui.fieldInput} h-11 min-w-0 font-sans ${ui.disabledField}`
@@ -18,11 +20,12 @@ const dateInput = `${ui.fieldInput} h-11 min-w-0 font-sans ${ui.disabledField}`
 // Paid and cancelled invoices are filed, so their inputs stay visible but
 // locked, with the reason under them. The parent remounts this card per
 // invoice id and row version, which resets the fields to the saved values.
-export default function DatesCard({ inv, pending, onSave }: DatesCardProps) {
+export default function DatesCard({ inv, pending, onSave, readOnly = false }: DatesCardProps) {
   const id = useId()
   const [invoiceDate, setInvoiceDate] = useState(() => toInputDate(inv.invoiceDate))
   const [dueDate, setDueDate] = useState(() => toInputDate(inv.dueDate))
-  const locked = datesLocked(inv.status)
+  const filed = datesLocked(inv.status)
+  const locked = filed || readOnly
   const problem = datesProblem(invoiceDate, dueDate)
   const patch = datesPatch(inv, invoiceDate, dueDate)
   const dirty = Object.keys(patch).length > 0
@@ -90,9 +93,11 @@ export default function DatesCard({ inv, pending, onSave }: DatesCardProps) {
           id={`${id}-hint`}
           className={`text-caption ${!locked && problem ? "text-[#B91C1C]" : "text-dark-500"}`}
         >
-          {locked
+          {filed
             ? "Tanggal invoice yang sudah dibayar atau dibatalkan tidak dapat diubah."
-            : (problem ?? "Jatuh tempo menentukan kapan invoice dianggap Terlambat.")}
+            : readOnly
+              ? "Tanggal invoice diatur oleh kepala keuangan."
+              : (problem ?? "Jatuh tempo menentukan kapan invoice dianggap Terlambat.")}
         </p>
       </div>
     </section>

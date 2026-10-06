@@ -16,6 +16,9 @@ type QuotationTableProps = {
   onDownload?: (row: QuotationRow) => void
   // Empty-state text, aware of search and filters
   emptyText: string
+  // Columns a role may see
+  showHargaBeli?: boolean
+  showTotal?: boolean
 }
 
 // Sort control, keyboard reachable.
@@ -31,7 +34,10 @@ export default function QuotationTable({
   onViewDetail,
   onDownload,
   emptyText,
+  showHargaBeli = true,
+  showTotal = true,
 }: QuotationTableProps) {
+  const cols = 6 + Number(showHargaBeli) + Number(showTotal)
   const dirOf = (key: SortableRowKey) => (sortKey === key ? sortDir : null)
   const ariaSort = (key: SortableRowKey) => {
     const d = dirOf(key)
@@ -60,20 +66,24 @@ export default function QuotationTable({
               <SortIcon direction={dirOf("date")} />
             </button>
           </th>
-          <th className={`${ui.thCenter} w-[160px]`}>Total Harga Beli</th>
-          <th className={`${ui.thCenter} w-[160px]`} aria-sort={ariaSort("total")}>
-            <button type="button" className={sortHead} onClick={() => onSort("total")}>
-              <span>Total Penawaran</span>
-              <SortIcon direction={dirOf("total")} />
-            </button>
-          </th>
+          {showHargaBeli && <th className={`${ui.thCenter} w-[160px]`}>Total Harga Beli</th>}
+          {showTotal && (
+            <th className={`${ui.thCenter} w-[160px]`} aria-sort={ariaSort("total")}>
+              <button type="button" className={sortHead} onClick={() => onSort("total")}>
+                <span>Total Penawaran</span>
+                <SortIcon direction={dirOf("total")} />
+              </button>
+            </th>
+          )}
           <th className={`${ui.thCenter} w-[120px]`}>Status</th>
           <th className={`${ui.thCenter} w-[80px]`}>Aksi</th>
         </tr>
       </thead>
       <tbody>
-        {isLoading && <TableLoadingRow colSpan={8} />}
-        {!isLoading && rows.length === 0 && <TableEmptyRow colSpan={8}>{emptyText}</TableEmptyRow>}
+        {isLoading && <TableLoadingRow colSpan={cols} />}
+        {!isLoading && rows.length === 0 && (
+          <TableEmptyRow colSpan={cols}>{emptyText}</TableEmptyRow>
+        )}
         {!isLoading &&
           rows.map((row) => {
             const badge = statusConfig[row.status]
@@ -91,8 +101,14 @@ export default function QuotationTable({
                   </EntityLink>
                 </td>
                 <td className={`${ui.tdCenter} truncate`}>{row.date}</td>
-                <td className={`${ui.tdCenter} truncate`}>{row.hargaBeli}</td>
-                <td className={`${ui.tdCenter} truncate font-bold text-dark-900`}>{row.total}</td>
+                {showHargaBeli && (
+                  <td className={`${ui.tdCenter} truncate`}>{row.hargaBeli ?? "-"}</td>
+                )}
+                {showTotal && (
+                  <td className={`${ui.tdCenter} truncate font-bold text-dark-900`}>
+                    {row.total ?? "-"}
+                  </td>
+                )}
                 <td className={ui.tdCenter}>
                   <StatusBadge bg={badge.bg} color={badge.color}>
                     {row.status}
@@ -109,29 +125,31 @@ export default function QuotationTable({
                     >
                       <EyeIcon size={18} />
                     </button>
-                    <button
-                      type="button"
-                      className={ui.iconAction}
-                      title="Unduh PDF"
-                      aria-label={`Unduh PDF ${row.displayNo}`}
-                      onClick={() => onDownload?.(row)}
-                    >
-                      <svg
-                        aria-hidden="true"
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                    {onDownload && (
+                      <button
+                        type="button"
+                        className={ui.iconAction}
+                        title="Unduh PDF"
+                        aria-label={`Unduh PDF ${row.displayNo}`}
+                        onClick={() => onDownload?.(row)}
                       >
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="7 10 12 15 17 10" />
-                        <line x1="12" y1="15" x2="12" y2="3" />
-                      </svg>
-                    </button>
+                        <svg
+                          aria-hidden="true"
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="7 10 12 15 17 10" />
+                          <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>

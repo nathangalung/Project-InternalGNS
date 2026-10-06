@@ -1,7 +1,9 @@
 import EntityLink from "@/components/shared/EntityLink"
 import RecentQuotations, { QuotationStatusBadge } from "@/components/shared/RecentQuotations"
+import { useMe } from "@/features/auth/hooks"
 import { useItemRecentQuotations } from "@/features/items/hooks"
 import { formatDate, formatNumber, formatRupiah } from "@/lib/format"
+import { seesCost, seesSelling } from "@/lib/rbac"
 import { ui } from "@/lib/ui"
 
 const columns = [
@@ -17,15 +19,22 @@ const columns = [
 ]
 
 // The product's newest quotation lines.
+// Each price column shows only to a role that sees that side.
 export default function ProductQuotations({ itemId }: { itemId: number }) {
   const { data, isPending, isError } = useItemRecentQuotations(itemId)
+  const role = useMe().data?.role
+  const cost = seesCost(role)
+  const selling = seesSelling(role)
+  const shown = columns.filter(
+    (c) => (c.label !== "Harga Beli" || cost) && (c.label !== "Harga Jual" || selling),
+  )
   return (
     <RecentQuotations
       subject="produk"
       rows={data}
       isPending={isPending}
       isError={isError}
-      columns={columns}
+      columns={shown}
       rowKey={(r) => String(r.lineId)}
       renderRow={(r) => (
         <>
@@ -51,10 +60,12 @@ export default function ProductQuotations({ itemId }: { itemId: number }) {
             )}
           </td>
           <td className={ui.tdCenter}>{formatNumber(r.qty)}</td>
-          <td className={ui.tdCenter}>{formatRupiah(r.costPrice, "-")}</td>
-          <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>
-            {formatRupiah(r.sellingPrice, "-")}
-          </td>
+          {cost && <td className={ui.tdCenter}>{formatRupiah(r.costPrice, "-")}</td>}
+          {selling && (
+            <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>
+              {formatRupiah(r.sellingPrice, "-")}
+            </td>
+          )}
           <td className={ui.tdCenter}>
             <QuotationStatusBadge status={r.status} />
           </td>

@@ -48,6 +48,8 @@ type HistoryEntry = {
 
 export type QuotationData = {
   id: string
+  // Harga jual came back; false for a role that sees none
+  seesSelling: boolean
   version: number
   client: string
   clientId?: number

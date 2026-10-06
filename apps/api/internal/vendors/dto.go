@@ -30,7 +30,7 @@ type Vendor struct {
 	CreatedAt     time.Time    `db:"created_at"     json:"createdAt"`
 	UpdatedAt     time.Time    `db:"updated_at"     json:"updatedAt"`
 	ProductCount  int64        `db:"product_count"  json:"productCount"`
-	TotalPurchase string       `db:"total_purchase" json:"totalPurchase"`
+	TotalPurchase string       `db:"total_purchase" json:"totalPurchase,omitempty"`
 	LogoObjectKey *string      `db:"logo_object_key" json:"logoObjectKey,omitempty"`
 }
 

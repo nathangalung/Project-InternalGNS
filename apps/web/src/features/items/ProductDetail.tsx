@@ -13,7 +13,7 @@ import { useUnits } from "@/features/units/hooks"
 import UnitCombobox from "@/features/units/UnitCombobox"
 import { formErrors } from "@/lib/form-errors"
 import { formatDate, formatRupiah } from "@/lib/format"
-import { canWriteCatalog } from "@/lib/rbac"
+import { canWriteCatalog, seesCost } from "@/lib/rbac"
 import { ui } from "@/lib/ui"
 import type { ItemRow, ItemVendorRow } from "@/types/api"
 
@@ -33,7 +33,8 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
   const { data: units } = useUnits()
   const { data: me } = useMe()
   const canWrite = canWriteCatalog(me?.role)
-  const vendorCols = canWrite ? 6 : 5
+  const showCost = seesCost(me?.role)
+  const vendorCols = 4 + Number(showCost) + Number(canWrite)
   const nameId = useId()
   const nameErrorId = useId()
   const impaId = useId()
@@ -409,7 +410,7 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                 <tr className={ui.theadRow}>
                   <th className={`${ui.thCenter} w-[280px]`}>Nama Vendor</th>
                   <th className={`${ui.thCenter} w-[200px]`}>SKU Vendor</th>
-                  <th className={`${ui.thCenter} w-[180px]`}>Harga Beli</th>
+                  {showCost && <th className={`${ui.thCenter} w-[180px]`}>Harga Beli</th>}
                   <th className={`${ui.thCenter} w-[200px]`}>Penawaran Terakhir</th>
                   <th className={`${ui.thCenter} w-[180px]`}>Link Toko</th>
                   {canWrite && <th className={`${ui.thCenter} w-[100px]`}>Aksi</th>}
@@ -453,9 +454,11 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                           </div>
                         </td>
                         <td className={`${ui.tdCenter} font-medium`}>{v.vendorSku ?? "-"}</td>
-                        <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>
-                          {formattedPrice}
-                        </td>
+                        {showCost && (
+                          <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>
+                            {formattedPrice}
+                          </td>
+                        )}
                         <td className={`${ui.tdCenter} font-medium`}>{formattedDate}</td>
                         <td className={ui.tdCenter}>
                           <StoreLink url={v.productUrl} fallback="-" />

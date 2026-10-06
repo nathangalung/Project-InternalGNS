@@ -57,6 +57,8 @@ type ProductAddProps = {
   allowIncomplete?: boolean
   // Document the line belongs to
   docKind?: "quotation" | "po"
+  // False for a role that sets no harga jual: the field and its history hide
+  pricing?: boolean
 }
 
 const DIALOG_TITLE = {
@@ -73,6 +75,7 @@ export default function ProductAdd({
   clientId,
   allowIncomplete = false,
   docKind = "quotation",
+  pricing = true,
 }: ProductAddProps) {
   const [form, setForm] = useState<ProductAddFormData>(INITIAL_FORM)
   const [openDropdown, setOpenDropdown] = useState<DropdownKey | null>(null)
@@ -194,7 +197,7 @@ export default function ProductAdd({
     setAutofillFor(null)
   }, [autofillFor, recommendation, form])
 
-  const priceHistory = useItemPriceHistory(pickedItemId ?? undefined, 10)
+  const priceHistory = useItemPriceHistory(pricing ? (pickedItemId ?? undefined) : undefined, 10)
   const priceHistoryRows = priceHistory.data
   const historisOptions: HistorisOption[] = useMemo(
     () =>
@@ -265,7 +268,7 @@ export default function ProductAdd({
   const isJumlahFilled = isSatuanFilled && form.jumlahProduk.trim().length > 0
   const exactVendor = vendorOptions.find((v) => v.nama === form.namaVendor)
   const isVendorFilled = isJumlahFilled && exactVendor !== undefined
-  const isHargaJualValid = parseRp(form.hargaJual) > 0
+  const isHargaJualValid = !pricing || parseRp(form.hargaJual) > 0
   // A draft line may lack its vendor and prices, but a typed vendor must be
   // one of the options.
   const vendorTyped = form.namaVendor.trim().length > 0
@@ -295,7 +298,8 @@ export default function ProductAdd({
     const currentJual = parseRp(form.hargaJual)
 
     const isBeliChanged = initialPrices.beli !== null && currentBeli !== initialPrices.beli
-    const isJualChanged = initialPrices.jual !== null && currentJual !== initialPrices.jual
+    const isJualChanged =
+      pricing && initialPrices.jual !== null && currentJual !== initialPrices.jual
 
     if (isBeliChanged || isJualChanged) {
       setShowConfirm(true)
@@ -343,7 +347,7 @@ export default function ProductAdd({
   const currentBeli = parseRp(form.hargaBeli)
   const currentJual = parseRp(form.hargaJual)
   const isBeliChanged = initialPrices.beli !== null && currentBeli !== initialPrices.beli
-  const isJualChanged = initialPrices.jual !== null && currentJual !== initialPrices.jual
+  const isJualChanged = pricing && initialPrices.jual !== null && currentJual !== initialPrices.jual
 
   // The list each dropdown shows.
   const productFailure = lookupFailure(
@@ -549,6 +553,7 @@ export default function ProductAdd({
             isVendorFilled={pricesUnlocked}
             profit={profit}
             profitPct={profitPct}
+            pricing={pricing}
             vendorFailure={vendorFailure}
             historyFailure={historyFailure}
             recommendationFailure={recommendationFailure}

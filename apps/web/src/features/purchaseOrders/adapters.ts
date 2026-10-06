@@ -92,7 +92,8 @@ export type PoLineSource = {
   itemCode?: string
   qty: string
   unitId?: number
-  sellingPrice: string
+  // Absent for a role that sees no harga jual
+  sellingPrice?: string
   costPrice?: string
   isAvailable: boolean
   shipDestination?: string
@@ -180,16 +181,20 @@ function unitIdOf(line: PoEditLine, unitIdByCode: Map<string, number>): number |
 // picked without a link travels as vendorId and the server links it.
 export function lineToInput(line: PoEditLine, unitIdByCode: Map<string, number>): PoItemInput {
   const s = line.source
-  if (s && !line.touched) return { ...s }
+  // The stored line id lets a role that sets no price keep its harga jual
+  const id = s ? line.id : undefined
+  if (s && !line.touched) return { ...s, id }
   const costUnknown = s !== undefined && s.costPrice === undefined && line.hargaBeli === 0
+  const sellingHidden = s !== undefined && s.sellingPrice === undefined
   return {
+    id,
     quotationItemId: s && line.itemId === s.offeredItemId ? s.quotationItemId : undefined,
     offeredItemId: line.itemId,
     itemName: line.nama || line.requestedNama,
     itemCode: line.kodeImpa || undefined,
     qty: String(line.jumlah),
     unitId: unitIdOf(line, unitIdByCode),
-    sellingPrice: String(line.hargaJual),
+    sellingPrice: sellingHidden ? undefined : String(line.hargaJual),
     costPrice: costUnknown ? undefined : String(line.hargaBeli),
     isAvailable: s?.isAvailable,
     shipDestination: s?.shipDestination,

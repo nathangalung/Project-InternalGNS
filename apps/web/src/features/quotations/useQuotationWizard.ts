@@ -15,7 +15,12 @@ import {
 //
 // QuotationAdd and QuotationEdit run the same four steps over the same
 // fields; each keeps only its own client picking, loading and save call.
-export function useQuotationWizard(units: { id: number; code: string }[] | undefined) {
+// pricing is false for a role that sets no harga jual, whose lines are
+// complete without one.
+export function useQuotationWizard(
+  units: { id: number; code: string }[] | undefined,
+  pricing = true,
+) {
   const [step, setStep] = useState(1)
 
   const [selectedClient, setSelectedClient] = useState("")
@@ -174,7 +179,7 @@ export function useQuotationWizard(units: { id: number; code: string }[] | undef
     unitsOk: unknownUnits === 0,
     invalidQty: countInvalidQty(products),
     // Lines not yet ready to be sent
-    incompleteLines: products.filter((p) => !isLineComplete(p)).length,
+    incompleteLines: products.filter((p) => !isLineComplete(p, pricing)).length,
     // Server errors apply to the lines they were raised for.
     qtyErrors: qtyFail?.lines === products ? qtyFail.byId : {},
     recordQtyFailure,

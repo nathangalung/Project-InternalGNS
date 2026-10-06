@@ -10,6 +10,7 @@ import SearchInput from "@/components/shared/SearchInput"
 import StatCard from "@/components/shared/StatCard"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
+import { useMe } from "@/features/auth/hooks"
 import ClientAdd from "@/features/clients/ClientAdd"
 import ClientFilter, { type ClientFilterValues } from "@/features/clients/ClientFilter"
 import { clientKpis } from "@/features/clients/helpers"
@@ -19,6 +20,7 @@ import { filterChips } from "@/lib/filter-chips"
 import { statusFilterLabel } from "@/lib/filter-options"
 import { formatNumber, formatRupiah, PENDING_FIGURE } from "@/lib/format"
 import { emptyListText } from "@/lib/list-empty"
+import { editsWholeClient, seesSelling } from "@/lib/rbac"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import { ui } from "@/lib/ui"
 import { useListScreen, usePageWithin } from "@/lib/useListScreen"
@@ -28,6 +30,10 @@ import type { ClientRow } from "@/types/api"
 const CLIENT_FILTERS: ClientFilterValues = { status: "all", countryCode: "", minTotal: "" }
 
 export default function ClientList() {
+  const role = useMe().data?.role
+  // Total purchase is a selling figure; finance input adds no client
+  const showTotal = seesSelling(role)
+  const canAdd = editsWholeClient(role)
   const { data: countriesData } = useCountries()
   const { data: summaryData } = useClientSummary()
 
@@ -90,26 +96,28 @@ export default function ClientList() {
         <div className={ui.pageHeader}>
           <h1 className={ui.pageTitle}>Daftar Klien</h1>
           <div className={ui.pageActions}>
-            <button
-              className={`${ui.btnPrimary} w-[200px]`}
-              type="button"
-              onClick={() => setShowAdd(true)}
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                aria-hidden="true"
+            {canAdd && (
+              <button
+                className={`${ui.btnPrimary} w-[200px]`}
+                type="button"
+                onClick={() => setShowAdd(true)}
               >
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-              Tambah Klien
-            </button>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  aria-hidden="true"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Tambah Klien
+              </button>
+            )}
           </div>
         </div>
 
@@ -146,15 +154,17 @@ export default function ClientList() {
                 <th className={`${ui.thCenter} w-[240px]`}>Nama Klien</th>
                 <th className={`${ui.thCenter} w-[160px]`}>Negara</th>
                 <th className={`${ui.thCenter} w-[140px]`}>Status</th>
-                <th className={`${ui.thCenter} w-[180px]`}>Total Pembelian</th>
+                {showTotal && <th className={`${ui.thCenter} w-[180px]`}>Total Pembelian</th>}
                 <th className={`${ui.thCenter} w-[160px]`}>Jumlah Pembelian</th>
                 <th className={`${ui.thCenter} w-[80px]`}>Aksi</th>
               </tr>
             </thead>
             <tbody>
-              {isLoading && <TableLoadingRow colSpan={6} />}
+              {isLoading && <TableLoadingRow colSpan={showTotal ? 6 : 5} />}
               {!isLoading && currentRows.length === 0 && (
-                <TableEmptyRow colSpan={6}>{emptyListText(list, "Belum ada klien.")}</TableEmptyRow>
+                <TableEmptyRow colSpan={showTotal ? 6 : 5}>
+                  {emptyListText(list, "Belum ada klien.")}
+                </TableEmptyRow>
               )}
               {!isLoading &&
                 currentRows.map((c: ClientRow) => {
@@ -179,9 +189,11 @@ export default function ClientList() {
                           {status.label}
                         </StatusBadge>
                       </td>
-                      <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>
-                        {formatRupiah(c.totalPurchase, "-")}
-                      </td>
+                      {showTotal && (
+                        <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>
+                          {formatRupiah(c.totalPurchase, "-")}
+                        </td>
+                      )}
                       <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>
                         {c.quotationCount}
                       </td>
@@ -223,6 +235,7 @@ export default function ClientList() {
           onClose={() => setShowFilter(false)}
           initialValues={filters}
           onApply={list.applyFilters}
+          showTotal={showTotal}
         />
       )}
     </>

@@ -17,6 +17,8 @@ type ProductTableProps = {
   showRequest?: boolean
   // Vendor and store link under the offer, for buying
   showVendor?: boolean
+  // Harga jual and totals, absent for a role that sees none
+  showPrices?: boolean
   products: ProductRow[]
 }
 
@@ -50,6 +52,7 @@ export default function ProductTable({
   showProfit = true,
   showRequest = true,
   showVendor = false,
+  showPrices = true,
 }: ProductTableProps) {
   const [rawPage, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(5)
@@ -127,9 +130,11 @@ export default function ProductTable({
                   )}
                   <th className={`${ui.thCenter} w-[80px]`}>Jumlah</th>
                   <th className={`${ui.thCenter} w-[80px]`}>Satuan</th>
-                  <th className={`${ui.thCenter} w-[140px]`}>Harga Jual Satuan</th>
-                  {showProfit && <th className={`${thProfit} w-[150px]`}>Profit (Rp)</th>}
-                  <th className={`${ui.thCenter} w-[150px]`}>Total (Rp)</th>
+                  {showPrices && <th className={`${ui.thCenter} w-[140px]`}>Harga Jual Satuan</th>}
+                  {showPrices && showProfit && (
+                    <th className={`${thProfit} w-[150px]`}>Profit (Rp)</th>
+                  )}
+                  {showPrices && <th className={`${ui.thCenter} w-[150px]`}>Total (Rp)</th>}
                 </tr>
               </thead>
               <tbody>
@@ -156,13 +161,17 @@ export default function ProductTable({
                       />
                       <td className={`${ui.tdCenter} truncate`}>{p.qty}</td>
                       <td className={`${ui.tdCenter} truncate`}>{p.satuan}</td>
-                      <td className={`${ui.tdCenter} truncate`}>{formatRp(p.hargaSatuan)}</td>
-                      {showProfit && (
+                      {showPrices && (
+                        <td className={`${ui.tdCenter} truncate`}>{formatRp(p.hargaSatuan)}</td>
+                      )}
+                      {showPrices && showProfit && (
                         <td className={tdProfit}>{formatRp(p.qty * p.profitSatuan)}</td>
                       )}
-                      <td className={`${ui.tdCenter} truncate font-bold text-dark-900`}>
-                        {formatRp(p.qty * p.hargaSatuan)}
-                      </td>
+                      {showPrices && (
+                        <td className={`${ui.tdCenter} truncate font-bold text-dark-900`}>
+                          {formatRp(p.qty * p.hargaSatuan)}
+                        </td>
+                      )}
                     </tr>
                   )
                 })}

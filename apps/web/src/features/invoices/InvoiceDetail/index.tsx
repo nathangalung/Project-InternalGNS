@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/react-router"
 import { useEffect, useMemo, useRef, useState } from "react"
+import { useMe } from "@/features/auth/hooks"
 import { getCompanyInitials } from "@/features/clients/helpers"
 import ClientSummaryCard from "@/features/quotations/QuotationDetail/ClientSummaryCard"
 import CostBreakdown from "@/features/quotations/QuotationDetail/CostBreakdown"
@@ -8,6 +9,7 @@ import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
 import { downloadPdf, fetchObjectUrl } from "@/lib/api-client"
 import { errorMessage } from "@/lib/errors"
 import { computeTaxBreakdown, toNum } from "@/lib/format"
+import { managesInvoices } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import type { InvoiceDetail as InvoiceDetailData } from "@/types/api"
@@ -67,6 +69,8 @@ export default function InvoiceDetail({ inv }: InvoiceDetailProps) {
   const replaceInvoice = useReplaceInvoice()
   const updateDates = useUpdateInvoiceDates()
   const attachmentInputRef = useRef<HTMLInputElement>(null)
+  // Finance input records payment only
+  const manages = managesInvoices(useMe().data?.role)
   const [modal, setModal] = useState<ActionModalKind | null>(null)
 
   const status = invoiceDisplayStatus(inv)
@@ -154,6 +158,7 @@ export default function InvoiceDetail({ inv }: InvoiceDetailProps) {
       <DatesCard
         key={`${inv.id}-${inv.rowVersion}`}
         inv={inv}
+        readOnly={!manages}
         pending={updateDates.isPending}
         onSave={async (input) => {
           await updateDates.mutateAsync({ id: inv.id, input, rowVersion: inv.rowVersion })
@@ -172,7 +177,7 @@ export default function InvoiceDetail({ inv }: InvoiceDetailProps) {
       />
       <FileCard
         fileName={fileNameFromKey(inv.attachmentObjectKey)}
-        onUpload={() => attachmentInputRef.current?.click()}
+        onUpload={manages ? () => attachmentInputRef.current?.click() : undefined}
         onDownload={() => void handleAttachmentDownload()}
       />
       <ClientSummaryCard

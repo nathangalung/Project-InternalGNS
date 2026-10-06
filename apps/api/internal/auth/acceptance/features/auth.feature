@@ -122,10 +122,11 @@ Feature: Login, session refresh and session revocation
     Then the response status is <status>
 
     Examples:
-      | role        | path                      | status |
-      | finance     | /api/v1/quotations/       | 403    |
-      | finance     | /api/v1/invoices/         | 200    |
-      | operational | /api/v1/quotations/       | 200    |
+      | role              | path                      | status |
+      | finance_input     | /api/v1/quotations/       | 403    |
+      | finance_input     | /api/v1/invoices/         | 200    |
+      | operational_input | /api/v1/invoices/         | 403    |
+      | operational       | /api/v1/quotations/       | 200    |
 
   Scenario: Keeping the same role keeps the session
     Given the account is logged in

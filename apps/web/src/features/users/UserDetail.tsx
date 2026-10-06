@@ -9,7 +9,7 @@ import {
 import { useMe } from "@/features/auth/hooks"
 import { PartialUserUpdateError } from "@/features/users/api"
 import ChangeOwnPasswordModal from "@/features/users/ChangeOwnPasswordModal"
-import { endsSessions, ROLE_LABEL, ROLE_ORDER } from "@/features/users/helpers"
+import { endsSessions, ROLE_HINT, ROLE_LABEL, ROLE_ORDER } from "@/features/users/helpers"
 import { useEndOwnSession, useUpdateUser } from "@/features/users/hooks"
 import PasswordChecklist from "@/features/users/PasswordChecklist"
 import PasswordInput from "@/features/users/PasswordInput"
@@ -348,6 +348,7 @@ export default function UserDetail({ user, onBack }: UserDetailProps) {
                   ))}
                 </SelectContent>
               </Select>
+              <p className="mt-1.5 text-[12px] text-dark-500">{ROLE_HINT[role]}</p>
               {fieldErrors.role && <div className={fieldErrorClass}>{fieldErrors.role}</div>}
             </div>
           </div>

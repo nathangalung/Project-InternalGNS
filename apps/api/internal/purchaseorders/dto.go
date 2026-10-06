@@ -151,7 +151,7 @@ type UpdateItemsLine struct {
 	ItemCode        *string `json:"itemCode,omitempty"`
 	Qty             string  `json:"qty"`
 	UnitID          *int16  `json:"unitId,omitempty"`
-	SellingPrice    string  `json:"sellingPrice"`
+	SellingPrice    string  `json:"sellingPrice,omitempty"` // a role that sets no price omits it
 	CostPrice       *string `json:"costPrice,omitempty"`
 	IsAvailable     *bool   `json:"isAvailable,omitempty"`
 	ShipDestination *string `json:"shipDestination,omitempty"`

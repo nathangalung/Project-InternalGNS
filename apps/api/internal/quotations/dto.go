@@ -146,7 +146,7 @@ type CreateItem struct {
 	Qty      string `json:"qty"` // numeric as string
 	// UnitID 0 (absent) stores no unit; the send rule asks for one
 	UnitID            int16   `json:"unitId,omitempty"`
-	SellingPrice      string  `json:"sellingPrice"`
+	SellingPrice      string  `json:"sellingPrice,omitempty"` // a role that sets no price omits it
 	CostPrice         *string `json:"costPrice,omitempty"`
 	UpdateVendorPrice bool    `json:"updateVendorPrice,omitempty"`
 	ShipDestination   *string `json:"shipDestination,omitempty"`
