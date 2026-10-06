@@ -1,4 +1,4 @@
-import { ApiError } from "@/lib/api-client"
+import { ApiError, joinFieldMessages } from "@/lib/api-client"
 import { toast } from "@/lib/toast"
 
 // Filesystem-safe invoice number.
@@ -15,10 +15,7 @@ export function transferErrorMessage(err: unknown, fallback: string): string {
   if (!(err instanceof ApiError) || (err.status !== 409 && err.status !== 422)) return fallback
   const detail = err.body?.detail?.trim()
   if (detail) return detail
-  const parts = Object.values(err.body?.fields ?? {})
-    .map((v) => v.trim())
-    .filter((v) => v !== "")
-  return parts.length > 0 ? parts.join("; ") : fallback
+  return joinFieldMessages(err.body?.fields) || fallback
 }
 
 // Run a download, toast failures.

@@ -99,7 +99,7 @@ export default function ContactCompletion({ clientId, contact }: ContactCompleti
           disabled={!canSave || update.isPending}
           className={`${ui.modalSubmit} px-4 py-2 text-[13px]`}
         >
-          {update.isPending ? "Menyimpan..." : "Simpan Kontak"}
+          {update.isPending ? "Menyimpan..." : "Simpan Narahubung"}
         </button>
       </div>
     </div>

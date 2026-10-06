@@ -68,7 +68,7 @@ export async function loginState(
 //
 // Resolves with the API answer, so a caller can wait out each attempt.
 export async function submitLogin(page: Page, email: string, password: string): Promise<Response> {
-  await page.getByLabel("Surel").fill(email)
+  await page.getByLabel("Email").fill(email)
   await page.getByLabel("Kata Sandi", { exact: true }).fill(password)
   const response = page.waitForResponse((r) => r.url().endsWith("/auth/login"))
   await page.getByRole("button", { name: "Masuk" }).click()

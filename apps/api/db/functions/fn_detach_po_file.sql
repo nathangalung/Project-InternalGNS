@@ -1,4 +1,4 @@
--- Canonical current body of fn_detach_po_file (deployed by migration 00073).
+-- Canonical current body of fn_detach_po_file (deployed by migration 00103).
 CREATE OR REPLACE FUNCTION public.fn_detach_po_file(p_po_id bigint, p_user_id bigint)
  RETURNS void
  LANGUAGE plpgsql
@@ -10,7 +10,7 @@ BEGIN
     FROM purchase_orders WHERE id = p_po_id FOR UPDATE;
 
   IF v_old IS NULL THEN
-    RAISE EXCEPTION 'PO % tidak ditemukan.', p_po_id
+    RAISE EXCEPTION 'PO tidak ditemukan. Muat ulang halaman.'
       USING ERRCODE = 'P0011';
   END IF;
 

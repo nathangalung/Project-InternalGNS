@@ -224,7 +224,7 @@ func buildExportData(
 		DPP:           pdfgen.FormatIDRCents(d.DppNilaiLain),
 		PPN:           pdfgen.FormatIDRCents(d.PpnAmount),
 		GrandTotal:    pdfgen.FormatIDRCents(d.GrandTotal),
-		DeliveryPlace: pdfgen.LatexEscape(delivery),
+		DeliveryPlace: pdfgen.LatexAddress(delivery, pdfgen.PartyKeep),
 		DeliveryTime:  pdfgen.LatexEscape(deliveryTime),
 		Payment:       pdfgen.LatexEscape(payment),
 		Validity:      pdfgen.LatexEscape(validity),

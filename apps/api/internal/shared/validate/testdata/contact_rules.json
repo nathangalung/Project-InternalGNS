@@ -1,7 +1,7 @@
 {
   "comment": "Shared phone and email rules. validate_test.go and apps/web/src/lib/validation.test.ts both run every case, so the Go and TS validators cannot drift. Inputs are checked as given: callers trim first and skip blank optional fields.",
   "messages": {
-    "phone": "Nomor telepon harus 9–12 digit angka.",
+    "phone": "Nomor telepon harus 9 sampai 12 digit angka.",
     "email": "Format email tidak valid."
   },
   "phone": [

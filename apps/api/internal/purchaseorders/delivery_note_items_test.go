@@ -35,8 +35,8 @@ func TestDeliveryNoteItems(t *testing.T) {
 				product("Cat #1", "10.00", &box, &hold),
 			},
 			[]dnItem{
-				{No: 1, Qty: "2.5", Unit: "PCS", Name: `Tali\_Tambang`, ShipDestination: `Deck \& Hold \#2`},
-				{No: 2, Qty: "10", Unit: "BOX", Name: `Cat \#1`, ShipDestination: `Gudang 50\%`},
+				{No: 1, Qty: "2.5", Unit: "PCS", Name: `Tali\_Tambang`, ShipDestination: `Deck~\&~Hold~\#2`},
+				{No: 2, Qty: "10", Unit: "BOX", Name: `Cat \#1`, ShipDestination: `Gudang~50\%`},
 			},
 		},
 		{
@@ -47,30 +47,30 @@ func TestDeliveryNoteItems(t *testing.T) {
 		{
 			"the shipping charge is left out",
 			[]PurchaseOrderItem{product("Lampu", "3", &pcs, &hold), shipping},
-			[]dnItem{{No: 1, Qty: "3", Unit: "PCS", Name: "Lampu", ShipDestination: `Gudang 50\%`}},
+			[]dnItem{{No: 1, Qty: "3", Unit: "PCS", Name: "Lampu", ShipDestination: `Gudang~50\%`}},
 		},
 		{
 			"numbering skips the shipping charge",
 			[]PurchaseOrderItem{product("A", "1", &pcs, &hold), shipping, product("B", "2", &pcs, &hold)},
 			[]dnItem{
-				{No: 1, Qty: "1", Unit: "PCS", Name: "A", ShipDestination: `Gudang 50\%`},
-				{No: 2, Qty: "2", Unit: "PCS", Name: "B", ShipDestination: `Gudang 50\%`},
+				{No: 1, Qty: "1", Unit: "PCS", Name: "A", ShipDestination: `Gudang~50\%`},
+				{No: 2, Qty: "2", Unit: "PCS", Name: "B", ShipDestination: `Gudang~50\%`},
 			},
 		},
 		{
 			"unaddressed goods take the shipping line address",
 			[]PurchaseOrderItem{product("A", "1", &pcs, nil), product("B", "2", &pcs, &blank), shipping},
 			[]dnItem{
-				{No: 1, Qty: "1", Unit: "PCS", Name: "A", ShipDestination: `Deck \& Hold \#2`},
-				{No: 2, Qty: "2", Unit: "PCS", Name: "B", ShipDestination: `Deck \& Hold \#2`},
+				{No: 1, Qty: "1", Unit: "PCS", Name: "A", ShipDestination: `Deck~\&~Hold~\#2`},
+				{No: 2, Qty: "2", Unit: "PCS", Name: "B", ShipDestination: `Deck~\&~Hold~\#2`},
 			},
 		},
 		{
 			"addressed goods keep their own",
 			[]PurchaseOrderItem{product("A", "1", &pcs, &hold), product("B", "2", &pcs, nil), shipping},
 			[]dnItem{
-				{No: 1, Qty: "1", Unit: "PCS", Name: "A", ShipDestination: `Gudang 50\%`},
-				{No: 2, Qty: "2", Unit: "PCS", Name: "B", ShipDestination: `Deck \& Hold \#2`},
+				{No: 1, Qty: "1", Unit: "PCS", Name: "A", ShipDestination: `Gudang~50\%`},
+				{No: 2, Qty: "2", Unit: "PCS", Name: "B", ShipDestination: `Deck~\&~Hold~\#2`},
 			},
 		},
 		{
@@ -81,7 +81,7 @@ func TestDeliveryNoteItems(t *testing.T) {
 		{
 			"a long part number gets break points",
 			[]PurchaseOrderItem{product(longPart, "1", &pcs, &hold)},
-			[]dnItem{{No: 1, Qty: "1", Unit: "PCS", Name: pdfgen.LatexBreakable(longPart), ShipDestination: `Gudang 50\%`}},
+			[]dnItem{{No: 1, Qty: "1", Unit: "PCS", Name: pdfgen.LatexBreakable(longPart), ShipDestination: `Gudang~50\%`}},
 		},
 		{
 			"a long destination gets break points",

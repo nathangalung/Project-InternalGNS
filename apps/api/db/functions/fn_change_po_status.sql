@@ -1,4 +1,4 @@
--- Canonical current body of fn_change_po_status (deployed by migration 00098).
+-- Canonical current body of fn_change_po_status (deployed by migration 00103).
 CREATE OR REPLACE FUNCTION public.fn_change_po_status(p_po_id bigint, p_new_status text, p_user_id bigint, p_note text DEFAULT NULL::text)
  RETURNS void
  LANGUAGE plpgsql
@@ -17,7 +17,7 @@ BEGIN
     FROM purchase_orders WHERE id = p_po_id FOR UPDATE;
 
   IF v_old IS NULL THEN
-    RAISE EXCEPTION 'PO % tidak ditemukan.', p_po_id
+    RAISE EXCEPTION 'PO tidak ditemukan. Muat ulang halaman.'
       USING ERRCODE = 'P0011';
   END IF;
 

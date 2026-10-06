@@ -80,7 +80,7 @@ test("edit pages name the document and link back to it", async ({ page, seed }) 
 
   await page.goto(`/quotations/${draft.id}/edit`)
   await expect(
-    page.getByRole("heading", { name: `Edit Quotation ${draft.quotationNo}` }),
+    page.getByRole("heading", { name: `Ubah Quotation ${draft.quotationNo}` }),
   ).toBeVisible()
   await page.getByRole("link", { name: `Detail ${draft.quotationNo}` }).click()
   await expect(page).toHaveURL(new RegExp(`/quotations/${draft.id}$`))
@@ -89,7 +89,7 @@ test("edit pages name the document and link back to it", async ({ page, seed }) 
   const po = await seed.accept(q.id)
   await page.goto(`/purchase-orders/${q.id}/edit`)
   await expect(
-    page.getByRole("heading", { name: `Edit Purchase Order ${po.poNumber}` }),
+    page.getByRole("heading", { name: `Ubah Purchase Order ${po.poNumber}` }),
   ).toBeVisible()
   await page.getByRole("link", { name: `Detail ${po.poNumber}` }).click()
   await expect(page).toHaveURL(new RegExp(`/purchase-orders/${q.id}$`))

@@ -1,4 +1,4 @@
--- Canonical current body of fn_prepare_quotation_lines (deployed by migration 00088).
+-- Canonical current body of fn_prepare_quotation_lines (deployed by migration 00103).
 CREATE OR REPLACE FUNCTION public.fn_prepare_quotation_lines(p_items jsonb, p_user_id bigint)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -37,7 +37,7 @@ BEGIN
         WHERE id = (v_item->>'vendor_product_id')::BIGINT
           AND item_id = (v_item->>'offered_item_id')::BIGINT) THEN
       -- A vendor link names one product.
-      RAISE EXCEPTION 'Vendor yang dipilih bukan pemasok produk ini. Pilih ulang vendor.'
+      RAISE EXCEPTION 'Vendor ini tidak menyediakan produk tersebut. Pilih vendor lain.'
         USING ERRCODE = 'P0014';
     END IF;
     v_out := v_out || jsonb_build_array(v_item - 'vendor_id');

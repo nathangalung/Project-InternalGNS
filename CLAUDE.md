@@ -623,10 +623,17 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    DocumentHead` checks all of it with `pdfinfo` and `pdftotext`.
    Geometry uses `includehead` so the running header prints on the sheet
    instead of off its top edge. The party block is a top-aligned `tabularx`
-   whose value column is ragged-right `X` with hyphenation off (English
-   patterns would split Indonesian names), and the client name and address
-   go through `pdfgen.LatexBreakable`, so a long name or address wraps
-   instead of printing over the right-hand block. The layout fixtures carry
+   whose value column is plain `\raggedright` `X` with hyphenation off
+   (English patterns would split Indonesian names), and the client name goes
+   through `pdfgen.LatexBreakable`, so a long name wraps instead of printing
+   over the right-hand block. Every printed address (the party Address, the
+   quotation's Delivery Place, the note's Tujuan, the invoice's Description)
+   goes through `pdfgen.LatexAddress`: `NormalizeAddress` folds typed line
+   breaks, stray spaces and doubled commas into one ", " between parts and
+   keeps a house-number list such as "2,6,8", and a part up to `PartyKeep`
+   (or `CellKeep` in a cell) characters never splits, so lines break at the
+   commas, and Jl., Lt., No., Kav. and the like stay with their word. An
+   empty party or terms value prints "-". The layout fixtures carry
    a long name and a full office address, and
    `TestLatexExports_LongPartyWraps` checks with `pdftotext -bbox` that they
    stay left of that block. `TestLatexExports_Clean` and `_MultiPage`
@@ -645,7 +652,9 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    three agree, and the web previews mirror it (`computeTaxBreakdown`).
    Invoices snapshot `gross_unit_price` and `total_discount`, so the PDF
    prints a gross line plus a real discount row (`TotalProduk − Diskon = DPP`)
-   without reading the quotation. Every PDF prints the sen, and the Go line
+   without reading the quotation. Every PDF prints rupiah as the web's
+   `formatRupiah` does (`pdfgen.FormatIDRCents`): "Rp2.000.000", no space
+   and no ",00", and a figure with real sen keeps both digits, and the Go line
    math (`pdfgen.BigMul`) rounds half away from zero like Postgres `ROUND`,
    so a fractional quantity still adds up. Do not restate already-filed
    invoices: their amounts are never recomputed, and a wrong invoice is
@@ -667,4 +676,14 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
   within five words. No emoji and no decorative separator lines.
 - UI text is Indonesian, written inline; there is no i18n layer. Problem
   details a user can read (business rules, validation) are Indonesian too.
+- Copy a user reads is short plain sentences with no semicolon and no dash
+  (em or en), in the UI, problem details, raise messages and PDFs, and never
+  shows a database id, a row version, a raw status key or a date format.
+  Four tests hold it: `src/lib/copy-guard.test.ts` (web source),
+  `httperr.TestCopy_NoSemicolonOrDash` (Go strings), `db/functions`
+  `TestLiterals_NoSemicolonOrDash` (function literals) and
+  `TestLatexExports_DocumentHead` (printed text). One word per thing: Ubah
+  (not Edit), Unggah, berkas, narahubung for the person, Riwayat, Jumlah and
+  Satuan, Email. Field messages join as sentences (`joinFieldMessages`, the
+  same rule as `httperr.Unprocessable`).
 - Use conventional commits (`feat:`, `fix:`, `test:`, `docs:`).

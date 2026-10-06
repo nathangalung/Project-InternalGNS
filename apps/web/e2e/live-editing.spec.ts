@@ -52,16 +52,16 @@ test.describe("live quotation editing", () => {
       await toStep(other.page, 2)
 
       // The operational editor opens line 2; this page sees it taken.
-      await other.page.getByRole("button", { name: "Edit produk 2" }).click()
-      const theirs = other.page.getByRole("dialog", { name: "Edit Produk Quotation" })
+      await other.page.getByRole("button", { name: "Ubah produk 2" }).click()
+      const theirs = other.page.getByRole("dialog", { name: "Ubah Produk Quotation" })
       await expect(theirs).toBeVisible()
       await expect(page.getByText(`Sedang diedit oleh ${operationalName}`)).toBeVisible()
-      await expect(page.getByRole("button", { name: "Edit produk 2" })).toBeDisabled()
+      await expect(page.getByRole("button", { name: "Ubah produk 2" })).toBeDisabled()
       await expect(page.getByRole("button", { name: "Hapus produk 2" })).toBeDisabled()
 
       // Line 1 stays free: this page edits it while line 2 is open.
-      await page.getByRole("button", { name: "Edit produk 1" }).click()
-      const mine = page.getByRole("dialog", { name: "Edit Produk Quotation" })
+      await page.getByRole("button", { name: "Ubah produk 1" }).click()
+      const mine = page.getByRole("dialog", { name: "Ubah Produk Quotation" })
       await mine.getByLabel("Jumlah Produk *").fill("6")
       await mine.getByRole("button", { name: "Simpan Perubahan" }).click()
       await expect(mine).toBeHidden()
@@ -79,7 +79,7 @@ test.describe("live quotation editing", () => {
         )
         .toEqual([6, 9])
       await expect(page.getByText(`Sedang diedit oleh ${operationalName}`)).toHaveCount(0)
-      await expect(page.getByRole("button", { name: "Edit produk 2" })).toBeEnabled()
+      await expect(page.getByRole("button", { name: "Ubah produk 2" })).toBeEnabled()
       for (const p of [page, other.page]) {
         await expect(p.locator("main")).toContainText("PRODUK 1")
         await expect.poll(() => p.locator("main").innerText()).toMatch(/\b6\b[\s\S]*\b9\b/)
@@ -193,8 +193,8 @@ test.describe("live quotation editing", () => {
     await expect(page.getByText("Satuan belum diisi.")).toBeVisible()
     await seed.adopt("item", fresh)
 
-    await page.getByRole("button", { name: "Edit produk 2" }).click()
-    const product = page.getByRole("dialog", { name: "Edit Produk Quotation" })
+    await page.getByRole("button", { name: "Ubah produk 2" }).click()
+    const product = page.getByRole("dialog", { name: "Ubah Produk Quotation" })
     await product.getByRole("combobox", { name: "Satuan *" }).click()
     await page.getByRole("option", { name: /^PCS/ }).click()
     await product.getByRole("button", { name: "Simpan Perubahan" }).click()
@@ -228,14 +228,14 @@ test.describe("live quotation editing", () => {
     await page.goto(`/quotations/${q.id}/edit`)
     await toStep(page, 2)
     await page.getByRole("button", { name: "2", exact: true }).click()
-    await expect(page.getByText("Menampilkan 6–6 dari 6 produk")).toBeVisible()
+    await expect(page.getByText("Menampilkan 6-6 dari 6 produk")).toBeVisible()
     await page.getByRole("button", { name: "Hapus produk 6" }).click()
     await page
       .getByRole("dialog", { name: "Hapus produk ini dari quotation?" })
       .getByRole("button", { name: "Hapus Produk" })
       .click()
 
-    await expect(page.getByText("Menampilkan 1–5 dari 5 produk")).toBeVisible()
+    await expect(page.getByText("Menampilkan 1-5 dari 5 produk")).toBeVisible()
     await expect(page.getByRole("button", { name: "Hapus produk 5" })).toBeVisible()
     await expect(page.getByRole("button", { name: "1", exact: true })).toHaveAttribute(
       "aria-current",

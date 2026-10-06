@@ -154,6 +154,6 @@ func requireEmailTaken(t *testing.T, res *http.Response) {
 	var p httperr.Error
 	require.NoError(t, json.NewDecoder(res.Body).Decode(&p))
 	assert.Equal(t, map[string]string{
-		"email": "Email ini sudah dipakai kontak lain di klien ini.",
+		"email": "Email ini sudah dipakai narahubung lain di klien ini.",
 	}, p.Fields)
 }

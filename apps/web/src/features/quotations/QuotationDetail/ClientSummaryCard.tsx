@@ -1,5 +1,6 @@
 import EntityLink from "@/components/shared/EntityLink"
 import type { ClientInfo } from "@/features/quotations/types"
+import { formatAddress } from "@/lib/format"
 import { ui } from "@/lib/ui"
 import { qe } from "../wizard-styles"
 
@@ -102,7 +103,7 @@ export default function ClientSummaryCard({
                 ci?.lokasi ? "text-[#374151]" : "italic text-[#9CA3AF]"
               }`}
             >
-              {ci?.lokasi || "Belum diisi"}
+              {formatAddress(ci?.lokasi) || "Belum diisi"}
             </div>
           </div>
           <div>
@@ -112,7 +113,7 @@ export default function ClientSummaryCard({
                 shippingAlamat ? "text-[#374151]" : "italic text-[#9CA3AF]"
               }`}
             >
-              {shippingAlamat || "Belum diisi"}
+              {formatAddress(shippingAlamat) || "Belum diisi"}
             </div>
           </div>
         </div>

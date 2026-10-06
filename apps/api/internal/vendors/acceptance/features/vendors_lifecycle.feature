@@ -102,8 +102,8 @@ Feature: Vendor lifecycle
 
     Examples:
       | field | value         | message                               |
-      | phone | 8123456789012 | Nomor telepon harus 9–12 digit angka. |
-      | phone | 81234567      | Nomor telepon harus 9–12 digit angka. |
+      | phone | 8123456789012 | Nomor telepon harus 9 sampai 12 digit angka. |
+      | phone | 81234567      | Nomor telepon harus 9 sampai 12 digit angka. |
       | email | toko@maju     | Format email tidak valid.             |
 
   Scenario Outline: A padded contact email is stored without its padding

@@ -397,7 +397,7 @@ func (h *Handler) requireClient(ctx context.Context, id int64) error {
 
 // msgEmailTaken sits on email.
 // The unique index is per client, so the owner is another contact of it.
-const msgEmailTaken = "Email ini sudah dipakai kontak lain di klien ini."
+const msgEmailTaken = "Email ini sudah dipakai narahubung lain di klien ini."
 
 // renderContactErr maps save failures.
 func renderContactErr(w http.ResponseWriter, r *http.Request, err error) {

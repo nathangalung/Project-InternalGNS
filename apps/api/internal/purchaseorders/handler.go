@@ -223,7 +223,7 @@ func (h *Handler) UpdateFile(w http.ResponseWriter, r *http.Request) {
 // to UPLOADED, so it must never point at a file that never arrived.
 func (h *Handler) fileUploaded(w http.ResponseWriter, r *http.Request, key string) bool {
 	if h.objects == nil {
-		httperr.Render(w, httperr.ServiceUnavailable("Penyimpanan berkas belum dikonfigurasi."))
+		httperr.Render(w, httperr.ServiceUnavailable("Berkas belum bisa disimpan saat ini. Hubungi administrator."))
 		return false
 	}
 	ok, err := h.objects.ObjectExists(r.Context(), storage.BucketPODocs, key)
@@ -287,7 +287,7 @@ func (h *Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 	}
 	poDate, err := time.Parse("2006-01-02", strings.TrimSpace(req.PoDate))
 	if err != nil {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"poDate": "Tanggal PO harus berformat YYYY-MM-DD."}))
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"poDate": "Tanggal PO tidak valid. Pilih tanggal dari kalender."}))
 		return
 	}
 	actor := deps.CurrentUserID(r.Context())
@@ -505,7 +505,7 @@ func validateFile(req UpdateFileRequest) map[string]string {
 		fields["fileName"] = "Jenis berkas tidak didukung. Gunakan PDF, PNG, JPG, WEBP, XLS, atau XLSX."
 	}
 	if limit := storage.MaxBytes(storage.BucketPODocs); req.FileSize < 1 || req.FileSize > limit {
-		fields["fileSize"] = fmt.Sprintf("Ukuran berkas harus antara 1 byte dan %d MB.", limit>>20)
+		fields["fileSize"] = fmt.Sprintf("Berkas kosong atau lebih dari %d MB.", limit>>20)
 	}
 	if req.ObjectKey == "" {
 		fields["objectKey"] = "Berkas PO wajib diunggah."

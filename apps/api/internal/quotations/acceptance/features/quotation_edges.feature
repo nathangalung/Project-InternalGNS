@@ -41,7 +41,7 @@ Feature: Quotation edges and access
   Scenario Outline: An unknown quotation is not found
     When the user <action> quotation 9999999
     Then the response status is 404
-    And the problem detail mentions "Quotation 9999999 tidak ditemukan."
+    And the problem detail mentions "Quotation tidak ditemukan. Muat ulang halaman."
 
     Examples:
       | action  |

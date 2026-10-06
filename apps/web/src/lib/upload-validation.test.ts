@@ -26,7 +26,7 @@ describe("validateAsset", () => {
       "proof MIME",
       "paymentProof",
       file("a.pdf", 10, "text/html"),
-      "Tipe file bukti pembayaran tidak didukung.",
+      "Jenis berkas bukti pembayaran tidak didukung.",
     ],
     [
       "attachment keeps its label",
@@ -76,7 +76,7 @@ describe("validateAsset per kind", () => {
 
   it("refuses an image MIME dressed as a logo it is not", () => {
     expect(() => validateAsset("vendorLogo", file("a.png", 10, "image/svg+xml"))).toThrow(
-      "Tipe file logo vendor tidak didukung.",
+      "Jenis berkas logo vendor tidak didukung.",
     )
   })
 })

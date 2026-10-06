@@ -43,7 +43,7 @@ describe("Step4Summary terms", () => {
     }
     await mount(<Step4Summary {...base} terms={terms} />)
     expect(text()).toContain("Tenggat Waktu Penawaran")
-    expect(text()).toContain("Jatuh tempo pembayaran dan berlaku sampai wajib diisi")
+    expect(text()).toContain("Isi jatuh tempo pembayaran dan masa berlaku")
   })
 
   // A PO keeps its quotation's terms.

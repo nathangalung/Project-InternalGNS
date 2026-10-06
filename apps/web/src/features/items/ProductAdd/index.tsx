@@ -60,8 +60,8 @@ type ProductAddProps = {
 }
 
 const DIALOG_TITLE = {
-  quotation: { add: "Tambah Produk ke Quotation", edit: "Edit Produk Quotation" },
-  po: { add: "Tambah Produk ke PO", edit: "Edit Produk PO" },
+  quotation: { add: "Tambah Produk ke Quotation", edit: "Ubah Produk Quotation" },
+  po: { add: "Tambah Produk ke PO", edit: "Ubah Produk PO" },
 }
 
 // Product creation orchestrator.
@@ -472,7 +472,7 @@ export default function ProductAdd({
                 ? isJumlahFilled &&
                   isLineIncomplete && (
                     <span className="flex-1 text-[12px] text-dark-600">
-                      Belum lengkap; tetap tersimpan di Draf dan dilengkapi sebelum dikirim.
+                      Belum lengkap. Tetap tersimpan di Draf dan dilengkapi sebelum dikirim.
                     </span>
                   )
                 : isVendorFilled &&

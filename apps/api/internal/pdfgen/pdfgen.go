@@ -228,16 +228,17 @@ func LatexBreakable(s string) string {
 	return b.String()
 }
 
-// FormatIDRCents keeps the cents.
+// FormatIDRCents prints rupiah.
+// "Rp2.000.000" like the web's formatRupiah: no space, no ",00", and a
+// figure with real sen (a PPN, say) keeps both digits so rows add up.
 func FormatIDRCents(numericStr string) string {
-	// Every document prints stored amounts with their sen, so rows add up.
 	s := strings.TrimSpace(numericStr)
 	if s == "" {
-		return "Rp~--"
+		return "-"
 	}
-	prefix := "Rp~"
+	prefix := "Rp"
 	if strings.HasPrefix(s, "-") {
-		prefix = "-Rp~"
+		prefix = "-Rp"
 		s = s[1:]
 	}
 	intPart, fracPart := s, "00"
@@ -245,7 +246,7 @@ func FormatIDRCents(numericStr string) string {
 		intPart, fracPart = s[:dot], s[dot+1:]
 	}
 	if _, err := strconv.ParseInt(intPart, 10, 64); err != nil {
-		return "Rp~--"
+		return "-"
 	}
 	fracPart = (fracPart + "00")[:2]
 	var b strings.Builder
@@ -256,8 +257,10 @@ func FormatIDRCents(numericStr string) string {
 		}
 		b.WriteRune(c)
 	}
-	b.WriteByte(',')
-	b.WriteString(fracPart)
+	if fracPart != "00" {
+		b.WriteByte(',')
+		b.WriteString(fracPart)
+	}
 	return b.String()
 }
 

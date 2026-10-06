@@ -113,7 +113,7 @@ export default function UploadPoModal({
       title={
         <>
           <span className="block">
-            {isEdit ? "Ubah Detail Purchase Order" : "Upload Berkas Purchase Order"}
+            {isEdit ? "Ubah Detail Purchase Order" : "Unggah Berkas PO"}
           </span>
           <span className="mt-1 block text-[13px] font-normal leading-6 text-[#4A4455]">
             {poRef(row)} • {row.client}

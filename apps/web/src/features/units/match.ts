@@ -14,5 +14,5 @@ export function matchUnits(units: readonly UnitRow[], query: string, limit = 5):
 
 // Picker row label.
 export function unitLabel(unit: UnitRow): string {
-  return unit.name ? `${unit.code} — ${unit.name}` : unit.code
+  return unit.name ? `${unit.code} - ${unit.name}` : unit.code
 }

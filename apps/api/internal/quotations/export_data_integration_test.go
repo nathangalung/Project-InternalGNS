@@ -75,7 +75,7 @@ func TestBuildExportData_ReconcilesWithStoredQuotation(t *testing.T) {
 	for _, f := range fields {
 		assert.Equal(t, pdfgen.FormatIDRCents(f.stored), f.got, f.name)
 	}
-	assert.Equal(t, "Rp~150,37", got.Shipping)
+	assert.Equal(t, "Rp150,37", got.Shipping)
 	assert.True(t, got.HasShipping)
 
 	// Total Produk - Diskon + Pengiriman = Sub Total.
@@ -115,5 +115,5 @@ func TestBuildExportData_DeliveryTimeFromStoredShipping(t *testing.T) {
 
 	got := quotations.BuildExportData(d, map[int16]string{}, "", "", "Director", time.Now())
 	assert.Equal(t, "5 days", got.DeliveryTime)
-	assert.Equal(t, "Tanjung Priok", got.DeliveryPlace, "the shipping address wins over the vessel")
+	assert.Equal(t, "Tanjung~Priok", got.DeliveryPlace, "the shipping address wins over the vessel")
 }

@@ -15,7 +15,8 @@ Thumbs.db
 !.env.prod.example
 
 # Node / Bun
-node_modules/
+# Also a symlink, as a worktree links it.
+node_modules
 dist/
 build/
 .vite/

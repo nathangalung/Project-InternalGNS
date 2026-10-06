@@ -1,4 +1,4 @@
--- Canonical current body of fn_change_quotation_status (deployed by migration 00100).
+-- Canonical current body of fn_change_quotation_status (deployed by migration 00103).
 -- Validates the transition under a FOR UPDATE lock, blocks finalizing a
 -- quotation with unpriced products (ERRCODE P0100), records history, and
 -- creates the purchase order on acceptance.
@@ -18,7 +18,7 @@ BEGIN
   FOR UPDATE;
 
   IF v_old_status IS NULL THEN
-    RAISE EXCEPTION 'Quotation % tidak ditemukan.', p_quotation_id
+    RAISE EXCEPTION 'Quotation tidak ditemukan. Muat ulang halaman.'
       USING ERRCODE = 'P0011';
   END IF;
 

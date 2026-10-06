@@ -162,9 +162,9 @@ func TestCoretaxExport_FilesTheInvoicedBuyer(t *testing.T) {
 		rec := exportCoretaxXML(t, tx, invID)
 		require.Equal(t, http.StatusUnprocessableEntity, rec.Code, rec.Body.String())
 		assert.Equal(t,
-			"Ekspor Coretax memerlukan NPWP 16 digit untuk pembeli Indonesia. "+
-				"Invoice memakai data klien saat invoice dibuat, jadi lengkapi NPWP klien, "+
-				"lalu batalkan dan terbitkan invoice pengganti untuk: "+inv.InvoiceNo+".",
+			"Ekspor Coretax butuh NPWP 16 digit untuk pembeli Indonesia. "+
+				"Lengkapi NPWP klien, "+
+				"lalu batalkan dan terbitkan ulang invoice berikut: "+inv.InvoiceNo+".",
 			problemDetail(t, rec))
 	})
 }

@@ -8,7 +8,7 @@ const logoImg = "/logo.png"
 // Sign-in is a lookup, so the server's 401 is the verdict. The shared write
 // rule would lock out accounts made under the older, looser one.
 const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const EMAIL_SHAPE_ERROR = "Format surel tidak valid"
+const EMAIL_SHAPE_ERROR = "Format email tidak valid."
 
 type LoginProps = {
   onLogin: (email: string, password: string) => Promise<void>
@@ -94,7 +94,7 @@ export default function Login({ onLogin }: LoginProps) {
             {/* Email */}
             <div className="mb-5">
               <label className={labelClass} htmlFor="email">
-                Surel
+                Email
               </label>
               <div className="relative flex items-center">
                 <span className="pointer-events-none absolute left-4 flex h-[18px] w-[18px] items-center justify-center text-dark-400 [&_svg]:h-[18px] [&_svg]:w-[18px] [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:[stroke-width:1.8] [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]">

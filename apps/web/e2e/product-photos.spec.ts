@@ -134,7 +134,7 @@ test("picks past the maximum are left out", async ({ page, seed }) => {
   const nine = Array.from({ length: 9 }, (_, i) => ({ ...blue, name: `foto-${i}.png` }))
   await page.locator('input[type="file"]').setInputFiles(nine)
   await expect(
-    page.getByText("Maksimal 8 foto per produk; 1 foto tidak ditambahkan."),
+    page.getByText("Maksimal 8 foto per produk. 1 foto tidak ditambahkan."),
   ).toBeVisible()
   await expect(page.getByRole("button", { name: "Tambah Foto (8/8)" })).toBeDisabled()
   expect((await photos(item.id)()).length).toBe(8)

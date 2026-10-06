@@ -179,13 +179,13 @@ func TestExport_PrintsSen(t *testing.T) {
 	}
 
 	got := newExportHandler(t, tx).PDFTotalsForTest(invoices.InvoiceDetail{Invoice: inv}, items)
-	assert.Equal(t, "Rp~5.000,95", got.TotalProduk)
-	assert.Equal(t, "Rp~5.000,95", got.DPP)
-	assert.Equal(t, "Rp~4.584,20", got.DPPNilaiLain)
-	assert.Equal(t, "Rp~550,10", got.PPN)
-	assert.Equal(t, "Rp~5.551,05", got.Total)
-	assert.Equal(t, []string{"Rp~5.000,95"}, got.LineUnitPrices)
-	assert.Equal(t, []string{"Rp~5.000,95"}, got.LineAmounts)
+	assert.Equal(t, "Rp5.000,95", got.TotalProduk)
+	assert.Equal(t, "Rp5.000,95", got.DPP)
+	assert.Equal(t, "Rp4.584,20", got.DPPNilaiLain)
+	assert.Equal(t, "Rp550,10", got.PPN)
+	assert.Equal(t, "Rp5.551,05", got.Total)
+	assert.Equal(t, []string{"Rp5.000,95"}, got.LineUnitPrices)
+	assert.Equal(t, []string{"Rp5.000,95"}, got.LineAmounts)
 }
 
 // Fractional qty rounds like Postgres.
@@ -228,7 +228,7 @@ func TestExport_FractionalQtyMatchesDPP(t *testing.T) {
 
 	got := newExportHandler(t, tx).PDFTotalsForTest(invoices.InvoiceDetail{Invoice: inv}, items)
 	assert.Empty(t, got.Diskon, "no discount, no Diskon row")
-	assert.Equal(t, []string{"Rp~3.086,43"}, got.LineAmounts)
-	assert.Equal(t, "Rp~3.086,43", got.TotalProduk)
+	assert.Equal(t, []string{"Rp3.086,43"}, got.LineAmounts)
+	assert.Equal(t, "Rp3.086,43", got.TotalProduk)
 	assert.Equal(t, got.DPP, got.TotalProduk, "TotalProduk - Diskon must equal DPP")
 }

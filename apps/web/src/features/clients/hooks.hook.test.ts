@@ -182,7 +182,7 @@ describe("contact writes", () => {
       () => m.updateContact.mockResolvedValue({ id: 3 } as never),
       () => m.updateContact.mockRejectedValue(new Error("")),
       { companyId: 7, contactId: 3, input: contactInput },
-      "Gagal memperbarui kontak.",
+      "Gagal memperbarui narahubung.",
     ],
     [
       "delete",
@@ -190,7 +190,7 @@ describe("contact writes", () => {
       () => m.deleteContact.mockResolvedValue(undefined),
       () => m.deleteContact.mockRejectedValue(new Error("")),
       { companyId: 7, contactId: 3 },
-      "Gagal menghapus kontak.",
+      "Gagal menonaktifkan narahubung.",
     ],
   ]
 

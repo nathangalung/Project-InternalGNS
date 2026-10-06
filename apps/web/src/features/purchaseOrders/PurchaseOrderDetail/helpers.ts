@@ -93,7 +93,7 @@ export function poEditLockReason(
   if (!po.linesLocked) return null
   if (po.status === "CANCELLED") return "PO yang dibatalkan tidak dapat diubah."
   if (po.status === "DELIVERED") {
-    return "PO yang sudah dikirim hanya dapat diubah setelah invoicenya dibatalkan dan sebelum invoice pengganti diterbitkan."
+    return "PO yang sudah dikirim hanya bisa diubah jika invoicenya dibatalkan dan invoice pengganti belum diterbitkan."
   }
   return "PO ini tidak dapat diubah."
 }

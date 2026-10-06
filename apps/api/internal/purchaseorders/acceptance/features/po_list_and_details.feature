@@ -26,7 +26,7 @@ Feature: PO list, export and client PO details
     Examples:
       | edit                                                        | message                               |
       | edits PO details with a number of 51 characters             | Isian terlalu panjang                 |
-      | edits PO details with number "PO/1" dated "2026-02-30"      | Tanggal PO harus berformat YYYY-MM-DD |
+      | edits PO details with number "PO/1" dated "2026-02-30"      | Tanggal PO tidak valid                |
 
   Scenario: A blank number clears it before work starts
     Given an accepted quotation

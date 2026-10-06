@@ -41,7 +41,7 @@ test.describe("login", () => {
   test("the login form signs a user in", async ({ page }) => {
     const admin = adminCredentials()
     await page.goto("/login")
-    await page.getByLabel("Surel").fill(admin.email)
+    await page.getByLabel("Email").fill(admin.email)
     await page.getByLabel("Kata Sandi", { exact: true }).fill(admin.password)
     await page.getByRole("button", { name: "Masuk" }).click()
     await expect(page).toHaveURL(/\/$/)

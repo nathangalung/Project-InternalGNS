@@ -113,7 +113,7 @@ export default function VendorPriceCard({
             {vendorMatches.length === 0 ? (
               !vendorFailure && (
                 <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>
-                  Tidak ada hasil. Silahkan tambahkan vendor baru.
+                  Vendor tidak ditemukan. Tambahkan vendor baru.
                 </div>
               )
             ) : (
@@ -180,7 +180,7 @@ export default function VendorPriceCard({
               : "cursor-not-allowed border-[rgba(99,14,212,0.1)] bg-[#F7F7F8] text-[#A386D6]"
           }`}
         >
-          <span>Historis Harga Jual</span>
+          <span>Riwayat Harga Jual</span>
           <svg
             aria-hidden="true"
             width="12"
@@ -231,7 +231,7 @@ export default function VendorPriceCard({
         </Menu.Portal>
       </Menu.Root>
       {historyFailure && (
-        <LoadError message="Gagal memuat historis harga jual." {...historyFailure} />
+        <LoadError message="Gagal memuat riwayat harga jual." {...historyFailure} />
       )}
 
       <div className={ui.field}>

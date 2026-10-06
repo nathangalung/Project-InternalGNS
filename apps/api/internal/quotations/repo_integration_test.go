@@ -100,7 +100,7 @@ func TestRepo_Create_RejectsBadDiscount(t *testing.T) {
 	req.DiscountPct = "120"
 	_, err := repo.Create(ctx, req, seedUserID)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "Diskon harus antara 0 dan 100; nilai yang dikirim 120.")
+	assert.Contains(t, err.Error(), "Diskon harus antara 0 dan 100. Nilai yang dikirim 120.")
 }
 
 func TestRepo_Create_RejectsUnknownClient(t *testing.T) {

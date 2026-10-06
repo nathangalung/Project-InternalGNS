@@ -23,4 +23,4 @@ Feature: RFQ upload
   Scenario: An RFQ with more product rows than one match takes is refused
     When the user uploads an RFQ with 501 product rows
     Then the response status is 422
-    And the problem detail mentions "Berkas berisi 501 baris produk; paling banyak 500 per unggahan."
+    And the problem detail mentions "Berkas berisi 501 baris produk, padahal paling banyak 500 per unggahan."

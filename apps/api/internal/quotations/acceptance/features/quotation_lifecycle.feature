@@ -80,7 +80,7 @@ Feature: Quotation lifecycle
     Then the response status is 200
     And the list contains at least 1 quotation
 
-  Scenario: The quotation PDF prints the stored totals on one A5 sheet
+  Scenario: The quotation PDF prints the stored totals on one A4 sheet
     Given a draft quotation with a discount, shipping and an unpriced line
     When the user downloads the quotation PDF
     Then the PDF prints the stored totals, the offered item and No Offer

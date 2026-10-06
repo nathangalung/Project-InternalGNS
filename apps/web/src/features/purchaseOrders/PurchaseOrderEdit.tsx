@@ -247,11 +247,11 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
                 &rsaquo;
               </span>
               <span className={ui.breadcrumbCurrent} aria-current="page">
-                Edit
+                Ubah
               </span>
             </nav>
             <h1 className="text-2xl font-bold leading-8 tracking-tight text-dark-900 [overflow-wrap:anywhere]">
-              Edit Purchase Order <PoNumber value={po.poNumber} />
+              Ubah Purchase Order <PoNumber value={po.poNumber} />
             </h1>
           </div>
 
@@ -290,7 +290,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
 
         {loadFailed ? (
           <StateMessage
-            title="Form edit belum dapat dibuka"
+            title="Halaman ubah PO belum dapat dibuka"
             action={
               <button
                 type="button"

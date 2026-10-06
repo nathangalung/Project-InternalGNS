@@ -384,7 +384,7 @@ func (h *Handler) Recommendations(w http.ResponseWriter, r *http.Request) {
 	if raw := q.Get("clientId"); raw != "" {
 		id, err := strconv.ParseInt(raw, 10, 64)
 		if err != nil || id <= 0 {
-			httperr.Render(w, httperr.Unprocessable(map[string]string{"clientId": "id klien tidak valid"}))
+			httperr.Render(w, httperr.Unprocessable(map[string]string{"clientId": "Klien tidak ditemukan. Muat ulang halaman."}))
 			return
 		}
 		clientID = &id

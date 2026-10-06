@@ -144,7 +144,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
     } catch (e) {
       // Saved by someone else: the reloaded row is the one to edit.
       if (isVersionConflict(e)) setDraft(null)
-      setErrMsg(errorMessage(e, "Gagal menyimpan item request."))
+      setErrMsg(errorMessage(e, "Gagal menyimpan permintaan."))
     }
   }
 
@@ -155,7 +155,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
     try {
       await remove.mutateAsync({ quotationId, requestId: id })
     } catch (e) {
-      setErrMsg(errorMessage(e, "Gagal menghapus item request."))
+      setErrMsg(errorMessage(e, "Gagal menghapus permintaan."))
     }
   }
 
@@ -180,7 +180,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
         },
       })
     } catch (e) {
-      setErrMsg(errorMessage(e, "Gagal menyimpan item request."))
+      setErrMsg(errorMessage(e, "Gagal menyimpan permintaan."))
     }
   }
 
@@ -258,8 +258,8 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
                   <th className="p-2">#</th>
                   <th className="p-2">Deskripsi</th>
                   <th className="p-2">IMPA</th>
-                  <th className="p-2">Qty</th>
-                  <th className="p-2">UOM</th>
+                  <th className="p-2">Jumlah</th>
+                  <th className="p-2">Satuan</th>
                   <th className="p-2">Status</th>
                   <th className="p-2 text-right">Aksi</th>
                 </tr>
@@ -341,14 +341,14 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
                 <input
                   value={draft.requestedQty}
                   onChange={(e) => setDraft({ ...draft, requestedQty: e.target.value })}
-                  placeholder="Qty"
+                  placeholder="Jumlah"
                   aria-label="Jumlah diminta"
                   className={draftInput}
                 />
                 <input
                   value={draft.requestedUom}
                   onChange={(e) => setDraft({ ...draft, requestedUom: e.target.value })}
-                  placeholder="UOM"
+                  placeholder="Satuan"
                   aria-label="Satuan diminta"
                   className={draftInput}
                 />

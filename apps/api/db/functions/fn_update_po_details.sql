@@ -1,4 +1,4 @@
--- Canonical current body of fn_update_po_details (deployed by migration 00098).
+-- Canonical current body of fn_update_po_details (deployed by migration 00103).
 CREATE OR REPLACE FUNCTION public.fn_update_po_details(p_po_id bigint, p_if_match integer, p_po_number text, p_po_date date, p_user_id bigint)
  RETURNS integer
  LANGUAGE plpgsql
@@ -15,12 +15,12 @@ BEGIN
   FOR UPDATE;
 
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'PO % tidak ditemukan.', p_po_id
+    RAISE EXCEPTION 'PO tidak ditemukan. Muat ulang halaman.'
       USING ERRCODE = 'P0011';
   END IF;
 
   IF p_if_match IS NOT NULL AND v_current <> p_if_match THEN
-    RAISE EXCEPTION 'Data sudah diubah pengguna lain (versi %, dikirim %).', v_current, p_if_match
+    RAISE EXCEPTION 'Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.'
       USING ERRCODE = 'P0010';
   END IF;
 

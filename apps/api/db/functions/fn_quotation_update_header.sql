@@ -1,4 +1,4 @@
--- Canonical current body of fn_quotation_update_header (deployed by migration 00088).
+-- Canonical current body of fn_quotation_update_header (deployed by migration 00103).
 CREATE OR REPLACE FUNCTION public.fn_quotation_update_header(p_quotation_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_notes text, p_user_id bigint)
  RETURNS void
  LANGUAGE plpgsql
@@ -10,7 +10,7 @@ BEGIN
   PERFORM fn_quotation_lock_draft(p_quotation_id);
   PERFORM fn_quotation_part_held(p_quotation_id, 'header', p_user_id);
   IF p_discount_pct < 0 OR p_discount_pct > 100 THEN
-    RAISE EXCEPTION 'Diskon harus antara 0 dan 100; nilai yang dikirim %.', p_discount_pct
+    RAISE EXCEPTION 'Diskon harus antara 0 dan 100. Nilai yang dikirim %.', p_discount_pct
       USING ERRCODE = 'P0014';
   END IF;
 
@@ -37,14 +37,14 @@ BEGIN
         ship_destination, shipping_days, created_by, updated_by
       ) VALUES (
         p_quotation_id, v_next, 'shipping',
-        'SHIPPING' || COALESCE(' — ' || p_shipping_address, ''), 1,
+        'SHIPPING' || COALESCE(' - ' || p_shipping_address, ''), 1,
         (SELECT id FROM units WHERE code = 'UNIT' LIMIT 1),
         COALESCE(p_shipping_cost, 0), p_shipping_address, p_shipping_days,
         p_user_id, p_user_id
       );
     ELSE
       UPDATE quotation_items
-      SET requested_name   = 'SHIPPING' || COALESCE(' — ' || p_shipping_address, ''),
+      SET requested_name   = 'SHIPPING' || COALESCE(' - ' || p_shipping_address, ''),
           selling_price    = COALESCE(p_shipping_cost, 0),
           ship_destination = p_shipping_address,
           shipping_days    = p_shipping_days,

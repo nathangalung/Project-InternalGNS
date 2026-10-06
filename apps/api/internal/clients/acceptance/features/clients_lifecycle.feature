@@ -86,7 +86,7 @@ Feature: Client lifecycle
     And the client has a contact with an email and a title
     When the client adds a contact with the same email
     Then the response status is 422
-    And the email field error reads "Email ini sudah dipakai kontak lain di klien ini."
+    And the email field error reads "Email ini sudah dipakai narahubung lain di klien ini."
 
   Scenario: A contact needs an email or a phone
     Given an existing client
@@ -208,8 +208,8 @@ Feature: Client lifecycle
 
     Examples:
       | field | value         | message                               |
-      | phone | 8123456789012 | Nomor telepon harus 9–12 digit angka. |
-      | phone | 81234567      | Nomor telepon harus 9–12 digit angka. |
+      | phone | 8123456789012 | Nomor telepon harus 9 sampai 12 digit angka. |
+      | phone | 81234567      | Nomor telepon harus 9 sampai 12 digit angka. |
       | email | budi@kantor   | Format email tidak valid.             |
 
   Scenario: Editing a contact to a 13 digit phone gets a field error
@@ -217,7 +217,7 @@ Feature: Client lifecycle
     And the client has a contact with an email and a title
     When the user sets the contact phone to "8123456789012"
     Then the response status is 422
-    And the phone field error reads "Nomor telepon harus 9–12 digit angka."
+    And the phone field error reads "Nomor telepon harus 9 sampai 12 digit angka."
     When the user sets the contact phone to "812345678901"
     Then the response status is 200
 

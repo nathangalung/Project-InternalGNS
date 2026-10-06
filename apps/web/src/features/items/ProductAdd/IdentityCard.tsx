@@ -120,7 +120,7 @@ export default function IdentityCard({
                 />
               ) : requestMatches.length === 0 ? (
                 <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>
-                  Tidak ada rekomendasi — input akan disimpan apa adanya.
+                  Tidak ada yang cocok di katalog. Teks ini disimpan apa adanya.
                 </div>
               ) : (
                 <AutocompleteList>

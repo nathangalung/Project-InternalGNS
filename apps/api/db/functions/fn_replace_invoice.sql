@@ -1,4 +1,4 @@
--- Canonical current body of fn_replace_invoice (deployed by migration 00097).
+-- Canonical current body of fn_replace_invoice (deployed by migration 00103).
 CREATE OR REPLACE FUNCTION public.fn_replace_invoice(p_invoice_id bigint, p_user_id bigint)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -14,7 +14,7 @@ BEGIN
   FOR UPDATE;
 
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'Invoice % tidak ditemukan.', p_invoice_id
+    RAISE EXCEPTION 'Invoice tidak ditemukan. Muat ulang halaman.'
       USING ERRCODE = 'P0011';
   END IF;
 

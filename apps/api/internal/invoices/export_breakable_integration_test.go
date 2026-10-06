@@ -44,7 +44,7 @@ func TestExport_LineDescriptionsBreakLongTokens(t *testing.T) {
 
 	got := newExportHandler(t, tx).PDFTotalsForTest(invoices.InvoiceDetail{}, items).LineDescriptions
 
-	assert.Equal(t, []string{pdfgen.LatexBreakable(dest), `Deck \& Hold \#2`, ""}, got)
+	assert.Equal(t, []string{pdfgen.LatexAddress(dest, pdfgen.CellKeep), `Deck~\&~Hold~\#2`, ""}, got)
 }
 
 // Party fields get break points.
@@ -59,6 +59,6 @@ func TestExport_PartyBreaksLongTokens(t *testing.T) {
 	got := newExportHandler(t, tx).PDFHeaderForTest(det, nil)
 
 	assert.Equal(t, pdfgen.LatexBreakable(name), got.CompanyName)
-	assert.Equal(t, pdfgen.LatexBreakable(addr), got.CompanyAddress)
+	assert.Equal(t, pdfgen.LatexAddress(addr, pdfgen.PartyKeep), got.CompanyAddress)
 	assert.Contains(t, got.CompanyAddress, `\discretionary{}{}{}`, "the long token carries break points")
 }

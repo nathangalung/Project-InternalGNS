@@ -15,7 +15,7 @@ func TestLatexExports_InvoiceMarks(t *testing.T) {
 	withShipping := sampleItems(5)
 	withShipping = append(withShipping, map[string]any{
 		"No": 6, "Qty": "1", "Unit": "", "Name": "Pengiriman", "Description": "Pelabuhan Tanjung Priok",
-		"UnitPrice": "Rp~50.000", "Amount": "Rp~50.000",
+		"UnitPrice": "Rp50.000", "Amount": "Rp50.000",
 	})
 	marked := func(items []map[string]any) map[string]any {
 		d := invoiceData(items)
@@ -73,7 +73,7 @@ func TestLatexExports_InvoiceOnePage(t *testing.T) {
 	withShipping := sampleItems(5)
 	withShipping = append(withShipping, map[string]any{
 		"No": 6, "Qty": "1", "Unit": "", "Name": "Pengiriman", "Description": "Pelabuhan Tanjung Priok",
-		"UnitPrice": "Rp~50.000", "Amount": "Rp~50.000",
+		"UnitPrice": "Rp50.000", "Amount": "Rp50.000",
 	})
 	cases := []struct {
 		name  string

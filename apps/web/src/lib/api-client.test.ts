@@ -131,8 +131,8 @@ describe("transferFailureMessage", () => {
       "download 409 is written for the user",
       "download",
       409,
-      detail("Surat jalan baru terbit setelah pekerjaan PO dimulai (ON_PROGRESS)."),
-      "Surat jalan baru terbit setelah pekerjaan PO dimulai (ON_PROGRESS).",
+      detail("Surat jalan tersedia setelah status PO Dalam Progres."),
+      "Surat jalan tersedia setelah status PO Dalam Progres.",
     ],
     [
       "download 422 fields",

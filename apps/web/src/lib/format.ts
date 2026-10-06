@@ -4,7 +4,7 @@ import { JAKARTA_TZ } from "@/lib/date-range"
 //
 // KPI cards show it until their summary arrives, or for good when it fails,
 // so zero is never shown as data.
-export const PENDING_FIGURE = "–"
+export const PENDING_FIGURE = "-"
 
 // NaN-safe string/null → number coercion.
 export function toNum(v: string | number | null | undefined): number {
@@ -146,4 +146,23 @@ export function computeTaxBreakdown(lineNets: number[]): {
     ppnAmount: ppn / 100,
     grandTotal: (net + ppn) / 100,
   }
+}
+
+// Tidy address for display.
+// Mirrors pdfgen.NormalizeAddress: typed line breaks, stray spaces and
+// doubled commas become one ", " between parts, and a bare number after a
+// number keeps its comma ("No. 2,6,8").
+export function formatAddress(value: string | null | undefined): string {
+  const parts = (value ?? "")
+    .replace(/\r\n|\r|\n/g, ",")
+    .replace(/\s+/g, " ")
+    .split(/\s*,\s*/)
+    .map((p) => p.trim())
+    .filter((p) => p !== "")
+  let out = ""
+  for (const p of parts) {
+    if (out !== "") out += /\d$/.test(out) && /^\d+$/.test(p) ? "," : ", "
+    out += p
+  }
+  return out
 }

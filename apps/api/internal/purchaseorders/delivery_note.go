@@ -71,7 +71,7 @@ func (h *DeliveryNoteHandler) ExportPDF(w http.ResponseWriter, r *http.Request) 
 	dnNo, ok := issuedDeliveryNote(po)
 	if !ok {
 		httperr.Render(w, httperr.Conflict(
-			"Surat jalan baru terbit setelah pekerjaan PO dimulai (ON_PROGRESS)."))
+			"Surat jalan tersedia setelah status PO Dalam Progres."))
 		return
 	}
 
@@ -125,7 +125,7 @@ func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, d
 		PONo:           pdfgen.LatexEscape(pdfgen.StrDeref(po.PoNumber)),
 		PODate:         po.PoDate.In(tz.Jakarta()).Format("2 January 2006"),
 		CompanyName:    pdfgen.LatexBreakable(po.CompanyName),
-		CompanyAddress: pdfgen.LatexBreakable(pdfgen.StrDeref(client.Address)),
+		CompanyAddress: pdfgen.LatexAddress(pdfgen.StrDeref(client.Address), pdfgen.PartyKeep),
 		DateLine:       pdfgen.JakartaDateLine(deliveryNoteDate(po).In(tz.Jakarta())),
 		Items:          deliveryNoteItems(items),
 	}, nil
@@ -170,7 +170,7 @@ func deliveryNoteItems(items []PurchaseOrderItem) []dnItem {
 			Qty:             pdfgen.FormatQty(it.Qty),
 			Unit:            pdfgen.LatexEscape(unit),
 			Name:            pdfgen.LatexBreakable(it.ItemName),
-			ShipDestination: pdfgen.LatexBreakable(ship),
+			ShipDestination: pdfgen.LatexAddress(ship, pdfgen.CellKeep),
 		})
 	}
 	return out

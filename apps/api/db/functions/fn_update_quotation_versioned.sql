@@ -1,4 +1,4 @@
--- Canonical current body of fn_update_quotation_versioned (deployed by migration 00073).
+-- Canonical current body of fn_update_quotation_versioned (deployed by migration 00103).
 CREATE OR REPLACE FUNCTION public.fn_update_quotation_versioned(p_id bigint, p_if_match integer, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_user_id bigint, p_notes text DEFAULT NULL::text)
  RETURNS integer
  LANGUAGE plpgsql
@@ -13,11 +13,11 @@ BEGIN
   FOR UPDATE;
 
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'Quotation % tidak ditemukan.', p_id USING ERRCODE = 'P0011';
+    RAISE EXCEPTION 'Quotation tidak ditemukan. Muat ulang halaman.' USING ERRCODE = 'P0011';
   END IF;
 
   IF v_current <> p_if_match THEN
-    RAISE EXCEPTION 'Data sudah diubah pengguna lain (versi %, dikirim %).', v_current, p_if_match
+    RAISE EXCEPTION 'Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.'
       USING ERRCODE = 'P0010';
   END IF;
 

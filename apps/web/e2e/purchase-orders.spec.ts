@@ -88,7 +88,7 @@ test.describe("purchase order detail", () => {
     await page.getByRole("button", { name: "Ubah", exact: true }).click()
     // PO-01: the edit route resolves the PO through the quotation id too.
     await expect(page).toHaveURL(new RegExp(`/purchase-orders/${q.id}/edit$`))
-    await expect(page.getByRole("heading", { name: "Edit Purchase Order" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Ubah Purchase Order" })).toBeVisible()
     // PO-02: the wizard opens with the PO's discount, not zero.
     await expect(page.getByRole("button", { name: "Diskon (5%)" })).toBeVisible()
     await page.getByRole("button", { name: "Lanjut" }).click()
@@ -115,8 +115,8 @@ test.describe("purchase order detail", () => {
     expect(po.poTotalProduk).toBe("300000.00")
 
     await page.goto(`/purchase-orders/${q.id}/edit`)
-    await page.getByRole("button", { name: "Edit produk 1" }).click()
-    const modal = page.getByRole("dialog", { name: "Edit Produk PO" })
+    await page.getByRole("button", { name: "Ubah produk 1" }).click()
+    const modal = page.getByRole("dialog", { name: "Ubah Produk PO" })
     await expect(modal.getByLabel("Harga Jual Satuan *")).toHaveValue("100000")
     await modal.getByLabel("Harga Jual Satuan *").fill("120000")
     await modal.getByRole("button", { name: "Simpan Perubahan" }).click()
@@ -144,8 +144,8 @@ test.describe("purchase order detail", () => {
 
     await page.goto(`/purchase-orders/${q.id}/edit`)
     await expect(page.locator("main")).toContainText(vendor.name)
-    await page.getByRole("button", { name: "Edit produk 1" }).click()
-    const modal = page.getByRole("dialog", { name: "Edit Produk PO" })
+    await page.getByRole("button", { name: "Ubah produk 1" }).click()
+    const modal = page.getByRole("dialog", { name: "Ubah Produk PO" })
     await modal.getByLabel("Nama Vendor *").click()
     await modal.getByLabel("Nama Vendor *").fill(other.name)
     await page.getByRole("option", { name: new RegExp(other.name) }).click()
@@ -175,8 +175,8 @@ test.describe("purchase order detail", () => {
     const { q, po } = await acceptedPo(seed)
 
     await page.goto(`/purchase-orders/${q.id}/edit`)
-    await page.getByRole("button", { name: "Edit produk 1" }).click()
-    const modal = page.getByRole("dialog", { name: "Edit Produk PO" })
+    await page.getByRole("button", { name: "Ubah produk 1" }).click()
+    const modal = page.getByRole("dialog", { name: "Ubah Produk PO" })
     await modal.getByLabel("Jumlah Produk *").fill("0")
     await modal.getByRole("button", { name: "Simpan Perubahan" }).click()
     await expect(modal).toBeHidden()
@@ -195,7 +195,7 @@ test.describe("purchase order detail", () => {
       .toBe(0)
     // The editor reopens on the stored 0 without flagging it.
     await page.goto(`/purchase-orders/${q.id}/edit`)
-    await expect(page.getByRole("button", { name: "Edit produk 1" })).toBeVisible()
+    await expect(page.getByRole("button", { name: "Ubah produk 1" })).toBeVisible()
     await expect(page.locator("main").getByText("Jumlah harus")).toHaveCount(0)
   })
 })
@@ -215,7 +215,7 @@ test.describe("purchase order file", () => {
       page.getByRole("heading", { name: "Purchase Order Belum ada No. PO" }),
     ).toBeVisible()
     await page.getByRole("button", { name: "Unggah Berkas" }).click()
-    const modal = page.getByRole("dialog", { name: /Upload Berkas Purchase Order/ })
+    const modal = page.getByRole("dialog", { name: /Unggah Berkas PO/ })
     const upload = modal.getByRole("button", { name: "Upload" })
     await expect(upload).toBeDisabled()
     await modal.getByLabel("Nomor PO").fill(clientPo)
@@ -450,7 +450,7 @@ test.describe("purchase order after invoicing", () => {
     await expect(edit).toBeEnabled()
     await edit.click()
     await expect(page).toHaveURL(new RegExp(`/purchase-orders/${q.id}/edit$`))
-    await expect(page.getByRole("heading", { name: "Edit Purchase Order" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Ubah Purchase Order" })).toBeVisible()
 
     await api("POST", `/invoices/${invoice.id}/replacement`)
     await page.goto(`/purchase-orders/${q.id}`)
@@ -479,8 +479,8 @@ test.describe("purchase order after invoicing", () => {
       await page.goto(`/purchase-orders/${q.id}`)
       await page.getByRole("button", { name: "Ubah", exact: true }).click()
       await expect(page).toHaveURL(new RegExp(`/purchase-orders/${q.id}/edit$`))
-      await page.getByRole("button", { name: "Edit produk 1" }).click()
-      const modal = page.getByRole("dialog", { name: "Edit Produk PO" })
+      await page.getByRole("button", { name: "Ubah produk 1" }).click()
+      const modal = page.getByRole("dialog", { name: "Ubah Produk PO" })
       await modal.getByLabel("Jumlah Produk *").fill("1")
       await modal.getByRole("button", { name: "Simpan Perubahan" }).click()
       await expect(modal).toBeHidden()

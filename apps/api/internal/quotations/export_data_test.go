@@ -86,13 +86,13 @@ func TestBuildExportData_TotalsFromStoredHeader(t *testing.T) {
 	checks := []struct {
 		field, got, want string
 	}{
-		{"TotalProduk", got.TotalProduk, "Rp~2.001,00"},
-		{"TotalDiscount", got.TotalDiscount, "Rp~200,10"},
-		{"Shipping", got.Shipping, "Rp~150,25"},
-		{"Subtotal", got.Subtotal, "Rp~1.951,15"},
-		{"DPP", got.DPP, "Rp~1.788,55"},
-		{"PPN", got.PPN, "Rp~214,63"},
-		{"GrandTotal", got.GrandTotal, "Rp~2.165,78"},
+		{"TotalProduk", got.TotalProduk, "Rp2.001"},
+		{"TotalDiscount", got.TotalDiscount, "Rp200,10"},
+		{"Shipping", got.Shipping, "Rp150,25"},
+		{"Subtotal", got.Subtotal, "Rp1.951,15"},
+		{"DPP", got.DPP, "Rp1.788,55"},
+		{"PPN", got.PPN, "Rp214,63"},
+		{"GrandTotal", got.GrandTotal, "Rp2.165,78"},
 	}
 	for _, c := range checks {
 		if c.got != c.want {
@@ -108,13 +108,13 @@ func TestBuildExportData_TotalsFromStoredHeader(t *testing.T) {
 	if !got.Items[1].HasOffer {
 		t.Error("the shipping line must print its amount, not No Offer")
 	}
-	if got.Items[1].Amount != "Rp~150,25" {
-		t.Errorf("shipping amount = %q, want Rp~150,25", got.Items[1].Amount)
+	if got.Items[1].Amount != "Rp150,25" {
+		t.Errorf("shipping amount = %q, want Rp150,25", got.Items[1].Amount)
 	}
 }
 
 // Uncharged shipping prints no row.
-// A line kept only for its address must not read as a Rp 0 charge, in the
+// A line kept only for its address must not read as a Rp0 charge, in the
 // item table or in the totals; its delivery days still print.
 func TestBuildExportData_ZeroCostShipping(t *testing.T) {
 	for _, cost := range []string{"0.00", "0"} {
@@ -130,10 +130,10 @@ func TestBuildExportData_ZeroCostShipping(t *testing.T) {
 			got := buildExportData(d, qUnits, "", "", "Director", exportNow)
 
 			if got.HasShipping {
-				t.Error("HasShipping = true for a Rp 0 shipping line")
+				t.Error("HasShipping = true for a Rp0 shipping line")
 			}
 			if len(got.Items) != 1 {
-				t.Fatalf("items = %d, want 1 (the Rp 0 shipping line is not printed)", len(got.Items))
+				t.Fatalf("items = %d, want 1 (the Rp0 shipping line is not printed)", len(got.Items))
 			}
 			if got.DeliveryTime != "3 days" {
 				t.Errorf("DeliveryTime = %q, want 3 days", got.DeliveryTime)
@@ -175,8 +175,8 @@ func TestBuildExportData_NoOfferIsUnpriced(t *testing.T) {
 			t.Errorf("line %d: HasOffer = %v, want %v", c.line+1, got.Items[c.line].HasOffer, c.hasOffer)
 		}
 	}
-	if got.TotalProduk != "Rp~1.500,00" {
-		t.Errorf("TotalProduk = %q, want Rp~1.500,00", got.TotalProduk)
+	if got.TotalProduk != "Rp1.500" {
+		t.Errorf("TotalProduk = %q, want Rp1.500", got.TotalProduk)
 	}
 	if got.HasShipping {
 		t.Error("HasShipping = true with no shipping line")
@@ -237,7 +237,7 @@ func TestBuildExportData_FooterTerms(t *testing.T) {
 			name:   "every term set",
 			vessel: qStr("MV Global Star & Co"), payment: qStr("30 hari"), validity: &three,
 			items:     []QuotationItem{product, withDays(&three)},
-			wantPlace: `MV Global Star \& Co`, wantTime: "3 days", wantPayment: "30 hari", wantValidity: "3 days",
+			wantPlace: `MV~Global~Star~\&~Co`, wantTime: "3 days", wantPayment: "30 hari", wantValidity: "3 days",
 		},
 		{
 			name:     "one day is singular",
@@ -290,11 +290,11 @@ func TestBuildExportData_DeliveryPlace(t *testing.T) {
 		items  []QuotationItem
 		want   string
 	}{
-		{"destination wins over vessel", qStr("MV CONTOH"), withDest(qStr("Franco Surabaya")), "Franco Surabaya"},
-		{"destination without vessel", nil, withDest(qStr("Cilegon Port")), "Cilegon Port"},
-		{"blank destination falls back", qStr("MV CONTOH"), withDest(qStr("   ")), "MV CONTOH"},
-		{"no destination falls back", qStr("MV CONTOH"), withDest(nil), "MV CONTOH"},
-		{"no shipping line falls back", qStr("MV CONTOH"), nil, "MV CONTOH"},
+		{"destination wins over vessel", qStr("MV CONTOH"), withDest(qStr("Franco Surabaya")), "Franco~Surabaya"},
+		{"destination without vessel", nil, withDest(qStr("Cilegon Port")), "Cilegon~Port"},
+		{"blank destination falls back", qStr("MV CONTOH"), withDest(qStr("   ")), "MV~CONTOH"},
+		{"no destination falls back", qStr("MV CONTOH"), withDest(nil), "MV~CONTOH"},
+		{"no shipping line falls back", qStr("MV CONTOH"), nil, "MV~CONTOH"},
 		{"neither prints nothing", nil, nil, ""},
 	}
 	for _, tc := range cases {

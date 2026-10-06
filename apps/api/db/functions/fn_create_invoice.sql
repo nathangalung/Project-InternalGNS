@@ -1,4 +1,4 @@
--- Canonical current body of fn_create_invoice (deployed by migration 00098).
+-- Canonical current body of fn_create_invoice (deployed by migration 00103).
 -- Snapshots a delivered PO's items into a draft invoice. Line tax figures are
 -- rounded per line; the header tax figures are the SUM of those per-line values
 -- so the invoice matches what is filed with DJP per line via e-faktur.
@@ -27,7 +27,7 @@ BEGIN
   FROM purchase_orders WHERE id = p_po_id;
 
   IF v_quotation_id IS NULL THEN
-    RAISE EXCEPTION 'PO % tidak ditemukan.', p_po_id
+    RAISE EXCEPTION 'PO tidak ditemukan. Muat ulang halaman.'
       USING ERRCODE = 'P0011';
   END IF;
 

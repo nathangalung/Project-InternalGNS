@@ -242,7 +242,7 @@ func TestRevise_OriginalIsFrozen(t *testing.T) {
 	}, seedUserID, &o.RowVersion)
 	require.Error(t, err)
 	assert.Equal(t, "P0013", sqlState(err), "a locked status is a conflict: %v", err)
-	assert.Contains(t, err.Error(), "Hanya quotation berstatus Draf yang dapat diubah; status saat ini Revisi.")
+	assert.Contains(t, err.Error(), "Hanya quotation berstatus Draf yang dapat diubah. Status saat ini Revisi.")
 }
 
 // Both updates type missing ids.

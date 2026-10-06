@@ -101,7 +101,7 @@ test("a vendor with many products pages its list", async ({ page, seed }) => {
 })
 
 // Phone takes 9-12 digits.
-const PHONE_ERROR = "Nomor telepon harus 9–12 digit angka."
+const PHONE_ERROR = "Nomor telepon harus 9 sampai 12 digit angka."
 
 test("Tambah Vendor refuses a 13-digit phone inline", async ({ page, seed }) => {
   await page.goto("/vendors")

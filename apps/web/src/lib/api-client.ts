@@ -205,17 +205,22 @@ export async function apiList<T>(input: RequestInput): Promise<PaginatedList<T>>
 export function extractErrorMessage(problem: ProblemDetail | null, fallback: string): string {
   if (!problem) return fallback
   if (problem.detail) return problem.detail
+  return joinFieldMessages(problem.fields) || problem.title || fallback
+}
+
+// Field messages as sentences.
+// Like httperr: a shared message prints once, and each joined one ends with
+// a stop, never a semicolon. Blank when no field has text.
+export function joinFieldMessages(fields: Record<string, string> | undefined): string {
   const parts = [
     ...new Set(
-      Object.values(problem.fields ?? {})
+      Object.values(fields ?? {})
         .map((v) => v.trim())
         .filter((v) => v.length > 0),
     ),
   ]
-  if (parts.length === 1) return parts[0]
-  // Sentences, like httperr: each ends with a stop, never a semicolon.
-  if (parts.length > 1) return parts.map((p) => (/[.!?]$/.test(p) ? p : `${p}.`)).join(" ")
-  return problem.title || fallback
+  if (parts.length <= 1) return parts[0] ?? ""
+  return parts.map((p) => (/[.!?]$/.test(p) ? p : `${p}.`)).join(" ")
 }
 
 export type TransferKind = "upload" | "download"

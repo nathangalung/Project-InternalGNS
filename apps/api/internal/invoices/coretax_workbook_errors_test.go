@@ -116,9 +116,9 @@ func TestInvalidBuyers(t *testing.T) {
 func TestBuyerIdentityMessage(t *testing.T) {
 	t.Parallel()
 	got := buyerIdentityMessage([]string{"INV-1", "INV-2"})
-	want := "Ekspor Coretax memerlukan NPWP 16 digit untuk pembeli Indonesia. " +
-		"Invoice memakai data klien saat invoice dibuat, jadi lengkapi NPWP klien, " +
-		"lalu batalkan dan terbitkan invoice pengganti untuk: INV-1, INV-2."
+	want := "Ekspor Coretax butuh NPWP 16 digit untuk pembeli Indonesia. " +
+		"Lengkapi NPWP klien, " +
+		"lalu batalkan dan terbitkan ulang invoice berikut: INV-1, INV-2."
 	if got != want {
 		t.Fatalf("message = %q, want %q", got, want)
 	}

@@ -120,7 +120,7 @@ func TestGapLabels(t *testing.T) {
 		{Code: GapClientNpwp, Label: "NPWP"},
 		{Code: GapClientAddress, Label: "Alamat"},
 		{Code: GapContactName, Label: "Nama Narahubung"},
-		{Code: GapContactReach, Label: "Email atau Nomor Telepon Narahubung"},
+		{Code: GapContactReach, Label: "Email atau No HP Narahubung"},
 	}, missingClientFields(ClientCompleteness{}))
 	assert.Equal(t, []CompletenessGap{{Code: GapContactInactive, Label: "Narahubung aktif"}},
 		missingClientFields(ClientCompleteness{

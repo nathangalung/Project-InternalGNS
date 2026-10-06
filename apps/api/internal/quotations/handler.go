@@ -157,7 +157,7 @@ func validateCreateStatus(status *Status) map[string]string {
 		return nil
 	}
 	return map[string]string{
-		"status": "quotation baru selalu berstatus draf; ubah status lewat endpoint status",
+		"status": "Quotation baru selalu dibuat sebagai draf. Ubah statusnya setelah tersimpan.",
 	}
 }
 

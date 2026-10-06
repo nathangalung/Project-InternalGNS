@@ -116,21 +116,21 @@ describe("importSummary", () => {
   it("counts matches, new products, and what still needs work", () => {
     const rows = [matched(0, 11), matched(1, 12), created(2, 13)]
     expect(importSummary(importedLines(rows, [filled], 0), rows, 0)).toBe(
-      "3 produk diimport (2 cocok katalog, 1 produk baru). 1 terisi otomatis; 2 perlu vendor dan harga sebelum dikirim.",
+      "3 produk diimpor (2 cocok dengan katalog, 1 produk baru). 1 terisi otomatis. 2 perlu vendor dan harga sebelum dikirim.",
     )
   })
 
   it("says when every line is filled", () => {
     const rows = [matched(0, 11)]
     expect(importSummary(importedLines(rows, [filled], 0), rows, 0)).toBe(
-      "1 produk diimport (1 cocok katalog, 0 produk baru). Semua terisi otomatis.",
+      "1 produk diimpor (1 cocok dengan katalog, 0 produk baru). Semua terisi otomatis.",
     )
   })
 
   it("adds the lines whose unit is unknown", () => {
     const rows = [matched(0, 11)]
     expect(importSummary(importedLines(rows, [filled], 0), rows, 1)).toBe(
-      "1 produk diimport (1 cocok katalog, 0 produk baru). Semua terisi otomatis. 1 produk perlu satuan yang dikenal; pilih lewat tombol edit.",
+      "1 produk diimpor (1 cocok dengan katalog, 0 produk baru). Semua terisi otomatis. 1 produk perlu satuan yang dikenal. Pilih satuannya lewat tombol Ubah.",
     )
   })
 })
