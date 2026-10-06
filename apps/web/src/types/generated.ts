@@ -42,6 +42,39 @@ export type AdvancedSearchResponse = {
     counts: Record<string, number>;
 };
 
+// From cashentries/dto.go
+export type CashDirection = "in" | "out";
+
+// From cashentries/dto.go
+export type CashEntryInput = {
+    entryDate: string;
+    direction: CashDirection;
+    category: string;
+    amount: string;
+    description: string;
+};
+
+// From cashentries/dto.go
+export type CashEntryRow = {
+    id: number;
+    entryDate: string;
+    direction: CashDirection;
+    category: string;
+    amount: string;
+    description: string;
+    rowVersion: number;
+    createdAt: string;
+    updatedAt: string;
+    createdByName: string;
+};
+
+// From cashentries/dto.go
+export type CashSummary = {
+    totalIn: string;
+    totalOut: string;
+    net: string;
+};
+
 // From invoices/dto.go
 export type ChangeInvoiceStatusInput = {
     status: InvoiceBackendStatus;

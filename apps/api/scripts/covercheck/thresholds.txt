@@ -9,6 +9,7 @@
 # Business logic: 98.
 internal/auth                98
 internal/users               98
+internal/cashentries         98
 internal/clients             98
 internal/vendors             98
 internal/items               98

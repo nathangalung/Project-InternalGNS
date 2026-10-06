@@ -270,6 +270,7 @@ func TestRouter_RenderRoutesClassified(t *testing.T) {
 	sort.Strings(long)
 
 	assert.Equal(t, []string{
+		"/api/v1/cash-entries/export.xlsx",
 		"/api/v1/dashboard/export.xlsx",
 		"/api/v1/invoices/coretax.xlsx",
 		"/api/v1/invoices/export.xlsx",

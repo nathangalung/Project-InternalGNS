@@ -59,13 +59,14 @@ management picks a role from a dropdown with an Indonesian label and hint
   head to price, and in Ubah PO it edits harga beli, vendor and qty of the
   stored lines only (each line carries its PO line `id`; adding or dropping
   one is a 403). It moves a PO to any state but Dibatalkan.
-- finance (Kepala Keuangan): invoices and the financial dashboard, and reads
-  quotations, POs, products and vendors without changing them. Keeps client
-  writes.
+- finance (Kepala Keuangan): invoices, Kas Lain and the financial dashboard,
+  and reads quotations, POs, products and vendors without changing them.
+  Keeps client writes.
 - finance_input (Input Data Keuangan): invoices and POs, with what is billed
   but no harga beli or profit. It records payment only (Lunas is its one
   move, with the proof), downloads Coretax, and changes a client's NPWP and
   TKU alone (`clients.taxOnly` takes every other field from the stored row).
+  It adds and edits Kas Lain entries but neither deletes nor exports them.
   No quotations, no dashboards beyond the overview, no Pengganti, no invoice
   dates or attachment.
 
@@ -432,6 +433,20 @@ sends the price only when it was changed.
 `StoreLink` shows it in a new tab on the product and vendor pages, under
 each offer on the quotation and PO detail, and beside the picked vendor in
 the quotation product dialog.
+
+## Kas Lain
+
+Kas Lain (`/cash-entries`, `internal/cashentries`, migration 00105) records
+money in and out beyond the sales and purchases the documents already
+record: a date, Masuk or Keluar, a free-text category (the form suggests
+those in use), an amount above zero and a note, all required. Superadmin
+and the finance roles reach it; finance input lists, adds and edits, and
+only the finance head and superadmin delete or export it. An edit needs
+`If-Match` with the entry's `rowVersion`. The page totals Masuk, Keluar and
+their difference over the current filter. The entries do not feed the
+financial dashboard or Laba Bersih, which stay paid DPP minus cost of
+goods: a capital injection or a loan is not profit. The amount input reads
+Indonesian (dots group thousands, a comma starts the sen).
 
 ## Frontend layout (`apps/web`)
 

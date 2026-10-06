@@ -12,6 +12,7 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/db/queries"
 	"github.com/nathangalung/internalgns/apps/api/internal/auth"
+	"github.com/nathangalung/internalgns/apps/api/internal/cashentries"
 	"github.com/nathangalung/internalgns/apps/api/internal/clients"
 	"github.com/nathangalung/internalgns/apps/api/internal/countries"
 	"github.com/nathangalung/internalgns/apps/api/internal/dashboard"
@@ -149,6 +150,8 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 				Mount("/purchase-orders", purchaseorders.Routes(d))
 			r.With(requireRole(roles.Superadmin, roles.Finance, roles.FinanceInput)).
 				Mount("/invoices", invoices.Routes(d))
+			r.With(requireRole(roles.Superadmin, roles.Finance, roles.FinanceInput)).
+				Mount("/cash-entries", cashentries.Routes(d))
 			r.With(requireRole(roles.Superadmin)).
 				Mount("/users", users.Routes(d))
 			r.With(requireRole(everyRole...)).Mount("/dashboard", dashboard.Routes(d))

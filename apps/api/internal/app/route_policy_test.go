@@ -84,6 +84,12 @@ func TestRouter_RoutePolicy(t *testing.T) {
 		{"PATCH", "/invoices/999999999/attachment", []string{s, f}},
 		{"GET", "/invoices/999999999/payment-proof/upload-url", []string{s, f, fi}},
 
+		{"GET", "/cash-entries", []string{s, f, fi}},
+		{"POST", "/cash-entries", []string{s, f, fi}},
+		{"PUT", "/cash-entries/999999999", []string{s, f, fi}},
+		{"GET", "/cash-entries/export.xlsx", []string{s, f}},
+		{"DELETE", "/cash-entries/999999999", []string{s, f}},
+
 		{"GET", "/dashboard/summary", all},
 		{"GET", "/dashboard/export.xlsx", []string{s, f}},
 		{"GET", "/dashboard/timeseries?metric=revenue", []string{s, f}},

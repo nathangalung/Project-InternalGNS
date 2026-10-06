@@ -74,6 +74,12 @@ export const queryKeys = {
     byQuotation: (quotationId: number) => ["invoices", "by-quotation", quotationId] as const,
     summary: () => ["invoices", "summary"] as const,
   },
+  cashEntries: {
+    all: ["cash-entries"] as const,
+    list: (params: Record<string, unknown> = {}) => ["cash-entries", "list", params] as const,
+    summary: (params: Record<string, unknown> = {}) => ["cash-entries", "summary", params] as const,
+    categories: () => ["cash-entries", "categories"] as const,
+  },
   dashboard: {
     all: ["dashboard"] as const,
     summary: () => ["dashboard", "summary"] as const,

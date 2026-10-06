@@ -9,6 +9,10 @@ import type * as G from "./generated"
 
 export type {
   AddVendorToItemInput,
+  CashDirection,
+  CashEntryInput,
+  CashEntryRow,
+  CashSummary,
   ChangeInvoiceStatusInput,
   ChangeOwnPasswordInput,
   ChangeUserPasswordInput,
