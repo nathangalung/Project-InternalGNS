@@ -1,4 +1,4 @@
--- Canonical current body of fn_create_quotation (deployed by migration 00098).
+-- Canonical current body of fn_create_quotation (deployed by migration 00103).
 CREATE OR REPLACE FUNCTION public.fn_create_quotation(p_company_client_id bigint, p_contact_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_created_by bigint, p_notes text DEFAULT NULL::text, p_status text DEFAULT 'draft'::text)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -27,7 +27,7 @@ BEGIN
   END IF;
 
   IF p_discount_pct < 0 OR p_discount_pct > 100 THEN
-    RAISE EXCEPTION 'Diskon harus antara 0 dan 100; nilai yang dikirim %.', p_discount_pct
+    RAISE EXCEPTION 'Diskon harus antara 0 dan 100. Nilai yang dikirim %.', p_discount_pct
       USING ERRCODE = 'P0014';
   END IF;
 
@@ -153,7 +153,7 @@ BEGIN
       v_quotation_id,
       v_line_no,
       'shipping',
-      'SHIPPING' || COALESCE(' — ' || p_shipping_address, ''),
+      'SHIPPING' || COALESCE(' - ' || p_shipping_address, ''),
       1,
       (SELECT id FROM units WHERE code = 'UNIT' LIMIT 1),
       COALESCE(p_shipping_cost, 0),

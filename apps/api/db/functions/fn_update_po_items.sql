@@ -1,4 +1,4 @@
--- Canonical current body of fn_update_po_items (deployed by migration 00097).
+-- Canonical current body of fn_update_po_items (deployed by migration 00103).
 CREATE OR REPLACE FUNCTION public.fn_update_po_items(p_po_id bigint, p_user_id bigint, p_discount_pct numeric, p_notes text, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb)
  RETURNS void
  LANGUAGE plpgsql
@@ -20,7 +20,7 @@ BEGIN
   FOR UPDATE;
 
   IF v_status IS NULL THEN
-    RAISE EXCEPTION 'PO % tidak ditemukan.', p_po_id
+    RAISE EXCEPTION 'PO tidak ditemukan. Muat ulang halaman.'
       USING ERRCODE = 'P0011';
   END IF;
 
@@ -31,7 +31,7 @@ BEGIN
 
   -- The PO lock above orders this with fn_replace_invoice.
   IF fn_po_lines_locked(p_po_id, v_status) THEN
-    RAISE EXCEPTION 'PO yang sudah dikirim hanya dapat diubah setelah invoicenya dibatalkan dan sebelum invoice pengganti diterbitkan.'
+    RAISE EXCEPTION 'PO yang sudah dikirim hanya bisa diubah jika invoicenya dibatalkan dan invoice pengganti belum diterbitkan.'
       USING ERRCODE = 'P0013';
   END IF;
 

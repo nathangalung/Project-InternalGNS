@@ -1,4 +1,4 @@
--- Canonical current body of fn_update_quotation (deployed by migration 00092).
+-- Canonical current body of fn_update_quotation (deployed by migration 00103).
 CREATE OR REPLACE FUNCTION public.fn_update_quotation(p_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_user_id bigint, p_notes text DEFAULT NULL::text)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -28,12 +28,12 @@ BEGIN
   FOR UPDATE;
 
   IF v_status IS NULL THEN
-    RAISE EXCEPTION 'Quotation % tidak ditemukan.', p_id
+    RAISE EXCEPTION 'Quotation tidak ditemukan. Muat ulang halaman.'
       USING ERRCODE = 'P0011';
   END IF;
 
   IF v_status != 'draft' THEN
-    RAISE EXCEPTION 'Hanya quotation berstatus Draf yang dapat diubah; status saat ini %.',
+    RAISE EXCEPTION 'Hanya quotation berstatus Draf yang dapat diubah. Status saat ini %.',
       fn_quotation_status_label(v_status)
       USING ERRCODE = 'P0013';
   END IF;
@@ -48,7 +48,7 @@ BEGIN
   END IF;
 
   IF p_discount_pct < 0 OR p_discount_pct > 100 THEN
-    RAISE EXCEPTION 'Diskon harus antara 0 dan 100; nilai yang dikirim %.', p_discount_pct
+    RAISE EXCEPTION 'Diskon harus antara 0 dan 100. Nilai yang dikirim %.', p_discount_pct
       USING ERRCODE = 'P0014';
   END IF;
 
@@ -182,7 +182,7 @@ BEGIN
       p_id,
       v_line_no,
       'shipping',
-      'SHIPPING' || COALESCE(' — ' || p_shipping_address, ''),
+      'SHIPPING' || COALESCE(' - ' || p_shipping_address, ''),
       1,
       (SELECT id FROM units WHERE code = 'UNIT' LIMIT 1),
       COALESCE(p_shipping_cost, 0),

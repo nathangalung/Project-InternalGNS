@@ -1,4 +1,4 @@
--- Canonical current body of fn_revise_quotation (deployed by migration 00086).
+-- Canonical current body of fn_revise_quotation (deployed by migration 00103).
 CREATE OR REPLACE FUNCTION public.fn_revise_quotation(p_quotation_id bigint, p_user_id bigint, p_note text DEFAULT NULL::text)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -15,12 +15,12 @@ BEGIN
   FOR UPDATE;
 
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'Quotation % tidak ditemukan.', p_quotation_id
+    RAISE EXCEPTION 'Quotation tidak ditemukan. Muat ulang halaman.'
       USING ERRCODE = 'P0011';
   END IF;
 
   IF v_orig.status <> 'sent' THEN
-    RAISE EXCEPTION 'Hanya quotation berstatus Dikirim yang dapat direvisi; status saat ini %.',
+    RAISE EXCEPTION 'Hanya quotation berstatus Dikirim yang dapat direvisi. Status saat ini %.',
       fn_quotation_status_label(v_orig.status)
       USING ERRCODE = 'P0012';
   END IF;

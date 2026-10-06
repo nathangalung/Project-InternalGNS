@@ -1,4 +1,4 @@
--- Canonical current body of fn_change_invoice_status (deployed by migration 00093).
+-- Canonical current body of fn_change_invoice_status (deployed by migration 00103).
 CREATE OR REPLACE FUNCTION public.fn_change_invoice_status(p_invoice_id bigint, p_target text, p_user_id bigint, p_note text DEFAULT NULL::text, p_proof_key text DEFAULT NULL::text)
  RETURNS void
  LANGUAGE plpgsql
@@ -16,7 +16,7 @@ BEGIN
   FOR UPDATE;
 
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'Invoice % tidak ditemukan.', p_invoice_id
+    RAISE EXCEPTION 'Invoice tidak ditemukan. Muat ulang halaman.'
       USING ERRCODE = 'P0011';
   END IF;
 
@@ -33,7 +33,7 @@ BEGIN
   IF v_current = p_target THEN
     -- A proof is stored only by the paid move itself.
     IF p_target = 'paid' AND v_proof IS NOT NULL THEN
-      RAISE EXCEPTION 'Invoice sudah ditandai Dibayar. Muat ulang halaman; bukti pembayaran tidak tersimpan.'
+      RAISE EXCEPTION 'Invoice sudah ditandai Dibayar. Muat ulang halaman. Bukti pembayaran tidak tersimpan.'
         USING ERRCODE = 'P0012';
     END IF;
     RETURN;

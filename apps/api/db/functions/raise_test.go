@@ -73,3 +73,31 @@ func TestRaisesScanner(t *testing.T) {
 		t.Fatalf("raises() = %q, want %q", got, want)
 	}
 }
+
+// sqlLiteral matches a quoted string.
+// sqlComment drops line comments, whose apostrophes would pair with code.
+var sqlComment = regexp.MustCompile(`--[^\n]*`)
+
+// sqlLiteral matches a quoted string on one line.
+var sqlLiteral = regexp.MustCompile(`'(?:[^'\n]|'')*'`)
+
+// Function text reads as sentences.
+// A raise reaches the user as a problem detail and a stored name reaches
+// screens and documents, so no literal carries a semicolon or a dash.
+func TestLiterals_NoSemicolonOrDash(t *testing.T) {
+	files, err := filepath.Glob("*.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, f := range files {
+		body, err := os.ReadFile(f)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, lit := range sqlLiteral.FindAllString(sqlComment.ReplaceAllString(string(body), ""), -1) {
+			if strings.ContainsAny(lit, ";—–") {
+				t.Errorf("%s: %s", f, lit)
+			}
+		}
+	}
+}

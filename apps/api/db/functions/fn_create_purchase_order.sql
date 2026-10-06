@@ -1,4 +1,4 @@
--- Canonical current body of fn_create_purchase_order (deployed by migration 00098).
+-- Canonical current body of fn_create_purchase_order (deployed by migration 00103).
 CREATE OR REPLACE FUNCTION public.fn_create_purchase_order(p_quotation_id bigint, p_user_id bigint)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -18,7 +18,7 @@ BEGIN
   FROM quotations WHERE id = p_quotation_id;
 
   IF v_company_id IS NULL THEN
-    RAISE EXCEPTION 'Quotation % tidak ditemukan.', p_quotation_id
+    RAISE EXCEPTION 'Quotation tidak ditemukan. Muat ulang halaman.'
       USING ERRCODE = 'P0011';
   END IF;
 
