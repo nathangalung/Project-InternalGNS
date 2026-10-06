@@ -986,7 +986,7 @@ export type QuotationUpdateInput = {
 };
 
 // From users/dto.go
-export type Role = "finance" | "operational" | "superadmin";
+export type Role = "finance" | "finance_input" | "operational" | "operational_input" | "superadmin";
 
 // From units/dto.go
 export type UnitRow = {

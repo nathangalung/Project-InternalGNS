@@ -1,13 +1,19 @@
 package users
 
-import "time"
+import (
+	"time"
+
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/roles"
+)
 
 type Role string
 
 const (
-	RoleSuperadmin  Role = "superadmin"
-	RoleOperational Role = "operational"
-	RoleFinance     Role = "finance"
+	RoleSuperadmin       Role = roles.Superadmin
+	RoleOperational      Role = roles.Operational
+	RoleOperationalInput Role = roles.OperationalInput
+	RoleFinance          Role = roles.Finance
+	RoleFinanceInput     Role = roles.FinanceInput
 )
 
 type User struct {

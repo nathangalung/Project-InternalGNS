@@ -5,6 +5,8 @@ import (
 	"path"
 	"slices"
 	"strings"
+
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/roles"
 )
 
 // Per-bucket extension allowlist.
@@ -16,26 +18,35 @@ var bucketExtensions = map[string]map[string]struct{}{
 	BucketPODocs:             docExts(),
 }
 
+// Role groups for buckets.
+var (
+	allRoles = []string{roles.Superadmin, roles.Operational, roles.OperationalInput, roles.Finance, roles.FinanceInput}
+	opsWrite = []string{roles.Superadmin, roles.Operational, roles.OperationalInput}
+	finance  = []string{roles.Superadmin, roles.Finance, roles.FinanceInput}
+)
+
 // bucketReaders mirrors the resource RBAC.
-// Logos and item images are shared master data; invoice attachments follow
-// /invoices; PO documents follow /purchase-orders.
+// Logos, item images and PO documents follow master data and
+// /purchase-orders, which every role reads; invoice attachments and payment
+// proofs follow /invoices.
 var bucketReaders = map[string][]string{
-	BucketClientLogos:        {"superadmin", "operational", "finance"},
-	BucketVendorLogos:        {"superadmin", "operational", "finance"},
-	BucketItemImages:         {"superadmin", "operational", "finance"},
-	BucketInvoiceAttachments: {"superadmin", "finance"},
-	BucketPODocs:             {"superadmin", "operational"},
+	BucketClientLogos:        allRoles,
+	BucketVendorLogos:        allRoles,
+	BucketItemImages:         allRoles,
+	BucketInvoiceAttachments: finance,
+	BucketPODocs:             allRoles,
 }
 
 // bucketWriters mirrors the write RBAC.
-// Finance only reads /items and /vendors, so it stores no item image or
-// vendor logo. It keeps client writes for NPWP and TKU, logo included.
+// The finance roles only read /items, /vendors and purchase orders. The
+// finance head keeps client writes, logo included; finance input changes
+// only NPWP and TKU, so it stores no logo, but it stores payment proofs.
 var bucketWriters = map[string][]string{
-	BucketClientLogos:        {"superadmin", "operational", "finance"},
-	BucketVendorLogos:        {"superadmin", "operational"},
-	BucketItemImages:         {"superadmin", "operational"},
-	BucketInvoiceAttachments: {"superadmin", "finance"},
-	BucketPODocs:             {"superadmin", "operational"},
+	BucketClientLogos:        {roles.Superadmin, roles.Operational, roles.OperationalInput, roles.Finance},
+	BucketVendorLogos:        opsWrite,
+	BucketItemImages:         opsWrite,
+	BucketInvoiceAttachments: finance,
+	BucketPODocs:             opsWrite,
 }
 
 // CanReadBucket checks role read access.

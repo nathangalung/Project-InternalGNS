@@ -9,6 +9,8 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/assetproxy"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/rolegate"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/roles"
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 )
 
@@ -26,12 +28,14 @@ func Routes(d deps.Deps) chi.Router {
 	r.Post("/", h.Create)
 	r.Get("/search-advanced", h.SearchAdvanced)
 	r.Post("/match-rows", h.MatchRows)
-	r.Get("/recommendations", h.Recommendations)
+	// Recommendations carry harga beli.
+	r.With(rolegate.Deny(roles.FinanceInput)).Get("/recommendations", h.Recommendations)
 	r.Get("/{id}", h.Get)
 	r.Put("/{id}", h.Update)
 	r.Get("/{id}/vendors", h.ListVendorsForItem)
 	r.Post("/{id}/vendors", h.AddVendor)
-	r.Get("/{id}/price-history", h.PriceHistory)
+	// The harga jual history is for the price setters and the finance head.
+	r.With(rolegate.Deny(roles.OperationalInput, roles.FinanceInput)).Get("/{id}/price-history", h.PriceHistory)
 	r.Get("/{id}/quotations", h.RecentQuotations)
 
 	image := imageAsset(d.Storage, d.Objects, repo)

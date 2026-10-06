@@ -76,7 +76,7 @@ func validateName(name string) string {
 // validateRole checks the role enum.
 func validateRole(r Role) string {
 	switch r {
-	case RoleSuperadmin, RoleOperational, RoleFinance:
+	case RoleSuperadmin, RoleOperational, RoleOperationalInput, RoleFinance, RoleFinanceInput:
 		return ""
 	}
 	return "Peran tidak valid."

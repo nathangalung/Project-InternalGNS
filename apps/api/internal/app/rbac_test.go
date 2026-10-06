@@ -90,7 +90,7 @@ func TestRoleRefusals_IndonesianDetail(t *testing.T) {
 	}{
 		{"mount gate", requireRole("superadmin")(next), http.MethodGet, "/users", detailRoleRefused},
 		{"read-only gate", readOnlyFor("finance")(next), http.MethodPost, "/items/", detailRoleRefused},
-		{"bucket gate", authorizeBucket(next), http.MethodGet, "/storage/object?bucket=po-docs", detailBucketRefused},
+		{"bucket gate", authorizeBucket(next), http.MethodPut, "/storage/object?bucket=item-images", detailBucketRefused},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

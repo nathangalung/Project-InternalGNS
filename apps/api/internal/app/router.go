@@ -21,6 +21,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/live"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/roles"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/session"
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 	"github.com/nathangalung/internalgns/apps/api/internal/units"
@@ -132,20 +133,25 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 
 			r.Mount("/units", units.Routes(d))
 			r.Mount("/countries", countries.Routes(d))
-			r.Mount("/clients", clients.Routes(d))
-			// Finance keeps client writes for NPWP and TKU, but only reads the
-			// catalog and vendors.
-			r.With(readOnlyFor("finance")).Mount("/items", items.Routes(d))
-			r.With(readOnlyFor("finance")).Mount("/vendors", vendors.Routes(d))
-			r.With(requireRole("superadmin", "operational")).
+			// Finance input changes only NPWP and TKU (clients.Routes).
+			r.With(requireRole(everyRole...)).Mount("/clients", clients.Routes(d))
+			// Only operational roles change the catalog and vendors.
+			r.With(requireRole(everyRole...), readOnlyFor(roles.Finance, roles.FinanceInput)).
+				Mount("/items", items.Routes(d))
+			r.With(requireRole(everyRole...), readOnlyFor(roles.Finance, roles.FinanceInput)).
+				Mount("/vendors", vendors.Routes(d))
+			// The finance head reads quotations; the input roles are gated
+			// per route inside.
+			r.With(requireRole(roles.Superadmin, roles.Operational, roles.OperationalInput, roles.Finance),
+				readOnlyFor(roles.Finance)).
 				Mount("/quotations", quotations.Routes(d))
-			r.With(requireRole("superadmin", "operational")).
+			r.With(requireRole(everyRole...), readOnlyFor(roles.Finance, roles.FinanceInput)).
 				Mount("/purchase-orders", purchaseorders.Routes(d))
-			r.With(requireRole("superadmin", "finance")).
+			r.With(requireRole(roles.Superadmin, roles.Finance, roles.FinanceInput)).
 				Mount("/invoices", invoices.Routes(d))
-			r.With(requireRole("superadmin")).
+			r.With(requireRole(roles.Superadmin)).
 				Mount("/users", users.Routes(d))
-			r.Mount("/dashboard", dashboard.Routes(d))
+			r.With(requireRole(everyRole...)).Mount("/dashboard", dashboard.Routes(d))
 
 			// Proxy asset bytes through the authenticated API (MinIO stays internal).
 			if storageClient != nil {
@@ -157,4 +163,15 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 	})
 
 	return r
+}
+
+// everyRole lists the known roles.
+// Mount gates admit only these, so a route-level rolegate.Deny never meets
+// a role it does not know.
+var everyRole = []string{
+	roles.Superadmin,
+	roles.Operational,
+	roles.OperationalInput,
+	roles.Finance,
+	roles.FinanceInput,
 }

@@ -11,6 +11,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/pdfgen"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/assetproxy"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/rolegate"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/roles"
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 )
 
@@ -60,13 +62,15 @@ func RoutesWithProofs(d deps.Deps, proofs ProofStore) chi.Router {
 	r.Get("/{id}", h.Get)
 	r.Get("/{id}/items", h.ListItems)
 	r.Patch("/{id}/status", h.ChangeStatus)
-	r.Post("/{id}/replacement", h.Replace)
-	r.Patch("/{id}/dates", h.UpdateDates)
+	// Finance input records payment only.
+	finInput := rolegate.Deny(roles.FinanceInput)
+	r.With(finInput).Post("/{id}/replacement", h.Replace)
+	r.With(finInput).Patch("/{id}/dates", h.UpdateDates)
 
 	attachment := attachmentAsset(d.Storage, d.Objects, repo)
-	r.Get("/{id}/attachment/upload-url", assetproxy.Upload(attachment))
+	r.With(finInput).Get("/{id}/attachment/upload-url", assetproxy.Upload(attachment))
 	r.Get("/{id}/attachment/download-url", assetproxy.Download(attachment))
-	r.Patch("/{id}/attachment", assetproxy.UpdateKey(attachment))
+	r.With(finInput).Patch("/{id}/attachment", assetproxy.UpdateKey(attachment))
 
 	// Paid status saves the key.
 	proof := paymentProofAsset(d.Storage, d.Objects, repo)

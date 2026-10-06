@@ -11,6 +11,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/pdfgen"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/assetproxy"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/rolegate"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/roles"
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 )
 
@@ -26,7 +28,8 @@ func Routes(d deps.Deps) chi.Router {
 
 	doc := docAsset(d.Storage, repo)
 	r.Get("/", h.List)
-	r.Get("/export.xlsx", h.Export)
+	// The export totals harga jual.
+	r.With(rolegate.Deny(roles.OperationalInput)).Get("/export.xlsx", h.Export)
 	r.Get("/by-quotation/{quotationId}", h.GetByQuotation)
 	r.Get("/{id}", h.Get)
 	r.Get("/{id}/items", h.ListItems)

@@ -32,6 +32,8 @@ internal/shared/httpx        95
 internal/shared/live         95
 internal/shared/listq        95
 internal/shared/paginate     95
+internal/shared/rolegate     95
+internal/shared/roles        95
 internal/shared/session      95
 internal/shared/sheet        95
 internal/shared/tz           95
