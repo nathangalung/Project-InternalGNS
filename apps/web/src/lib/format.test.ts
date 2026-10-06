@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import {
   computeTaxBreakdown,
+  formatAddress,
   formatDate,
   formatDateShort,
   formatDateTime,
@@ -202,5 +203,35 @@ describe("dates read in WIB from any browser zone", () => {
     expect(formatDateShort("2026-08-04T12:00:00Z")).toBe("4 Agu 2026")
     expect(formatDateShort("")).toBe("")
     expect(formatDateShort("bukan tanggal")).toBe("bukan tanggal")
+  })
+})
+
+describe("formatAddress", () => {
+  it.each([
+    {
+      name: "line breaks and stray spaces",
+      input:
+        "GEDUNG TCC LT 11 JL KH MAS MANSYUR KAV 126 ,  \n RT 009,  RW 003, KARET TENGSIN,  \n DKI JAKARTA 10220",
+      want: "GEDUNG TCC LT 11 JL KH MAS MANSYUR KAV 126, RT 009, RW 003, KARET TENGSIN, DKI JAKARTA 10220",
+    },
+    {
+      name: "a glued postal code",
+      input: "CIRACAS JAKARTA TIMUR,13740",
+      want: "CIRACAS JAKARTA TIMUR, 13740",
+    },
+    {
+      name: "house number lists stay",
+      input: "Blok G No. 2,6,8, Jl. Hayam wuruk No.2-5",
+      want: "Blok G No. 2,6,8, Jl. Hayam wuruk No.2-5",
+    },
+    {
+      name: "doubled and trailing commas",
+      input: " , Jl. A,, Jakarta ,\r\n",
+      want: "Jl. A, Jakarta",
+    },
+    { name: "blank", input: "  \n ", want: "" },
+    { name: "missing", input: undefined, want: "" },
+  ])("$name", ({ input, want }) => {
+    expect(formatAddress(input)).toBe(want)
   })
 })

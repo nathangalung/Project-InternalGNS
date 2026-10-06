@@ -1,6 +1,7 @@
 import { useId, useState } from "react"
 import PageButtons from "@/components/shared/PageButtons"
 import { optionalCls } from "@/features/clients/ClientAdd/helpers"
+import { formatAddress } from "@/lib/format"
 import { clampPage, pageCount } from "@/lib/pagination"
 import { ui } from "@/lib/ui"
 import { isValidAddress, optionalAddressError } from "@/lib/validation"
@@ -287,7 +288,7 @@ export default function Step4Summary({
                   currentClient?.lokasi ? "text-[#374151]" : "italic text-[#9CA3AF]"
                 }`}
               >
-                {currentClient?.lokasi || "Belum diisi"}
+                {formatAddress(currentClient?.lokasi) || "Belum diisi"}
               </div>
             </div>
             <div>
@@ -297,7 +298,7 @@ export default function Step4Summary({
                   shippingAddress ? "text-[#374151]" : "italic text-[#9CA3AF]"
                 }`}
               >
-                {shippingAddress || "Belum diisi"}
+                {formatAddress(shippingAddress) || "Belum diisi"}
               </div>
             </div>
           </div>
