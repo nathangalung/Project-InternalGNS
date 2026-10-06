@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"testing"
 )
 
@@ -20,7 +21,7 @@ func renderPage(t *testing.T, pdf string) image.Image {
 		t.Skip("pdftoppm unavailable")
 	}
 	out := filepath.Join(filepath.Dir(pdf), "page")
-	if err := exec.Command(bin, "-r", "144", "-gray", "-png", "-f", "1", "-l", "1", "-singlefile", pdf, out).Run(); err != nil {
+	if err := exec.Command(bin, "-r", strconv.Itoa(edgeDPI), "-gray", "-png", "-f", "1", "-l", "1", "-singlefile", pdf, out).Run(); err != nil {
 		t.Fatalf("pdftoppm: %v", err)
 	}
 	f, err := os.Open(out + ".png")
