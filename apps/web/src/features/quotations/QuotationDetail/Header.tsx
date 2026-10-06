@@ -15,7 +15,8 @@ type HeaderProps = {
   status: Status
   // Absent once the quotation leaves draft
   onEdit?: () => void
-  onDownload: () => Promise<void>
+  // Absent for a role that may not download
+  onDownload?: () => Promise<void>
 }
 
 // Breadcrumb plus title actions.
@@ -34,7 +35,7 @@ export default function Header({
   async function download() {
     setDownloading(true)
     try {
-      await onDownload()
+      await onDownload?.()
     } finally {
       setDownloading(false)
     }
@@ -93,29 +94,31 @@ export default function Header({
               Ubah
             </button>
           )}
-          <button
-            type="button"
-            className={`${ui.btnPrimary} min-w-[130px]`}
-            onClick={() => void download()}
-            disabled={downloading}
-          >
-            <svg
-              aria-hidden="true"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="#fff"
-              stroke="#fff"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          {onDownload && (
+            <button
+              type="button"
+              className={`${ui.btnPrimary} min-w-[130px]`}
+              onClick={() => void download()}
+              disabled={downloading}
             >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            {downloading ? "Mengunduh…" : "Unduh PDF"}
-          </button>
+              <svg
+                aria-hidden="true"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="#fff"
+                stroke="#fff"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              {downloading ? "Mengunduh…" : "Unduh PDF"}
+            </button>
+          )}
         </div>
       </div>
     </>

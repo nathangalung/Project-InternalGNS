@@ -90,11 +90,14 @@ test("a product never quoted says so", async ({ page, seed }) => {
   await expect(section(page)).toContainText("Belum ada quotation untuk produk ini.")
 })
 
-test.describe("as finance", () => {
-  test.use({ session: "finance" })
+test.describe("as finance input", () => {
+  test.use({ session: "finance_input" })
 
-  // Finance cannot open quotations, so the number reads as plain text.
-  test("finance sees a client's quotations without quotation links", async ({ page, seed }) => {
+  // Finance input cannot open quotations, so the number reads as plain text.
+  test("finance input sees a client's quotations without quotation links", async ({
+    page,
+    seed,
+  }) => {
     const client = await seed.client()
     const item = await seed.item()
     const created = await seed.quotation({ client, lines: [{ item, qty: 1, price: 50_000 }] })

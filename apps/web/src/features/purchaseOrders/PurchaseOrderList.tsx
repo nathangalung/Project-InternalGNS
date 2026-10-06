@@ -7,10 +7,12 @@ import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
+import { useMe } from "@/features/auth/hooks"
 import { downloadPdf } from "@/lib/api-client"
 import { resolveRange } from "@/lib/date-range"
 import { formatDate } from "@/lib/format"
 import { emptyListText } from "@/lib/list-empty"
+import { canWriteCatalog, seesSelling } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import { useListScreen, usePageWithin } from "@/lib/useListScreen"
@@ -37,6 +39,10 @@ type PurchaseOrderListProps = {
 }
 
 export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListProps) {
+  const role = useMe().data?.role
+  // Totals are harga jual; uploads are an operational write
+  const showTotal = seesSelling(role)
+  const writes = canWriteCatalog(role)
   // By PO id, so a refetch refreshes the modal row.
   const [uploadPoId, setUploadPoId] = useState<number | null>(null)
   const [showFilter, setShowFilter] = useState(false)
@@ -150,28 +156,30 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
         <div className={ui.pageHeader}>
           <h1 className={ui.pageTitle}>Daftar Purchase Order</h1>
           <div className={ui.pageActionsTight}>
-            <button
-              type="button"
-              className={`${ui.btnOutline} min-w-[160px] whitespace-nowrap`}
-              onClick={() => void handleExport()}
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
+            {showTotal && (
+              <button
+                type="button"
+                className={`${ui.btnOutline} min-w-[160px] whitespace-nowrap`}
+                onClick={() => void handleExport()}
               >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              Ekspor Excel
-            </button>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Ekspor Excel
+              </button>
+            )}
           </div>
         </div>
 
@@ -194,15 +202,15 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
                 <th className={`${ui.thCenter} w-[130px]`}>Nomor PO</th>
                 <th className={`${ui.thCenter} w-[200px]`}>Nama Klien</th>
                 <th className={`${ui.thCenter} w-[160px]`}>Tanggal PO</th>
-                <th className={`${ui.thCenter} w-[150px]`}>Total PO</th>
+                {showTotal && <th className={`${ui.thCenter} w-[150px]`}>Total PO</th>}
                 <th className={`${ui.thCenter} w-[150px]`}>Status</th>
                 <th className={`${ui.thCenter} w-[110px]`}>Aksi</th>
               </tr>
             </thead>
             <tbody>
-              {isLoading && <TableLoadingRow colSpan={7} />}
+              {isLoading && <TableLoadingRow colSpan={showTotal ? 7 : 6} />}
               {!isLoading && currentRows.length === 0 && (
-                <TableEmptyRow colSpan={7}>
+                <TableEmptyRow colSpan={showTotal ? 7 : 6}>
                   {emptyListText(
                     list,
                     "Belum ada Purchase Order. PO terbuat otomatis ketika quotation disetujui.",
@@ -243,7 +251,9 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
                         </EntityLink>
                       </td>
                       <td className={ui.tdCenter}>{formatDate(row.date)}</td>
-                      <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>{row.total}</td>
+                      {showTotal && (
+                        <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>{row.total}</td>
+                      )}
                       <td className={ui.tdCenter}>
                         <StatusBadge bg={status.bg} color={status.color}>
                           {PO_LABEL[row.status]}
@@ -260,29 +270,31 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
                           >
                             <EyeIcon size={18} />
                           </button>
-                          <button
-                            type="button"
-                            title={uploadLabel}
-                            aria-label={`${uploadLabel} ${poRef(row)}`}
-                            className={ui.iconAction}
-                            onClick={() => setUploadPoId(row.id)}
-                          >
-                            <svg
-                              width="18"
-                              height="18"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              aria-hidden="true"
+                          {writes && (
+                            <button
+                              type="button"
+                              title={uploadLabel}
+                              aria-label={`${uploadLabel} ${poRef(row)}`}
+                              className={ui.iconAction}
+                              onClick={() => setUploadPoId(row.id)}
                             >
-                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                              <polyline points="17 8 12 3 7 8" />
-                              <line x1="12" y1="3" x2="12" y2="15" />
-                            </svg>
-                          </button>
+                              <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden="true"
+                              >
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="17 8 12 3 7 8" />
+                                <line x1="12" y1="3" x2="12" y2="15" />
+                              </svg>
+                            </button>
+                          )}
                           <button
                             type="button"
                             title={
@@ -354,6 +366,7 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
           onClose={() => setShowFilter(false)}
           initialValues={activeFilters ?? undefined}
           onApply={list.applyFilters}
+          showTotalRange={showTotal}
         />
       )}
     </>

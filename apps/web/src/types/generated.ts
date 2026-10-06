@@ -67,7 +67,7 @@ export type ClientQuotationRow = {
     createdAt: string;
     status: string;
     contactName?: string;
-    grandTotal: string;
+    grandTotal?: string;
     productCount: number;
 };
 
@@ -88,7 +88,7 @@ export type ClientRow = {
     contactName?: string;
     contactEmail?: string;
     contactPhone?: string;
-    totalPurchase: string;
+    totalPurchase?: string;
     quotationCount: number;
     logoObjectKey?: string;
 };
@@ -350,7 +350,7 @@ export type ItemPriceHistoryRow = {
     clientName: string;
     qty: string;
     costPrice?: string;
-    sellingPrice: string;
+    sellingPrice?: string;
     profitPct?: string;
 };
 
@@ -368,7 +368,7 @@ export type ItemQuotationRow = {
     vendorName?: string;
     qty: string;
     costPrice?: string;
-    sellingPrice: string;
+    sellingPrice?: string;
 };
 
 // From items/dto.go
@@ -517,13 +517,14 @@ export type PoIssueKind = "client" | "po" | "shipping" | "vendor";
 
 // From purchaseorders/dto.go
 export type PoItemInput = {
+    id?: number;
     quotationItemId?: number;
     offeredItemId?: number;
     itemName: string;
     itemCode?: string;
     qty: string;
     unitId?: number;
-    sellingPrice: string;
+    sellingPrice?: string;
     costPrice?: string;
     isAvailable?: boolean;
     shipDestination?: string;
@@ -617,10 +618,10 @@ export type PurchaseOrderItemRow = {
     qty: string;
     unitId?: number;
     unitCode?: string;
-    sellingPrice: string;
+    sellingPrice?: string;
     costPrice?: string;
-    subtotal: string;
-    totalSelling: string;
+    subtotal?: string;
+    totalSelling?: string;
     profitAmount?: string;
     shipDestination?: string;
     shippingDays?: number;
@@ -646,16 +647,16 @@ export type PurchaseOrderRow = {
     uploadedAt?: string;
     notes?: string;
     objectKey?: string;
-    discountPct: string;
+    discountPct?: string;
     quotationTotal?: string;
     quotationSubtotal?: string;
-    poSubtotal: string;
-    poTotalProduk: string;
-    poTotalProfit: string;
-    poDppNilaiLain: string;
-    poPpnAmount: string;
-    poGrandTotal: string;
-    poTotalDiscount: string;
+    poSubtotal?: string;
+    poTotalProduk?: string;
+    poTotalProfit?: string;
+    poDppNilaiLain?: string;
+    poPpnAmount?: string;
+    poGrandTotal?: string;
+    poTotalDiscount?: string;
     rowVersion: number;
     createdAt: string;
     updatedAt: string;
@@ -733,14 +734,14 @@ export type QuotationHeader = {
     status: QuotationStatus;
     paymentTerms?: string;
     validityDays?: number;
-    discountPct: string;
-    totalProduk: string;
-    total: string;
-    totalDiscount: string;
-    subtotal: string;
-    dppNilaiLain: string;
-    ppnAmount: string;
-    grandTotal: string;
+    discountPct?: string;
+    totalProduk?: string;
+    total?: string;
+    totalDiscount?: string;
+    subtotal?: string;
+    dppNilaiLain?: string;
+    ppnAmount?: string;
+    grandTotal?: string;
     notes?: string;
     rowVersion: number;
     createdAt: string;
@@ -770,7 +771,7 @@ export type QuotationItemInput = {
     vendorId?: number;
     qty: string;
     unitId?: number;
-    sellingPrice: string;
+    sellingPrice?: string;
     costPrice?: string;
     updateVendorPrice?: boolean;
     shipDestination?: string;
@@ -847,12 +848,12 @@ export type QuotationItemRow = {
     productUrl?: string;
     qty: string;
     unitId?: number;
-    sellingPrice: string;
+    sellingPrice?: string;
     costPrice?: string;
-    discountPct: string;
-    totalSelling: string;
-    discountAmount: string;
-    subtotal: string;
+    discountPct?: string;
+    totalSelling?: string;
+    discountAmount?: string;
+    subtotal?: string;
     isAvailable: boolean;
     shipDestination?: string;
     shippingDays?: number;
@@ -877,10 +878,10 @@ export type QuotationListRow = {
     companyClientId: number;
     companyName: string;
     status: QuotationStatus;
-    grandTotal: string;
-    subtotal: string;
-    totalDiscount: string;
-    totalHargaBeli: string;
+    grandTotal?: string;
+    subtotal?: string;
+    totalDiscount?: string;
+    totalHargaBeli?: string;
     productCount: number;
     createdAt: string;
 };
@@ -916,8 +917,8 @@ export type QuotationRevisionRow = {
     quotationNo: string;
     version: number;
     status: QuotationStatus;
-    grandTotal: string;
-    totalProduk: string;
+    grandTotal?: string;
+    totalProduk?: string;
     createdAt: string;
     updatedAt: string;
 };
@@ -986,7 +987,7 @@ export type QuotationUpdateInput = {
 };
 
 // From users/dto.go
-export type Role = "finance" | "operational" | "superadmin";
+export type Role = "finance" | "finance_input" | "operational" | "operational_input" | "superadmin";
 
 // From units/dto.go
 export type UnitRow = {
@@ -1102,6 +1103,6 @@ export type VendorRow = {
     createdAt: string;
     updatedAt: string;
     productCount: number;
-    totalPurchase: string;
+    totalPurchase?: string;
     logoObjectKey?: string;
 };

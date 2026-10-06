@@ -28,19 +28,19 @@ type PurchaseOrder struct {
 	UploadedAt        *time.Time `db:"uploaded_at"         json:"uploadedAt,omitempty"`
 	Notes             *string    `db:"notes"               json:"notes,omitempty"`
 	FileURL           *string    `db:"file_url"            json:"objectKey,omitempty"`
-	DiscountPct       string     `db:"discount_pct"        json:"discountPct"`
+	DiscountPct       string     `db:"discount_pct"        json:"discountPct,omitempty"`
 	QuotationTotal    *string    `db:"quotation_total"     json:"quotationTotal,omitempty"`
 	QuotationSubtotal *string    `db:"quotation_subtotal"  json:"quotationSubtotal,omitempty"`
 	// Money figures from v_po_totals.
 	// The view mirrors fn_create_invoice: PoSubtotal is the invoice DPP and
 	// the tax figures round per line.
-	PoSubtotal      string    `db:"po_subtotal"         json:"poSubtotal"`
-	PoTotalProduk   string    `db:"po_total_produk"     json:"poTotalProduk"`
-	PoTotalProfit   string    `db:"po_total_profit"     json:"poTotalProfit"`
-	PoDppNilaiLain  string    `db:"po_dpp_nilai_lain"   json:"poDppNilaiLain"`
-	PoPpnAmount     string    `db:"po_ppn_amount"       json:"poPpnAmount"`
-	PoGrandTotal    string    `db:"po_grand_total"      json:"poGrandTotal"`
-	PoTotalDiscount string    `db:"po_total_discount"   json:"poTotalDiscount"`
+	PoSubtotal      string    `db:"po_subtotal"         json:"poSubtotal,omitempty"`
+	PoTotalProduk   string    `db:"po_total_produk"     json:"poTotalProduk,omitempty"`
+	PoTotalProfit   string    `db:"po_total_profit"     json:"poTotalProfit,omitempty"`
+	PoDppNilaiLain  string    `db:"po_dpp_nilai_lain"   json:"poDppNilaiLain,omitempty"`
+	PoPpnAmount     string    `db:"po_ppn_amount"       json:"poPpnAmount,omitempty"`
+	PoGrandTotal    string    `db:"po_grand_total"      json:"poGrandTotal,omitempty"`
+	PoTotalDiscount string    `db:"po_total_discount"   json:"poTotalDiscount,omitempty"`
 	RowVersion      int32     `db:"row_version"         json:"rowVersion"`
 	CreatedAt       time.Time `db:"created_at"          json:"createdAt"`
 	UpdatedAt       time.Time `db:"updated_at"          json:"updatedAt"`
@@ -80,10 +80,10 @@ type PurchaseOrderItem struct {
 	Qty             string  `db:"qty"                json:"qty"`
 	UnitID          *int16  `db:"unit_id"            json:"unitId,omitempty"`
 	UnitCode        *string `db:"unit_code"          json:"unitCode,omitempty"`
-	SellingPrice    string  `db:"selling_price"      json:"sellingPrice"`
+	SellingPrice    string  `db:"selling_price"      json:"sellingPrice,omitempty"`
 	CostPrice       *string `db:"cost_price"         json:"costPrice,omitempty"`
-	Subtotal        string  `db:"subtotal"           json:"subtotal"`
-	TotalSelling    string  `db:"total_selling"      json:"totalSelling"`
+	Subtotal        string  `db:"subtotal"           json:"subtotal,omitempty"`
+	TotalSelling    string  `db:"total_selling"      json:"totalSelling,omitempty"`
 	ProfitAmount    *string `db:"profit_amount"      json:"profitAmount,omitempty"`
 	ShipDestination *string `db:"ship_destination"   json:"shipDestination,omitempty"`
 	ShippingDays    *int    `db:"shipping_days"      json:"shippingDays,omitempty"`
@@ -141,13 +141,17 @@ type UpdateItemsRequest struct {
 }
 
 type UpdateItemsLine struct {
+	// The stored PO line, absent on a new one.
+	// A role that sets no price edits stored lines only, and each keeps its
+	// stored harga jual.
+	ID              *int64  `json:"id,omitempty"`
 	QuotationItemID *int64  `json:"quotationItemId,omitempty"`
 	OfferedItemID   *int64  `json:"offeredItemId,omitempty"`
 	ItemName        string  `json:"itemName"`
 	ItemCode        *string `json:"itemCode,omitempty"`
 	Qty             string  `json:"qty"`
 	UnitID          *int16  `json:"unitId,omitempty"`
-	SellingPrice    string  `json:"sellingPrice"`
+	SellingPrice    string  `json:"sellingPrice,omitempty"` // a role that sets no price omits it
 	CostPrice       *string `json:"costPrice,omitempty"`
 	IsAvailable     *bool   `json:"isAvailable,omitempty"`
 	ShipDestination *string `json:"shipDestination,omitempty"`

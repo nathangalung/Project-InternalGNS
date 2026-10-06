@@ -2,58 +2,65 @@ import { useNavigate } from "@tanstack/react-router"
 import { ui } from "@/lib/ui"
 
 type PageHeaderProps = {
-  onExport: () => void
+  // Absent for a role that may not export
+  onExport?: () => void
+  // Quotation Baru, for a role that writes drafts
+  canCreate?: boolean
 }
 
 // Title bar plus three actions.
-export default function PageHeader({ onExport }: PageHeaderProps) {
+export default function PageHeader({ onExport, canCreate = true }: PageHeaderProps) {
   const navigate = useNavigate()
   return (
     <div className={ui.pageHeader}>
       <h1 className={ui.pageTitle}>Daftar Quotation</h1>
       <div className={ui.pageActions}>
-        <button
-          type="button"
-          className={`${ui.btnOutline} min-w-[160px] whitespace-nowrap`}
-          onClick={onExport}
-        >
-          <svg
-            aria-hidden="true"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+        {onExport && (
+          <button
+            type="button"
+            className={`${ui.btnOutline} min-w-[160px] whitespace-nowrap`}
+            onClick={onExport}
           >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          Ekspor Excel
-        </button>
-        <button
-          type="button"
-          className={`${ui.btnPrimary} min-w-[180px] whitespace-nowrap`}
-          onClick={() => void navigate({ to: "/quotations/add" })}
-        >
-          <svg
-            aria-hidden="true"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="#fff"
-            stroke="#fff"
-            strokeWidth="2.5"
-            strokeLinecap="round"
+            <svg
+              aria-hidden="true"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Ekspor Excel
+          </button>
+        )}
+        {canCreate && (
+          <button
+            type="button"
+            className={`${ui.btnPrimary} min-w-[180px] whitespace-nowrap`}
+            onClick={() => void navigate({ to: "/quotations/add" })}
           >
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-          Quotation Baru
-        </button>
+            <svg
+              aria-hidden="true"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="#fff"
+              stroke="#fff"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Quotation Baru
+          </button>
+        )}
       </div>
     </div>
   )

@@ -2,7 +2,8 @@ import { ui } from "@/lib/ui"
 
 type FileCardProps = {
   fileName?: string
-  onUpload: () => void
+  // Absent for a role that records payment only
+  onUpload?: () => void
   onDownload: () => void
 }
 
@@ -50,24 +51,26 @@ export default function FileCard({ fileName, onUpload, onDownload }: FileCardPro
           </div>
         </div>
         <div className="flex gap-2.5 max-sm:w-full max-sm:flex-wrap max-sm:*:flex-1">
-          <button type="button" onClick={onUpload} className={`${ui.btnOutline} min-w-[120px]`}>
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" y1="3" x2="12" y2="15" />
-            </svg>
-            {hasFile ? "Ganti Berkas" : "Unggah Berkas"}
-          </button>
+          {onUpload && (
+            <button type="button" onClick={onUpload} className={`${ui.btnOutline} min-w-[120px]`}>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              {hasFile ? "Ganti Berkas" : "Unggah Berkas"}
+            </button>
+          )}
           {hasFile && (
             <button type="button" onClick={onDownload} className={`${ui.btnPrimary} min-w-[120px]`}>
               <svg

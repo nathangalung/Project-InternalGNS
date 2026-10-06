@@ -131,11 +131,8 @@ test.describe("finance", () => {
 
   test("overview cards only link to pages finance can open (DASH-5)", async ({ page }) => {
     await openOverview(page)
-    for (const label of COMMON_CARDS) await expectLinked(page, label, false)
-    await expectLinked(page, "Total Pengeluaran", false)
-    for (const label of FINANCIAL_CARDS.filter((l) => l !== "Total Pengeluaran")) {
-      await expectLinked(page, label, true)
-    }
+    // The finance head reads quotations and POs too, so every card links.
+    for (const label of [...FINANCIAL_CARDS, ...COMMON_CARDS]) await expectLinked(page, label, true)
     await page.getByRole("button").filter({ hasText: "Total Invoice Dibayar" }).click()
     await expect(page).toHaveURL(/\/invoices$/)
     await expect(page.getByRole("heading", { name: "Daftar Invoice" })).toBeVisible()

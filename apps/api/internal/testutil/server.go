@@ -19,6 +19,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/roles"
 	"github.com/nathangalung/internalgns/apps/api/internal/units"
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 	"github.com/nathangalung/internalgns/apps/api/internal/vendors"
@@ -62,7 +63,7 @@ func QuotationServer(t testing.TB, userID int64) *httptest.Server {
 	store := Store(t)
 
 	r := chi.NewRouter()
-	r.Use(withUserID(userID))
+	r.Use(withUserID(userID), withRole(roles.Superadmin))
 	r.Mount("/quotations", quotations.Routes(deps.Deps{Pool: pool, Queries: store}))
 	r.Mount("/items", items.Routes(deps.Deps{Pool: pool, Tx: pool, Queries: store}))
 
@@ -78,7 +79,7 @@ func ClientsServer(t testing.TB, userID int64) *httptest.Server {
 	store := Store(t)
 
 	r := chi.NewRouter()
-	r.Use(withUserID(userID))
+	r.Use(withUserID(userID), withRole(roles.Superadmin))
 	r.Mount("/clients", clients.Routes(deps.Deps{Pool: pool, Queries: store}))
 
 	srv := httptest.NewServer(r)
@@ -93,7 +94,7 @@ func ItemsServer(t testing.TB, userID int64) *httptest.Server {
 	store := Store(t)
 
 	r := chi.NewRouter()
-	r.Use(withUserID(userID))
+	r.Use(withUserID(userID), withRole(roles.Superadmin))
 	r.Mount("/items", items.Routes(deps.Deps{Pool: pool, Tx: pool, Queries: store}))
 
 	srv := httptest.NewServer(r)
@@ -108,7 +109,7 @@ func VendorsServer(t testing.TB, userID int64) *httptest.Server {
 	store := Store(t)
 
 	r := chi.NewRouter()
-	r.Use(withUserID(userID))
+	r.Use(withUserID(userID), withRole(roles.Superadmin))
 	r.Mount("/vendors", vendors.Routes(deps.Deps{Pool: pool, Queries: store}))
 
 	srv := httptest.NewServer(r)
@@ -180,7 +181,7 @@ func PurchaseOrdersServer(t testing.TB, userID int64) *httptest.Server {
 	store := Store(t)
 
 	r := chi.NewRouter()
-	r.Use(withUserID(userID))
+	r.Use(withUserID(userID), withRole(roles.Superadmin))
 	r.Mount("/purchase-orders", purchaseorders.Routes(deps.Deps{Pool: pool, Queries: store, Objects: StoredObjects{}}))
 
 	srv := httptest.NewServer(r)
@@ -195,7 +196,7 @@ func InvoicesServer(t testing.TB, userID int64) *httptest.Server {
 	store := Store(t)
 
 	r := chi.NewRouter()
-	r.Use(withUserID(userID))
+	r.Use(withUserID(userID), withRole(roles.Superadmin))
 	r.Mount("/invoices", invoices.Routes(deps.Deps{Pool: pool, Queries: store}))
 
 	srv := httptest.NewServer(r)
@@ -210,7 +211,7 @@ func UsersServer(t testing.TB, userID int64) *httptest.Server {
 	store := Store(t)
 
 	r := chi.NewRouter()
-	r.Use(withUserID(userID))
+	r.Use(withUserID(userID), withRole(roles.Superadmin))
 	r.Mount("/users", users.Routes(deps.Deps{Pool: pool, Queries: store}))
 
 	srv := httptest.NewServer(r)
@@ -221,16 +222,26 @@ func UsersServer(t testing.TB, userID int64) *httptest.Server {
 // FullServer wires the document routes.
 // Quotation, PO and invoice routes share one server.
 func FullServer(t testing.TB, userID int64) *httptest.Server {
+	return FullServerAs(t, userID, roles.Superadmin)
+}
+
+// FullServerAs wires them as role.
+// Items, vendors and clients ride along, so a role sees every figure it
+// reads.
+func FullServerAs(t testing.TB, userID int64, role string) *httptest.Server {
 	t.Helper()
 	pool := Pool(t)
 	store := Store(t)
 	d := deps.Deps{Pool: pool, Queries: store, Objects: StoredObjects{}}
 
 	r := chi.NewRouter()
-	r.Use(withUserID(userID))
+	r.Use(withUserID(userID), withRole(role))
 	r.Mount("/quotations", quotations.Routes(d))
 	r.Mount("/purchase-orders", purchaseorders.Routes(d))
 	r.Mount("/invoices", invoices.Routes(d))
+	r.Mount("/items", items.Routes(deps.Deps{Pool: pool, Tx: pool, Queries: store}))
+	r.Mount("/vendors", vendors.Routes(d))
+	r.Mount("/clients", clients.Routes(d))
 
 	srv := httptest.NewServer(r)
 	t.Cleanup(srv.Close)
@@ -244,7 +255,7 @@ func FaultyServer(t testing.TB, userID int64, mount func(chi.Router, deps.Deps))
 	d := deps.Deps{Pool: FakeExec{}, Tx: FakeBeginner{}, Queries: store}
 
 	r := chi.NewRouter()
-	r.Use(withUserID(userID))
+	r.Use(withUserID(userID), withRole(roles.Superadmin))
 	mount(r, d)
 
 	srv := httptest.NewServer(r)

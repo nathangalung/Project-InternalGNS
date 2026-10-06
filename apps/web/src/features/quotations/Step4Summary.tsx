@@ -50,6 +50,8 @@ type Step4SummaryProps = {
   incompleteCount?: number
   // Another user holds the header
   readOnly?: boolean
+  // False for a role that sets no harga jual: no selling figure shows
+  pricing?: boolean
 }
 
 const PAGE_SIZE = 5
@@ -179,6 +181,7 @@ export default function Step4Summary({
   unknownUnitCount = 0,
   incompleteCount = 0,
   readOnly = false,
+  pricing = true,
 }: Step4SummaryProps) {
   const id = useId()
   const [prodPage, setProdPage] = useState(1)
@@ -329,12 +332,14 @@ export default function Step4Summary({
                 {shippingTime ? `${shippingTime} hari` : "-"}
               </div>
             </div>
-            <div>
-              <div className={fieldLabel}>BIAYA PENGIRIMAN</div>
-              <div className={`${fieldValueBold} mt-1`}>
-                Rp {formatRp(Number(shippingCost) || 0)}
+            {pricing && (
+              <div>
+                <div className={fieldLabel}>BIAYA PENGIRIMAN</div>
+                <div className={`${fieldValueBold} mt-1`}>
+                  Rp {formatRp(Number(shippingCost) || 0)}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -437,19 +442,23 @@ export default function Step4Summary({
                                 <span className={qep.rp}>Rp</span> {formatRp(p.hargaBeli)}
                               </div>
                             </div>
-                            <div className={qep.field}>
-                              <span className={qep.fieldLabel}>HARGA JUAL SATUAN</span>
-                              <div className={qep.fieldInput}>
-                                <span className={qep.rp}>Rp</span> {formatRp(p.hargaJual)}
-                              </div>
-                            </div>
-                            <div className={qep.field}>
-                              <span className={qep.fieldLabel}>PROFIT</span>
-                              <div className={qep.fieldInput}>
-                                <span className={qep.rp}>Rp</span> {formatRp(profit)}{" "}
-                                <span className={qep.profitPct}>({profitPct}%)</span>
-                              </div>
-                            </div>
+                            {pricing && (
+                              <>
+                                <div className={qep.field}>
+                                  <span className={qep.fieldLabel}>HARGA JUAL SATUAN</span>
+                                  <div className={qep.fieldInput}>
+                                    <span className={qep.rp}>Rp</span> {formatRp(p.hargaJual)}
+                                  </div>
+                                </div>
+                                <div className={qep.field}>
+                                  <span className={qep.fieldLabel}>PROFIT</span>
+                                  <div className={qep.fieldInput}>
+                                    <span className={qep.rp}>Rp</span> {formatRp(profit)}{" "}
+                                    <span className={qep.profitPct}>({profitPct}%)</span>
+                                  </div>
+                                </div>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -476,56 +485,66 @@ export default function Step4Summary({
               <span>Total Harga Beli</span>
               <span className={costValue}>Rp {formatRp(summaryTotalHargaBeli)}</span>
             </div>
-            <div className={costRow}>
-              <span>Total Harga Jual</span>
-              <span className={costValue}>Rp {formatRp(summaryTotalHargaJual)}</span>
-            </div>
-            {discountPct > 0 && (
-              <div className={costRow}>
-                <span>Diskon ({discountPct}%)</span>
-                <span className="font-semibold text-[#10B981]">- Rp {formatRp(nominalDiskon)}</span>
-              </div>
-            )}
-            <div className={costRow}>
-              <span>Sub Total</span>
-              <div className="flex items-center gap-2">
+            {pricing && (
+              <>
+                <div className={costRow}>
+                  <span>Total Harga Jual</span>
+                  <span className={costValue}>Rp {formatRp(summaryTotalHargaJual)}</span>
+                </div>
                 {discountPct > 0 && (
-                  <span className="text-[#9CA3AF] line-through">
-                    Rp {formatRp(summaryTotalHargaJual)}
-                  </span>
+                  <div className={costRow}>
+                    <span>Diskon ({discountPct}%)</span>
+                    <span className="font-semibold text-[#10B981]">
+                      - Rp {formatRp(nominalDiskon)}
+                    </span>
+                  </div>
                 )}
-                <span className={costValue}>Rp {formatRp(summarySubTotal)}</span>
+                <div className={costRow}>
+                  <span>Sub Total</span>
+                  <div className="flex items-center gap-2">
+                    {discountPct > 0 && (
+                      <span className="text-[#9CA3AF] line-through">
+                        Rp {formatRp(summaryTotalHargaJual)}
+                      </span>
+                    )}
+                    <span className={costValue}>Rp {formatRp(summarySubTotal)}</span>
+                  </div>
+                </div>
+                <div className={costRow}>
+                  <span>DPP Nilai Lain</span>
+                  <span className={costValue}>Rp {formatRp(summaryDpp)}</span>
+                </div>
+                <div className={costRow}>
+                  <span>PPN 12%</span>
+                  <span className={costValue}>Rp {formatRp(summaryPpn)}</span>
+                </div>
+                <div className={costRow}>
+                  <span>Biaya Pengiriman</span>
+                  <span className={costValue}>Rp {formatRp(summaryShippingCost)}</span>
+                </div>
+              </>
+            )}
+          </div>
+
+          {pricing && (
+            <>
+              <div className="mb-4 h-px bg-[#E5E7EB]" />
+
+              <div className="mb-5 flex justify-between text-[11px] font-bold uppercase text-[#6B7280]">
+                <span>Total Estimasi Profit</span>
+                <span className="text-xs text-primary-700">Rp {formatRp(summaryProfit)}</span>
               </div>
-            </div>
-            <div className={costRow}>
-              <span>DPP Nilai Lain</span>
-              <span className={costValue}>Rp {formatRp(summaryDpp)}</span>
-            </div>
-            <div className={costRow}>
-              <span>PPN 12%</span>
-              <span className={costValue}>Rp {formatRp(summaryPpn)}</span>
-            </div>
-            <div className={costRow}>
-              <span>Biaya Pengiriman</span>
-              <span className={costValue}>Rp {formatRp(summaryShippingCost)}</span>
-            </div>
-          </div>
 
-          <div className="mb-4 h-px bg-[#E5E7EB]" />
-
-          <div className="mb-5 flex justify-between text-[11px] font-bold uppercase text-[#6B7280]">
-            <span>Total Estimasi Profit</span>
-            <span className="text-xs text-primary-700">Rp {formatRp(summaryProfit)}</span>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[11px] font-bold uppercase tracking-[1px] text-[#6B7280]">
-              Grand Total
-            </span>
-            <span className="text-[28px] font-extrabold tracking-[-0.5px] text-primary-700">
-              Rp {formatRp(summaryGrandTotal)}
-            </span>
-          </div>
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[11px] font-bold uppercase tracking-[1px] text-[#6B7280]">
+                  Grand Total
+                </span>
+                <span className="text-[28px] font-extrabold tracking-[-0.5px] text-primary-700">
+                  Rp {formatRp(summaryGrandTotal)}
+                </span>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

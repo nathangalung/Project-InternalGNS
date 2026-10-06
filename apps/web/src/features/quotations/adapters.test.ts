@@ -154,6 +154,34 @@ describe("status labels", () => {
     expect(toQuotationData(d, () => "").status).toBe("Dibatalkan")
   })
 
+  it("keeps hidden totals absent in the table", () => {
+    const row = toTableRow({
+      id: 1,
+      quotationNo: "Q-1",
+      version: 1,
+      companyClientId: 4,
+      companyName: "PT Laut",
+      status: "draft",
+      totalHargaBeli: "5000",
+      productCount: 1,
+      createdAt: "2026-09-01T00:00:00Z",
+    })
+    expect(row.total).toBeUndefined()
+    expect(row.hargaBeli).toBe("5.000")
+  })
+
+  it("marks a detail without harga jual", () => {
+    const d = detail([])
+    expect(toQuotationData(d, () => "").seesSelling).toBe(true)
+    expect(toQuotationData({ ...d, grandTotal: undefined }, () => "").seesSelling).toBe(false)
+  })
+
+  it("sends no harga jual for a role that sets no price", () => {
+    const p = toWizardProduct(item({ id: 1, sellingPrice: "100", costPrice: "60" }), 1, "PCS")
+    expect(toItemInput(p, 3, false)).toMatchObject({ sellingPrice: undefined, costPrice: "60" })
+    expect(toItemInput(p, 3)).toMatchObject({ sellingPrice: "100" })
+  })
+
   it("spells sent Dikirim in the table", () => {
     const row = toTableRow({
       id: 1,

@@ -47,7 +47,7 @@ func TestHandler_AddVendor_ProductURL(t *testing.T) {
 	assert.Nil(t, cleared.ProductURL)
 }
 
-// A link-only relink keeps the price.
+// Link-only relink keeps price.
 // Changing only the store link must not zero harga beli or date a quote,
 // and a new link without a price still starts at zero.
 func TestHandler_AddVendor_LinkKeepsPrice(t *testing.T) {

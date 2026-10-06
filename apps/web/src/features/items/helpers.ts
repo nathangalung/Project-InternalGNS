@@ -156,7 +156,7 @@ export function findVendorByName<T extends { name: string }>(
   return rows.find((r) => r.name.trim().toLocaleLowerCase("id-ID") === target)
 }
 
-// Whole rupiah digits of a stored price.
+// Whole rupiah of a price.
 export function wholeRupiah(price: string | undefined): string {
   return (price ?? "").split(".")[0].replace(/\D/g, "")
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/rolegate"
 )
 
 var errInvalidYear = errors.New("invalid year")
@@ -34,7 +35,7 @@ var exportMetrics = []struct{ key, header string }{
 // total equals the sum of its Bulanan column.
 func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 	if !canViewFinancial(deps.CurrentUserRole(r.Context())) {
-		httperr.Render(w, httperr.Forbidden("insufficient role"))
+		rolegate.Refused(w)
 		return
 	}
 	from, to, name, err := exportRange(h.now(), r.URL.Query().Get("year"))

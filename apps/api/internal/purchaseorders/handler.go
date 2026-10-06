@@ -16,6 +16,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/listq"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/rolegate"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/roles"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/sheet"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/validate"
@@ -60,13 +62,21 @@ func parseListFilter(r *http.Request) ListFilter {
 }
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+	role := deps.CurrentUserRole(r.Context())
 	f := parseListFilter(r)
+	if !roles.SeesSelling(role) && f.probesSelling() {
+		rolegate.Refused(w)
+		return
+	}
 	f.Limit, f.Offset = paginate.Parse(r)
 
 	res, err := h.repo.List(r.Context(), f)
 	if err != nil {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
+	}
+	for i := range res.Rows {
+		res.Rows[i].redact(role)
 	}
 	w.Header().Set("X-Total-Count", strconv.FormatInt(res.Total, 10))
 	httpx.WriteJSON(w, http.StatusOK, res.Rows)
@@ -131,6 +141,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
+	po.redact(deps.CurrentUserRole(r.Context()))
 	httpx.WriteJSON(w, http.StatusOK, po)
 }
 
@@ -149,6 +160,7 @@ func (h *Handler) GetByQuotation(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
+	po.redact(deps.CurrentUserRole(r.Context()))
 	httpx.WriteJSON(w, http.StatusOK, po)
 }
 
@@ -162,6 +174,9 @@ func (h *Handler) ListItems(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
+	}
+	for i := range items {
+		items[i].redact(deps.CurrentUserRole(r.Context()))
 	}
 	httpx.WriteJSON(w, http.StatusOK, items)
 }
@@ -329,6 +344,10 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"status": "Status PO tidak dikenal."}))
 		return
 	}
+	if !canMove(deps.CurrentUserRole(r.Context()), req.Status) {
+		rolegate.Refused(w)
+		return
+	}
 	req.Note = strings.TrimSpace(req.Note)
 	if requiresNote(req.Status) && req.Note == "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"note": "Alasan pembatalan wajib diisi."}))
@@ -371,6 +390,19 @@ func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 	var req UpdateItemsRequest
 	if !httpx.DecodeJSON(w, r, &req) {
 		return
+	}
+	if !roles.SetsPrices(deps.CurrentUserRole(r.Context())) {
+		if err := h.repo.keepStoredPrices(r.Context(), id, &req); err != nil {
+			switch {
+			case errors.Is(err, errLinesChanged):
+				httperr.Render(w, httperr.Forbidden(msgLinesChanged))
+			case errors.Is(err, ErrNotFound):
+				httperr.Render(w, httperr.NotFound("purchase order not found"))
+			default:
+				httperr.RenderDBErrCtx(r.Context(), w, err)
+			}
+			return
+		}
 	}
 	if strings.TrimSpace(req.DiscountPct) == "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"discountPct": "required"}))

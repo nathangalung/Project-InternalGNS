@@ -186,6 +186,13 @@ describe("line completeness", () => {
     expect(lineGaps(line)).toEqual(want)
     expect(isLineComplete(line)).toBe(want.length === 0)
   })
+
+  it("leaves harga jual to a head for a role that sets no price", () => {
+    const line = { ...base, hargaJual: 0 }
+    expect(lineGaps(line, false)).toEqual([])
+    expect(isLineComplete(line, false)).toBe(true)
+    expect(lineGaps({ ...line, hargaBeli: 0 }, false)).toEqual(["harga beli"])
+  })
 })
 
 describe("incompleteLines", () => {
@@ -206,6 +213,11 @@ describe("incompleteLines", () => {
     { name: "no harga beli", line: { ...done, costPrice: "0" }, want: 1 },
     { name: "no harga jual", line: { ...done, sellingPrice: "0" }, want: 1 },
     { name: "Tidak Ditawarkan", line: { ...done, isAvailable: false, sellingPrice: "0" }, want: 0 },
+    {
+      name: "a harga jual hidden from the viewer",
+      line: { ...done, sellingPrice: undefined },
+      want: 0,
+    },
     {
       name: "the shipping line",
       line: { ...done, itemType: "shipping", offeredItemId: undefined },

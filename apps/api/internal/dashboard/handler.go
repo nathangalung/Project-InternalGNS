@@ -8,6 +8,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/rolegate"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/roles"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 )
 
@@ -47,7 +49,7 @@ func (h *Handler) Timeseries(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if isFinancialMetric(metric) && !canViewFinancial(deps.CurrentUserRole(r.Context())) {
-		httperr.Render(w, httperr.Forbidden("insufficient role"))
+		rolegate.Refused(w)
 		return
 	}
 
@@ -111,7 +113,7 @@ func firstOfNextMonth(t time.Time) time.Time {
 
 // Roles allowed financial figures.
 func canViewFinancial(role string) bool {
-	return role == "superadmin" || role == "finance"
+	return roles.SeesFinancialDashboard(role)
 }
 
 // Finance-only timeseries metrics.

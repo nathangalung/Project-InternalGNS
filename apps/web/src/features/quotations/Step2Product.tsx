@@ -62,6 +62,10 @@ type Step2ProductProps = {
   lockedBy?: Record<number, string>
   // A PO line may stay at qty 0
   allowZeroQty?: boolean
+  // False for a role that sets no harga jual: no selling figure shows
+  pricing?: boolean
+  // Lines are edited in place only: no add, import or delete
+  fixedLines?: boolean
 }
 
 export default function Step2Product({
@@ -93,6 +97,8 @@ export default function Step2Product({
   editProduct,
   lockedBy = {},
   allowZeroQty = false,
+  pricing = true,
+  fixedLines = false,
 }: Step2ProductProps) {
   // No unit warnings before the list loads
   const unitsReady = unitIdByCode.size > 0
@@ -122,7 +128,7 @@ export default function Step2Product({
       onImportProducts(built)
       const unknownUnits = unitsReady ? countUnknownUnits(built, unitIdByCode) : 0
       // Stays up: it says which lines still need work.
-      setImportMsg({ text: importSummary(built, resp.rows, unknownUnits), ok: true })
+      setImportMsg({ text: importSummary(built, resp.rows, unknownUnits, pricing), ok: true })
     } catch (err) {
       setImportMsg({ text: `Gagal membaca berkas: ${(err as Error).message}`, ok: false })
     } finally {
@@ -161,72 +167,78 @@ export default function Step2Product({
             className="hidden"
             onChange={handleImportFile}
           />
-          <button
-            type="button"
-            className={`${qe.addBtn} w-[210px] justify-center disabled:cursor-wait disabled:opacity-60`}
-            onClick={() => importFileRef.current?.click()}
-            disabled={importing}
-          >
-            <svg
-              aria-hidden="true"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          {!fixedLines && (
+            <button
+              type="button"
+              className={`${qe.addBtn} w-[210px] justify-center disabled:cursor-wait disabled:opacity-60`}
+              onClick={() => importFileRef.current?.click()}
+              disabled={importing}
             >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" y1="3" x2="12" y2="15" />
-            </svg>
-            {importing ? "Memproses…" : "Unggah Excel/CSV"}
-          </button>
-          <button
-            type="button"
-            className={`${qe.addBtn} w-[210px] justify-center`}
-            onClick={() => setShowDiscountModal(true)}
-          >
-            <svg
-              aria-hidden="true"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+              <svg
+                aria-hidden="true"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              {importing ? "Memproses…" : "Unggah Excel/CSV"}
+            </button>
+          )}
+          {pricing && (
+            <button
+              type="button"
+              className={`${qe.addBtn} w-[210px] justify-center`}
+              onClick={() => setShowDiscountModal(true)}
             >
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            {discountPct > 0 ? `Diskon (${discountPct}%)` : "Tambah Diskon"}
-          </button>
-          <button
-            type="button"
-            className={`${qe.addBtn} w-[210px] justify-center`}
-            onClick={() => {
-              setEditingProduct(null)
-              setShowProductAdd(true)
-            }}
-          >
-            <svg
-              aria-hidden="true"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+              <svg
+                aria-hidden="true"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              {discountPct > 0 ? `Diskon (${discountPct}%)` : "Tambah Diskon"}
+            </button>
+          )}
+          {!fixedLines && (
+            <button
+              type="button"
+              className={`${qe.addBtn} w-[210px] justify-center`}
+              onClick={() => {
+                setEditingProduct(null)
+                setShowProductAdd(true)
+              }}
             >
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            Tambah Produk
-          </button>
+              <svg
+                aria-hidden="true"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              Tambah Produk
+            </button>
+          )}
         </div>
       </div>
 
@@ -322,7 +334,7 @@ export default function Step2Product({
                 const qtyError = qtyErrors[p.id] ?? qtyIssue(p.jumlah, allowZeroQty)
                 const unitError = unitsReady ? unitIssue(p.satuan, unitIdByCode) : null
                 // Only a quotation has a send rule to fill in for
-                const gaps = toggleNoOffer ? lineGaps(p) : []
+                const gaps = toggleNoOffer ? lineGaps(p, pricing) : []
                 const editor = lockedBy[p.id]
                 return (
                   <div key={p.id} className={`${qep.card} mb-0`}>
@@ -382,28 +394,30 @@ export default function Step2Product({
                             <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
                           </svg>
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => deleteProduct(p.id)}
-                          disabled={Boolean(editor)}
-                          className={`${cardIconBtn} text-error`}
-                          title="Hapus Produk"
-                          aria-label={`Hapus produk ${globalIndex}`}
-                        >
-                          <svg
-                            aria-hidden="true"
-                            width="18"
-                            height="18"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                        {!fixedLines && (
+                          <button
+                            type="button"
+                            onClick={() => deleteProduct(p.id)}
+                            disabled={Boolean(editor)}
+                            className={`${cardIconBtn} text-error`}
+                            title="Hapus Produk"
+                            aria-label={`Hapus produk ${globalIndex}`}
                           >
-                            <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
-                          </svg>
-                        </button>
+                            <svg
+                              aria-hidden="true"
+                              width="18"
+                              height="18"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
                     </div>
                     <RequestOffer
@@ -459,19 +473,23 @@ export default function Step2Product({
                               <span className={qep.rp}>Rp</span> {formatRp(p.hargaBeli)}
                             </div>
                           </div>
-                          <div className={qep.field}>
-                            <span className={qep.fieldLabel}>HARGA JUAL SATUAN</span>
-                            <div className={qep.fieldInput}>
-                              <span className={qep.rp}>Rp</span> {formatRp(p.hargaJual)}
-                            </div>
-                          </div>
-                          <div className={qep.field}>
-                            <span className={qep.fieldLabel}>PROFIT</span>
-                            <div className={qep.fieldInput}>
-                              <span className={qep.rp}>Rp</span> {formatRp(profit)}{" "}
-                              <span className={qep.profitPct}>({profitPct}%)</span>
-                            </div>
-                          </div>
+                          {pricing && (
+                            <>
+                              <div className={qep.field}>
+                                <span className={qep.fieldLabel}>HARGA JUAL SATUAN</span>
+                                <div className={qep.fieldInput}>
+                                  <span className={qep.rp}>Rp</span> {formatRp(p.hargaJual)}
+                                </div>
+                              </div>
+                              <div className={qep.field}>
+                                <span className={qep.fieldLabel}>PROFIT</span>
+                                <div className={qep.fieldInput}>
+                                  <span className={qep.rp}>Rp</span> {formatRp(profit)}{" "}
+                                  <span className={qep.profitPct}>({profitPct}%)</span>
+                                </div>
+                              </div>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
@@ -498,52 +516,62 @@ export default function Step2Product({
             <span>Total Harga Beli</span>
             <span className={costValue}>Rp {formatRp(summaryTotalHargaBeli)}</span>
           </div>
-          <div className={costRow}>
-            <span>Total Harga Jual</span>
-            <span className={costValue}>Rp {formatRp(summaryTotalHargaJual)}</span>
-          </div>
-          {discountPct > 0 && (
-            <div className={costRow}>
-              <span>Diskon ({discountPct}%)</span>
-              <span className="font-semibold text-[#10B981]">- Rp {formatRp(nominalDiskon)}</span>
-            </div>
-          )}
-          <div className={costRow}>
-            <span>Sub Total</span>
-            <div className="flex items-center gap-2">
+          {pricing && (
+            <>
+              <div className={costRow}>
+                <span>Total Harga Jual</span>
+                <span className={costValue}>Rp {formatRp(summaryTotalHargaJual)}</span>
+              </div>
               {discountPct > 0 && (
-                <span className="text-[#9CA3AF] line-through">
-                  Rp {formatRp(summaryTotalHargaJual)}
-                </span>
+                <div className={costRow}>
+                  <span>Diskon ({discountPct}%)</span>
+                  <span className="font-semibold text-[#10B981]">
+                    - Rp {formatRp(nominalDiskon)}
+                  </span>
+                </div>
               )}
-              <span className={costValue}>Rp {formatRp(summarySubTotal)}</span>
+              <div className={costRow}>
+                <span>Sub Total</span>
+                <div className="flex items-center gap-2">
+                  {discountPct > 0 && (
+                    <span className="text-[#9CA3AF] line-through">
+                      Rp {formatRp(summaryTotalHargaJual)}
+                    </span>
+                  )}
+                  <span className={costValue}>Rp {formatRp(summarySubTotal)}</span>
+                </div>
+              </div>
+              <div className={costRow}>
+                <span>DPP Nilai Lain</span>
+                <span className={costValue}>Rp {formatRp(summaryDpp)}</span>
+              </div>
+              <div className={costRow}>
+                <span>PPN 12%</span>
+                <span className={costValue}>Rp {formatRp(summaryPpn)}</span>
+              </div>
+            </>
+          )}
+        </div>
+
+        {pricing && (
+          <>
+            <div className="mb-4 h-px bg-[#E5E7EB]" />
+
+            <div className="mb-5 flex justify-between text-[11px] font-bold uppercase text-[#6B7280]">
+              <span>Total Estimasi Profit</span>
+              <span className="text-xs text-primary-700">Rp {formatRp(summaryProfit)}</span>
             </div>
-          </div>
-          <div className={costRow}>
-            <span>DPP Nilai Lain</span>
-            <span className={costValue}>Rp {formatRp(summaryDpp)}</span>
-          </div>
-          <div className={costRow}>
-            <span>PPN 12%</span>
-            <span className={costValue}>Rp {formatRp(summaryPpn)}</span>
-          </div>
-        </div>
 
-        <div className="mb-4 h-px bg-[#E5E7EB]" />
-
-        <div className="mb-5 flex justify-between text-[11px] font-bold uppercase text-[#6B7280]">
-          <span>Total Estimasi Profit</span>
-          <span className="text-xs text-primary-700">Rp {formatRp(summaryProfit)}</span>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <span className="text-[11px] font-bold uppercase tracking-[1px] text-[#6B7280]">
-            Grand Total
-          </span>
-          <span className="text-[28px] font-extrabold tracking-[-0.5px] text-primary-700">
-            Rp {formatRp(summarySubTotal + summaryPpn)}
-          </span>
-        </div>
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[11px] font-bold uppercase tracking-[1px] text-[#6B7280]">
+                Grand Total
+              </span>
+              <span className="text-[28px] font-extrabold tracking-[-0.5px] text-primary-700">
+                Rp {formatRp(summarySubTotal + summaryPpn)}
+              </span>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

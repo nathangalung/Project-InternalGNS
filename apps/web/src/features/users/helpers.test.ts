@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { endsSessions, ROLE_LABEL, ROLE_ORDER } from "./helpers"
+import { endsSessions, ROLE_HINT, ROLE_LABEL, ROLE_ORDER } from "./helpers"
 
 describe("endsSessions", () => {
   const before = { role: "operational", isActive: true } as const
@@ -21,7 +21,20 @@ describe("endsSessions", () => {
 
 describe("role labels", () => {
   it("names every role once, in the order the forms list them", () => {
-    expect(ROLE_ORDER).toEqual(["superadmin", "finance", "operational"])
-    expect(ROLE_ORDER.map((r) => ROLE_LABEL[r])).toEqual(["Super Admin", "Finance", "Operasional"])
+    expect(ROLE_ORDER).toEqual([
+      "superadmin",
+      "operational",
+      "operational_input",
+      "finance",
+      "finance_input",
+    ])
+    expect(ROLE_ORDER.map((r) => ROLE_LABEL[r])).toEqual([
+      "Super Admin",
+      "Kepala Operasional",
+      "Input Data Operasional",
+      "Kepala Keuangan",
+      "Input Data Keuangan",
+    ])
+    for (const r of ROLE_ORDER) expect(ROLE_HINT[r].length).toBeGreaterThan(0)
   })
 })

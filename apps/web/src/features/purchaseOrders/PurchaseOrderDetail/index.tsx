@@ -10,6 +10,7 @@ import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
 import type { QuotationData } from "@/features/quotations/types"
 import { downloadFile, downloadPdf } from "@/lib/api-client"
 import { formatDate, toNum } from "@/lib/format"
+import { canWriteCatalog } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import type { PoCompletenessIssue, PoTransition, PurchaseOrderRow } from "@/types/api"
@@ -76,6 +77,11 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
   const shipping = useMemo(() => poItemsToShipping(poItems), [poItems])
   // Profit needs real cost data.
   const hasCost = useMemo(() => (poItems ?? []).some((it) => toNum(it.costPrice) > 0), [poItems])
+  // Figures the role may see came back; profit needs both sides
+  const sellingShown = po.poGrandTotal !== undefined
+  const profitShown = hasCost && po.poTotalProfit !== undefined
+  // The finance roles only read a PO
+  const writes = canWriteCatalog(me?.role)
   const history = useMemo(
     () => (events ?? []).map((ev) => poHistoryEntry(ev, actorNames.get(ev.changedBy))),
     [events, actorNames],
@@ -176,8 +182,8 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
           deliveryNoteNumber={po.deliveryNoteNumber}
           legacyDnNo={po.legacyDnNo}
           invoiceNo={po.invoiceNo}
-          onEdit={editLockReason ? undefined : onEdit}
-          editLockReason={editLockReason ?? undefined}
+          onEdit={!writes || editLockReason ? undefined : onEdit}
+          editLockReason={writes ? (editLockReason ?? undefined) : undefined}
           onDownloadDeliveryNote={dnReady ? () => void handleDownloadDeliveryNote() : undefined}
         />
         <StatusBar
@@ -193,9 +199,9 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
           fileSize={po.fileSize}
           uploadedAt={po.uploadedAt}
           fileLocked={rules.fileLocked}
-          onUpload={rules.editable ? () => setShowUpload(true) : undefined}
+          onUpload={writes && rules.editable ? () => setShowUpload(true) : undefined}
           onDownload={() => void handleDownload()}
-          onRemove={fileRemovable ? () => setConfirmRemove(true) : undefined}
+          onRemove={writes && fileRemovable ? () => setConfirmRemove(true) : undefined}
         />
         <ClientSummaryCard
           clientName={clientName}
@@ -204,27 +210,35 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
           clientInfo={quotation?.clientInfo}
           shippingAlamat={shipping.alamat}
         />
-        {totalShip > 0 && (
+        {(sellingShown ? totalShip > 0 : Boolean(shipping.alamat || shipping.hari)) && (
           <div className="min-w-0 overflow-x-auto max-sm:*:min-w-max">
-            <ShippingTable shipping={shipping} />
+            <ShippingTable shipping={shipping} showPrice={sellingShown} />
           </div>
         )}
         <div className="min-w-0 overflow-x-auto max-sm:*:min-w-max">
-          <ProductTable products={products} showProfit={hasCost} showRequest={false} showVendor />
+          <ProductTable
+            products={products}
+            showProfit={profitShown}
+            showPrices={sellingShown}
+            showRequest={false}
+            showVendor
+          />
         </div>
-        <CostBreakdown
-          hasProducts={products.length > 0}
-          totalProduk={figures.totalProduk}
-          discountPct={figures.discountPct}
-          nominalDiskon={figures.nominalDiskon}
-          subTotal={figures.subTotal}
-          dppNilaiLain={figures.dppNilaiLain}
-          ppn12={figures.ppn12}
-          totalShip={totalShip}
-          totalProfit={figures.totalProfit}
-          showProfit={hasCost}
-          grandTotal={figures.grandTotal}
-        />
+        {sellingShown && (
+          <CostBreakdown
+            hasProducts={products.length > 0}
+            totalProduk={figures.totalProduk}
+            discountPct={figures.discountPct}
+            nominalDiskon={figures.nominalDiskon}
+            subTotal={figures.subTotal}
+            dppNilaiLain={figures.dppNilaiLain}
+            ppn12={figures.ppn12}
+            totalShip={totalShip}
+            totalProfit={figures.totalProfit}
+            showProfit={profitShown}
+            grandTotal={figures.grandTotal}
+          />
+        )}
         <HistoryCard entries={history} isLoading={historyLoading} />
       </div>
 
@@ -285,7 +299,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
           target={gate.target}
           quotationId={po.quotationId}
           onClose={() => setGate(null)}
-          onEnterPoNumber={rules.editable ? enterPoNumber : undefined}
+          onEnterPoNumber={writes && rules.editable ? enterPoNumber : undefined}
         />
       )}
     </>

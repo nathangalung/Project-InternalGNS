@@ -1,9 +1,11 @@
 import { useState } from "react"
 import EntityLink from "@/components/shared/EntityLink"
 import HistoryTimeline from "@/components/shared/HistoryTimeline"
+import { useMe } from "@/features/auth/hooks"
 import { getCompanyInitials } from "@/features/clients/helpers"
 import { downloadQuotationPdf } from "@/features/quotations/hooks"
 import type { QuotationData } from "@/features/quotations/types"
+import { exportsQuotation, writesQuotation } from "@/lib/rbac"
 import { ui } from "@/lib/ui"
 import type { QuotationTransition } from "@/types/api"
 import { isEditable, quotationStatusFromLabel, splitTransitions, statusHint } from "../status"
@@ -48,6 +50,7 @@ export default function QuotationDetail({
   incomplete = 0,
   onEdit,
 }: QuotationDetailProps) {
+  const { data: me } = useMe()
   const [picked, setPicked] = useState<QuotationTransition | null>(null)
   const [revising, setRevising] = useState(false)
 
@@ -55,7 +58,8 @@ export default function QuotationDetail({
   const status = quotationStatusFromLabel(q.status)
   const { moves, cancel } = splitTransitions(transitions)
   // The editor covers drafts; an accepted quote re-picks here.
-  const canChangeContact = status === "accepted" && q.clientId !== undefined
+  const canChangeContact =
+    status === "accepted" && q.clientId !== undefined && writesQuotation(me?.role)
   const [changingContact, setChangingContact] = useState(openContactPicker && canChangeContact)
 
   const totalProduk = q.products.reduce((s, p) => s + p.qty * p.hargaSatuan, 0)
@@ -70,8 +74,10 @@ export default function QuotationDetail({
         createdAt={q.createdAt}
         version={q.version}
         status={q.status}
-        onEdit={isEditable(status) ? onEdit : undefined}
-        onDownload={() => downloadQuotationPdf(id, quotationNo)}
+        onEdit={isEditable(status) && writesQuotation(me?.role) ? onEdit : undefined}
+        onDownload={
+          exportsQuotation(me?.role) ? () => downloadQuotationPdf(id, quotationNo) : undefined
+        }
       />
       <StatusBar
         status={q.status}
@@ -94,7 +100,7 @@ export default function QuotationDetail({
         onRevise={() => setRevising(true)}
       />
       {/* What blocks Dikirim, with the way to fix it. */}
-      {isEditable(status) && incomplete > 0 && (
+      {isEditable(status) && writesQuotation(me?.role) && incomplete > 0 && (
         <div
           role="status"
           className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[rgba(245,158,11,0.4)] bg-[rgba(245,158,11,0.06)] px-5 py-3.5"
@@ -115,20 +121,24 @@ export default function QuotationDetail({
         shippingAlamat={q.shipping.alamat}
         onChangeContact={canChangeContact ? () => setChangingContact(true) : undefined}
       />
-      {totalShip > 0 && <ShippingTable shipping={q.shipping} />}
-      <ProductTable products={q.products} showVendor />
-      <CostBreakdown
-        hasProducts={hasProducts}
-        totalProduk={totalProduk}
-        discountPct={q.discountPct ?? 0}
-        nominalDiskon={q.totalDiscount}
-        subTotal={q.subtotal}
-        dppNilaiLain={q.dppNilaiLain}
-        ppn12={q.ppnAmount}
-        totalShip={totalShip}
-        totalProfit={profitAfterDiscount(q.products, q.totalDiscount)}
-        grandTotal={q.totalBayar}
-      />
+      {(q.seesSelling ? totalShip > 0 : q.shipping.nama !== "") && (
+        <ShippingTable shipping={q.shipping} showPrice={q.seesSelling} />
+      )}
+      <ProductTable products={q.products} showVendor showPrices={q.seesSelling} />
+      {q.seesSelling && (
+        <CostBreakdown
+          hasProducts={hasProducts}
+          totalProduk={totalProduk}
+          discountPct={q.discountPct ?? 0}
+          nominalDiskon={q.totalDiscount}
+          subTotal={q.subtotal}
+          dppNilaiLain={q.dppNilaiLain}
+          ppn12={q.ppnAmount}
+          totalShip={totalShip}
+          totalProfit={profitAfterDiscount(q.products, q.totalDiscount)}
+          grandTotal={q.totalBayar}
+        />
+      )}
       <HistoryTimeline title="Riwayat Status" entries={q.history} />
       <RevisionHistoryCard quotationId={id} />
 

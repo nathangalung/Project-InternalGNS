@@ -14,7 +14,7 @@ function stopClick(e: MouseEvent) {
   e.stopPropagation()
 }
 
-// Store link in a new tab.
+// Store link, new tab.
 //
 // Names the store host. A missing or unsafe link renders the fallback.
 export default function StoreLink({ url, className = "", fallback = null }: StoreLinkProps) {

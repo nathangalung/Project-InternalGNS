@@ -12,28 +12,38 @@ import { expect, type Session, test } from "./fixtures"
 
 const MISSING = "999999999"
 
-type Grant = "superadmin" | "operational" | "finance"
+type Grant = "superadmin" | "operational" | "operational_input" | "finance" | "finance_input"
 
 type RouteCase = { path: string; heading: string; allowed: readonly Grant[] }
 
-const everyone: readonly Grant[] = ["superadmin", "operational", "finance"]
-const sales: readonly Grant[] = ["superadmin", "operational"]
-const money: readonly Grant[] = ["superadmin", "finance"]
+const everyone: readonly Grant[] = [
+  "superadmin",
+  "operational",
+  "operational_input",
+  "finance",
+  "finance_input",
+]
+// Operational writers, who also open the editors
+const sales: readonly Grant[] = ["superadmin", "operational", "operational_input"]
+// The finance head reads quotations
+const quotes: readonly Grant[] = [...sales, "finance"]
+const money: readonly Grant[] = ["superadmin", "finance", "finance_input"]
+const moneyBoard: readonly Grant[] = ["superadmin", "finance"]
 const adminOnly: readonly Grant[] = ["superadmin"]
 
 const routes: readonly RouteCase[] = [
   { path: "/", heading: "Dashboard Utama", allowed: everyone },
-  { path: "/dashboard-financial", heading: "Dashboard Finansial", allowed: money },
+  { path: "/dashboard-financial", heading: "Dashboard Finansial", allowed: moneyBoard },
   { path: "/dashboard-operational", heading: "Dashboard Operasional", allowed: sales },
-  { path: "/quotations", heading: "Daftar Quotation", allowed: sales },
+  { path: "/quotations", heading: "Daftar Quotation", allowed: quotes },
   { path: "/quotations/add", heading: "Tambah Quotation Baru", allowed: sales },
-  { path: `/quotations/${MISSING}`, heading: "Quotation tidak ditemukan", allowed: sales },
+  { path: `/quotations/${MISSING}`, heading: "Quotation tidak ditemukan", allowed: quotes },
   { path: `/quotations/${MISSING}/edit`, heading: "Quotation tidak ditemukan", allowed: sales },
-  { path: "/purchase-orders", heading: "Daftar Purchase Order", allowed: sales },
+  { path: "/purchase-orders", heading: "Daftar Purchase Order", allowed: everyone },
   {
     path: `/purchase-orders/${MISSING}`,
     heading: "Purchase Order tidak ditemukan",
-    allowed: sales,
+    allowed: everyone,
   },
   {
     path: `/purchase-orders/${MISSING}/edit`,
@@ -52,7 +62,14 @@ const routes: readonly RouteCase[] = [
   { path: `/users/${MISSING}`, heading: "Pengguna tidak ditemukan", allowed: adminOnly },
 ]
 
-const sessions: readonly Session[] = ["superadmin", "operational", "finance", "anonymous"]
+const sessions: readonly Session[] = [
+  "superadmin",
+  "operational",
+  "operational_input",
+  "finance",
+  "finance_input",
+  "anonymous",
+]
 
 // Pathname only, exact.
 function atPath(path: string): RegExp {

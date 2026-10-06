@@ -75,7 +75,7 @@ Feature: PO list, export and client PO details
       | transitions the PO through "UPLOADED"       |
       | cancels the PO with reason "Salah pesanan"  |
 
-  Scenario Outline: Only superadmin and operational open POs
+  Scenario Outline: Every role opens POs
     Given an accepted quotation
     And a signed-in "<role>" user
     When that user lists the POs
@@ -84,7 +84,9 @@ Feature: PO list, export and client PO details
     Then the response status is <status>
 
     Examples:
-      | role        | status |
-      | finance     | 403    |
-      | operational | 200    |
-      | superadmin  | 200    |
+      | role              | status |
+      | finance           | 200    |
+      | finance_input     | 200    |
+      | operational_input | 200    |
+      | operational       | 200    |
+      | superadmin        | 200    |

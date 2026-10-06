@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/react-router"
 import { useEffect, useMemo, useState } from "react"
+import { useMe } from "@/features/auth/hooks"
 import ClientAdd from "@/features/clients/ClientAdd"
 import { pickedContact } from "@/features/clients/clientCard"
 import { dedupeByCompany, fromClientHit, fromClientRow } from "@/features/clients/helpers"
@@ -11,6 +12,7 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { formatNumber as formatRp } from "@/lib/format"
 import { lookupFailure } from "@/lib/lookup"
 import { INLINE_LOOKUP } from "@/lib/query-client"
+import { setsPrices } from "@/lib/rbac"
 import { ui } from "@/lib/ui"
 import type { QuotationCreateInput, QuotationItemInput } from "@/types/api"
 import { toItemInput } from "./adapters"
@@ -35,6 +37,8 @@ import {
 export default function QuotationAdd() {
   const navigate = useNavigate()
   const { data: unitsData } = useUnits()
+  // A role that sets no harga jual sees and sends none
+  const pricing = setsPrices(useMe().data?.role)
   const {
     step,
     setStep,
@@ -84,7 +88,7 @@ export default function QuotationAdd() {
     invalidQty,
     qtyErrors,
     recordQtyFailure,
-  } = useQuotationWizard(unitsData)
+  } = useQuotationWizard(unitsData, pricing)
 
   // Client picking, add mode only.
   const [search, setSearch] = useState("")
@@ -183,7 +187,9 @@ export default function QuotationAdd() {
     isAlamatOk
 
   function buildItems(): QuotationItemInput[] {
-    return products.map((p) => toItemInput(p, unitIdByCode.get(p.satuan.toUpperCase()) ?? 0))
+    return products.map((p) =>
+      toItemInput(p, unitIdByCode.get(p.satuan.toUpperCase()) ?? 0, pricing),
+    )
   }
 
   function handleSubmit() {
@@ -338,6 +344,7 @@ export default function QuotationAdd() {
         )}
         {step === 2 && (
           <Step2Product
+            pricing={pricing}
             products={products}
             unitIdByCode={unitIdByCode}
             clientId={numericClientId > 0 ? numericClientId : undefined}
@@ -366,6 +373,7 @@ export default function QuotationAdd() {
         )}
         {step === 3 && (
           <Step3Shipping
+            pricing={pricing}
             shippingAddress={shippingAddress}
             setShippingAddress={setShippingAddress}
             shippingTime={shippingTime}
@@ -379,6 +387,7 @@ export default function QuotationAdd() {
         )}
         {step === 4 && (
           <Step4Summary
+            pricing={pricing}
             terms={{
               jatuhTempo,
               setJatuhTempo,
@@ -432,6 +441,7 @@ export default function QuotationAdd() {
         }}
       />
       <ProductAdd
+        pricing={pricing}
         open={showProductAdd}
         initialData={editingProduct}
         onOpenChange={setProductAddOpen}

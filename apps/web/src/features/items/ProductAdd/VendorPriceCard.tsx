@@ -42,6 +42,8 @@ type VendorPriceCardProps = {
   vendorFailure?: LookupFailure | null
   historyFailure?: LookupFailure | null
   recommendationFailure?: LookupFailure | null
+  // False for a role that sets no harga jual
+  pricing?: boolean
 }
 
 // Vendor and price card.
@@ -64,6 +66,7 @@ export default function VendorPriceCard({
   vendorFailure = null,
   historyFailure = null,
   recommendationFailure = null,
+  pricing = true,
 }: VendorPriceCardProps) {
   const vendorId = useId()
   const buyId = useId()
@@ -160,96 +163,107 @@ export default function VendorPriceCard({
             disabled={!isVendorFilled}
           />
         </div>
-        <div className={ui.field}>
-          <label htmlFor={sellId} className={ui.fieldLabel}>
-            Harga Jual Satuan <span className="text-primary-700">*</span>
-          </label>
-          <input
-            id={sellId}
-            className={`${ui.fieldInput} font-sans ${ui.disabledField}`}
-            type="number"
-            min={0}
-            placeholder="Masukkan harga jual"
-            value={form.hargaJual}
-            onChange={(e) => onChange("hargaJual", e.target.value)}
-            disabled={!isVendorFilled}
-          />
-        </div>
+        {pricing && (
+          <div className={ui.field}>
+            <label htmlFor={sellId} className={ui.fieldLabel}>
+              Harga Jual Satuan <span className="text-primary-700">*</span>
+            </label>
+            <input
+              id={sellId}
+              className={`${ui.fieldInput} font-sans ${ui.disabledField}`}
+              type="number"
+              min={0}
+              placeholder="Masukkan harga jual"
+              value={form.hargaJual}
+              onChange={(e) => onChange("hargaJual", e.target.value)}
+              disabled={!isVendorFilled}
+            />
+          </div>
+        )}
       </div>
 
-      <Menu.Root modal={false}>
-        <Menu.Trigger
-          disabled={!isVendorFilled}
-          className={`relative flex w-full items-center justify-center rounded-md border px-6 py-[11px] text-sm font-bold ${ui.focusRing} ${
-            isVendorFilled
-              ? "cursor-pointer border-[rgba(99,14,212,0.2)] bg-transparent text-primary-700"
-              : "cursor-not-allowed border-[rgba(99,14,212,0.1)] bg-[#F7F7F8] text-[#A386D6]"
-          }`}
-        >
-          <span>Riwayat Harga Jual</span>
-          <svg
-            aria-hidden="true"
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            className="absolute right-5"
-          >
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </Menu.Trigger>
-        <Menu.Portal>
-          <Menu.Positioner
-            align="start"
-            sideOffset={4}
-            collisionAvoidance={{ side: "none" }}
-            className="z-[110]"
-          >
-            <Menu.Popup
-              className={cn(
-                dropdown({ placement: "floating" }).panel(),
-                "max-h-(--available-height) w-(--anchor-width) overflow-y-auto outline-none",
-              )}
+      {pricing && (
+        <>
+          <Menu.Root modal={false}>
+            <Menu.Trigger
+              disabled={!isVendorFilled}
+              className={`relative flex w-full items-center justify-center rounded-md border px-6 py-[11px] text-sm font-bold ${ui.focusRing} ${
+                isVendorFilled
+                  ? "cursor-pointer border-[rgba(99,14,212,0.2)] bg-transparent text-primary-700"
+                  : "cursor-not-allowed border-[rgba(99,14,212,0.1)] bg-[#F7F7F8] text-[#A386D6]"
+              }`}
             >
-              {historisOptions.length === 0 && (
-                <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>
-                  Belum ada riwayat harga.
-                </div>
-              )}
-              {historisOptions.map((h, i) => {
-                const isActive = form.hargaJual === String(h.harga)
-                return (
-                  <Menu.Item
-                    key={i}
-                    className={cn(dropdown().item(), "outline-none data-highlighted:bg-dark-100")}
-                    onClick={() => onPickHistoris(h.harga)}
-                  >
-                    <span className={dropdownLabel(isActive)}>{h.keterangan}</span>
-                    <span className={priceCls(isActive)}>Rp {formatRp(h.harga)}</span>
-                  </Menu.Item>
-                )
-              })}
-            </Menu.Popup>
-          </Menu.Positioner>
-        </Menu.Portal>
-      </Menu.Root>
-      {historyFailure && (
-        <LoadError message="Gagal memuat riwayat harga jual." {...historyFailure} />
+              <span>Riwayat Harga Jual</span>
+              <svg
+                aria-hidden="true"
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                className="absolute right-5"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner
+                align="start"
+                sideOffset={4}
+                collisionAvoidance={{ side: "none" }}
+                className="z-[110]"
+              >
+                <Menu.Popup
+                  className={cn(
+                    dropdown({ placement: "floating" }).panel(),
+                    "max-h-(--available-height) w-(--anchor-width) overflow-y-auto outline-none",
+                  )}
+                >
+                  {historisOptions.length === 0 && (
+                    <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>
+                      Belum ada riwayat harga.
+                    </div>
+                  )}
+                  {historisOptions.map((h, i) => {
+                    const isActive = form.hargaJual === String(h.harga)
+                    return (
+                      <Menu.Item
+                        key={i}
+                        className={cn(
+                          dropdown().item(),
+                          "outline-none data-highlighted:bg-dark-100",
+                        )}
+                        onClick={() => onPickHistoris(h.harga)}
+                      >
+                        <span className={dropdownLabel(isActive)}>{h.keterangan}</span>
+                        <span className={priceCls(isActive)}>Rp {formatRp(h.harga)}</span>
+                      </Menu.Item>
+                    )
+                  })}
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+          {historyFailure && (
+            <LoadError message="Gagal memuat riwayat harga jual." {...historyFailure} />
+          )}
+        </>
       )}
 
-      <div className={ui.field}>
-        <span className={ui.fieldLabel}>Profit</span>
-        <div
-          className={`${ui.fieldInput} flex cursor-default items-center ${
-            profit === 0 ? "text-dark-500" : "text-dark-900"
-          } ${!isVendorFilled ? "bg-[#F7F7F8]" : ""}`}
-        >
-          {profit === 0 ? "Otomatis terisi" : `Rp ${formatRp(profit)} (${profitPct}%)`}
+      {pricing && (
+        <div className={ui.field}>
+          <span className={ui.fieldLabel}>Profit</span>
+          <div
+            className={`${ui.fieldInput} flex cursor-default items-center ${
+              profit === 0 ? "text-dark-500" : "text-dark-900"
+            } ${!isVendorFilled ? "bg-[#F7F7F8]" : ""}`}
+          >
+            {profit === 0 ? "Otomatis terisi" : `Rp ${formatRp(profit)} (${profitPct}%)`}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

@@ -5,10 +5,12 @@ import { qe } from "../wizard-styles"
 
 interface ShippingTableProps {
   shipping: ShippingRow
+  // Hidden for a role that sees no harga jual
+  showPrice?: boolean
 }
 
 // Single shipping row with formatting.
-export default function ShippingTable({ shipping }: ShippingTableProps) {
+export default function ShippingTable({ shipping, showPrice = true }: ShippingTableProps) {
   return (
     <div>
       <h2 className={`${qe.sectionTitle} mb-3`}>Detail Pengiriman</h2>
@@ -18,8 +20,12 @@ export default function ShippingTable({ shipping }: ShippingTableProps) {
             <tr className={ui.theadRow}>
               <th className={`${ui.thCenter} w-[200px]`}>Nama</th>
               <th className={`${ui.thCenter} w-[200px]`}>Waktu Pengiriman (Hari Kerja)</th>
-              <th className={`${ui.thCenter} w-[160px]`}>Harga Jual Satuan</th>
-              <th className={`${ui.thCenter} w-[160px]`}>Total (Rp)</th>
+              {showPrice && (
+                <>
+                  <th className={`${ui.thCenter} w-[160px]`}>Harga Jual Satuan</th>
+                  <th className={`${ui.thCenter} w-[160px]`}>Total (Rp)</th>
+                </>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -28,10 +34,14 @@ export default function ShippingTable({ shipping }: ShippingTableProps) {
                 {shipping.nama}
               </td>
               <td className={`${ui.tdCenter} truncate`}>{shipping.hari ?? "-"}</td>
-              <td className={`${ui.tdCenter} truncate`}>{formatRp(shipping.hargaSatuan)}</td>
-              <td className={`${ui.tdCenter} truncate font-bold text-dark-900`}>
-                {formatRp(shipping.hargaSatuan)}
-              </td>
+              {showPrice && (
+                <>
+                  <td className={`${ui.tdCenter} truncate`}>{formatRp(shipping.hargaSatuan)}</td>
+                  <td className={`${ui.tdCenter} truncate font-bold text-dark-900`}>
+                    {formatRp(shipping.hargaSatuan)}
+                  </td>
+                </>
+              )}
             </tr>
           </tbody>
         </table>

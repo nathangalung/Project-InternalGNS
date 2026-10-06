@@ -6,7 +6,7 @@ import * as authApi from "@/features/auth/api"
 import { clearAuthState, useAuth } from "@/features/auth/hooks"
 import { ApiError } from "@/lib/api-client"
 import { queryKeys } from "@/lib/query-keys"
-import { roleCanAccess, sectionFromPathname } from "@/lib/rbac"
+import { roleCanOpen } from "@/lib/rbac"
 import { restoreSession } from "@/lib/session"
 
 export const Route = createFileRoute("/_authed")({
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_authed")({
       throw redirect({ to: "/login" })
     }
     // Typed URLs respect the role matrix.
-    if (!roleCanAccess(me.role, sectionFromPathname(location.pathname))) {
+    if (!roleCanOpen(me.role, location.pathname)) {
       throw redirect({ to: "/" })
     }
   },

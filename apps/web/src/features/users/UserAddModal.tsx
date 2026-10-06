@@ -1,6 +1,13 @@
 import { useId, useState } from "react"
 import Modal from "@/components/shared/Modal"
-import { ROLE_LABEL, ROLE_ORDER } from "@/features/users/helpers"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { ROLE_HINT, ROLE_LABEL, ROLE_ORDER } from "@/features/users/helpers"
 import { useCreateUser } from "@/features/users/hooks"
 import PasswordChecklist from "@/features/users/PasswordChecklist"
 import PasswordInput from "@/features/users/PasswordInput"
@@ -15,15 +22,8 @@ type UserAddModalProps = {
   onOpenChange: (open: boolean) => void
 }
 
-type RoleCard = {
-  value: Role
-  label: string
-}
-
-const ROLE_CARDS: RoleCard[] = ROLE_ORDER.map((r) => ({ value: r, label: ROLE_LABEL[r] }))
-
 // Least privilege by default.
-const DEFAULT_ROLE: Role = "operational"
+const DEFAULT_ROLE: Role = "operational_input"
 
 const FIELDS = ["name", "email", "password", "role"] as const
 
@@ -45,6 +45,8 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
   const passwordId = useId()
   const checklistId = useId()
   const roleHeadingId = useId()
+  const roleId = useId()
+  const roleHintId = useId()
   const statusId = useId()
   const statusHintId = useId()
 
@@ -217,36 +219,38 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
       </div>
 
       <div className={ui.modalSection}>
-        <div id={roleHeadingId} className={ui.modalSectionHeading}>
+        <label id={roleHeadingId} htmlFor={roleId} className={ui.modalSectionHeading}>
           Peran
-        </div>
+        </label>
         <div className={ui.field}>
-          <fieldset
-            aria-labelledby={roleHeadingId}
-            className="m-0 min-w-0 border-0 p-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))] gap-3"
+          <Select
+            modal={false}
+            items={ROLE_LABEL}
+            value={role}
+            onValueChange={(next) => {
+              if (next === null) return
+              setRole(next)
+              clearServer("role")
+            }}
           >
-            {ROLE_CARDS.map((card) => {
-              const selected = role === card.value
-              return (
-                <button
-                  key={card.value}
-                  type="button"
-                  aria-pressed={selected}
-                  onClick={() => {
-                    setRole(card.value)
-                    clearServer("role")
-                  }}
-                  className={`flex items-center justify-center rounded-md px-3 py-[14px] text-[13px] tracking-[-0.2px] transition-all duration-150 ${ui.focusRing} ${
-                    selected
-                      ? "bg-[#EADDFF] font-bold text-primary-800 shadow-[0_0_0_1.5px_rgba(99,14,212,0.4)]"
-                      : "bg-[#F2F4F6] font-medium text-[#191C1E]"
-                  }`}
-                >
-                  {card.label}
-                </button>
-              )
-            })}
-          </fieldset>
+            <SelectTrigger
+              id={roleId}
+              aria-labelledby={`${roleHeadingId} ${roleId}-value`}
+              aria-describedby={roleHintId}
+            >
+              <SelectValue id={`${roleId}-value`} />
+            </SelectTrigger>
+            <SelectContent>
+              {ROLE_ORDER.map((r) => (
+                <SelectItem key={r} value={r}>
+                  {ROLE_LABEL[r]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p id={roleHintId} className="text-[12px] text-dark-500">
+            {ROLE_HINT[role]}
+          </p>
           {serverErrors.role && <span className={errorText}>{serverErrors.role}</span>}
         </div>
       </div>

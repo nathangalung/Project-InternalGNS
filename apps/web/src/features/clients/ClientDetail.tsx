@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router"
 import { useEffect, useId, useRef, useState } from "react"
 import FieldError from "@/components/shared/FieldError"
 import Modal from "@/components/shared/Modal"
+import { useMe } from "@/features/auth/hooks"
 import * as clientsApi from "@/features/clients/api"
 import {
   contactEmailError,
@@ -23,6 +24,7 @@ import { useObjectUrl } from "@/hooks/useObjectUrl"
 import { logoBackground } from "@/lib/avatar"
 import { errorMessage } from "@/lib/errors"
 import { formErrors } from "@/lib/form-errors"
+import { editsWholeClient } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import { validateAsset } from "@/lib/upload-validation"
@@ -79,6 +81,8 @@ const CLIENT_FIELDS = ["name", "phone", "email", "npwp"] as const
 type ClientField = (typeof CLIENT_FIELDS)[number]
 
 export default function ClientDetail({ client }: ClientDetailProps) {
+  // Finance input changes NPWP and TKU only; the server keeps the rest
+  const whole = editsWholeClient(useMe().data?.role)
   const [name, setName] = useState(client.name)
   const [tkuId, setTkuId] = useState(client.tkuId ?? "")
   const [countryCode, setCountryCode] = useState(client.countryCode)
@@ -366,6 +370,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
+              disabled={!whole}
               title="Klik untuk ganti logo"
               aria-label="Ganti logo klien"
               className={`flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg p-0 text-[20px] font-extrabold tracking-[0.5px] text-white ${ui.focusRing}`}
@@ -377,33 +382,35 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                 getCompanyInitials(client.name)
               )}
             </button>
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              title="Ganti logo"
-              aria-hidden="true"
-              tabIndex={-1}
-              className="absolute -bottom-1 -right-1 flex h-[26px] w-[26px] items-center justify-center rounded-full border-2 border-white bg-white p-0 shadow-[0_2px_6px_rgba(0,0,0,0.15)]"
-            >
-              <span
-                className={`flex h-full w-full items-center justify-center rounded-full ${gradientCls}`}
+            {whole && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                title="Ganti logo"
+                aria-hidden="true"
+                tabIndex={-1}
+                className="absolute -bottom-1 -right-1 flex h-[26px] w-[26px] items-center justify-center rounded-full border-2 border-white bg-white p-0 shadow-[0_2px_6px_rgba(0,0,0,0.15)]"
               >
-                <svg
-                  width="13"
-                  height="13"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#FFFFFF"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
+                <span
+                  className={`flex h-full w-full items-center justify-center rounded-full ${gradientCls}`}
                 >
-                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                  <circle cx="12" cy="13" r="3.5" />
-                </svg>
-              </span>
-            </button>
+                  <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#FFFFFF"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                    <circle cx="12" cy="13" r="3.5" />
+                  </svg>
+                </span>
+              </button>
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <h2 className="m-0 break-words text-[18px] font-bold leading-6 tracking-[-0.4px] text-[#191C1E]">
@@ -449,6 +456,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
               </label>
               <input
                 id={`${fid}-name`}
+                disabled={!whole}
                 aria-invalid={Boolean(fieldErrors.name)}
                 type="text"
                 value={name}
@@ -487,6 +495,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                   code={countryCode}
                   onCodeChange={setCountryCode}
                   triggerId={`${fid}-country`}
+                  disabled={!whole}
                   triggerClassName={`${inputBase} flex h-11 items-center justify-between rounded-md border-transparent text-left`}
                   fallback={countryCode}
                   chevronColor="#94A3B8"
@@ -506,6 +515,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                   </span>
                   <input
                     id={`${fid}-phone`}
+                    disabled={!whole}
                     type="text"
                     inputMode="numeric"
                     value={phone}
@@ -530,6 +540,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                 </label>
                 <input
                   id={`${fid}-email`}
+                  disabled={!whole}
                   type="email"
                   value={email}
                   placeholder="contact@nusantara.com"
@@ -571,6 +582,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
               </label>
               <textarea
                 id={`${fid}-address`}
+                disabled={!whole}
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 rows={3}
@@ -597,6 +609,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
               <button
                 type="button"
                 onClick={() => setIsActive((a) => !a)}
+                disabled={!whole}
                 role="switch"
                 aria-checked={isActive}
                 aria-labelledby={`${fid}-status`}
@@ -635,7 +648,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
               Kelola narahubung klien.
             </p>
           </div>
-          {!contactFormOpen && (
+          {whole && !contactFormOpen && (
             <button
               type="button"
               onClick={() => setContactFormOpen(true)}
@@ -770,24 +783,26 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                       </div>
                     )}
                   </div>
-                  <div className="flex shrink-0 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => openEditContact(c)}
-                      aria-label={`Ubah narahubung ${c.name}`}
-                      className={`rounded-sm border-[1.5px] border-primary-700 px-3 py-1.5 text-xs font-semibold text-primary-700 ${ui.focusRing}`}
-                    >
-                      Ubah
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPendingDeleteId(c.id)}
-                      aria-label={`Hapus narahubung ${c.name}`}
-                      className={`rounded-sm border-[1.5px] border-[#DC2626] px-3 py-1.5 text-xs font-semibold text-[#DC2626] ${ui.focusRing}`}
-                    >
-                      Hapus
-                    </button>
-                  </div>
+                  {whole && (
+                    <div className="flex shrink-0 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openEditContact(c)}
+                        aria-label={`Ubah narahubung ${c.name}`}
+                        className={`rounded-sm border-[1.5px] border-primary-700 px-3 py-1.5 text-xs font-semibold text-primary-700 ${ui.focusRing}`}
+                      >
+                        Ubah
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPendingDeleteId(c.id)}
+                        aria-label={`Hapus narahubung ${c.name}`}
+                        className={`rounded-sm border-[1.5px] border-[#DC2626] px-3 py-1.5 text-xs font-semibold text-[#DC2626] ${ui.focusRing}`}
+                      >
+                        Hapus
+                      </button>
+                    </div>
+                  )}
                 </div>
               ),
             )}

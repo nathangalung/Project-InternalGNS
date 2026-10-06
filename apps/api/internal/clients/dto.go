@@ -41,7 +41,7 @@ type Client struct {
 	ContactName    *string   `db:"contact_name"    json:"contactName,omitempty"`
 	ContactEmail   *string   `db:"contact_email"   json:"contactEmail,omitempty"`
 	ContactPhone   *string   `db:"contact_phone"   json:"contactPhone,omitempty"`
-	TotalPurchase  string    `db:"total_purchase"  json:"totalPurchase"`
+	TotalPurchase  string    `db:"total_purchase"  json:"totalPurchase,omitempty"`
 	QuotationCount int64     `db:"quotation_count" json:"quotationCount"`
 	LogoObjectKey  *string   `db:"logo_object_key" json:"logoObjectKey,omitempty"`
 }
@@ -150,6 +150,6 @@ type ClientQuotation struct {
 	CreatedAt    time.Time `db:"created_at"    json:"createdAt"`
 	Status       string    `db:"status"        json:"status"`
 	ContactName  *string   `db:"contact_name"  json:"contactName,omitempty"`
-	GrandTotal   string    `db:"grand_total"   json:"grandTotal"`
+	GrandTotal   string    `db:"grand_total"   json:"grandTotal,omitempty"`
 	ProductCount int       `db:"product_count" json:"productCount"`
 }

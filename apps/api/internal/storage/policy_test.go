@@ -2,8 +2,9 @@ package storage
 
 import "testing"
 
-// Finance reads catalog images only.
-// Every other role reads and writes the same buckets.
+// Buckets follow the routes.
+// Finance roles read catalog images and PO documents only; finance input
+// also stores no client logo. Operational roles never see invoice files.
 func TestBucketAccess(t *testing.T) {
 	cases := []struct {
 		role, bucket string
@@ -14,7 +15,15 @@ func TestBucketAccess(t *testing.T) {
 		{"operational", BucketInvoiceAttachments, false, false},
 		{"superadmin", BucketPODocs, true, true},
 		{"operational", BucketPODocs, true, true},
-		{"finance", BucketPODocs, false, false},
+		{"finance", BucketPODocs, true, false},
+		{"finance_input", BucketPODocs, true, false},
+		{"operational_input", BucketPODocs, true, true},
+		{"finance_input", BucketInvoiceAttachments, true, true},
+		{"operational_input", BucketInvoiceAttachments, false, false},
+		{"finance_input", BucketClientLogos, true, false},
+		{"operational_input", BucketClientLogos, true, true},
+		{"operational_input", BucketItemImages, true, true},
+		{"finance_input", BucketItemImages, true, false},
 		{"operational", BucketClientLogos, true, true},
 		{"finance", BucketClientLogos, true, true},
 		{"finance", BucketItemImages, true, false},

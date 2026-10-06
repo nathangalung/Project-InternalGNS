@@ -23,11 +23,18 @@ type VendorFilterProps = {
   onClose: () => void
   onApply: (filters: VendorFilterValues) => void
   initialValues?: VendorFilterValues
+  // Hidden for a role that sees no cost
+  showTotal?: boolean
 }
 
 const DEFAULTS: VendorFilterValues = { status: "all", countryName: "", minTotal: "" }
 
-export default function VendorFilter({ onClose, onApply, initialValues }: VendorFilterProps) {
+export default function VendorFilter({
+  onClose,
+  onApply,
+  initialValues,
+  showTotal = true,
+}: VendorFilterProps) {
   const [status, setStatus] = useState<VendorStatusFilter>(initialValues?.status ?? "all")
   const [location, setLocation] = useState<string>(initialValues?.countryName ?? "")
   const [minTotal, setMinTotal] = useState<string>(initialValues?.minTotal ?? "")
@@ -111,25 +118,27 @@ export default function VendorFilter({ onClose, onApply, initialValues }: Vendor
         </div>
       </div>
 
-      <div className={ui.modalSection}>
-        <label htmlFor={minTotalId} className={`block ${ui.modalSectionHeading}`}>
-          Min Total Pembelian
-        </label>
-        <div className={ui.field}>
-          <div className={ui.prefixWrap}>
-            <span className={ui.prefixLabel}>IDR</span>
-            <input
-              id={minTotalId}
-              className={amountInputCls}
-              type="text"
-              inputMode="numeric"
-              placeholder="0"
-              value={formatRupiah(minTotal)}
-              onChange={(e) => setMinTotal(e.target.value.replace(/\D/g, ""))}
-            />
+      {showTotal && (
+        <div className={ui.modalSection}>
+          <label htmlFor={minTotalId} className={`block ${ui.modalSectionHeading}`}>
+            Min Total Pembelian
+          </label>
+          <div className={ui.field}>
+            <div className={ui.prefixWrap}>
+              <span className={ui.prefixLabel}>IDR</span>
+              <input
+                id={minTotalId}
+                className={amountInputCls}
+                type="text"
+                inputMode="numeric"
+                placeholder="0"
+                value={formatRupiah(minTotal)}
+                onChange={(e) => setMinTotal(e.target.value.replace(/\D/g, ""))}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </Modal>
   )
 }

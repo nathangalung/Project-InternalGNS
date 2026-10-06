@@ -40,9 +40,9 @@ Feature: Asset storage through the authenticated proxy
     Then the response status is 403
 
     Examples:
-      | role        | bucket              | file      |
-      | finance     | po-docs             | scan.pdf  |
-      | operational | invoice-attachments | proof.pdf |
+      | role              | bucket              | file      |
+      | operational       | invoice-attachments | proof.pdf |
+      | operational_input | invoice-attachments | proof.pdf |
 
   Scenario Outline: Each role reaches the buckets it shares
     Given I am signed in as "<role>"
@@ -59,8 +59,10 @@ Feature: Asset storage through the authenticated proxy
       | operational | po-docs             | scan.jpg   |
       | operational | item-images         | item.webp  |
       | superadmin  | vendor-logos        | logo.gif   |
+      | finance_input | invoice-attachments | proof.png |
+      | operational_input | po-docs         | scan.pdf   |
 
-  Scenario Outline: Finance reads catalog images but cannot store them
+  Scenario Outline: Finance reads catalog images and PO files but cannot store them
     Given I am signed in as "operational"
     And I uploaded "<file>" of 16 bytes to "<bucket>"
     And I am signed in as "finance"
@@ -76,6 +78,7 @@ Feature: Asset storage through the authenticated proxy
       | bucket       | file      |
       | item-images  | item.png  |
       | vendor-logos | logo.webp |
+      | po-docs      | scan.pdf  |
 
   Scenario: A request without a session is told to sign in
     Given I am not signed in

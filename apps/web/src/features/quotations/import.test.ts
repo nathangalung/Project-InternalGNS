@@ -127,6 +127,14 @@ describe("importSummary", () => {
     )
   })
 
+  it("leaves harga jual out for a role that sets no price", () => {
+    const rows = [matched(0, 11)]
+    const { sellingPrice: _, ...costOnly } = filled
+    const lines = importedLines(rows, [costOnly], 0)
+    expect(importSummary(lines, rows, 0)).toContain("1 perlu vendor dan harga")
+    expect(importSummary(lines, rows, 0, false)).toContain("Semua terisi otomatis.")
+  })
+
   it("adds the lines whose unit is unknown", () => {
     const rows = [matched(0, 11)]
     expect(importSummary(importedLines(rows, [filled], 0), rows, 1)).toBe(

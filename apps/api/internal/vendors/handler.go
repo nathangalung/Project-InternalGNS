@@ -13,6 +13,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/rolegate"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/roles"
 )
 
 type Handler struct {
@@ -52,11 +54,19 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	if s := q.Get("minTotal"); s != "" {
 		f.MinTotal = &s
 	}
+	role := deps.CurrentUserRole(r.Context())
+	if !roles.SeesCost(role) && f.probesCost() {
+		rolegate.Refused(w)
+		return
+	}
 
 	res, err := h.repo.List(r.Context(), f)
 	if err != nil {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
+	}
+	for i := range res.Rows {
+		res.Rows[i].redact(role)
 	}
 	w.Header().Set("X-Total-Count", strconv.FormatInt(res.Total, 10))
 	httpx.WriteJSON(w, http.StatusOK, res.Rows)
@@ -77,6 +87,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
+	v.redact(deps.CurrentUserRole(r.Context()))
 	httpx.WriteJSON(w, http.StatusOK, v)
 }
 
@@ -160,6 +171,9 @@ func (h *Handler) ListItems(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
+	}
+	for i := range res.Rows {
+		res.Rows[i].redact(deps.CurrentUserRole(r.Context()))
 	}
 	w.Header().Set("X-Total-Count", strconv.FormatInt(res.Total, 10))
 	httpx.WriteJSON(w, http.StatusOK, res.Rows)

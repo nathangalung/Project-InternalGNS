@@ -197,3 +197,16 @@ SELECT fn_quotation_delete_line($1, $2, $3);
 SELECT fn_quotation_update_header(
     $1, $2, $3, $4, $5, $6::numeric(5,2), $7, $8, $9::numeric(15,2), $10, $11
 );
+
+-- name: quotations.stored_line_price
+-- What a save keeps for a role that sets no price.
+SELECT selling_price::text FROM quotation_items WHERE quotation_id = $1 AND id = $2;
+
+-- name: quotations.stored_header_prices
+-- The discount and the shipping charge a header save keeps.
+SELECT q.discount_pct::text,
+       (SELECT qi.selling_price::text FROM quotation_items qi
+         WHERE qi.quotation_id = q.id AND qi.item_type = 'shipping'
+         ORDER BY qi.id LIMIT 1)
+FROM quotations q
+WHERE q.id = $1;

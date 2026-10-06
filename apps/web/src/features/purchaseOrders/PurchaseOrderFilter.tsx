@@ -23,6 +23,8 @@ type PurchaseOrderFilterProps = {
   onClose: () => void
   onApply: (filters: PoFilterValues) => void
   initialValues?: PoFilterValues
+  // Hidden for a role that sees no total
+  showTotalRange?: boolean
 }
 
 const seed = presetRange("30-hari")
@@ -45,6 +47,7 @@ export default function PurchaseOrderFilter({
   onClose,
   onApply,
   initialValues,
+  showTotalRange = true,
 }: PurchaseOrderFilterProps) {
   const [preset, setPreset] = useState<DatePreset>(initialValues?.preset ?? DEFAULTS.preset)
   const [startDate, setStartDate] = useState<string>(initialValues?.startDate ?? DEFAULTS.startDate)
@@ -180,32 +183,34 @@ export default function PurchaseOrderFilter({
         </div>
       </div>
 
-      <div className={ui.modalSection}>
-        <div className={ui.modalSectionHeading}>Rentang Total PO</div>
-        <div className={ui.row2}>
-          {[
-            { id: "po-filter-min", label: "Min Total", value: minHarga, set: setMinHarga },
-            { id: "po-filter-max", label: "Max Total", value: maxHarga, set: setMaxHarga },
-          ].map(({ id, label, value, set }) => (
-            <div className={ui.field} key={id}>
-              <label htmlFor={id} className={ui.fieldLabel}>
-                {label}
-              </label>
-              <div className={ui.prefixWrap}>
-                <span className={ui.prefixLabel}>IDR</span>
-                <input
-                  id={id}
-                  className={ui.prefixInput}
-                  type="text"
-                  inputMode="numeric"
-                  value={value}
-                  onChange={(e) => set(e.target.value)}
-                />
+      {showTotalRange && (
+        <div className={ui.modalSection}>
+          <div className={ui.modalSectionHeading}>Rentang Total PO</div>
+          <div className={ui.row2}>
+            {[
+              { id: "po-filter-min", label: "Min Total", value: minHarga, set: setMinHarga },
+              { id: "po-filter-max", label: "Max Total", value: maxHarga, set: setMaxHarga },
+            ].map(({ id, label, value, set }) => (
+              <div className={ui.field} key={id}>
+                <label htmlFor={id} className={ui.fieldLabel}>
+                  {label}
+                </label>
+                <div className={ui.prefixWrap}>
+                  <span className={ui.prefixLabel}>IDR</span>
+                  <input
+                    id={id}
+                    className={ui.prefixInput}
+                    type="text"
+                    inputMode="numeric"
+                    value={value}
+                    onChange={(e) => set(e.target.value)}
+                  />
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </Modal>
   )
 }

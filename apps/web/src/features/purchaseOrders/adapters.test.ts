@@ -140,6 +140,7 @@ describe("edit wizard round trip", () => {
 
   it("sends an untouched line back exactly as stored", () => {
     expect(lineToInput(hydrated, units)).toEqual({
+      id: 7,
       quotationItemId: 70,
       offeredItemId: 42,
       itemName: "Rope",
@@ -157,6 +158,7 @@ describe("edit wizard round trip", () => {
   it("keeps stored flags, vendor and unknown cost on an edited quantity", () => {
     const edited: PoEditLine = { ...hydrated, jumlah: 5, touched: true }
     expect(lineToInput(edited, units)).toEqual({
+      id: 7,
       quotationItemId: 70,
       offeredItemId: 42,
       itemName: "Rope",
@@ -170,6 +172,19 @@ describe("edit wizard round trip", () => {
       vendorProductId: 700,
       vendorId: undefined,
     })
+  })
+
+  it("leaves out a harga jual the role cannot see", () => {
+    const [hidden] = poLinesToEdit([{ ...stored, sellingPrice: undefined }], unitCode)
+    const edited: PoEditLine = { ...hidden, hargaBeli: 55, touched: true }
+    const input = lineToInput(edited, units)
+    expect(input).toMatchObject({ id: 7, costPrice: "55" })
+    expect(input).not.toHaveProperty("sellingPrice", expect.anything())
+  })
+
+  it("sends no id for a line added in the edit", () => {
+    const added: PoEditLine = { ...hydrated, id: 99, source: undefined }
+    expect(lineToInput(added, units).id).toBeUndefined()
   })
 
   it("sends the vendor picked in the edit", () => {

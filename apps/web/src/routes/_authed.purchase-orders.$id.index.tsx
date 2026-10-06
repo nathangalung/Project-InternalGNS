@@ -3,6 +3,7 @@ import { useMemo } from "react"
 import LoadingState from "@/components/shared/LoadingState"
 import NotFoundState from "@/components/shared/NotFoundState"
 import RouteErrorFallback from "@/components/shared/RouteErrorFallback"
+import { useMe } from "@/features/auth/hooks"
 import { clientCardInfo, documentContact } from "@/features/clients/clientCard"
 import { useClient } from "@/features/clients/hooks"
 import { usePurchaseOrderByQuotation } from "@/features/purchaseOrders/hooks"
@@ -11,6 +12,7 @@ import { toQuotationData } from "@/features/quotations/adapters"
 import { useQuotation } from "@/features/quotations/hooks"
 import { useUnits } from "@/features/units/hooks"
 import { isMissing } from "@/lib/errors"
+import { roleCanAccess } from "@/lib/rbac"
 
 export const Route = createFileRoute("/_authed/purchase-orders/$id/")({
   component: PurchaseOrderDetailRoute,
@@ -24,8 +26,10 @@ function PurchaseOrderDetailRoute() {
   const numericId = Number(id)
   const quotationId = Number.isInteger(numericId) && numericId > 0 ? numericId : undefined
   const { data: po, isLoading, error, refetch } = usePurchaseOrderByQuotation(quotationId)
-  // Client card only; the PO carries its own figures.
-  const { data: detail } = useQuotation(po ? quotationId : undefined)
+  // Client card only; the PO carries its own figures. Finance input reads
+  // POs but not quotations, so its card shows the client alone.
+  const readsQuotation = roleCanAccess(useMe().data?.role, "quotation")
+  const { data: detail } = useQuotation(po && readsQuotation ? quotationId : undefined)
   const { data: units } = useUnits()
   const { data: client } = useClient(po?.companyClientId)
 

@@ -178,7 +178,7 @@
         {
           "name": "users_role_check",
           "type": "CHECK",
-          "def": "CHECK (((role)::text = ANY ((ARRAY['operational'::character varying, 'finance'::character varying, 'superadmin'::character varying])::text[])))",
+          "def": "CHECK (((role)::text = ANY ((ARRAY['superadmin'::character varying, 'operational'::character varying, 'operational_input'::character varying, 'finance'::character varying, 'finance_input'::character varying])::text[])))",
           "table": "public.users",
           "referenced_table": "",
           "columns": [
@@ -2764,10 +2764,6 @@
       ],
       "triggers": [
         {
-          "name": "trg_quotation_items_updated_at",
-          "def": "CREATE TRIGGER trg_quotation_items_updated_at BEFORE UPDATE ON public.quotation_items FOR EACH ROW EXECUTE FUNCTION set_updated_at()"
-        },
-        {
           "name": "trg_sync_vendor_cost",
           "def": "CREATE TRIGGER trg_sync_vendor_cost AFTER INSERT ON public.quotation_items FOR EACH ROW EXECUTE FUNCTION trg_fn_sync_vendor_cost()"
         },
@@ -2786,6 +2782,10 @@
         {
           "name": "trg_sync_vendor_cost_on_update",
           "def": "CREATE TRIGGER trg_sync_vendor_cost_on_update AFTER UPDATE OF cost_price, vendor_product_id, update_vendor_price ON public.quotation_items FOR EACH ROW WHEN ((new.update_vendor_price AND ((old.cost_price IS DISTINCT FROM new.cost_price) OR (old.vendor_product_id IS DISTINCT FROM new.vendor_product_id) OR (NOT old.update_vendor_price)))) EXECUTE FUNCTION trg_fn_sync_vendor_cost()"
+        },
+        {
+          "name": "trg_quotation_items_updated_at",
+          "def": "CREATE TRIGGER trg_quotation_items_updated_at BEFORE UPDATE ON public.quotation_items FOR EACH ROW EXECUTE FUNCTION set_updated_at()"
         }
       ]
     },

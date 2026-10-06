@@ -14,6 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/listq"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/rolegate"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/sheet"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
@@ -144,6 +145,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
+	inv.redact(deps.CurrentUserRole(r.Context()))
 	httpx.WriteJSON(w, http.StatusOK, inv)
 }
 
@@ -162,6 +164,7 @@ func (h *Handler) GetByQuotation(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
+	inv.redact(deps.CurrentUserRole(r.Context()))
 	httpx.WriteJSON(w, http.StatusOK, inv)
 }
 
@@ -175,6 +178,9 @@ func (h *Handler) ListItems(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
+	}
+	for i := range items {
+		items[i].redact(deps.CurrentUserRole(r.Context()))
 	}
 	httpx.WriteJSON(w, http.StatusOK, items)
 }
@@ -191,6 +197,10 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	if !isValidStatus(req.Status) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"status": "Status invoice tidak dikenal."}))
+		return
+	}
+	if !canMove(deps.CurrentUserRole(r.Context()), req.Status) {
+		rolegate.Refused(w)
 		return
 	}
 	if msg := proofKeyProblem(id, req); msg != "" {

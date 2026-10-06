@@ -74,8 +74,10 @@ export function toWizardProduct(
 // Add and edit share it, so a stored request round-trips unchanged and the
 // IMPA saved is the one the request block shows (see requestedCode). A
 // vendor picked without a link travels as vendorId and the server links it
-// (fn_prepare_quotation_lines); a Tidak Ditawarkan line goes out unpriced.
-export function toItemInput(p: ProductItem, unitId: number): QuotationItemInput {
+// (fn_prepare_quotation_lines); a Tidak Ditawarkan line goes out unpriced. A
+// role that sets no price (pricing false) sends no harga jual; the server
+// keeps the stored one.
+export function toItemInput(p: ProductItem, unitId: number, pricing = true): QuotationItemInput {
   const base = {
     requestedItemId: p.requestedItemId,
     requestedImpa: requestedCode(p) || undefined,
@@ -89,7 +91,7 @@ export function toItemInput(p: ProductItem, unitId: number): QuotationItemInput 
     ...base,
     vendorProductId: p.vendorProductId,
     vendorId: p.vendorProductId === undefined ? p.vendorId : undefined,
-    sellingPrice: String(p.hargaJual),
+    sellingPrice: pricing ? String(p.hargaJual) : undefined,
     costPrice: String(p.hargaBeli),
   }
 }
@@ -147,6 +149,7 @@ export function toQuotationData(
   const status = quotationStatusLabel(api.status)
   return {
     id: String(api.id),
+    seesSelling: api.grandTotal !== undefined,
     version: api.version,
     client: api.companyClientName,
     clientId: api.companyClientId,
@@ -171,10 +174,15 @@ export function toQuotationData(
   }
 }
 
+// Money text, absent when hidden.
+function moneyText(v: string | undefined): string | undefined {
+  if (v === undefined) return undefined
+  const n = Number(v)
+  return Number.isFinite(n) ? formatNumber(n) : v
+}
+
 // API row to table row.
 export function toTableRow(api: ApiQuotationRow): QuotationRow {
-  const grand = Number(api.grandTotal)
-  const hargaBeli = Number(api.totalHargaBeli)
   return {
     id: String(api.id),
     displayNo: api.quotationNo,
@@ -182,8 +190,8 @@ export function toTableRow(api: ApiQuotationRow): QuotationRow {
     client: api.companyName,
     clientId: api.companyClientId,
     date: formatDate(api.createdAt),
-    hargaBeli: Number.isFinite(hargaBeli) ? formatNumber(hargaBeli) : api.totalHargaBeli,
-    total: Number.isFinite(grand) ? formatNumber(grand) : api.grandTotal,
+    hargaBeli: moneyText(api.totalHargaBeli),
+    total: moneyText(api.grandTotal),
     status: quotationStatusLabel(api.status),
   }
 }

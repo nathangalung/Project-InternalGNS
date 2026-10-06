@@ -14,6 +14,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/rolegate"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/roles"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/validate"
 )
 
@@ -56,11 +58,19 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	if s := q.Get("minTotal"); s != "" {
 		f.MinTotal = &s
 	}
+	role := deps.CurrentUserRole(r.Context())
+	if !roles.SeesSelling(role) && f.probesSelling() {
+		rolegate.Refused(w)
+		return
+	}
 
 	res, err := h.repo.List(r.Context(), f)
 	if err != nil {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
+	}
+	for i := range res.Rows {
+		res.Rows[i].redact(role)
 	}
 	w.Header().Set("X-Total-Count", strconv.FormatInt(res.Total, 10))
 	httpx.WriteJSON(w, http.StatusOK, res.Rows)
@@ -83,6 +93,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
+	c.redact(deps.CurrentUserRole(r.Context()))
 	httpx.WriteJSON(w, http.StatusOK, c)
 }
 
@@ -123,6 +134,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
+	c.redact(deps.CurrentUserRole(r.Context()))
 	httpx.WriteJSON(w, http.StatusCreated, c)
 }
 
@@ -137,6 +149,18 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	var req UpdateClientRequest
 	if !httpx.DecodeJSON(w, r, &req) {
 		return
+	}
+	if deps.CurrentUserRole(r.Context()) == roles.FinanceInput {
+		stored, err := h.repo.GetByID(r.Context(), id)
+		if errors.Is(err, ErrNotFound) {
+			httperr.Render(w, httperr.NotFound("client not found"))
+			return
+		}
+		if err != nil {
+			httperr.RenderDBErrCtx(r.Context(), w, err)
+			return
+		}
+		req = taxOnly(stored, req)
 	}
 	req.Name = strings.TrimSpace(req.Name)
 	if req.Name == "" {
@@ -178,6 +202,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
+	c.redact(deps.CurrentUserRole(r.Context()))
 	httpx.WriteJSON(w, http.StatusOK, c)
 }
 
@@ -433,6 +458,9 @@ func (h *Handler) RecentQuotations(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
+	}
+	for i := range rows {
+		rows[i].redact(deps.CurrentUserRole(r.Context()))
 	}
 	httpx.WriteJSON(w, http.StatusOK, rows)
 }

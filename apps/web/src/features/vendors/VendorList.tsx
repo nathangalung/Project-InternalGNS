@@ -16,7 +16,7 @@ import { filterChips } from "@/lib/filter-chips"
 import { statusFilterLabel } from "@/lib/filter-options"
 import { formatRupiah } from "@/lib/format"
 import { emptyListText } from "@/lib/list-empty"
-import { canWriteCatalog } from "@/lib/rbac"
+import { canWriteCatalog, seesCost } from "@/lib/rbac"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import { ui } from "@/lib/ui"
 import { useListScreen, usePageWithin } from "@/lib/useListScreen"
@@ -40,6 +40,8 @@ export default function VendorList({ onViewDetail }: VendorListProps) {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
   const { data: me } = useMe()
   const canWrite = canWriteCatalog(me?.role)
+  // Total purchase is a cost figure
+  const showTotal = seesCost(me?.role)
 
   const list = useListScreen<VendorFilterValues>(VENDOR_FILTERS)
   const { debouncedSearch, filters, itemsPerPage, startIndex } = list
@@ -147,15 +149,17 @@ export default function VendorList({ onViewDetail }: VendorListProps) {
                 <th className={`${ui.thCenter} w-[240px]`}>Nama Vendor</th>
                 <th className={`${ui.thCenter} w-[160px]`}>Negara</th>
                 <th className={`${ui.thCenter} w-[140px]`}>Status</th>
-                <th className={`${ui.thCenter} w-[180px]`} aria-sort={ariaSort("totalPembelian")}>
-                  <button
-                    type="button"
-                    className={sortBtnCls}
-                    onClick={() => toggleSort("totalPembelian")}
-                  >
-                    Total Pembelian
-                  </button>
-                </th>
+                {showTotal && (
+                  <th className={`${ui.thCenter} w-[180px]`} aria-sort={ariaSort("totalPembelian")}>
+                    <button
+                      type="button"
+                      className={sortBtnCls}
+                      onClick={() => toggleSort("totalPembelian")}
+                    >
+                      Total Pembelian
+                    </button>
+                  </th>
+                )}
                 <th className={`${ui.thCenter} w-[160px]`} aria-sort={ariaSort("productCount")}>
                   <button
                     type="button"
@@ -169,9 +173,9 @@ export default function VendorList({ onViewDetail }: VendorListProps) {
               </tr>
             </thead>
             <tbody>
-              {isLoading && <TableLoadingRow colSpan={6} />}
+              {isLoading && <TableLoadingRow colSpan={showTotal ? 6 : 5} />}
               {!isLoading && currentRows.length === 0 && (
-                <TableEmptyRow colSpan={6}>
+                <TableEmptyRow colSpan={showTotal ? 6 : 5}>
                   {emptyListText(list, "Belum ada vendor.")}
                 </TableEmptyRow>
               )}
@@ -198,9 +202,11 @@ export default function VendorList({ onViewDetail }: VendorListProps) {
                           {status.label}
                         </StatusBadge>
                       </td>
-                      <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>
-                        {formatRupiah(v.totalPurchase, "-")}
-                      </td>
+                      {showTotal && (
+                        <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>
+                          {formatRupiah(v.totalPurchase, "-")}
+                        </td>
+                      )}
                       <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>
                         {v.productCount}
                       </td>
@@ -242,6 +248,7 @@ export default function VendorList({ onViewDetail }: VendorListProps) {
           onClose={() => setShowFilter(false)}
           initialValues={filters}
           onApply={list.applyFilters}
+          showTotal={showTotal}
         />
       )}
     </>

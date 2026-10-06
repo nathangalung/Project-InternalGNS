@@ -33,7 +33,15 @@ describe("entityTarget", () => {
       role: "operational",
       allowed: ["client", "vendor", "product", "quotation", "purchaseOrder"],
     },
-    { role: "finance", allowed: ["client", "vendor", "product", "invoice"] },
+    {
+      role: "operational_input",
+      allowed: ["client", "vendor", "product", "quotation", "purchaseOrder"],
+    },
+    {
+      role: "finance",
+      allowed: ["client", "vendor", "product", "quotation", "purchaseOrder", "invoice"],
+    },
+    { role: "finance_input", allowed: ["client", "vendor", "product", "purchaseOrder", "invoice"] },
     { role: undefined, allowed: ["client", "vendor", "product"] },
   ]
   for (const { role, allowed } of cases) {

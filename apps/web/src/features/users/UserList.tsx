@@ -29,11 +29,13 @@ const sortBtn = `mx-auto flex cursor-pointer items-center justify-center gap-1.5
 
 type UserFilters = { role: RoleFilter; status: StatusFilter }
 
-const ROLE_BADGE: Record<Role, { label: string; bg: string; color: string }> = {
-  superadmin: { label: "SUPERADMIN", bg: "#EDE9FE", color: "#5B21B6" },
+const ROLE_BADGE: Record<Role, { bg: string; color: string }> = {
+  superadmin: { bg: "#EDE9FE", color: "#5B21B6" },
   // Text darkened from #DA6900 (2.3:1) to 6.7:1.
-  operational: { label: "OPERASIONAL", bg: "#FFE16D", color: "#92400E" },
-  finance: { label: "FINANCE", bg: "#DBEAFE", color: "#1D4ED8" },
+  operational: { bg: "#FFE16D", color: "#92400E" },
+  operational_input: { bg: "#FEF3C7", color: "#92400E" },
+  finance: { bg: "#DBEAFE", color: "#1D4ED8" },
+  finance_input: { bg: "#E0F2FE", color: "#075985" },
 }
 
 // Filters with nothing applied.
@@ -181,7 +183,7 @@ export default function UserList() {
                       <td className={ui.tdCenter}>{u.email}</td>
                       <td className={ui.tdCenter}>
                         <StatusBadge bg={role.bg} color={role.color} minWidth={108}>
-                          {role.label}
+                          {ROLE_LABEL[u.role].toUpperCase()}
                         </StatusBadge>
                       </td>
                       <td className={ui.tdCenter}>

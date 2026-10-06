@@ -20,11 +20,15 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/live"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/roles"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
 // userHeader picks the acting user.
 const userHeader = "X-Test-User"
+
+// roleHeader picks the acting role, superadmin by default.
+const roleHeader = "X-Test-Role"
 
 // liveServer mounts quotations with a hub.
 // The acting user comes from userHeader, so one server serves two editors.
@@ -42,7 +46,12 @@ func liveServer(t *testing.T, hub *live.Hub) *httptest.Server {
 			if v := req.Header.Get(userHeader); v != "" {
 				uid, _ = strconv.ParseInt(v, 10, 64)
 			}
-			next.ServeHTTP(w, req.WithContext(deps.WithUserID(req.Context(), uid)))
+			role := roles.Superadmin
+			if v := req.Header.Get(roleHeader); v != "" {
+				role = v
+			}
+			ctx := deps.WithUserRole(deps.WithUserID(req.Context(), uid), role)
+			next.ServeHTTP(w, req.WithContext(ctx))
 		})
 	})
 	r.Mount("/quotations", quotations.Routes(deps.Deps{Pool: pool, Queries: testutil.Store(t), Live: hub}))

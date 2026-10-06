@@ -1,7 +1,8 @@
 Feature: Quotation edges and access
   The quotation API refuses bad input with a clear 4xx, keeps what an
   edit sends, prints the delivery terms, scopes nested resources to their
-  quotation, and is closed to finance.
+  quotation, is read only for the finance head, and keeps the operational
+  input role off status moves and selling totals.
 
   Background:
     Given an authenticated user with id 1
@@ -83,25 +84,29 @@ Feature: Quotation edges and access
     Then the response status is 422
     And the problem detail mentions "hanya dapat diganti saat quotation berstatus Draf atau Disetujui"
 
-  Scenario Outline: Finance is refused every quotation endpoint
+  Scenario Outline: Finance reads quotations and operational input stays off moves
     Given an existing draft quotation
     When a "<role>" user calls <method> "<path>" through the API
     Then the response status is <code>
 
     Examples:
       | role        | method | path                           | code |
-      | finance     | GET    | /quotations                    | 403  |
-      | finance     | GET    | /quotations/stats              | 403  |
-      | finance     | GET    | /quotations/export.xlsx        | 403  |
-      | finance     | GET    | /quotations/{id}               | 403  |
-      | finance     | GET    | /quotations/{id}/revisions     | 403  |
-      | finance     | GET    | /quotations/{id}/requests      | 403  |
+      | finance     | GET    | /quotations                    | 200  |
+      | finance     | GET    | /quotations/stats              | 200  |
+      | finance     | GET    | /quotations/export.xlsx        | 200  |
+      | finance     | GET    | /quotations/{id}               | 200  |
+      | finance     | GET    | /quotations/{id}/revisions     | 200  |
+      | finance     | GET    | /quotations/{id}/requests      | 200  |
       | finance     | POST   | /quotations                    | 403  |
       | finance     | PUT    | /quotations/{id}               | 403  |
       | finance     | POST   | /quotations/{id}/send          | 403  |
       | finance     | PATCH  | /quotations/{id}/contact       | 403  |
-      | finance     | GET    | /quotations/{id}/pdf           | 403  |
       | finance     | POST   | /quotations/rfq                | 403  |
+      | finance_input | GET  | /quotations                    | 403  |
+      | operational_input | GET | /quotations/{id}            | 200  |
+      | operational_input | GET | /quotations/export.xlsx     | 403  |
+      | operational_input | PUT | /quotations/{id}            | 403  |
+      | operational_input | POST | /quotations/{id}/send      | 403  |
       | operational | GET    | /quotations                    | 200  |
       | operational | GET    | /quotations/{id}               | 200  |
       | superadmin  | GET    | /quotations/{id}/requests      | 200  |

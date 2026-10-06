@@ -108,7 +108,7 @@ Feature: Quotation status model
     And the stats labels are "Draf,Dikirim,Revisi,Disetujui,Ditolak,Dibatalkan"
     And the stats count 1 "cancelled" and 0 "rejected"
 
-  Scenario Outline: Only superadmin and operational change quotation status
+  Scenario Outline: Only superadmin and the operational head change quotation status
     Given an existing draft quotation
     And the user transitions the quotation through "sent" giving a reason
     When a "<role>" user <action> the quotation through the API
@@ -118,6 +118,8 @@ Feature: Quotation status model
       | role        | action  | code |
       | finance     | cancels | 403  |
       | finance     | revises | 403  |
+      | operational_input | cancels | 403  |
+      | operational_input | revises | 403  |
       | operational | cancels | 204  |
       | operational | revises | 201  |
       | superadmin  | rejects | 204  |

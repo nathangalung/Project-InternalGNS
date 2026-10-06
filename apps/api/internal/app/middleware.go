@@ -16,6 +16,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/auth"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/rolegate"
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 )
 
@@ -226,7 +227,7 @@ func securityHeadersMiddleware(next http.Handler) http.Handler {
 
 // Role refusal toast details.
 const (
-	detailRoleRefused   = "Peran Anda tidak memiliki akses ke fitur ini."
+	detailRoleRefused   = rolegate.RefusedDetail
 	detailBucketRefused = "Peran Anda tidak memiliki akses ke berkas ini."
 )
 

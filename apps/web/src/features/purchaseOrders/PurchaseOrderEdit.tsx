@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import StateMessage from "@/components/shared/StateMessage"
+import { useMe } from "@/features/auth/hooks"
 import { fromClientRow } from "@/features/clients/helpers"
 import { useClient } from "@/features/clients/hooks"
 import ProductAdd from "@/features/items/ProductAdd"
@@ -13,6 +14,7 @@ import { wizardGates, wizardSummary } from "@/features/quotations/wizard"
 import { useUnits } from "@/features/units/hooks"
 import { isVersionConflict } from "@/lib/errors"
 import { formatNumber as formatRp, toNum } from "@/lib/format"
+import { setsPrices } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import type { PoUpdateItemsInput, PurchaseOrderItemRow, PurchaseOrderRow } from "@/types/api"
@@ -61,6 +63,9 @@ const arrowIcon = (
 
 export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
   const navigate = useNavigate()
+  // A role that sets no harga jual edits harga beli, vendor and qty of the
+  // stored lines only
+  const pricing = setsPrices(useMe().data?.role)
   const [step, setStep] = useState(1)
 
   const { refetch: refetchPo } = usePurchaseOrderByQuotation(po.quotationId)
@@ -349,6 +354,8 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
 
             {step === 1 && (
               <Step2Product
+                pricing={pricing}
+                fixedLines={!pricing}
                 products={products}
                 unitIdByCode={unitIdByCode}
                 clientId={po.companyClientId}
@@ -376,6 +383,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
             )}
             {step === 2 && (
               <Step3Shipping
+                pricing={pricing}
                 shippingAddress={shippingAddress}
                 setShippingAddress={setShippingAddress}
                 shippingTime={shippingTime}
@@ -390,6 +398,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
             )}
             {step === 3 && (
               <Step4Summary
+                pricing={pricing}
                 currentClient={currentClient}
                 shippingAddress={shippingAddress}
                 shippingTime={shippingTime}
@@ -423,6 +432,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
         }}
       />
       <ProductAdd
+        pricing={pricing}
         open={showProductAdd}
         initialData={editingProduct}
         clientId={po.companyClientId}

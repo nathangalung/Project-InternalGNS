@@ -89,20 +89,21 @@ export function requestDiffers(p: RequestLine): boolean {
 // What a line still lacks.
 // Mirrors the server's send rule (fn_change_quotation_status): a product, a
 // vendor (linked, or picked to be linked on save), harga beli and harga
-// jual. A Tidak Ditawarkan line needs none of them.
-export function lineGaps(p: ProductItem): string[] {
+// jual. A Tidak Ditawarkan line needs none of them. A role that sets no
+// price (pricing false) is not shown the harga jual a head fills in later.
+export function lineGaps(p: ProductItem, pricing = true): string[] {
   if (p.noOffer) return []
   const gaps: string[] = []
   if (p.itemId === undefined) gaps.push("produk")
   if (p.vendorProductId === undefined && p.vendorId === undefined) gaps.push("vendor")
   if (!(p.hargaBeli > 0)) gaps.push("harga beli")
-  if (!(p.hargaJual > 0)) gaps.push("harga jual")
+  if (pricing && !(p.hargaJual > 0)) gaps.push("harga jual")
   return gaps
 }
 
 // Ready to be sent.
-export function isLineComplete(p: ProductItem): boolean {
-  return lineGaps(p).length === 0
+export function isLineComplete(p: ProductItem, pricing = true): boolean {
+  return lineGaps(p, pricing).length === 0
 }
 
 // Stored line, as the send rule reads it.
@@ -119,7 +120,8 @@ export type StoredLine = Pick<
 
 // Offered lines the send rule refuses.
 // Mirrors fn_change_quotation_status: a product, a unit, a linked vendor,
-// harga beli and harga jual above zero. Tidak Ditawarkan lines never count.
+// harga beli and harga jual above zero. Tidak Ditawarkan lines never count,
+// and a harga jual hidden from the viewer is not theirs to fill.
 export function incompleteLines(items: StoredLine[]): number {
   return items.filter(
     (it) =>
@@ -129,6 +131,6 @@ export function incompleteLines(items: StoredLine[]): number {
         it.unitId === undefined ||
         it.vendorProductId === undefined ||
         !(Number(it.costPrice ?? 0) > 0) ||
-        !(Number(it.sellingPrice) > 0)),
+        (it.sellingPrice !== undefined && !(Number(it.sellingPrice) > 0))),
   ).length
 }

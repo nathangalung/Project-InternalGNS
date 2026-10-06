@@ -16,6 +16,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/roles"
 )
 
 // Stream clocks.
@@ -103,6 +104,9 @@ func (h *Handler) AddLines(w http.ResponseWriter, r *http.Request) {
 	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
+	if !roles.SetsPrices(deps.CurrentUserRole(r.Context())) {
+		unpriced(req.Items)
+	}
 	if len(req.Items) == 0 {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"items": "Tambahkan minimal satu baris produk."}))
 		return
@@ -128,6 +132,12 @@ func (h *Handler) UpdateLine(w http.ResponseWriter, r *http.Request) {
 	var item CreateItem
 	if !httpx.DecodeJSON(w, r, &item) {
 		return
+	}
+	if !roles.SetsPrices(deps.CurrentUserRole(r.Context())) {
+		if err := h.repo.keepLinePrice(r.Context(), id, lineID, &item); err != nil {
+			httperr.RenderDBErrCtx(r.Context(), w, err)
+			return
+		}
 	}
 	if fields := validateLines([]CreateItem{item}); fields != nil {
 		httperr.Render(w, httperr.Unprocessable(fields))
@@ -179,6 +189,12 @@ func (h *Handler) UpdateHeader(w http.ResponseWriter, r *http.Request) {
 	var req HeaderRequest
 	if !httpx.DecodeJSON(w, r, &req) {
 		return
+	}
+	if !roles.SetsPrices(deps.CurrentUserRole(r.Context())) {
+		if err := h.repo.keepHeaderPrices(r.Context(), id, &req); err != nil {
+			httperr.RenderDBErrCtx(r.Context(), w, err)
+			return
+		}
 	}
 	if fields := validateDiscountPct(req.DiscountPct); fields != nil {
 		httperr.Render(w, httperr.Unprocessable(fields))

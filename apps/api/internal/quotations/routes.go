@@ -6,6 +6,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/clients"
 	"github.com/nathangalung/internalgns/apps/api/internal/pdfgen"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/rolegate"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/roles"
 	"github.com/nathangalung/internalgns/apps/api/internal/units"
 )
 
@@ -18,14 +20,16 @@ func Routes(d deps.Deps) chi.Router {
 	r.Get("/", h.List)
 	r.Post("/", h.Create)
 	r.Get("/stats", h.Stats)
-	r.Get("/export.xlsx", h.Export)
+	// Operational input never sees a selling figure or moves a status.
+	opsInput := rolegate.Deny(roles.OperationalInput)
+	r.With(opsInput).Get("/export.xlsx", h.Export)
 	r.Post("/rfq", h.UploadRFQ)
 	r.Get("/{id}", h.Get)
-	r.Put("/{id}", h.Update)
-	r.Patch("/{id}/status", h.ChangeStatus)
+	r.With(opsInput).Put("/{id}", h.Update)
+	r.With(opsInput).Patch("/{id}/status", h.ChangeStatus)
 	r.Patch("/{id}/contact", h.ChangeContact)
-	r.Post("/{id}/send", h.Send)
-	r.Post("/{id}/revise", h.Revise)
+	r.With(opsInput).Post("/{id}/send", h.Send)
+	r.With(opsInput).Post("/{id}/revise", h.Revise)
 	r.Get("/{id}/revisions", h.Revisions)
 
 	// Live editing of a draft
@@ -51,7 +55,7 @@ func Routes(d deps.Deps) chi.Router {
 			pdfgen.NewRenderer(d.TemplatesRoot),
 			d.Pdf,
 		)
-		r.Get("/{id}/pdf", exp.ExportPDF)
+		r.With(opsInput).Get("/{id}/pdf", exp.ExportPDF)
 	}
 
 	return r

@@ -87,7 +87,7 @@ type PriceHistory struct {
 	ClientName    string  `db:"client_name"     json:"clientName"`
 	Qty           string  `db:"qty"             json:"qty"`
 	CostPrice     *string `db:"cost_price"      json:"costPrice,omitempty"`
-	SellingPrice  string  `db:"selling_price"   json:"sellingPrice"`
+	SellingPrice  string  `db:"selling_price"   json:"sellingPrice,omitempty"`
 	ProfitPct     *string `db:"profit_pct"      json:"profitPct,omitempty"`
 }
 
@@ -232,5 +232,5 @@ type ItemQuotation struct {
 	VendorName    *string   `db:"vendor_name"    json:"vendorName,omitempty"`
 	Qty           string    `db:"qty"            json:"qty"`
 	CostPrice     *string   `db:"cost_price"     json:"costPrice,omitempty"`
-	SellingPrice  string    `db:"selling_price"  json:"sellingPrice"`
+	SellingPrice  string    `db:"selling_price"  json:"sellingPrice,omitempty"`
 }

@@ -1,6 +1,20 @@
 import { describe, expect, it } from "vitest"
 import type { Role } from "@/types/api"
-import { canWriteCatalog, roleCanAccess, type Section, sectionFromPathname } from "./rbac"
+import {
+  canViewFinancial,
+  canWriteCatalog,
+  editsWholeClient,
+  exportsQuotation,
+  managesInvoices,
+  roleCanAccess,
+  roleCanOpen,
+  type Section,
+  sectionFromPathname,
+  seesCost,
+  seesSelling,
+  setsPrices,
+  writesQuotation,
+} from "./rbac"
 
 const ALL: Section[] = [
   "dashboard",
@@ -15,36 +29,33 @@ const ALL: Section[] = [
   "products",
 ]
 
+const ROLES: Role[] = ["superadmin", "operational", "operational_input", "finance", "finance_input"]
+
+// Sections beyond the common four, per role.
+const EXTRA: Record<Role, Section[]> = {
+  superadmin: [
+    "dashboard-financial",
+    "dashboard-operational",
+    "quotation",
+    "purchase-orders",
+    "invoices",
+    "users",
+  ],
+  operational: ["dashboard-operational", "quotation", "purchase-orders"],
+  operational_input: ["dashboard-operational", "quotation", "purchase-orders"],
+  finance: ["dashboard-financial", "quotation", "purchase-orders", "invoices"],
+  finance_input: ["purchase-orders", "invoices"],
+}
+
 describe("roleCanAccess", () => {
-  it("superadmin reaches every section", () => {
-    for (const s of ALL) expect(roleCanAccess("superadmin", s)).toBe(true)
-  })
-
-  it("operational skips users, financial dashboard, invoices", () => {
-    expect(roleCanAccess("operational", "users")).toBe(false)
-    expect(roleCanAccess("operational", "dashboard-financial")).toBe(false)
-    expect(roleCanAccess("operational", "invoices")).toBe(false)
-    expect(roleCanAccess("operational", "quotation")).toBe(true)
-    expect(roleCanAccess("operational", "purchase-orders")).toBe(true)
-    expect(roleCanAccess("operational", "dashboard-operational")).toBe(true)
-  })
-
-  it("finance gets only financial dashboard and invoices beyond common", () => {
-    expect(roleCanAccess("finance", "dashboard-financial")).toBe(true)
-    expect(roleCanAccess("finance", "invoices")).toBe(true)
-    expect(roleCanAccess("finance", "quotation")).toBe(false)
-    expect(roleCanAccess("finance", "purchase-orders")).toBe(false)
-    expect(roleCanAccess("finance", "dashboard-operational")).toBe(false)
-    expect(roleCanAccess("finance", "users")).toBe(false)
-  })
-
-  it("every role keeps the common four", () => {
-    for (const role of ["superadmin", "operational", "finance"] as const) {
-      for (const s of ["dashboard", "clients", "vendors", "products"] as const) {
-        expect(roleCanAccess(role, s)).toBe(true)
+  for (const role of ROLES) {
+    it(`${role} reaches its sections and no other`, () => {
+      for (const s of ALL) {
+        const common = ["dashboard", "clients", "vendors", "products"].includes(s)
+        expect(roleCanAccess(role, s), s).toBe(common || EXTRA[role].includes(s))
       }
-    }
-  })
+    })
+  }
 
   it("unknown role sees only common sections", () => {
     expect(roleCanAccess(undefined, "clients")).toBe(true)
@@ -52,24 +63,47 @@ describe("roleCanAccess", () => {
   })
 })
 
-describe("sectionFromPathname", () => {
-  it("maps nested paths to their section", () => {
-    expect(sectionFromPathname("/quotations/12/edit")).toBe("quotation")
-    expect(sectionFromPathname("/purchase-orders/3")).toBe("purchase-orders")
-    expect(sectionFromPathname("/invoices")).toBe("invoices")
-    expect(sectionFromPathname("/users/5")).toBe("users")
-    expect(sectionFromPathname("/")).toBe("dashboard")
+describe("capabilities", () => {
+  // selling, cost, prices, writes, exports, financial, whole client, invoices
+  const table: [Role | undefined, boolean[]][] = [
+    ["superadmin", [true, true, true, true, true, true, true, true]],
+    ["operational", [true, true, true, true, true, false, true, false]],
+    ["operational_input", [false, true, false, true, false, false, true, false]],
+    ["finance", [true, true, false, false, true, true, true, true]],
+    ["finance_input", [true, false, false, false, false, false, false, false]],
+    [undefined, [false, false, false, false, false, false, false, false]],
+    ["admin" as Role, [false, false, false, false, false, false, false, false]],
+  ]
+  it.each(table)("%s", (role, want) => {
+    expect([
+      seesSelling(role),
+      seesCost(role),
+      setsPrices(role),
+      writesQuotation(role),
+      exportsQuotation(role),
+      canViewFinancial(role),
+      editsWholeClient(role),
+      managesInvoices(role),
+    ]).toEqual(want)
+    expect(canWriteCatalog(role)).toBe(writesQuotation(role))
   })
 })
 
-describe("canWriteCatalog", () => {
-  it.each([
-    ["superadmin", true],
-    ["operational", true],
-    ["finance", false],
-    [undefined, false],
-  ] as const)("%s -> %s", (role, want) => {
-    expect(canWriteCatalog(role)).toBe(want)
+describe("roleCanOpen", () => {
+  it.each<[Role | undefined, string, boolean]>([
+    ["finance", "/quotations/12", true],
+    ["finance", "/quotations/add", false],
+    ["finance", "/quotations/12/edit", false],
+    ["finance", "/purchase-orders/3/edit", false],
+    ["finance_input", "/purchase-orders/3", true],
+    ["finance_input", "/purchase-orders/3/edit/", false],
+    ["finance_input", "/quotations/12", false],
+    ["operational_input", "/quotations/add", true],
+    ["operational_input", "/purchase-orders/3/edit", true],
+    ["operational_input", "/invoices", false],
+    ["superadmin", "/users", true],
+  ])("%s %s", (role, path, want) => {
+    expect(roleCanOpen(role, path)).toBe(want)
   })
 })
 
@@ -78,6 +112,7 @@ describe("sectionFromPathname every section", () => {
     ["/dashboard-financial", "dashboard-financial"],
     ["/dashboard-operational", "dashboard-operational"],
     ["/quotations/new", "quotation"],
+    ["/quotations/12/edit", "quotation"],
     ["/purchase-orders/9/edit", "purchase-orders"],
     ["/invoices/4", "invoices"],
     ["/users", "users"],
@@ -85,17 +120,9 @@ describe("sectionFromPathname every section", () => {
     ["/vendors/3", "vendors"],
     ["/products/5", "products"],
     ["", "dashboard"],
+    ["/", "dashboard"],
     ["/login", "dashboard"],
   ])("%s", (path, want) => {
     expect(sectionFromPathname(path)).toBe(want)
-  })
-})
-
-describe("roleCanAccess fails closed", () => {
-  it("denies a role the app does not know beyond the common sections", () => {
-    const stranger = "admin" as Role
-    expect(roleCanAccess(stranger, "clients")).toBe(true)
-    expect(roleCanAccess(stranger, "users")).toBe(false)
-    expect(canWriteCatalog(stranger)).toBe(false)
   })
 })

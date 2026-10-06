@@ -17,6 +17,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/pdfgen"
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/roles"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -44,10 +45,17 @@ func poExportServer(t *testing.T) *httptest.Server {
 	return srv
 }
 
+// roleHeader picks the acting role, superadmin by default.
+const roleHeader = "X-Test-Role"
+
 func poInjectUser(uid int64) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := deps.WithUserID(r.Context(), uid)
+			role := roles.Superadmin
+			if v := r.Header.Get(roleHeader); v != "" {
+				role = v
+			}
+			ctx := deps.WithUserRole(deps.WithUserID(r.Context(), uid), role)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

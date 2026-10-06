@@ -19,6 +19,8 @@ type Step3ShippingProps = {
   formatRp: (n: number) => string
   // Another user holds the header
   readOnly?: boolean
+  // False for a role that sets no harga jual: the charge is left to a head
+  pricing?: boolean
 }
 
 const fieldLabel = "mb-2 block text-[11px] font-bold uppercase tracking-[0.5px] text-[#4B5563]"
@@ -36,6 +38,7 @@ export default function Step3Shipping({
   formatRp,
   addressRequired = false,
   readOnly = false,
+  pricing = true,
 }: Step3ShippingProps) {
   const id = useId()
   const addressError = optionalAddressError(shippingAddress)
@@ -99,37 +102,41 @@ export default function Step3Shipping({
           />
         </div>
 
-        <div className={`transition-opacity duration-200 ${isWaktuFilled ? "" : "opacity-60"}`}>
-          <label htmlFor={`${id}-biaya`} className={fieldLabel}>
-            Biaya Pengiriman <span className="text-error">*</span>
-          </label>
-          <input
-            id={`${id}-biaya`}
-            type="number"
-            placeholder="3570000 (Isi hanya dengan angka)"
-            value={shippingCost}
-            onChange={(e) => setShippingCost(e.target.value)}
-            disabled={readOnly || !isWaktuFilled}
-            className={fieldInput}
-          />
-        </div>
+        {pricing && (
+          <div className={`transition-opacity duration-200 ${isWaktuFilled ? "" : "opacity-60"}`}>
+            <label htmlFor={`${id}-biaya`} className={fieldLabel}>
+              Biaya Pengiriman <span className="text-error">*</span>
+            </label>
+            <input
+              id={`${id}-biaya`}
+              type="number"
+              placeholder="3570000 (Isi hanya dengan angka)"
+              value={shippingCost}
+              onChange={(e) => setShippingCost(e.target.value)}
+              disabled={readOnly || !isWaktuFilled}
+              className={fieldInput}
+            />
+          </div>
+        )}
       </div>
 
-      <div className={qep.summaryCard}>
-        <h3 className={qep.summaryTitle}>Ringkasan Pengiriman</h3>
-        <div className={qep.summaryRow}>
-          <span className="text-[0.6875rem] font-medium tracking-[0.06em] text-dark-500">
-            Biaya Pengiriman
-          </span>
-          <span className="text-base font-bold leading-6 tracking-tight text-[#111827]">
-            Rp {formatRp(Number(shippingCost) || 0)}
-          </span>
+      {pricing && (
+        <div className={qep.summaryCard}>
+          <h3 className={qep.summaryTitle}>Ringkasan Pengiriman</h3>
+          <div className={qep.summaryRow}>
+            <span className="text-[0.6875rem] font-medium tracking-[0.06em] text-dark-500">
+              Biaya Pengiriman
+            </span>
+            <span className="text-base font-bold leading-6 tracking-tight text-[#111827]">
+              Rp {formatRp(Number(shippingCost) || 0)}
+            </span>
+          </div>
+          <div className={qep.summaryRow}>
+            <span className={qep.summaryLabel}>TOTAL PENGIRIMAN</span>
+            <span className={qep.summaryValueGrand}>Rp {formatRp(Number(shippingCost) || 0)}</span>
+          </div>
         </div>
-        <div className={qep.summaryRow}>
-          <span className={qep.summaryLabel}>TOTAL PENGIRIMAN</span>
-          <span className={qep.summaryValueGrand}>Rp {formatRp(Number(shippingCost) || 0)}</span>
-        </div>
-      </div>
+      )}
     </div>
   )
 }
