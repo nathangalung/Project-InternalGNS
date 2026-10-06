@@ -100,7 +100,8 @@ func TestLatexExports_DocumentHead(t *testing.T) {
 					t.Errorf("prints %q", w)
 				}
 			}
-			for _, mark := range []string{"–", "—", ";"} {
+			// A minus sign is the font swapping a hyphen between digits.
+			for _, mark := range []string{"–", "—", "−", ";"} {
 				if strings.Contains(text, mark) {
 					t.Errorf("prints %q", mark)
 				}
