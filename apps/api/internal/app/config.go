@@ -49,11 +49,13 @@ type Config struct {
 
 	TemplatesRoot string `env:"TEMPLATES_ROOT" envDefault:"templates/documents"`
 
-	PdfSignerName    string `env:"PDF_SIGNER_NAME"     envDefault:"Director"`
-	PdfBankName      string `env:"PDF_BANK_NAME"       envDefault:"BCA"`
-	PdfBankAccountNo string `env:"PDF_BANK_ACCOUNT_NO" envDefault:"-"`
-	PdfBankAccountNm string `env:"PDF_BANK_ACCOUNT_NM" envDefault:"PT GLOBAL NIAGA SAKTI"`
-	PdfPaymentTerms  string `env:"PDF_PAYMENT_TERMS"   envDefault:"Net 30 days"`
+	PdfSignerName string `env:"PDF_SIGNER_NAME"     envDefault:"Director"`
+	// The scanned Signature.jpg is his.
+	PdfQuotationSignerName string `env:"PDF_QUOTATION_SIGNER_NAME" envDefault:"Seno Dwi Sasongko"`
+	PdfBankName            string `env:"PDF_BANK_NAME"       envDefault:"BCA"`
+	PdfBankAccountNo       string `env:"PDF_BANK_ACCOUNT_NO" envDefault:"-"`
+	PdfBankAccountNm       string `env:"PDF_BANK_ACCOUNT_NM" envDefault:"PT GLOBAL NIAGA SAKTI"`
+	PdfPaymentTerms        string `env:"PDF_PAYMENT_TERMS"   envDefault:"Net 30 days"`
 
 	// Coretax (DJP) seller fields.
 	// E-faktur export: seller-side static fields. SellerTIN is the company
@@ -135,6 +137,9 @@ func (c Config) validate() error {
 		}
 		if isPlaceholder(c.PdfSignerName) {
 			return errors.New("PDF_SIGNER_NAME is still a placeholder in production")
+		}
+		if isPlaceholder(c.PdfQuotationSignerName) {
+			return errors.New("PDF_QUOTATION_SIGNER_NAME is still a placeholder in production")
 		}
 	}
 	return nil

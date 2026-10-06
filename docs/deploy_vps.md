@@ -285,7 +285,8 @@ VITE_API_URL=https://api.internalgns.yourdomain.id/api/v1
 PDF_RENDER_CONCURRENCY=
 
 # Printed on every quotation and invoice sent to clients.
-PDF_SIGNER_NAME=<name of the signing director>
+PDF_SIGNER_NAME=<invoice signer, signs by hand>
+PDF_QUOTATION_SIGNER_NAME=<quotation signer, the scanned Signature.jpg is theirs>
 PDF_BANK_NAME=BCA
 PDF_BANK_ACCOUNT_NO=<the account clients transfer into>
 PDF_BANK_ACCOUNT_NM=PT GLOBAL NIAGA SAKTI
