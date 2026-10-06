@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import Modal from "@/components/shared/Modal"
+import * as itemsApi from "@/features/items/api"
 import { findVendorByName } from "@/features/items/helpers"
 import {
   useActiveVendorOptions,
@@ -25,6 +26,7 @@ import {
   recommendationFields,
   withSavedVendors,
 } from "./autofill"
+import { COPY_MIN_SCORE, copyNote, copyRow, matchedCatalog } from "./copyOffer"
 import {
   type CatalogItem,
   type DropdownKey,
@@ -94,6 +96,9 @@ export default function ProductAdd({
   const [newVendorForm, setNewVendorForm] = useState<NewVendorForm>({ nama: "", harga: "" })
   const [newVendorError, setNewVendorError] = useState<string | null>(null)
   const [newVendorSaving, setNewVendorSaving] = useState(false)
+  // Salin ke Offer in flight, and what it did
+  const [copying, setCopying] = useState(false)
+  const [copyMessage, setCopyMessage] = useState<{ text: string; ok: boolean } | null>(null)
 
   const { data: units } = useUnits()
   const satuanOptions = useMemo(() => (units ?? []).map((u) => u.code), [units])
@@ -272,6 +277,7 @@ export default function ProductAdd({
   function handleChange(field: keyof ProductAddFormData, value: string) {
     if (field === "requestedKodeImpaNama") {
       setForm((prev) => ({ ...prev, requestedKodeImpaNama: value, requestedItemId: undefined }))
+      setCopyMessage(null)
       return
     }
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -416,6 +422,43 @@ export default function ProductAdd({
     }))
   }
 
+  // Request as the offer, from the catalog.
+  // A catalog request copies as that item; typed text finds the same item
+  // by IMPA code or a near-exact name, or adds it to the catalog, so the
+  // offer is always a real product with its vendors and unit.
+  async function copyRequestToOffer() {
+    setCopyMessage(null)
+    if (requestedItem && requestedItem.id === form.requestedItemId) {
+      const label = formatKodeNama(requestedItem.kode, requestedItem.nama)
+      setForm((prev) => ({ ...prev, kodeImpaNama: label }))
+      pickProduct(requestedItem)
+      return
+    }
+    setCopying(true)
+    try {
+      const res = await itemsApi.matchRows(
+        [copyRow(form.requestedKodeImpaNama, form.jumlahProduk, form.satuan)],
+        { minScore: COPY_MIN_SCORE, autoCreate: true },
+      )
+      const row = res.rows[0]
+      if (!row?.matched) {
+        setCopyMessage({
+          text: "Produk request tidak bisa disalin. Pilih offer dari katalog.",
+          ok: false,
+        })
+        return
+      }
+      const item = matchedCatalog(row.matched)
+      setForm((prev) => ({ ...prev, kodeImpaNama: formatKodeNama(item.kode, item.nama) }))
+      pickProduct(item)
+      setCopyMessage({ text: copyNote(row.source), ok: true })
+    } catch (err) {
+      setCopyMessage({ text: errorMessage(err, "Gagal menyalin produk request."), ok: false })
+    } finally {
+      setCopying(false)
+    }
+  }
+
   return (
     <>
       <div className={showProductNew || showVendorNew ? "hidden" : ""}>
@@ -484,21 +527,9 @@ export default function ProductAdd({
                 requestedItemId: item.id,
               }))
             }}
-            onCopyRequestToOffer={() => {
-              setForm((prev) => ({
-                ...prev,
-                kodeImpaNama: prev.requestedKodeImpaNama,
-                itemId: prev.requestedItemId,
-                vendorId: undefined,
-                vendorProductId: undefined,
-              }))
-              // A catalog request copies as that item, vendors and unit included.
-              if (requestedItem && requestedItem.id === form.requestedItemId) {
-                pickProduct(requestedItem)
-              } else {
-                setPickedItemId(null)
-              }
-            }}
+            onCopyRequestToOffer={() => void copyRequestToOffer()}
+            copying={copying}
+            copyMessage={copyMessage}
           />
 
           <VendorPriceCard
