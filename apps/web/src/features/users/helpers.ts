@@ -27,11 +27,14 @@ export const ROLE_LABEL: Record<Role, string> = {
 // What each role may do.
 export const ROLE_HINT: Record<Role, string> = {
   superadmin: "Semua akses, termasuk kelola pengguna.",
-  operational: "Quotation, PO, katalog, harga beli dan harga jual.",
+  operational:
+    "Quotation, PO, katalog, harga beli dan harga jual. Status quotation diubah Super Admin.",
   operational_input:
-    "Data klien, permintaan klien, harga beli dan katalog. Tidak melihat harga jual atau profit.",
-  finance: "Invoice dan dashboard keuangan. Data operasional hanya dibaca.",
-  finance_input: "Invoice, pembayaran, NPWP dan TKU klien. Tidak melihat harga beli atau profit.",
+    "Data klien, permintaan klien, harga beli dan katalog. Di PO hanya harga beli dan vendor. Tidak melihat harga jual atau profit.",
+  finance:
+    "Invoice, Kas Lain, dashboard keuangan, NPWP dan TKU klien. Data operasional hanya dibaca.",
+  finance_input:
+    "Invoice, pembayaran, ekspor Coretax dan Kas Lain. Tidak melihat harga beli atau profit.",
 }
 
 // Order the role pickers list them.

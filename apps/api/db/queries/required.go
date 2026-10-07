@@ -58,6 +58,7 @@ var RequiredKeys = []string{
 	"invoices.list_count_base",
 	"invoices.list_items",
 	"invoices.list_items_bulk",
+	"invoices.reminder_contacts",
 	"invoices.replace",
 	"invoices.status_and_version",
 	"invoices.summary",

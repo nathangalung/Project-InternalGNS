@@ -22,10 +22,11 @@ func TestExportXLSX_EffectiveStatusLabel(t *testing.T) {
 		status  string
 		dueDays int
 		want    string
+		late    string
 	}{
-		{"sent", -1, "Terlambat"},
-		{"sent", 5, "Dikirim"},
-		{"draft", 5, "Draf"},
+		{"sent", -1, "Terlambat", "1"},
+		{"sent", 5, "Dikirim", ""},
+		{"draft", 5, "Draf", ""},
 	}
 	for _, tc := range cases {
 		t.Run(tc.want, func(t *testing.T) {
@@ -35,6 +36,14 @@ func TestExportXLSX_EffectiveStatusLabel(t *testing.T) {
 				invID, tc.status, tc.dueDays)
 			require.NoError(t, err)
 			inv, err := invoices.NewRepo(tx, testutil.Store(t)).GetByID(ctx, invID)
+			require.NoError(t, err)
+			// The reminder names the quotation's own contact.
+			var contactID int64
+			require.NoError(t, tx.QueryRow(ctx, `INSERT INTO company_contacts
+				(company_id, name, email, phone, country_code, created_by, updated_by)
+				VALUES ($1, 'Bu Pengingat', 'pengingat@contoh.test', '812345678', 'IDN', 1, 1)
+				RETURNING id`, inv.CompanyClientID).Scan(&contactID))
+			_, err = tx.Exec(ctx, `UPDATE quotations SET contact_id = $2 WHERE id = $1`, inv.QuotationID, contactID)
 			require.NoError(t, err)
 
 			srv := assetServer(t, tx)
@@ -51,6 +60,9 @@ func TestExportXLSX_EffectiveStatusLabel(t *testing.T) {
 			require.Len(t, rows, 2)
 			assert.Equal(t, "Status", rows[0][5])
 			assert.Equal(t, tc.want, rows[1][5])
+			assert.Equal(t, []string{"Hari Terlambat", "Narahubung", "Email Narahubung", "Telepon Narahubung", "Email Klien"}, rows[0][7:12])
+			got := append(rows[1], make([]string, 12)...)[7:11]
+			assert.Equal(t, []string{tc.late, "Bu Pengingat", "pengingat@contoh.test", "812345678"}, got)
 		})
 	}
 }

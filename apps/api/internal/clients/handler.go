@@ -150,18 +150,6 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
-	if deps.CurrentUserRole(r.Context()) == roles.FinanceInput {
-		stored, err := h.repo.GetByID(r.Context(), id)
-		if errors.Is(err, ErrNotFound) {
-			httperr.Render(w, httperr.NotFound("client not found"))
-			return
-		}
-		if err != nil {
-			httperr.RenderDBErrCtx(r.Context(), w, err)
-			return
-		}
-		req = taxOnly(stored, req)
-	}
 	req.Name = strings.TrimSpace(req.Name)
 	if req.Name == "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))

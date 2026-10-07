@@ -20,7 +20,7 @@ import { filterChips } from "@/lib/filter-chips"
 import { statusFilterLabel } from "@/lib/filter-options"
 import { formatNumber, formatRupiah, PENDING_FIGURE } from "@/lib/format"
 import { emptyListText } from "@/lib/list-empty"
-import { editsWholeClient, seesSelling } from "@/lib/rbac"
+import { editsClients, seesSelling } from "@/lib/rbac"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import { ui } from "@/lib/ui"
 import { useListScreen, usePageWithin } from "@/lib/useListScreen"
@@ -33,7 +33,7 @@ export default function ClientList() {
   const role = useMe().data?.role
   // Total purchase is a selling figure; finance input adds no client
   const showTotal = seesSelling(role)
-  const canAdd = editsWholeClient(role)
+  const canAdd = editsClients(role)
   const { data: countriesData } = useCountries()
   const { data: summaryData } = useClientSummary()
 

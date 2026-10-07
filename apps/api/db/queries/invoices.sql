@@ -342,3 +342,20 @@ SELECT
   COUNT(*) FILTER (WHERE fn_invoice_effective_status(status, due_date) = 'overdue')::BIGINT AS overdue
 FROM invoices
 WHERE status <> 'cancelled';
+
+-- name: invoices.reminder_contacts
+-- Who to remind about each invoice: the quotation's contact, else the
+-- client's first active one, as the detail page shows, and the client email.
+SELECT inv.id, cc.email AS company_email,
+       ct.name AS contact_name, ct.email AS contact_email, ct.phone AS contact_phone
+FROM invoices inv
+JOIN quotations q ON q.id = inv.quotation_id
+JOIN company_client cc ON cc.id = inv.company_client_id
+LEFT JOIN LATERAL (
+    SELECT co.name, co.email, co.phone
+    FROM company_contacts co
+    WHERE co.company_id = cc.id AND co.is_active = TRUE
+    ORDER BY COALESCE(co.id = q.contact_id, FALSE) DESC, co.id ASC
+    LIMIT 1
+) ct ON TRUE
+WHERE inv.id = ANY($1::bigint[]);

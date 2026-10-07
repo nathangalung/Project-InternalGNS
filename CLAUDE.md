@@ -45,30 +45,38 @@ checks fail closed for an unknown role, and in the route guard
 management picks a role from a dropdown with an Indonesian label and hint
 (`features/users/helpers`).
 
-- superadmin (Super Admin): everything, including user management.
+- superadmin (Super Admin): everything, including user management. Only
+  superadmin moves a quotation (Dikirim, Disetujui, Ditolak, Dibatalkan) and
+  revises it (`roles.MovesQuotations`), so the last word before and after a
+  quotation reaches the client stays with the owner.
 - operational (Kepala Operasional): quotations, purchase orders, the catalog
-  and vendors, harga beli and harga jual. Only this role and superadmin move
-  a quotation, revise it, set a selling price or discount, and cancel a PO.
+  and vendors, harga beli and harga jual. It edits drafts, sets selling
+  prices and discounts, and downloads the quotation PDF, which is its last
+  step; it runs a PO (file, number, notes, status, cancelling) with
+  superadmin (`roles.ManagesPOs`).
 - operational_input (Input Data Operasional): client data, client requests,
   harga beli and the catalog (products, photos, vendors, store links). It
-  writes quotation drafts and POs but never sees or sets a selling figure:
-  no harga jual, discount, shipping charge, totals, tax or profit, no harga
-  jual history, no quotation PDF and no quotation or PO export. Its line and
+  writes quotation drafts but never sees or sets a selling figure: no harga
+  jual, discount, shipping charge, totals, tax or profit, no harga jual
+  history, no quotation PDF and no quotation or PO export. Its line and
   header saves keep the stored harga jual, discount and shipping charge
-  (`quotations/price_guard.go`), its new lines start at harga jual 0 for a
-  head to price, and in Ubah PO it edits harga beli, vendor and qty of the
-  stored lines only (each line carries its PO line `id`; adding or dropping
-  one is a 403). It moves a PO to any state but Dibatalkan.
+  (`quotations/price_guard.go`), and its new lines start at harga jual 0
+  for a head to price. On a PO it only views and keeps the purchase data
+  current: in Ubah PO it changes harga beli and vendor of the stored lines,
+  everything the client ordered stays as stored (`keepStoredSale`; each line
+  carries its PO line `id`, adding or dropping one is a 403), and it neither
+  moves the PO nor touches its file, number or notes.
 - finance (Kepala Keuangan): invoices, Kas Lain and the financial dashboard,
   and reads quotations, POs, products and vendors without changing them.
-  Keeps client writes.
+  Keeps client writes, so it fixes a client's NPWP and TKU.
 - finance_input (Input Data Keuangan): invoices and POs, with what is billed
-  but no harga beli or profit. It records payment only (Lunas is its one
-  move, with the proof), downloads Coretax, and changes a client's NPWP and
-  TKU alone (`clients.taxOnly` takes every other field from the stored row).
-  It adds and edits Kas Lain entries but neither deletes nor exports them.
-  No quotations, no dashboards beyond the overview, no Pengganti, no invoice
-  dates or attachment.
+  but no harga beli or profit. It records payment (Lunas is its one move,
+  with the proof), prepares the Coretax export, and builds the payment
+  reminders from the invoice export, whose Terlambat rows carry the days
+  past due and the contact to write to. It reads clients without changing
+  them, and adds and edits Kas Lain entries but neither deletes nor exports
+  them. No quotations, no dashboards beyond the overview, no Pengganti, no
+  invoice dates or attachment.
 
 A hidden figure is left out of the JSON, never zeroed: each money field
 carries `omitempty`, each feature's `redact(role)` blanks what the role may
@@ -368,7 +376,10 @@ shows a missing one as Belum ada No. PO.
   from another quotation. A link the PO already stores is kept even after
   its vendor is deactivated; any other pick goes through
   `fn_link_vendor_item`, the link rule `fn_prepare_quotation_lines` shares,
-  so an inactive vendor is refused there.
+  so an inactive vendor is refused there. A harga beli that Ubah PO changes
+  becomes that vendor link's current catalog price and quote date
+  (00106), so the next quotation starts from what was paid; a price the
+  edit leaves as it was never touches the catalog.
 - Invoice: draft, sent, paid, cancelled; overdue is stored only on legacy
   rows. Draft goes to sent; sent or overdue to paid, which stamps `paid_at`
   and takes an optional proof stored under `invoices/<id>/payment/`; marking

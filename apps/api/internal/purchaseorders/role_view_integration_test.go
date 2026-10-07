@@ -103,9 +103,9 @@ func TestHandler_POInputRefusals(t *testing.T) {
 	assert.Equal(t, http.StatusForbidden, res.StatusCode)
 }
 
-// Input edits keep harga jual.
-// Its harga beli and qty are stored; harga jual, the discount and the
-// shipping charge stay as stored, and it cannot add or drop a line.
+// Input edits keep the sale.
+// Its harga beli is stored; the qty, harga jual, discount and shipping stay
+// as the client ordered, and it cannot add or drop a line.
 func TestHandler_POInputKeepsPrices(t *testing.T) {
 	ctx, tx, srv := txServer(t)
 	_, poID := acceptedQuotationWithPO(t, tx)
@@ -143,7 +143,7 @@ func TestHandler_POInputKeepsPrices(t *testing.T) {
 	for _, l := range after {
 		if l.ItemType == "product" {
 			assert.Equal(t, line.SellingPrice, l.SellingPrice, "harga jual stays")
-			assert.Equal(t, "7.00", l.Qty)
+			assert.Equal(t, line.Qty, l.Qty, "qty is the client's")
 			require.NotNil(t, l.CostPrice)
 			assert.Equal(t, "55000.00", *l.CostPrice)
 		}

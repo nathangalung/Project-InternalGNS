@@ -12,7 +12,7 @@ import { downloadPdf } from "@/lib/api-client"
 import { resolveRange } from "@/lib/date-range"
 import { formatDate } from "@/lib/format"
 import { emptyListText } from "@/lib/list-empty"
-import { canWriteCatalog, seesSelling } from "@/lib/rbac"
+import { managesPOs, seesSelling } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import { useListScreen, usePageWithin } from "@/lib/useListScreen"
@@ -40,9 +40,9 @@ type PurchaseOrderListProps = {
 
 export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListProps) {
   const role = useMe().data?.role
-  // Totals are harga jual; uploads are an operational write
+  // Totals are harga jual; uploads are a head's job
   const showTotal = seesSelling(role)
-  const writes = canWriteCatalog(role)
+  const writes = managesPOs(role)
   // By PO id, so a refetch refreshes the modal row.
   const [uploadPoId, setUploadPoId] = useState<number | null>(null)
   const [showFilter, setShowFilter] = useState(false)

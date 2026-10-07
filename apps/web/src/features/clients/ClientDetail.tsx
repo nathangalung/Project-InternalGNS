@@ -24,7 +24,7 @@ import { useObjectUrl } from "@/hooks/useObjectUrl"
 import { logoBackground } from "@/lib/avatar"
 import { errorMessage } from "@/lib/errors"
 import { formErrors } from "@/lib/form-errors"
-import { editsWholeClient } from "@/lib/rbac"
+import { editsClients } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import { validateAsset } from "@/lib/upload-validation"
@@ -81,8 +81,8 @@ const CLIENT_FIELDS = ["name", "phone", "email", "npwp"] as const
 type ClientField = (typeof CLIENT_FIELDS)[number]
 
 export default function ClientDetail({ client }: ClientDetailProps) {
-  // Finance input changes NPWP and TKU only; the server keeps the rest
-  const whole = editsWholeClient(useMe().data?.role)
+  // Finance input only reads a client
+  const canEdit = editsClients(useMe().data?.role)
   const [name, setName] = useState(client.name)
   const [tkuId, setTkuId] = useState(client.tkuId ?? "")
   const [countryCode, setCountryCode] = useState(client.countryCode)
@@ -370,7 +370,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              disabled={!whole}
+              disabled={!canEdit}
               title="Klik untuk ganti logo"
               aria-label="Ganti logo klien"
               className={`flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg p-0 text-[20px] font-extrabold tracking-[0.5px] text-white ${ui.focusRing}`}
@@ -382,7 +382,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                 getCompanyInitials(client.name)
               )}
             </button>
-            {whole && (
+            {canEdit && (
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -456,7 +456,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
               </label>
               <input
                 id={`${fid}-name`}
-                disabled={!whole}
+                disabled={!canEdit}
                 aria-invalid={Boolean(fieldErrors.name)}
                 type="text"
                 value={name}
@@ -480,6 +480,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                 </label>
                 <input
                   id={`${fid}-tku`}
+                  disabled={!canEdit}
                   type="text"
                   value={tkuId}
                   placeholder="Masukkan TKU"
@@ -495,7 +496,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                   code={countryCode}
                   onCodeChange={setCountryCode}
                   triggerId={`${fid}-country`}
-                  disabled={!whole}
+                  disabled={!canEdit}
                   triggerClassName={`${inputBase} flex h-11 items-center justify-between rounded-md border-transparent text-left`}
                   fallback={countryCode}
                   chevronColor="#94A3B8"
@@ -515,7 +516,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                   </span>
                   <input
                     id={`${fid}-phone`}
-                    disabled={!whole}
+                    disabled={!canEdit}
                     type="text"
                     inputMode="numeric"
                     value={phone}
@@ -540,7 +541,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                 </label>
                 <input
                   id={`${fid}-email`}
-                  disabled={!whole}
+                  disabled={!canEdit}
                   type="email"
                   value={email}
                   placeholder="contact@nusantara.com"
@@ -562,6 +563,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
               </label>
               <input
                 id={`${fid}-npwp`}
+                disabled={!canEdit}
                 type="text"
                 value={npwp}
                 placeholder="0000.0000.0000.0000"
@@ -582,7 +584,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
               </label>
               <textarea
                 id={`${fid}-address`}
-                disabled={!whole}
+                disabled={!canEdit}
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 rows={3}
@@ -609,7 +611,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
               <button
                 type="button"
                 onClick={() => setIsActive((a) => !a)}
-                disabled={!whole}
+                disabled={!canEdit}
                 role="switch"
                 aria-checked={isActive}
                 aria-labelledby={`${fid}-status`}
@@ -648,7 +650,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
               Kelola narahubung klien.
             </p>
           </div>
-          {whole && !contactFormOpen && (
+          {canEdit && !contactFormOpen && (
             <button
               type="button"
               onClick={() => setContactFormOpen(true)}
@@ -783,7 +785,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                       </div>
                     )}
                   </div>
-                  {whole && (
+                  {canEdit && (
                     <div className="flex shrink-0 gap-2">
                       <button
                         type="button"
@@ -924,34 +926,36 @@ export default function ClientDetail({ client }: ClientDetailProps) {
         )}
       </div>
 
-      <div className="mt-2 flex flex-wrap justify-end gap-4">
-        <button
-          type="button"
-          onClick={handleCancel}
-          disabled={!dirty || updateClient.isPending}
-          className={`rounded-lg bg-transparent px-7 py-3 text-sm font-bold ${ui.focusRing} ${
-            dirty && !updateClient.isPending
-              ? "cursor-pointer text-primary-700"
-              : "cursor-default text-[#CBD5E1]"
-          }`}
-        >
-          Batal
-        </button>
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={!dirty || updateClient.isPending}
-          className={`rounded-lg px-8 py-3 text-sm font-bold text-white ${ui.focusRing} ${
-            dirty
-              ? `${gradientCls} shadow-[0px_10px_15px_-3px_rgba(99,14,212,0.2),0px_4px_6px_-4px_rgba(99,14,212,0.2)]`
-              : "bg-[#CBD5E1] shadow-none"
-          } ${dirty && !updateClient.isPending ? "cursor-pointer" : "cursor-default"} ${
-            updateClient.isPending ? "opacity-70" : "opacity-100"
-          }`}
-        >
-          {updateClient.isPending ? "Menyimpan…" : "Simpan Perubahan"}
-        </button>
-      </div>
+      {canEdit && (
+        <div className="mt-2 flex flex-wrap justify-end gap-4">
+          <button
+            type="button"
+            onClick={handleCancel}
+            disabled={!dirty || updateClient.isPending}
+            className={`rounded-lg bg-transparent px-7 py-3 text-sm font-bold ${ui.focusRing} ${
+              dirty && !updateClient.isPending
+                ? "cursor-pointer text-primary-700"
+                : "cursor-default text-[#CBD5E1]"
+            }`}
+          >
+            Batal
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!dirty || updateClient.isPending}
+            className={`rounded-lg px-8 py-3 text-sm font-bold text-white ${ui.focusRing} ${
+              dirty
+                ? `${gradientCls} shadow-[0px_10px_15px_-3px_rgba(99,14,212,0.2),0px_4px_6px_-4px_rgba(99,14,212,0.2)]`
+                : "bg-[#CBD5E1] shadow-none"
+            } ${dirty && !updateClient.isPending ? "cursor-pointer" : "cursor-default"} ${
+              updateClient.isPending ? "opacity-70" : "opacity-100"
+            }`}
+          >
+            {updateClient.isPending ? "Menyimpan…" : "Simpan Perubahan"}
+          </button>
+        </div>
+      )}
 
       <ClientQuotations clientId={client.id} />
 

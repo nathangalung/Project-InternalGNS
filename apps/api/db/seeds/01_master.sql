@@ -1,5 +1,5 @@
 -- MASTER DATA — required for app to run
--- Tables: units (41), countries (251)
+-- Tables: units (43), countries (251)
 -- Idempotent: row-level ON CONFLICT, safe to re-run any time.
 -- Run after migrations applied (make migrate-up).
 
@@ -59,7 +59,9 @@ SELECT setval('units_id_seq', (SELECT MAX(id) FROM units));
 -- Later units take the next id; a unit already there by code is kept.
 -- LGH: one length of pipe or bar as cut (a 6 m pipe), not a metre.
 INSERT INTO units (code, name, coretax_code) VALUES
-  ('LGH', 'Length/Batang', 'UM.0033')
+  ('LGH', 'Length/Batang', 'UM.0033'),
+  ('PACK', 'Pack', 'UM.0033'),
+  ('COIL', 'Coil', 'UM.0033')
 ON CONFLICT (code) DO NOTHING;
 
 -- COUNTRIES (ISO 3166 alpha-3 + ITU-T E.164 dial codes)

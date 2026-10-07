@@ -18,8 +18,8 @@ import (
 
 // Master data by role.
 // Finance input sees no cost figure on vendors and products, operational
-// input no selling figure on clients, and finance input changes a client's
-// NPWP and TKU only. Keys are checked by presence, so a hidden figure is
+// input no selling figure on clients, and finance input only reads a
+// client. Keys are checked by presence, so a hidden figure is
 // absent, not zero.
 func TestRouter_MasterDataByRole(t *testing.T) {
 	srv := httptest.NewServer(mkRouter(t))
@@ -123,22 +123,13 @@ func TestRouter_MasterDataByRole(t *testing.T) {
 		})
 	}
 
-	npwp := "0123456789012345"
-	code, raw := call(roles.FinanceInput, http.MethodPut, fmt.Sprintf("/clients/%d", client), map[string]any{
-		"name": "Nama Diganti", "countryCode": "IDN", "npwp": npwp, "tkuId": npwp + "000000", "isActive": false,
+	// Finance input reads clients; the finance head fixes them.
+	code, _ := call(roles.FinanceInput, http.MethodPut, fmt.Sprintf("/clients/%d", client), map[string]any{
+		"name": "Nama Diganti", "countryCode": "IDN", "npwp": "0123456789012345", "isActive": false,
+	})
+	assert.Equal(t, http.StatusForbidden, code)
+	code, raw := call(roles.Finance, http.MethodPut, fmt.Sprintf("/clients/%d", client), map[string]any{
+		"name": fmt.Sprintf("PT Peran %d", stamp), "countryCode": "IDN", "npwp": "0123456789012345", "isActive": true,
 	})
 	require.Equal(t, http.StatusOK, code, string(raw))
-	var c struct {
-		Name     string  `json:"name"`
-		NPWP     *string `json:"npwp"`
-		TkuID    *string `json:"tkuId"`
-		IsActive bool    `json:"isActive"`
-	}
-	require.NoError(t, json.Unmarshal(raw, &c))
-	assert.Equal(t, fmt.Sprintf("PT Peran %d", stamp), c.Name, "the name is not theirs")
-	assert.True(t, c.IsActive, "nor the status")
-	require.NotNil(t, c.NPWP)
-	assert.Equal(t, npwp, *c.NPWP)
-	require.NotNil(t, c.TkuID)
-	assert.Equal(t, npwp+"000000", *c.TkuID)
 }

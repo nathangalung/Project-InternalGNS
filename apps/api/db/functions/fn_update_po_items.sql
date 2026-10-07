@@ -1,4 +1,4 @@
--- Canonical current body of fn_update_po_items (deployed by migration 00103).
+-- Canonical current body of fn_update_po_items (deployed by migration 00106).
 CREATE OR REPLACE FUNCTION public.fn_update_po_items(p_po_id bigint, p_user_id bigint, p_discount_pct numeric, p_notes text, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb)
  RETURNS void
  LANGUAGE plpgsql
@@ -12,6 +12,8 @@ DECLARE
   v_link        BIGINT;
   v_link_vendor BIGINT;
   v_stored      BIGINT[];
+  v_old_costs   JSONB;
+  v_cost        NUMERIC;
   it            JSONB;
 BEGIN
   SELECT status, quotation_id INTO v_status, v_quotation
@@ -84,6 +86,11 @@ BEGIN
   FROM purchase_order_items
   WHERE po_id = p_po_id AND vendor_product_id IS NOT NULL;
 
+  -- What each link cost on this PO before the edit.
+  SELECT COALESCE(jsonb_object_agg(vendor_product_id::TEXT, cost_price), '{}') INTO v_old_costs
+  FROM purchase_order_items
+  WHERE po_id = p_po_id AND vendor_product_id IS NOT NULL AND cost_price IS NOT NULL;
+
   DELETE FROM purchase_order_items WHERE po_id = p_po_id;
 
   FOR it IN SELECT * FROM jsonb_array_elements(p_items)
@@ -140,6 +147,15 @@ BEGIN
       p_user_id,
       p_user_id
     );
+
+    -- A changed harga beli is the catalog's current price for that vendor.
+    v_cost := NULLIF(it->>'costPrice','')::NUMERIC;
+    IF v_link IS NOT NULL AND v_cost > 0
+       AND (v_old_costs->>(v_link::TEXT))::NUMERIC IS DISTINCT FROM v_cost THEN
+      UPDATE vendor_products
+         SET cost_price = v_cost, last_quoted_at = NOW(), updated_by = p_user_id
+       WHERE id = v_link AND cost_price IS DISTINCT FROM v_cost;
+    END IF;
   END LOOP;
 
   -- Address, a charge or days keep the line, as on the quotation.

@@ -12,14 +12,15 @@ func TestCapabilities(t *testing.T) {
 	tests := []struct {
 		role                                     string
 		selling, cost, profit, prices, dashboard bool
+		moves, managesPOs                        bool
 	}{
-		{roles.Superadmin, true, true, true, true, true},
-		{roles.Operational, true, true, true, true, false},
-		{roles.OperationalInput, false, true, false, false, false},
-		{roles.Finance, true, true, true, false, true},
-		{roles.FinanceInput, true, false, false, false, false},
-		{"", false, false, false, false, false},
-		{"admin", false, false, false, false, false},
+		{roles.Superadmin, true, true, true, true, true, true, true},
+		{roles.Operational, true, true, true, true, false, false, true},
+		{roles.OperationalInput, false, true, false, false, false, false, false},
+		{roles.Finance, true, true, true, false, true, false, false},
+		{roles.FinanceInput, true, false, false, false, false, false, false},
+		{"", false, false, false, false, false, false, false},
+		{"admin", false, false, false, false, false, false, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.role, func(t *testing.T) {
@@ -28,6 +29,8 @@ func TestCapabilities(t *testing.T) {
 			assert.Equal(t, tt.profit, roles.SeesProfit(tt.role), "profit")
 			assert.Equal(t, tt.prices, roles.SetsPrices(tt.role), "prices")
 			assert.Equal(t, tt.dashboard, roles.SeesFinancialDashboard(tt.role), "dashboard")
+			assert.Equal(t, tt.moves, roles.MovesQuotations(tt.role), "moves")
+			assert.Equal(t, tt.managesPOs, roles.ManagesPOs(tt.role), "manages POs")
 		})
 	}
 }

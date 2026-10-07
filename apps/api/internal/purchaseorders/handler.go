@@ -392,7 +392,7 @@ func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !roles.SetsPrices(deps.CurrentUserRole(r.Context())) {
-		if err := h.repo.keepStoredPrices(r.Context(), id, &req); err != nil {
+		if err := h.repo.keepStoredSale(r.Context(), id, &req); err != nil {
 			switch {
 			case errors.Is(err, errLinesChanged):
 				httperr.Render(w, httperr.Forbidden(msgLinesChanged))

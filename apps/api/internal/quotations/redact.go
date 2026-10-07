@@ -26,18 +26,12 @@ func (it *QuotationItem) redact(role string) {
 	}
 }
 
-// movesStatus reports status rights.
-// Only these move a quotation or revise it; the finance head reads it.
-func movesStatus(role string) bool {
-	return role == roles.Superadmin || role == roles.Operational
-}
-
 func (d *QuotationDetail) redact(role string) {
 	d.Quotation.redact(role)
 	for i := range d.Items {
 		d.Items[i].redact(role)
 	}
-	if !movesStatus(role) {
+	if !roles.MovesQuotations(role) {
 		d.AllowedTransitions = []Transition{}
 		d.CanRevise = false
 	}
