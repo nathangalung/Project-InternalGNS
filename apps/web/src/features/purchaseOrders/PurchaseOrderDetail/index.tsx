@@ -10,7 +10,7 @@ import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
 import type { QuotationData } from "@/features/quotations/types"
 import { downloadFile, downloadPdf } from "@/lib/api-client"
 import { formatDate, toNum } from "@/lib/format"
-import { canWriteCatalog } from "@/lib/rbac"
+import { canWriteCatalog, managesPOs } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import type { PoCompletenessIssue, PoTransition, PurchaseOrderRow } from "@/types/api"
@@ -80,8 +80,9 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
   // Figures the role may see came back; profit needs both sides
   const sellingShown = po.poGrandTotal !== undefined
   const profitShown = hasCost && po.poTotalProfit !== undefined
-  // The finance roles only read a PO
-  const writes = canWriteCatalog(me?.role)
+  // Heads run the PO; operational input only edits its purchase prices
+  const writes = managesPOs(me?.role)
+  const editsLines = canWriteCatalog(me?.role)
   const history = useMemo(
     () => (events ?? []).map((ev) => poHistoryEntry(ev, actorNames.get(ev.changedBy))),
     [events, actorNames],
@@ -182,8 +183,8 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
           deliveryNoteNumber={po.deliveryNoteNumber}
           legacyDnNo={po.legacyDnNo}
           invoiceNo={po.invoiceNo}
-          onEdit={!writes || editLockReason ? undefined : onEdit}
-          editLockReason={writes ? (editLockReason ?? undefined) : undefined}
+          onEdit={!editsLines || editLockReason ? undefined : onEdit}
+          editLockReason={editsLines ? (editLockReason ?? undefined) : undefined}
           onDownloadDeliveryNote={dnReady ? () => void handleDownloadDeliveryNote() : undefined}
         />
         <StatusBar

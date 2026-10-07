@@ -4,7 +4,7 @@ Feature: Role gates at the router mounts
   operational ones. Invoices belong to superadmin and the finance roles,
   and user management to superadmin alone. The finance roles read the
   catalog and vendors but do not change them. Operational input never
-  moves a quotation or exports selling totals, and finance input records
+  exports selling totals, only superadmin moves a quotation, and finance input records
   payment only. The gate answers before any handler looks at the request,
   in Indonesian like every other refusal.
 
@@ -33,6 +33,14 @@ Feature: Role gates at the router mounts
       | operational_input | POST   | /api/v1/quotations/999999/revise    |
       | operational_input | GET    | /api/v1/purchase-orders/export.xlsx |
       | operational_input | GET    | /api/v1/invoices/                   |
+      | operational_input | PATCH  | /api/v1/purchase-orders/999999/status |
+      | operational_input | PATCH  | /api/v1/purchase-orders/999999/details |
+
+    Examples: only superadmin moves a quotation
+      | role        | method | path                              |
+      | operational | PATCH  | /api/v1/quotations/999999/status  |
+      | operational | POST   | /api/v1/quotations/999999/send    |
+      | operational | POST   | /api/v1/quotations/999999/revise  |
 
     Examples: finance input records payment only
       | role          | method | path                                    |
@@ -41,6 +49,7 @@ Feature: Role gates at the router mounts
       | finance_input | PATCH  | /api/v1/invoices/999999/dates           |
       | finance_input | POST   | /api/v1/items/                          |
       | finance_input | POST   | /api/v1/clients/                        |
+      | finance_input | PUT    | /api/v1/clients/999999                  |
       | finance_input | POST   | /api/v1/clients/999999/contacts         |
       | finance_input | PATCH  | /api/v1/purchase-orders/999999/status   |
 

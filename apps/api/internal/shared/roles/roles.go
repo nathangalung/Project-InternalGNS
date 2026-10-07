@@ -50,3 +50,17 @@ func SetsPrices(role string) bool {
 func SeesFinancialDashboard(role string) bool {
 	return role == Superadmin || role == Finance
 }
+
+// MovesQuotations reports status rights.
+// Sending, accepting, rejecting, cancelling and revising a quotation stay
+// with the owner; the operational head's last step is the PDF.
+func MovesQuotations(role string) bool {
+	return role == Superadmin
+}
+
+// ManagesPOs reports PO header writes.
+// The PO file, number, notes and status; operational input keeps to the
+// purchase price and vendor of each line.
+func ManagesPOs(role string) bool {
+	return role == Superadmin || role == Operational
+}

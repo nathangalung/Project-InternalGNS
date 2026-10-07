@@ -3,9 +3,10 @@ import type { Role } from "@/types/api"
 import {
   canViewFinancial,
   canWriteCatalog,
-  editsWholeClient,
+  editsClients,
   exportsQuotation,
   managesInvoices,
+  managesPOs,
   roleCanAccess,
   roleCanOpen,
   type Section,
@@ -66,15 +67,15 @@ describe("roleCanAccess", () => {
 })
 
 describe("capabilities", () => {
-  // selling, cost, prices, writes, exports, financial, whole client, invoices
+  // selling, cost, prices, writes, exports, financial, clients, invoices, POs
   const table: [Role | undefined, boolean[]][] = [
-    ["superadmin", [true, true, true, true, true, true, true, true]],
-    ["operational", [true, true, true, true, true, false, true, false]],
-    ["operational_input", [false, true, false, true, false, false, true, false]],
-    ["finance", [true, true, false, false, true, true, true, true]],
-    ["finance_input", [true, false, false, false, false, false, false, false]],
-    [undefined, [false, false, false, false, false, false, false, false]],
-    ["admin" as Role, [false, false, false, false, false, false, false, false]],
+    ["superadmin", [true, true, true, true, true, true, true, true, true]],
+    ["operational", [true, true, true, true, true, false, true, false, true]],
+    ["operational_input", [false, true, false, true, false, false, true, false, false]],
+    ["finance", [true, true, false, false, true, true, true, true, false]],
+    ["finance_input", [true, false, false, false, false, false, false, false, false]],
+    [undefined, [false, false, false, false, false, false, false, false, false]],
+    ["admin" as Role, [false, false, false, false, false, false, false, false, false]],
   ]
   it.each(table)("%s", (role, want) => {
     expect([
@@ -84,8 +85,9 @@ describe("capabilities", () => {
       writesQuotation(role),
       exportsQuotation(role),
       canViewFinancial(role),
-      editsWholeClient(role),
+      editsClients(role),
       managesInvoices(role),
+      managesPOs(role),
     ]).toEqual(want)
     expect(canWriteCatalog(role)).toBe(writesQuotation(role))
   })

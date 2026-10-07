@@ -28,19 +28,22 @@ func Routes(d deps.Deps) chi.Router {
 
 	doc := docAsset(d.Storage, repo)
 	r.Get("/", h.List)
-	// The export totals harga jual.
-	r.With(rolegate.Deny(roles.OperationalInput)).Get("/export.xlsx", h.Export)
+	// Operational input keeps to the purchase price and vendor of each
+	// line; the PO file, number, notes, status and the export (which totals
+	// harga jual) are for the heads.
+	header := rolegate.Deny(roles.OperationalInput)
+	r.With(header).Get("/export.xlsx", h.Export)
 	r.Get("/by-quotation/{quotationId}", h.GetByQuotation)
 	r.Get("/{id}", h.Get)
 	r.Get("/{id}/items", h.ListItems)
 	r.Get("/{id}/history", h.History)
-	r.Get("/{id}/upload-url", assetproxy.Upload(doc))
+	r.With(header).Get("/{id}/upload-url", assetproxy.Upload(doc))
 	r.Get("/{id}/download-url", assetproxy.Download(doc))
-	r.Patch("/{id}/status", h.ChangeStatus)
-	r.Patch("/{id}/file", h.UpdateFile)
-	r.Delete("/{id}/file", h.RemoveFile)
-	r.Patch("/{id}/notes", h.UpdateNotes)
-	r.Patch("/{id}/details", h.UpdateDetails)
+	r.With(header).Patch("/{id}/status", h.ChangeStatus)
+	r.With(header).Patch("/{id}/file", h.UpdateFile)
+	r.With(header).Delete("/{id}/file", h.RemoveFile)
+	r.With(header).Patch("/{id}/notes", h.UpdateNotes)
+	r.With(header).Patch("/{id}/details", h.UpdateDetails)
 	r.Put("/{id}/items", h.UpdateItems)
 
 	if d.TemplatesRoot != "" {

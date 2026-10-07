@@ -103,12 +103,18 @@ func TestHandler_POInputRefusals(t *testing.T) {
 	assert.Equal(t, http.StatusForbidden, res.StatusCode)
 }
 
-// Input edits keep harga jual.
-// Its harga beli and qty are stored; harga jual, the discount and the
-// shipping charge stay as stored, and it cannot add or drop a line.
+// Input edits keep the sale.
+// Its harga beli is stored; the qty, harga jual, discount and shipping stay
+// as the client ordered, and it cannot add or drop a line.
 func TestHandler_POInputKeepsPrices(t *testing.T) {
 	ctx, tx, srv := txServer(t)
 	_, poID := acceptedQuotationWithPO(t, tx)
+	// A stored shipping charge the input role cannot change.
+	_, err := tx.Exec(ctx, `INSERT INTO purchase_order_items
+		(po_id, line_number, item_type, item_name, qty, selling_price, discount_pct, is_available,
+		 ship_destination, shipping_days, created_by, updated_by)
+		VALUES ($1, 99, 'shipping', 'Pengiriman', 1, 75000, 0, TRUE, 'Gudang Lama', 3, 1, 1)`, poID)
+	require.NoError(t, err)
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
 	before, err := repo.GetByID(ctx, poID)
 	require.NoError(t, err)
@@ -143,9 +149,14 @@ func TestHandler_POInputKeepsPrices(t *testing.T) {
 	for _, l := range after {
 		if l.ItemType == "product" {
 			assert.Equal(t, line.SellingPrice, l.SellingPrice, "harga jual stays")
-			assert.Equal(t, "7.00", l.Qty)
+			assert.Equal(t, line.Qty, l.Qty, "qty is the client's")
 			require.NotNil(t, l.CostPrice)
 			assert.Equal(t, "55000.00", *l.CostPrice)
+		}
+		if l.ItemType == "shipping" {
+			assert.Equal(t, "75000.00", l.SellingPrice, "the shipping charge stays")
+			require.NotNil(t, l.ShipDestination)
+			assert.Equal(t, "Gudang Lama", *l.ShipDestination)
 		}
 	}
 	po, err := repo.GetByID(ctx, poID)
@@ -154,7 +165,10 @@ func TestHandler_POInputKeepsPrices(t *testing.T) {
 
 	extra := mine
 	extra.ID = nil
-	for _, lines := range [][]purchaseorders.UpdateItemsLine{{mine, extra}, {}, {extra}} {
+	unknown := mine
+	unknownID := int64(999999999)
+	unknown.ID = &unknownID
+	for _, lines := range [][]purchaseorders.UpdateItemsLine{{mine, extra}, {}, {extra}, {unknown}} {
 		res := edit(lines...)
 		p := readProblem(t, res)
 		res.Body.Close()

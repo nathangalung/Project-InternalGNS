@@ -952,9 +952,23 @@ test.describe("quotation status", () => {
     await expect(page.getByRole("button", { name: "Ubah", exact: true })).toBeVisible()
   })
 
-  test.describe("as operational", () => {
+  test.describe("as the operational head", () => {
     test.use({ session: "operational" })
 
+    // The owner moves a quotation; the head's last step is the PDF.
+    test("a sent quotation downloads but offers no move", async ({ page, seed }) => {
+      const client = await seed.client()
+      const item = await seed.item()
+      const q = await seed.quotation({ client, lines: [{ item, qty: 2, price: 75_000 }] })
+      await seed.send(q.id)
+      await page.goto(`/quotations/${q.id}`)
+      await expect(page.getByRole("button", { name: "Unduh PDF" })).toBeVisible()
+      await expect(page.getByRole("button", { name: "Status Dikirim, ubah status" })).toHaveCount(0)
+      await expect(page.getByRole("button", { name: "Buat Revisi" })).toHaveCount(0)
+    })
+  })
+
+  test.describe("as superadmin", () => {
     test("Disetujui creates a PO the PO list shows without a reload", async ({ page, seed }) => {
       const client = await seed.client()
       const item = await seed.item()

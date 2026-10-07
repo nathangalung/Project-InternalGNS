@@ -26,10 +26,12 @@ func Routes(d deps.Deps) chi.Router {
 	r.Post("/rfq", h.UploadRFQ)
 	r.Get("/{id}", h.Get)
 	r.With(opsInput).Put("/{id}", h.Update)
-	r.With(opsInput).Patch("/{id}/status", h.ChangeStatus)
+	// Moving or revising a quotation is the owner's last word.
+	ownerOnly := rolegate.Deny(roles.Operational, roles.OperationalInput)
+	r.With(ownerOnly).Patch("/{id}/status", h.ChangeStatus)
 	r.Patch("/{id}/contact", h.ChangeContact)
-	r.With(opsInput).Post("/{id}/send", h.Send)
-	r.With(opsInput).Post("/{id}/revise", h.Revise)
+	r.With(ownerOnly).Post("/{id}/send", h.Send)
+	r.With(ownerOnly).Post("/{id}/revise", h.Revise)
 	r.Get("/{id}/revisions", h.Revisions)
 
 	// Live editing of a draft

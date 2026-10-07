@@ -59,6 +59,8 @@ type ProductAddProps = {
   docKind?: "quotation" | "po"
   // False for a role that sets no harga jual: the field and its history hide
   pricing?: boolean
+  // Only harga beli and vendor change: the product and qty are the client's
+  purchaseOnly?: boolean
 }
 
 const DIALOG_TITLE = {
@@ -76,6 +78,7 @@ export default function ProductAdd({
   allowIncomplete = false,
   docKind = "quotation",
   pricing = true,
+  purchaseOnly = false,
 }: ProductAddProps) {
   const [form, setForm] = useState<ProductAddFormData>(INITIAL_FORM)
   const [openDropdown, setOpenDropdown] = useState<DropdownKey | null>(null)
@@ -502,41 +505,48 @@ export default function ProductAdd({
             </>
           }
         >
-          <IdentityCard
-            form={form}
-            onChange={handleChange}
-            productCatalog={productCatalog}
-            productMatches={productMatches}
-            requestMatches={requestMatches}
-            activeProductLabel={activeProductLabel}
-            productOpen={productOpen}
-            productRequestOpen={productRequestOpen}
-            satuanOptions={satuanOptions}
-            setOpenDropdown={setOpenDropdown}
-            closeIfMatch={closeIfMatch}
-            isProductFilled={isProductFilled}
-            isSatuanFilled={isSatuanFilled}
-            minQty={docKind === "po" ? 0 : 1}
-            onAddProductNew={() => {
-              setOpenDropdown(null)
-              setShowProductNew(true)
-            }}
-            onPickProduct={pickProduct}
-            requestFailure={requestFailure}
-            productFailure={productFailure}
-            onPickRequestSuggestion={(item) => {
-              setRequestedItem(item)
-              const label = formatKodeNama(item.kode, item.nama)
-              setForm((prev) => ({
-                ...prev,
-                requestedKodeImpaNama: label,
-                requestedItemId: item.id,
-              }))
-            }}
-            onCopyRequestToOffer={() => void copyRequestToOffer()}
-            copying={copying}
-            copyMessage={copyMessage}
-          />
+          <fieldset disabled={purchaseOnly} className="m-0 min-w-0 border-0 p-0">
+            {purchaseOnly && (
+              <p className="m-0 mb-2 text-xs text-dark-500">
+                Produk dan jumlah mengikuti PO klien. Ubah harga beli dan vendor di bawah.
+              </p>
+            )}
+            <IdentityCard
+              form={form}
+              onChange={handleChange}
+              productCatalog={productCatalog}
+              productMatches={productMatches}
+              requestMatches={requestMatches}
+              activeProductLabel={activeProductLabel}
+              productOpen={productOpen}
+              productRequestOpen={productRequestOpen}
+              satuanOptions={satuanOptions}
+              setOpenDropdown={setOpenDropdown}
+              closeIfMatch={closeIfMatch}
+              isProductFilled={isProductFilled}
+              isSatuanFilled={isSatuanFilled}
+              minQty={docKind === "po" ? 0 : 1}
+              onAddProductNew={() => {
+                setOpenDropdown(null)
+                setShowProductNew(true)
+              }}
+              onPickProduct={pickProduct}
+              requestFailure={requestFailure}
+              productFailure={productFailure}
+              onPickRequestSuggestion={(item) => {
+                setRequestedItem(item)
+                const label = formatKodeNama(item.kode, item.nama)
+                setForm((prev) => ({
+                  ...prev,
+                  requestedKodeImpaNama: label,
+                  requestedItemId: item.id,
+                }))
+              }}
+              onCopyRequestToOffer={() => void copyRequestToOffer()}
+              copying={copying}
+              copyMessage={copyMessage}
+            />
+          </fieldset>
 
           <VendorPriceCard
             form={form}

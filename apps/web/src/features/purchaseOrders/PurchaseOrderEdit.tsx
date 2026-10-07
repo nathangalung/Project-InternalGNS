@@ -384,6 +384,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
             {step === 2 && (
               <Step3Shipping
                 pricing={pricing}
+                readOnly={!pricing}
                 shippingAddress={shippingAddress}
                 setShippingAddress={setShippingAddress}
                 shippingTime={shippingTime}
@@ -433,6 +434,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
       />
       <ProductAdd
         pricing={pricing}
+        purchaseOnly={!pricing}
         open={showProductAdd}
         initialData={editingProduct}
         clientId={po.companyClientId}

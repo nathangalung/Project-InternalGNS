@@ -87,10 +87,17 @@ export function canViewFinancial(role: Role | undefined): boolean {
   return role === "superadmin" || role === "finance"
 }
 
-// Client writes beyond tax ids.
-const WHOLE_CLIENT: readonly Role[] = ["superadmin", "operational", "operational_input", "finance"]
-export function editsWholeClient(role: Role | undefined): boolean {
-  return role !== undefined && WHOLE_CLIENT.includes(role)
+// Client writes.
+// Finance input only reads clients.
+const CLIENT_WRITE: readonly Role[] = ["superadmin", "operational", "operational_input", "finance"]
+export function editsClients(role: Role | undefined): boolean {
+  return role !== undefined && CLIENT_WRITE.includes(role)
+}
+
+// PO file, number and status.
+// Operational input edits only harga beli and vendor in Ubah PO.
+export function managesPOs(role: Role | undefined): boolean {
+  return role === "superadmin" || role === "operational"
 }
 
 // Invoice writes beyond payment.

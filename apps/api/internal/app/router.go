@@ -134,8 +134,9 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 
 			r.Mount("/units", units.Routes(d))
 			r.Mount("/countries", countries.Routes(d))
-			// Finance input changes only NPWP and TKU (clients.Routes).
-			r.With(requireRole(everyRole...)).Mount("/clients", clients.Routes(d))
+			// Finance input reads clients; the finance head fixes NPWP and TKU.
+			r.With(requireRole(everyRole...), readOnlyFor(roles.FinanceInput)).
+				Mount("/clients", clients.Routes(d))
 			// Only operational roles change the catalog and vendors.
 			r.With(requireRole(everyRole...), readOnlyFor(roles.Finance, roles.FinanceInput)).
 				Mount("/items", items.Routes(d))

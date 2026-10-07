@@ -39,8 +39,7 @@ func (it *PurchaseOrderItem) redact(role string) {
 }
 
 // movesFor filters moves by role.
-// The finance roles only read a PO. Operational input runs the work but
-// leaves cancelling to a head.
+// Only superadmin and the operational head move a PO.
 func movesFor(role string, moves []Transition) []Transition {
 	out := []Transition{}
 	for _, m := range moves {
@@ -51,14 +50,8 @@ func movesFor(role string, moves []Transition) []Transition {
 	return out
 }
 
-func canMove(role string, to Status) bool {
-	switch role {
-	case roles.Superadmin, roles.Operational:
-		return true
-	case roles.OperationalInput:
-		return to != StatusCancelled
-	}
-	return false
+func canMove(role string, _ Status) bool {
+	return roles.ManagesPOs(role)
 }
 
 // probesSelling reports a total probe.
@@ -73,12 +66,13 @@ var errLinesChanged = errors.New("po lines added or removed by a role that sets 
 // msgLinesChanged says why.
 const msgLinesChanged = "Hanya kepala operasional yang dapat menambah atau menghapus baris PO."
 
-// keepStoredPrices restores harga jual.
+// keepStoredSale restores all but purchase.
 //
 // For a role that sets no price, each line must name a stored product
-// line, all of them, and takes its stored harga jual; the discount and the
-// shipping charge stay too. Harga beli, vendor and qty remain theirs.
-func (r *Repo) keepStoredPrices(ctx context.Context, id int64, req *UpdateItemsRequest) error {
+// line, all of them, and keeps everything the client ordered: product,
+// qty, unit, harga jual, availability and destination. Only harga beli and
+// the vendor are theirs; the discount, shipping and notes stay too.
+func (r *Repo) keepStoredSale(ctx context.Context, id int64, req *UpdateItemsRequest) error {
 	po, err := r.GetByID(ctx, id)
 	if err != nil {
 		return err
@@ -87,15 +81,16 @@ func (r *Repo) keepStoredPrices(ctx context.Context, id int64, req *UpdateItemsR
 	if err != nil {
 		return fmt.Errorf("stored po lines: %w", err)
 	}
-	stored := map[int64]string{}
-	req.DiscountPct, req.ShippingCost = po.DiscountPct, nil
+	stored := map[int64]PurchaseOrderItem{}
+	req.DiscountPct, req.Notes = po.DiscountPct, po.Notes
+	req.ShippingAddress, req.ShippingDays, req.ShippingCost = nil, nil, nil
 	for _, l := range lines {
 		if l.ItemType == "shipping" {
 			price := l.SellingPrice
-			req.ShippingCost = &price
+			req.ShippingAddress, req.ShippingDays, req.ShippingCost = l.ShipDestination, l.ShippingDays, &price
 			continue
 		}
-		stored[l.ID] = l.SellingPrice
+		stored[l.ID] = l
 	}
 	if len(req.Items) != len(stored) {
 		return errLinesChanged
@@ -105,11 +100,14 @@ func (r *Repo) keepStoredPrices(ctx context.Context, id int64, req *UpdateItemsR
 		if it.ID == nil {
 			return errLinesChanged
 		}
-		price, ok := stored[*it.ID]
+		s, ok := stored[*it.ID]
 		if !ok {
 			return errLinesChanged
 		}
-		it.SellingPrice = price
+		available := s.IsAvailable
+		it.QuotationItemID, it.OfferedItemID = s.QuotationItemID, s.OfferedItemID
+		it.ItemName, it.ItemCode, it.Qty, it.UnitID = s.ItemName, s.ItemCode, s.Qty, s.UnitID
+		it.SellingPrice, it.IsAvailable, it.ShipDestination = s.SellingPrice, &available, s.ShipDestination
 		delete(stored, *it.ID)
 	}
 	return nil

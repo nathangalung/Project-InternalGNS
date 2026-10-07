@@ -9,8 +9,6 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/assetproxy"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
-	"github.com/nathangalung/internalgns/apps/api/internal/shared/rolegate"
-	"github.com/nathangalung/internalgns/apps/api/internal/shared/roles"
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 )
 
@@ -25,23 +23,21 @@ func Routes(d deps.Deps) chi.Router {
 	h := NewHandler(repo)
 
 	r.Get("/", h.List)
-	// Finance input changes only NPWP and TKU, through PUT /{id}.
-	finInput := rolegate.Deny(roles.FinanceInput)
-	r.With(finInput).Post("/", h.Create)
+	r.Post("/", h.Create)
 	r.Get("/summary", h.Summary)
 	r.Get("/search", h.Search)
 	r.Get("/{id}", h.Get)
 	r.Put("/{id}", h.Update)
 	r.Get("/{id}/contacts", h.ListContacts)
 	r.Get("/{id}/quotations", h.RecentQuotations)
-	r.With(finInput).Post("/{id}/contacts", h.CreateContact)
-	r.With(finInput).Patch("/{id}/contacts/{contactId}", h.UpdateContact)
-	r.With(finInput).Delete("/{id}/contacts/{contactId}", h.DeleteContact)
+	r.Post("/{id}/contacts", h.CreateContact)
+	r.Patch("/{id}/contacts/{contactId}", h.UpdateContact)
+	r.Delete("/{id}/contacts/{contactId}", h.DeleteContact)
 
 	logo := logoAsset(d.Storage, d.Objects, repo)
-	r.With(finInput).Get("/{id}/logo/upload-url", assetproxy.Upload(logo))
+	r.Get("/{id}/logo/upload-url", assetproxy.Upload(logo))
 	r.Get("/{id}/logo/download-url", assetproxy.Download(logo))
-	r.With(finInput).Patch("/{id}/logo", assetproxy.UpdateKey(logo))
+	r.Patch("/{id}/logo", assetproxy.UpdateKey(logo))
 
 	return r
 }

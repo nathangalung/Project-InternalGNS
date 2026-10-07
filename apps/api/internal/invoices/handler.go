@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -80,7 +81,8 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 // Export streams the filtered list.
-// The list goes out as an XLSX table.
+// The list goes out as an XLSX table with who to remind and how many days
+// a Terlambat invoice is past due, so a payment reminder is built from it.
 func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 	f := parseListFilter(r)
 	f.Limit, f.Offset = listq.Unbounded, 0
@@ -91,7 +93,20 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WarnIfTruncated(r.Context(), "invoices.export", res.Total, len(res.Rows))
-	headers := []string{"No. Invoice", "No. Quotation", "Tanggal", "Jatuh Tempo", "Klien", "Status", "Total"}
+	ids := make([]int64, 0, len(res.Rows))
+	for _, inv := range res.Rows {
+		ids = append(ids, inv.ID)
+	}
+	contacts, err := h.repo.ReminderContacts(r.Context(), ids)
+	if err != nil {
+		httperr.RenderDBErrCtx(r.Context(), w, err)
+		return
+	}
+	now := time.Now()
+	headers := []string{
+		"No. Invoice", "No. Quotation", "Tanggal", "Jatuh Tempo", "Klien", "Status", "Total",
+		"Hari Terlambat", "Narahubung", "Email Narahubung", "Telepon Narahubung", "Email Klien",
+	}
 	rows := make([][]string, 0, len(res.Rows))
 	for _, inv := range res.Rows {
 		due := ""
@@ -111,6 +126,11 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 			// Terlambat is derived, never stored, as in the list.
 			StatusLabel(inv.EffectiveStatus),
 			total,
+			daysPastDue(inv, now),
+			deref(contacts[inv.ID].ContactName),
+			deref(contacts[inv.ID].ContactEmail),
+			deref(contacts[inv.ID].ContactPhone),
+			deref(contacts[inv.ID].CompanyEmail),
 		})
 	}
 	data, err := sheet.Write("Invoice", headers, rows, 6)
