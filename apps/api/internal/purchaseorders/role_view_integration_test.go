@@ -109,6 +109,12 @@ func TestHandler_POInputRefusals(t *testing.T) {
 func TestHandler_POInputKeepsPrices(t *testing.T) {
 	ctx, tx, srv := txServer(t)
 	_, poID := acceptedQuotationWithPO(t, tx)
+	// A stored shipping charge the input role cannot change.
+	_, err := tx.Exec(ctx, `INSERT INTO purchase_order_items
+		(po_id, line_number, item_type, item_name, qty, selling_price, discount_pct, is_available,
+		 ship_destination, shipping_days, created_by, updated_by)
+		VALUES ($1, 99, 'shipping', 'Pengiriman', 1, 75000, 0, TRUE, 'Gudang Lama', 3, 1, 1)`, poID)
+	require.NoError(t, err)
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
 	before, err := repo.GetByID(ctx, poID)
 	require.NoError(t, err)
@@ -147,6 +153,11 @@ func TestHandler_POInputKeepsPrices(t *testing.T) {
 			require.NotNil(t, l.CostPrice)
 			assert.Equal(t, "55000.00", *l.CostPrice)
 		}
+		if l.ItemType == "shipping" {
+			assert.Equal(t, "75000.00", l.SellingPrice, "the shipping charge stays")
+			require.NotNil(t, l.ShipDestination)
+			assert.Equal(t, "Gudang Lama", *l.ShipDestination)
+		}
 	}
 	po, err := repo.GetByID(ctx, poID)
 	require.NoError(t, err)
@@ -154,7 +165,10 @@ func TestHandler_POInputKeepsPrices(t *testing.T) {
 
 	extra := mine
 	extra.ID = nil
-	for _, lines := range [][]purchaseorders.UpdateItemsLine{{mine, extra}, {}, {extra}} {
+	unknown := mine
+	unknownID := int64(999999999)
+	unknown.ID = &unknownID
+	for _, lines := range [][]purchaseorders.UpdateItemsLine{{mine, extra}, {}, {extra}, {unknown}} {
 		res := edit(lines...)
 		p := readProblem(t, res)
 		res.Body.Close()
