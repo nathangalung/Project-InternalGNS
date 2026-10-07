@@ -56,6 +56,7 @@ func header(totalProduk, total, totalDiscount, subtotal, dpp, ppn, grand string)
 		DppNilaiLain:      dpp,
 		PpnAmount:         ppn,
 		GrandTotal:        grand,
+		PPNEnabled:        true,
 		CreatedAt:         time.Date(2026, 9, 23, 3, 0, 0, 0, time.UTC),
 	}
 }

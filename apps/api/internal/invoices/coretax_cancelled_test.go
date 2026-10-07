@@ -36,10 +36,12 @@ func TestCoretaxBulkExport_SkipsCancelledInvoice(t *testing.T) {
 	cases := []struct {
 		name      string
 		cancel    bool
+		noPPN     bool
 		wantFiled bool
 	}{
 		{name: "live invoice is filed", wantFiled: true},
 		{name: "cancelled invoice is skipped", cancel: true, wantFiled: false},
+		{name: "invoice without PPN is skipped", noPPN: true, wantFiled: false},
 	}
 
 	for _, tc := range cases {
@@ -50,6 +52,10 @@ func TestCoretaxBulkExport_SkipsCancelledInvoice(t *testing.T) {
 			repo := invoices.NewRepo(tx, store)
 			if tc.cancel {
 				require.NoError(t, repo.ChangeStatus(ctx, invID, move(invoices.StatusCancelled), seedUserID))
+			}
+			if tc.noPPN {
+				_, err := tx.Exec(ctx, `UPDATE invoices SET ppn_enabled = FALSE WHERE id = $1`, invID)
+				require.NoError(t, err)
 			}
 			inv, err := repo.GetByID(ctx, invID)
 			require.NoError(t, err)

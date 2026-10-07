@@ -11,29 +11,31 @@ type Quotation struct {
 	QuotationNo string `db:"quotation_no"        json:"quotationNo"`
 	// Number first issued under.
 	// Set by a re-import only; nil for app-created quotations.
-	LegacyNo          *string   `db:"legacy_no"           json:"legacyNo,omitempty"`
-	Version           int16     `db:"version"             json:"version"`
-	CompanyClientID   int64     `db:"company_client_id"   json:"companyClientId"`
-	CompanyClientName string    `db:"company_client_name" json:"companyClientName"`
-	ContactID         *int64    `db:"contact_id"          json:"contactId,omitempty"`
-	ContactName       *string   `db:"contact_name"        json:"contactName,omitempty"`
-	ClientRefNo       *string   `db:"client_ref_no"       json:"clientRefNo,omitempty"`
-	VesselName        *string   `db:"vessel_name"         json:"vesselName,omitempty"`
-	Status            Status    `db:"status"              json:"status"`
-	PaymentTerms      *string   `db:"payment_terms"       json:"paymentTerms,omitempty"`
-	ValidityDays      *int      `db:"validity_days"       json:"validityDays,omitempty"`
-	DiscountPct       string    `db:"discount_pct"        json:"discountPct,omitempty"`
-	TotalProduk       string    `db:"total_produk"        json:"totalProduk,omitempty"`
-	Total             string    `db:"total"               json:"total,omitempty"`
-	TotalDiscount     string    `db:"total_discount"      json:"totalDiscount,omitempty"`
-	Subtotal          string    `db:"subtotal"            json:"subtotal,omitempty"`
-	DppNilaiLain      string    `db:"dpp_nilai_lain"      json:"dppNilaiLain,omitempty"`
-	PpnAmount         string    `db:"ppn_amount"          json:"ppnAmount,omitempty"`
-	GrandTotal        string    `db:"grand_total"         json:"grandTotal,omitempty"`
-	Notes             *string   `db:"notes"               json:"notes,omitempty"`
-	RowVersion        int32     `db:"row_version"         json:"rowVersion"`
-	CreatedAt         time.Time `db:"created_at"          json:"createdAt"`
-	UpdatedAt         time.Time `db:"updated_at"          json:"updatedAt"`
+	LegacyNo          *string `db:"legacy_no"           json:"legacyNo,omitempty"`
+	Version           int16   `db:"version"             json:"version"`
+	CompanyClientID   int64   `db:"company_client_id"   json:"companyClientId"`
+	CompanyClientName string  `db:"company_client_name" json:"companyClientName"`
+	ContactID         *int64  `db:"contact_id"          json:"contactId,omitempty"`
+	ContactName       *string `db:"contact_name"        json:"contactName,omitempty"`
+	ClientRefNo       *string `db:"client_ref_no"       json:"clientRefNo,omitempty"`
+	VesselName        *string `db:"vessel_name"         json:"vesselName,omitempty"`
+	Status            Status  `db:"status"              json:"status"`
+	PaymentTerms      *string `db:"payment_terms"       json:"paymentTerms,omitempty"`
+	ValidityDays      *int    `db:"validity_days"       json:"validityDays,omitempty"`
+	DiscountPct       string  `db:"discount_pct"        json:"discountPct,omitempty"`
+	TotalProduk       string  `db:"total_produk"        json:"totalProduk,omitempty"`
+	Total             string  `db:"total"               json:"total,omitempty"`
+	TotalDiscount     string  `db:"total_discount"      json:"totalDiscount,omitempty"`
+	Subtotal          string  `db:"subtotal"            json:"subtotal,omitempty"`
+	DppNilaiLain      string  `db:"dpp_nilai_lain"      json:"dppNilaiLain,omitempty"`
+	PpnAmount         string  `db:"ppn_amount"          json:"ppnAmount,omitempty"`
+	GrandTotal        string  `db:"grand_total"         json:"grandTotal,omitempty"`
+	Notes             *string `db:"notes"               json:"notes,omitempty"`
+	// With PPN 12%, or without PPN at all
+	PPNEnabled bool      `db:"ppn_enabled" json:"ppnEnabled"`
+	RowVersion int32     `db:"row_version"         json:"rowVersion"`
+	CreatedAt  time.Time `db:"created_at"          json:"createdAt"`
+	UpdatedAt  time.Time `db:"updated_at"          json:"updatedAt"`
 }
 
 // QuotationItem mirrors quotation_items.
@@ -170,6 +172,8 @@ type CreateRequest struct {
 	Items           []CreateItem `json:"items"`
 	Notes           *string      `json:"notes,omitempty"`
 	Status          *Status      `json:"status,omitempty"` // defaults to draft
+	// Absent means with PPN
+	PPNEnabled *bool `json:"ppnEnabled,omitempty"`
 }
 
 // Update quotation body.
@@ -184,6 +188,8 @@ type UpdateRequest struct {
 	ShippingCost    *string      `json:"shippingCost,omitempty"`
 	Items           []CreateItem `json:"items"`
 	Notes           *string      `json:"notes,omitempty"`
+	// Absent keeps the stored choice
+	PPNEnabled *bool `json:"ppnEnabled,omitempty"`
 }
 
 // Change status body.
@@ -292,4 +298,6 @@ type HeaderRequest struct {
 	ShippingDays    *int    `json:"shippingDays,omitempty"`
 	ShippingCost    *string `json:"shippingCost,omitempty"`
 	Notes           *string `json:"notes,omitempty"`
+	// Absent keeps the stored choice
+	PPNEnabled *bool `json:"ppnEnabled,omitempty"`
 }

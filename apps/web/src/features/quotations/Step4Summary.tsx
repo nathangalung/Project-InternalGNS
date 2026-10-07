@@ -39,6 +39,8 @@ type Step4SummaryProps = {
   summarySubTotal: number
   summaryDpp: number
   summaryPpn: number
+  // Taxed at 12%, or sold without PPN
+  withPPN?: boolean
   summaryShippingCost: number
   summaryProfit: number
   summaryGrandTotal: number
@@ -174,6 +176,7 @@ export default function Step4Summary({
   summarySubTotal,
   summaryDpp,
   summaryPpn,
+  withPPN = true,
   summaryShippingCost,
   summaryProfit,
   summaryGrandTotal,
@@ -510,14 +513,23 @@ export default function Step4Summary({
                     <span className={costValue}>Rp {formatRp(summarySubTotal)}</span>
                   </div>
                 </div>
-                <div className={costRow}>
-                  <span>DPP Nilai Lain</span>
-                  <span className={costValue}>Rp {formatRp(summaryDpp)}</span>
-                </div>
-                <div className={costRow}>
-                  <span>PPN 12%</span>
-                  <span className={costValue}>Rp {formatRp(summaryPpn)}</span>
-                </div>
+                {withPPN ? (
+                  <>
+                    <div className={costRow}>
+                      <span>DPP Nilai Lain</span>
+                      <span className={costValue}>Rp {formatRp(summaryDpp)}</span>
+                    </div>
+                    <div className={costRow}>
+                      <span>PPN 12%</span>
+                      <span className={costValue}>Rp {formatRp(summaryPpn)}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className={costRow}>
+                    <span>PPN</span>
+                    <span className={costValue}>Tanpa PPN</span>
+                  </div>
+                )}
                 <div className={costRow}>
                   <span>Biaya Pengiriman</span>
                   <span className={costValue}>Rp {formatRp(summaryShippingCost)}</span>

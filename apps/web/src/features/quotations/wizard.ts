@@ -94,6 +94,7 @@ export function wizardSummary(
   products: ProductItem[],
   discountPct: number,
   shippingCost: string,
+  withPPN = true,
 ): WizardSummary {
   // A Tidak Ditawarkan line is not sold, so it adds nothing.
   const offered = products.filter((p) => !p.noOffer)
@@ -104,7 +105,7 @@ export function wizardSummary(
   const subTotal = sumRupiah(nets)
   const nominalDiskon = sumRupiah(offered.map((p, i) => lineNet(p.jumlah, p.hargaJual) - nets[i]))
   const shipping = Number(shippingCost) || 0
-  const tax = computeTaxBreakdown([...nets, shipping])
+  const tax = computeTaxBreakdown([...nets, shipping], withPPN)
   return {
     totalProdukQty: offered.reduce((sum, p) => sum + p.jumlah, 0),
     totalHargaBeli,
@@ -217,6 +218,8 @@ export type WizardSeed = {
   jatuhTempo: string
   // The client's own RFQ or PO number
   clientRefNo: string
+  // Taxed at 12%, or sold without PPN
+  ppnEnabled: boolean
 }
 
 // Stored quotation into steps.
@@ -245,5 +248,6 @@ export function seedFromDetail(d: QuotationDetail, unitNameById: Map<number, str
     berlakuSampai: d.validityDays ? String(d.validityDays) : "",
     jatuhTempo: Number.isFinite(termDays) && termDays > 0 ? String(termDays) : "",
     clientRefNo: d.clientRefNo ?? "",
+    ppnEnabled: d.ppnEnabled,
   }
 }

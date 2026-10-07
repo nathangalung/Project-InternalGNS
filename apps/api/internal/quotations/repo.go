@@ -218,7 +218,7 @@ func (r *Repo) Create(ctx context.Context, req CreateRequest, userID int64) (int
 		req.CompanyClientID, req.ContactID, req.ClientRefNo, req.VesselName,
 		req.PaymentTerms, req.ValidityDays, req.DiscountPct,
 		req.ShippingAddress, req.ShippingDays, req.ShippingCost,
-		itemsJSON, userID, req.Notes, status,
+		itemsJSON, userID, req.Notes, status, req.PPNEnabled,
 	).Scan(&id)
 	return id, err
 }
@@ -239,7 +239,7 @@ func (r *Repo) Update(
 		err = r.db.QueryRow(ctx, r.store.Get("quotations.fn_update"),
 			id, req.ClientRefNo, req.VesselName, req.PaymentTerms, req.ValidityDays,
 			req.DiscountPct, req.ShippingAddress, req.ShippingDays, req.ShippingCost,
-			itemsJSON, userID, req.Notes,
+			itemsJSON, userID, req.Notes, req.PPNEnabled,
 		).Scan(&legacyID)
 		if err != nil {
 			return 0, err
@@ -255,7 +255,7 @@ func (r *Repo) Update(
 	err = r.db.QueryRow(ctx, r.store.Get("quotations.fn_update_versioned"),
 		id, *ifMatch, req.ClientRefNo, req.VesselName, req.PaymentTerms, req.ValidityDays,
 		req.DiscountPct, req.ShippingAddress, req.ShippingDays, req.ShippingCost,
-		itemsJSON, userID, req.Notes,
+		itemsJSON, userID, req.Notes, req.PPNEnabled,
 	).Scan(&newVersion)
 	if err != nil {
 		var pgErr *pgconn.PgError

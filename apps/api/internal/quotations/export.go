@@ -59,6 +59,7 @@ type exportData struct {
 	Shipping      string
 	HasShipping   bool
 	Subtotal      string
+	WithPPN       bool
 	DPP           string
 	PPN           string
 	GrandTotal    string
@@ -221,6 +222,7 @@ func buildExportData(
 		Shipping:      pdfgen.FormatIDRCents(pdfgen.BigSub(d.Total, d.TotalProduk)),
 		HasShipping:   hasShipping,
 		Subtotal:      pdfgen.FormatIDRCents(d.Subtotal),
+		WithPPN:       d.PPNEnabled,
 		DPP:           pdfgen.FormatIDRCents(d.DppNilaiLain),
 		PPN:           pdfgen.FormatIDRCents(d.PpnAmount),
 		GrandTotal:    pdfgen.FormatIDRCents(d.GrandTotal),

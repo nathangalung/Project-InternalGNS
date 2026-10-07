@@ -46,6 +46,7 @@ func TestRealTemplate_Invoice(t *testing.T) {
 		Items                                                                         []item
 		TotalProduk, Diskon, DiscountPct                                              string
 		DPP, DPPNilaiLain, PPN, Total                                                 string
+		WithPPN                                                                       bool
 		PaymentTerms, BankName, BankAccountNo, BankAccountName                        string
 		DateLine, SignerName                                                          string
 		UseA4                                                                         bool
@@ -66,6 +67,7 @@ func TestRealTemplate_Invoice(t *testing.T) {
 		Diskon:            "",
 		DiscountPct:       "0",
 		DPP:               "Rp100",
+		WithPPN:           true,
 		DPPNilaiLain:      "Rp91",
 		PPN:               "Rp12",
 		Total:             "Rp112",
@@ -105,6 +107,7 @@ func TestRealTemplate_Quotation(t *testing.T) {
 		TotalProduk, DiscountPct, TotalDiscount, Subtotal          string
 		DPP, PPN, GrandTotal, Shipping                             string
 		HasShipping                                                bool
+		WithPPN                                                    bool
 		DeliveryPlace, DeliveryTime, Payment, Validity, SignerName string
 		UseA4                                                      bool
 	}{
@@ -120,6 +123,7 @@ func TestRealTemplate_Quotation(t *testing.T) {
 		DiscountPct:   "0",
 		TotalDiscount: "Rp0",
 		Subtotal:      "Rp100",
+		WithPPN:       true,
 		DPP:           "Rp91",
 		PPN:           "Rp12",
 		GrandTotal:    "Rp112",

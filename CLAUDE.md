@@ -395,6 +395,8 @@ shows a missing one as Belum ada No. PO.
   DELIVERED); only a Pengganti, which copies the client as it is then,
   changes it. Coretax refuses an invoice without a valid NPWP with that
   Pengganti route.
+  An invoice without PPN (`ppn_enabled` false, see convention 9) has no
+  faktur: its Coretax XML is a 422 and the bulk XLSX leaves it out.
   Country, email and TKU stay live. Terlambat is derived, never set: `fn_invoice_effective_status`
   (a stored overdue, or a draft or sent past its due date) is the one rule the
   list, summary and dashboard read. The invoice list leaves cancelled
@@ -720,6 +722,12 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    base. The quotation (`fn_line_dpp`, `fn_line_ppn`, stored by the functions
    that write its totals) and the PO (`v_po_totals`) use the same rule, so all
    three agree, and the web previews mirror it (`computeTaxBreakdown`).
+   PPN is 12% or nothing: `ppn_enabled` (00107, default on) is chosen on the
+   quotation, by the roles that set prices (the wizard's PPN switch on the
+   product step, saved with the header), copied to its revision, its PO and
+   the invoice, and a document without it stores DPP Nilai Lain and PPN as
+   0 with the grand total equal to the net. Its PDFs leave those two rows
+   out, and the web breakdown shows Tanpa PPN in their place.
    Invoices snapshot `gross_unit_price` and `total_discount`, so the PDF
    prints a gross line plus a real discount row (`TotalProduk − Diskon = DPP`)
    without reading the quotation. Every PDF prints rupiah as the web's

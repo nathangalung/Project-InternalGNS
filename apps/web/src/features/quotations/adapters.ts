@@ -163,6 +163,7 @@ export function toQuotationData(
     subtotal: Number.isFinite(subtotal) ? subtotal : 0,
     dppNilaiLain: Number.isFinite(dpp) ? dpp : 0,
     ppnAmount: Number.isFinite(ppn) ? ppn : 0,
+    ppnEnabled: api.ppnEnabled,
     totalDiscount: Number.isFinite(totalDiscount) ? totalDiscount : 0,
     discountPct: Number.isFinite(discount) ? discount : 0,
     products,

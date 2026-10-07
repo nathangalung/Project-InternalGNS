@@ -1,4 +1,4 @@
--- Canonical current body of fn_create_invoice (deployed by migration 00103).
+-- Canonical current body of fn_create_invoice (deployed by migration 00107).
 -- Snapshots a delivered PO's items into a draft invoice. Line tax figures are
 -- rounded per line; the header tax figures are the SUM of those per-line values
 -- so the invoice matches what is filed with DJP per line via e-faktur.
@@ -15,6 +15,7 @@ DECLARE
   v_company_id    BIGINT;
   v_dpp           NUMERIC(15,2);
   v_replaces_id   BIGINT;
+  v_ppn_on        BOOLEAN;
 BEGIN
   -- A cancelled invoice is void, so only a live one makes this a no-op.
   SELECT id INTO v_inv_id FROM invoices
@@ -23,7 +24,7 @@ BEGIN
     RETURN v_inv_id;
   END IF;
 
-  SELECT quotation_id, company_client_id INTO v_quotation_id, v_company_id
+  SELECT quotation_id, company_client_id, ppn_enabled INTO v_quotation_id, v_company_id, v_ppn_on
   FROM purchase_orders WHERE id = p_po_id;
 
   IF v_quotation_id IS NULL THEN
@@ -50,7 +51,7 @@ BEGIN
     invoice_no, quotation_id, po_id, company_client_id,
     buyer_name, buyer_npwp, buyer_address,
     invoice_date, due_date, subtotal, dpp,
-    status, faktur_type, replaces_invoice_id, created_by, updated_by
+    status, faktur_type, replaces_invoice_id, created_by, updated_by, ppn_enabled
   )
   SELECT
     v_inv_no, v_quotation_id, p_po_id, v_company_id,
@@ -60,7 +61,7 @@ BEGIN
     'draft',
     CASE WHEN v_replaces_id IS NULL THEN 'Normal' ELSE 'Pengganti' END,
     v_replaces_id,
-    p_user_id, p_user_id
+    p_user_id, p_user_id, v_ppn_on
   FROM company_client cc
   WHERE cc.id = v_company_id
   RETURNING id INTO v_inv_id;
@@ -85,9 +86,10 @@ BEGIN
     pi.ship_destination,
     CASE pi.item_type WHEN 'shipping' THEN 'J' ELSE 'B' END,
     pi.subtotal,
-    ROUND(pi.subtotal * 11.0 / 12.0, 2),
-    12.00,
-    ROUND(ROUND(pi.subtotal * 11.0 / 12.0, 2) * 0.12, 2),
+    -- Without PPN the line carries no tax base, rate or PPN.
+    CASE WHEN v_ppn_on THEN ROUND(pi.subtotal * 11.0 / 12.0, 2) ELSE 0.00 END,
+    CASE WHEN v_ppn_on THEN 12.00 ELSE 0.00 END,
+    CASE WHEN v_ppn_on THEN ROUND(ROUND(pi.subtotal * 11.0 / 12.0, 2) * 0.12, 2) ELSE 0.00 END,
     p_user_id, p_user_id
   FROM purchase_order_items pi
   LEFT JOIN units u ON u.id = pi.unit_id

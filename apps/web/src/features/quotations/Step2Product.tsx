@@ -8,6 +8,7 @@ import { ui } from "@/lib/ui"
 import { parseRfq } from "./api"
 import { importedLines, importSummary } from "./import"
 import { lineGaps, qtyIssue, requestDiffers, requestedCode } from "./lines"
+import PpnSwitch from "./PpnSwitch"
 import QuotationReviewCard from "./QuotationReviewCard"
 import RequestOffer from "./RequestOffer"
 import { countUnknownUnits, type ProductItem, unitIssue } from "./wizard"
@@ -46,6 +47,10 @@ type Step2ProductProps = {
   summarySubTotal: number
   summaryDpp: number
   summaryPpn: number
+  // Taxed at 12%, or sold without PPN
+  withPPN?: boolean
+  // Absent where the choice is not this page's to make
+  setWithPPN?: (on: boolean) => void
   onImportProducts: (products: ProductItem[]) => void
   quotationId?: number
   // Server qty errors by card id
@@ -88,6 +93,8 @@ export default function Step2Product({
   summarySubTotal,
   summaryDpp,
   summaryPpn,
+  withPPN = true,
+  setWithPPN,
   onImportProducts,
   quotationId,
   qtyErrors = {},
@@ -542,13 +549,21 @@ export default function Step2Product({
                 </div>
               </div>
               <div className={costRow}>
-                <span>DPP Nilai Lain</span>
-                <span className={costValue}>Rp {formatRp(summaryDpp)}</span>
+                <span>{withPPN ? "Dengan PPN 12%" : "Tanpa PPN"}</span>
+                {setWithPPN && <PpnSwitch on={withPPN} onChange={setWithPPN} />}
               </div>
-              <div className={costRow}>
-                <span>PPN 12%</span>
-                <span className={costValue}>Rp {formatRp(summaryPpn)}</span>
-              </div>
+              {withPPN && (
+                <>
+                  <div className={costRow}>
+                    <span>DPP Nilai Lain</span>
+                    <span className={costValue}>Rp {formatRp(summaryDpp)}</span>
+                  </div>
+                  <div className={costRow}>
+                    <span>PPN 12%</span>
+                    <span className={costValue}>Rp {formatRp(summaryPpn)}</span>
+                  </div>
+                </>
+              )}
             </>
           )}
         </div>

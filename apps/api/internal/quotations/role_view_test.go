@@ -126,8 +126,9 @@ func TestHandler_InputKeepsPrices(t *testing.T) {
 	res.Body.Close()
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	addr, days, cost := "Tanjung Priok", 4, "1"
+	off := false
 	res = doJSONWithHeaders(t, srv, http.MethodPut, base+"/header",
-		quotations.HeaderRequest{DiscountPct: "50", ShippingAddress: &addr, ShippingDays: &days, ShippingCost: &cost}, in)
+		quotations.HeaderRequest{DiscountPct: "50", ShippingAddress: &addr, ShippingDays: &days, ShippingCost: &cost, PPNEnabled: &off}, in)
 	res.Body.Close()
 	require.Equal(t, http.StatusNoContent, res.StatusCode)
 
@@ -142,6 +143,7 @@ func TestHandler_InputKeepsPrices(t *testing.T) {
 	require.NoError(t, json.NewDecoder(res.Body).Decode(&d))
 	res.Body.Close()
 	assert.Equal(t, "10.00", d.DiscountPct, "the stored discount")
+	assert.True(t, d.PPNEnabled, "the PPN choice is a head's")
 	for _, it := range d.Items {
 		switch {
 		case it.ID == lines[0]:
@@ -159,6 +161,7 @@ func TestHandler_InputKeepsPrices(t *testing.T) {
 
 	req := sampleCreate()
 	req.Items = []quotations.CreateItem{offered()}
+	req.PPNEnabled = &off
 	res = doJSONWithHeaders(t, srv, http.MethodPost, "/quotations/", req, in)
 	require.Equal(t, http.StatusCreated, res.StatusCode)
 	var created map[string]int64
@@ -169,6 +172,7 @@ func TestHandler_InputKeepsPrices(t *testing.T) {
 	require.NoError(t, json.NewDecoder(res.Body).Decode(&fresh))
 	res.Body.Close()
 	assert.Equal(t, "0.00", fresh.DiscountPct)
+	assert.True(t, fresh.PPNEnabled, "a new quotation keeps PPN")
 	for _, it := range fresh.Items {
 		assert.Equal(t, "0.00", it.SellingPrice, "%s line", it.ItemType)
 	}

@@ -1,5 +1,5 @@
--- Canonical current body of fn_update_quotation (deployed by migration 00103).
-CREATE OR REPLACE FUNCTION public.fn_update_quotation(p_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_user_id bigint, p_notes text DEFAULT NULL::text)
+-- Canonical current body of fn_update_quotation (deployed by migration 00107).
+CREATE OR REPLACE FUNCTION public.fn_update_quotation(p_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_user_id bigint, p_notes text DEFAULT NULL::text, p_ppn_enabled boolean DEFAULT NULL::boolean)
  RETURNS bigint
  LANGUAGE plpgsql
 AS $function$
@@ -120,6 +120,7 @@ BEGIN
       ppn_amount     = v_ppn,
       grand_total    = v_total - v_total_disc + v_ppn,
       notes          = p_notes,
+      ppn_enabled    = COALESCE(p_ppn_enabled, ppn_enabled),
       updated_by     = p_user_id
   WHERE id = p_id;
 
@@ -195,6 +196,8 @@ BEGIN
   -- Line ids changed: line locks point at lines that are gone.
   DELETE FROM quotation_edit_locks WHERE quotation_id = p_id AND part <> 'header';
   PERFORM fn_quotation_notify(p_id, 'lines', NULL, p_user_id);
+
+  PERFORM fn_recompute_quotation_totals(p_id);
 
   RETURN p_id;
 END;

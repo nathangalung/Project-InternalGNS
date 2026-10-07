@@ -1135,3 +1135,36 @@ test.describe("quotation list", () => {
     )
   })
 })
+
+test.describe("quotation PPN", () => {
+  test("a draft switched to Tanpa PPN totals without tax", async ({ page, seed }) => {
+    const client = await seed.client()
+    const item = await seed.item()
+    const q = await seed.quotation({ client, lines: [{ item, qty: 1, price: 10_000 }] })
+
+    await page.goto(`/quotations/${q.id}/edit`)
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    const ppn = page.getByRole("switch", { name: "Kenakan PPN 12%" })
+    await expect(ppn).toHaveAttribute("aria-checked", "true")
+    await expect(page.getByText("PPN 12%", { exact: true })).toBeVisible()
+    await ppn.click()
+    await expect(ppn).toHaveAttribute("aria-checked", "false")
+    await expect(page.getByText("Tanpa PPN", { exact: true })).toBeVisible()
+    await expect(page.getByText("DPP Nilai Lain", { exact: true })).toHaveCount(0)
+    await expect
+      .poll(async () => {
+        const d = await api<{ ppnEnabled: boolean; ppnAmount: string; grandTotal: string }>(
+          "GET",
+          `/quotations/${q.id}`,
+        )
+        return [d.ppnEnabled, Number(d.ppnAmount), Number(d.grandTotal)]
+      })
+      .toEqual([false, 0, 10_000])
+
+    await page.goto(`/quotations/${q.id}`)
+    const costs = costBreakdown(page)
+    await expect(amountAfter(costs, "PPN")).toHaveText("Tanpa PPN")
+    await expect(costs.getByText("PPN 12%", { exact: true })).toHaveCount(0)
+    await expect(amountAfter(costs, "Grand Total")).toHaveText(rupiah(10_000))
+  })
+})

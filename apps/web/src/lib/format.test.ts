@@ -90,6 +90,15 @@ describe("computeTaxBreakdown", () => {
     })
   })
 
+  it("charges no tax without PPN", () => {
+    expect(computeTaxBreakdown([100.5, 20], false)).toEqual({
+      subtotal: 120.5,
+      dppNilaiLain: 0,
+      ppnAmount: 0,
+      grandTotal: 120.5,
+    })
+  })
+
   it("taxes shipping as a line of its own", () => {
     expect(computeTaxBreakdown([1000, 200])).toEqual({
       subtotal: 1200,

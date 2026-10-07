@@ -182,7 +182,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
     ppn: summaryPpn,
     grandTotal: summaryGrandTotal,
     profit: summaryProfit,
-  } = wizardSummary(products, discountPct, shippingCost)
+  } = wizardSummary(products, discountPct, shippingCost, po.ppnEnabled)
 
   async function handleSave() {
     const missing = linesMissingUnit(products, unitIdByCode)
@@ -377,6 +377,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
                 summarySubTotal={summarySubTotal}
                 summaryDpp={summaryDpp}
                 summaryPpn={summaryPpn}
+                withPPN={po.ppnEnabled}
                 onImportProducts={(newProds) => setProducts((prev) => [...prev, ...newProds])}
                 allowZeroQty
               />
@@ -414,6 +415,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
                 summarySubTotal={summarySubTotal}
                 summaryDpp={summaryDpp}
                 summaryPpn={summaryPpn}
+                withPPN={po.ppnEnabled}
                 summaryShippingCost={summaryShippingCost}
                 summaryProfit={summaryProfit}
                 summaryGrandTotal={summaryGrandTotal}

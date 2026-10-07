@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -22,19 +21,16 @@ func TestMigration00103_PlainText(t *testing.T) {
 	_, err := tx.Exec(ctx, downSQL(t, plainTextMigration))
 	require.NoError(t, err)
 
-	addr := "Dermaga Koja"
-	cost := "50000"
-	qid, err := quotations.NewRepo(tx, testutil.Store(t)).Create(ctx, quotations.CreateRequest{
-		ValidityDays:    testutil.Validity(),
-		CompanyClientID: 1,
-		DiscountPct:     "0",
-		ShippingAddress: &addr,
-		ShippingCost:    &cost,
-		Items: testutil.OfferLines(t, ctx, tx, []quotations.CreateItem{
-			{RequestedName: "Migrasi 00103", Qty: "1", UnitID: 19, SellingPrice: "1000"},
-		}),
-	}, 1)
+	// Down recreates the create function as it was then; 00107 added an
+	// overload with the PPN choice, which would make the call ambiguous.
+	_, err = tx.Exec(ctx, `DROP FUNCTION fn_create_quotation(bigint, bigint, text, text, text,
+		integer, numeric, text, integer, numeric, jsonb, bigint, text, text, boolean)`)
 	require.NoError(t, err)
+	var qid int64
+	require.NoError(t, tx.QueryRow(ctx, `SELECT fn_create_quotation(1, NULL, NULL, NULL, NULL, 30, 0,
+		'Dermaga Koja', NULL, 50000,
+		'[{"requested_name": "Migrasi 00103", "qty": "1", "unit_id": 19, "selling_price": "1000"}]'::jsonb, 1)`).
+		Scan(&qid))
 	var name string
 	var version int32
 	row := `SELECT requested_name, row_version FROM quotation_items WHERE quotation_id = $1 AND item_type = 'shipping'`

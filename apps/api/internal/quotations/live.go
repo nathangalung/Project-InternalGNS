@@ -84,7 +84,7 @@ func (r *Repo) UpdateHeader(ctx context.Context, id int64, req HeaderRequest, us
 	_, err := r.db.Exec(ctx, r.store.Get("quotations.update_header"),
 		id, req.ClientRefNo, req.VesselName, req.PaymentTerms, req.ValidityDays,
 		req.DiscountPct, req.ShippingAddress, req.ShippingDays, req.ShippingCost,
-		req.Notes, userID)
+		req.Notes, userID, req.PPNEnabled)
 	return err
 }
 

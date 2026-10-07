@@ -45,6 +45,8 @@ type Invoice struct {
 	AttachmentObjectKey *string    `db:"attachment_object_key"   json:"attachmentObjectKey,omitempty"`
 	PaidAt              *time.Time `db:"paid_at"                 json:"paidAt,omitempty"`
 	PaymentProofKey     *string    `db:"payment_proof_key"       json:"paymentProofKey,omitempty"`
+	// Follows the PO: with PPN 12% or without
+	PPNEnabled bool `db:"ppn_enabled" json:"ppnEnabled"`
 }
 
 // InvoiceDetail backs the invoice screen.

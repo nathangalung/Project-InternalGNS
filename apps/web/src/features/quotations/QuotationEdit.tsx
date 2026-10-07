@@ -74,6 +74,8 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     setShowDiscountModal,
     discountPct,
     setDiscountPct,
+    ppnEnabled,
+    setPpnEnabled,
     products,
     prodPageSize,
     setProdPageSize,
@@ -197,6 +199,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
 
   const headerFields = {
     discountPct,
+    ppnEnabled,
     shippingAddress,
     shippingTime,
     shippingCost,
@@ -299,6 +302,18 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     if (!detail || qid === undefined) return
     setDiscountPct(val)
     const input = headerInput(detail, { ...headerFields, discountPct: val })
+    void change(() => quotationsApi.updateHeader(qid, input)).finally(() => {
+      if (own) void release(HEADER_PART)
+    })
+  }
+
+  // A PPN switch saves the header at once.
+  async function savePpn(on: boolean) {
+    if (!detail || qid === undefined) return
+    const own = !holdsHeader
+    if (own && !(await acquire(HEADER_PART))) return
+    setPpnEnabled(on)
+    const input = headerInput(detail, { ...headerFields, ppnEnabled: on })
     void change(() => quotationsApi.updateHeader(qid, input)).finally(() => {
       if (own) void release(HEADER_PART)
     })
@@ -541,6 +556,8 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
             summarySubTotal={summarySubTotal}
             summaryDpp={summaryDpp}
             summaryPpn={summaryPpn}
+            withPPN={ppnEnabled}
+            setWithPPN={pricing ? (on) => void savePpn(on) : undefined}
             onImportProducts={importLines}
             quotationId={numericQuotationId}
           />
@@ -585,6 +602,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
             summarySubTotal={summarySubTotal}
             summaryDpp={summaryDpp}
             summaryPpn={summaryPpn}
+            withPPN={ppnEnabled}
             summaryShippingCost={summaryShippingCost}
             summaryProfit={summaryProfit}
             summaryGrandTotal={summaryGrandTotal}

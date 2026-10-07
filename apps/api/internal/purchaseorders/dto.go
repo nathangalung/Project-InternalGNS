@@ -16,21 +16,23 @@ type PurchaseOrder struct {
 	ID int64 `db:"id"                  json:"id"`
 	// The client's own PO number.
 	// Nil until a user enters it; ON_PROGRESS and DELIVERED require it.
-	PoNumber          *string    `db:"po_number"           json:"poNumber,omitempty"`
-	QuotationID       int64      `db:"quotation_id"        json:"quotationId"`
-	QuotationNo       string     `db:"quotation_no"        json:"quotationNo"`
-	CompanyClientID   int64      `db:"company_client_id"   json:"companyClientId"`
-	CompanyName       string     `db:"company_name"        json:"companyName"`
-	PoDate            time.Time  `db:"po_date"             json:"poDate"`
-	Status            Status     `db:"status"              json:"status"`
-	FileName          *string    `db:"file_name"           json:"fileName,omitempty"`
-	FileSize          *int64     `db:"file_size"           json:"fileSize,omitempty"`
-	UploadedAt        *time.Time `db:"uploaded_at"         json:"uploadedAt,omitempty"`
-	Notes             *string    `db:"notes"               json:"notes,omitempty"`
-	FileURL           *string    `db:"file_url"            json:"objectKey,omitempty"`
-	DiscountPct       string     `db:"discount_pct"        json:"discountPct,omitempty"`
-	QuotationTotal    *string    `db:"quotation_total"     json:"quotationTotal,omitempty"`
-	QuotationSubtotal *string    `db:"quotation_subtotal"  json:"quotationSubtotal,omitempty"`
+	PoNumber        *string    `db:"po_number"           json:"poNumber,omitempty"`
+	QuotationID     int64      `db:"quotation_id"        json:"quotationId"`
+	QuotationNo     string     `db:"quotation_no"        json:"quotationNo"`
+	CompanyClientID int64      `db:"company_client_id"   json:"companyClientId"`
+	CompanyName     string     `db:"company_name"        json:"companyName"`
+	PoDate          time.Time  `db:"po_date"             json:"poDate"`
+	Status          Status     `db:"status"              json:"status"`
+	FileName        *string    `db:"file_name"           json:"fileName,omitempty"`
+	FileSize        *int64     `db:"file_size"           json:"fileSize,omitempty"`
+	UploadedAt      *time.Time `db:"uploaded_at"         json:"uploadedAt,omitempty"`
+	Notes           *string    `db:"notes"               json:"notes,omitempty"`
+	FileURL         *string    `db:"file_url"            json:"objectKey,omitempty"`
+	DiscountPct     string     `db:"discount_pct"        json:"discountPct,omitempty"`
+	// Follows the quotation: with PPN 12% or without
+	PPNEnabled        bool    `db:"ppn_enabled" json:"ppnEnabled"`
+	QuotationTotal    *string `db:"quotation_total"     json:"quotationTotal,omitempty"`
+	QuotationSubtotal *string `db:"quotation_subtotal"  json:"quotationSubtotal,omitempty"`
 	// Money figures from v_po_totals.
 	// The view mirrors fn_create_invoice: PoSubtotal is the invoice DPP and
 	// the tax figures round per line.
