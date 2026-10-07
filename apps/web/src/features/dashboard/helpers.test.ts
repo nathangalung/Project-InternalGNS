@@ -168,6 +168,7 @@ function invoice(id: number, over: Partial<InvoiceBackendRow> = {}): InvoiceBack
     invoiceDate: "2026-09-01",
     dueDate: "2099-01-01",
     total: "2000000",
+    ppnEnabled: true,
     status,
     effectiveStatus: status,
     rowVersion: 1,

@@ -89,6 +89,9 @@ func (h *CoretaxHandler) ExportBulkXLSX(w http.ResponseWriter, r *http.Request) 
 		if inv.Status == StatusCancelled {
 			continue // void; its Pengganti is filed instead
 		}
+		if !inv.PPNEnabled {
+			continue // no PPN, no faktur pajak
+		}
 		if _, ok := seenClient[inv.CompanyClientID]; !ok {
 			seenClient[inv.CompanyClientID] = struct{}{}
 			clientIDs = append(clientIDs, inv.CompanyClientID)

@@ -1,5 +1,5 @@
--- Canonical current body of fn_create_quotation (deployed by migration 00103).
-CREATE OR REPLACE FUNCTION public.fn_create_quotation(p_company_client_id bigint, p_contact_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_created_by bigint, p_notes text DEFAULT NULL::text, p_status text DEFAULT 'draft'::text)
+-- Canonical current body of fn_create_quotation (deployed by migration 00107).
+CREATE OR REPLACE FUNCTION public.fn_create_quotation(p_company_client_id bigint, p_contact_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_created_by bigint, p_notes text DEFAULT NULL::text, p_status text DEFAULT 'draft'::text, p_ppn_enabled boolean DEFAULT true)
  RETURNS bigint
  LANGUAGE plpgsql
 AS $function$
@@ -97,7 +97,7 @@ BEGIN
     payment_terms, validity_days, discount_pct,
     total_produk, total, total_discount,
     dpp_nilai_lain, ppn_amount, grand_total,
-    notes, created_by, updated_by
+    notes, created_by, updated_by, ppn_enabled
   ) VALUES (
     v_quotation_no, 1, p_company_client_id, v_company_name,
     p_contact_id, v_contact_name,
@@ -105,7 +105,7 @@ BEGIN
     p_payment_terms, p_validity_days, p_discount_pct,
     v_total_produk, v_total, v_total_discount,
     v_dpp, v_ppn, v_total - v_total_discount + v_ppn,
-    p_notes, p_created_by, p_created_by
+    p_notes, p_created_by, p_created_by, p_ppn_enabled
   ) RETURNING id INTO v_quotation_id;
 
   -- 6. INSERT product items
@@ -162,6 +162,8 @@ BEGIN
       p_created_by, p_created_by
     );
   END IF;
+
+  PERFORM fn_recompute_quotation_totals(v_quotation_id);
 
   RETURN v_quotation_id;
 END;

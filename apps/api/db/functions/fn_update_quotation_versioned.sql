@@ -1,5 +1,5 @@
--- Canonical current body of fn_update_quotation_versioned (deployed by migration 00103).
-CREATE OR REPLACE FUNCTION public.fn_update_quotation_versioned(p_id bigint, p_if_match integer, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_user_id bigint, p_notes text DEFAULT NULL::text)
+-- Canonical current body of fn_update_quotation_versioned (deployed by migration 00107).
+CREATE OR REPLACE FUNCTION public.fn_update_quotation_versioned(p_id bigint, p_if_match integer, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_user_id bigint, p_notes text DEFAULT NULL::text, p_ppn_enabled boolean DEFAULT NULL::boolean)
  RETURNS integer
  LANGUAGE plpgsql
 AS $function$
@@ -24,7 +24,7 @@ BEGIN
   PERFORM fn_update_quotation(
     p_id, p_client_ref_no, p_vessel_name, p_payment_terms,
     p_validity_days, p_discount_pct, p_shipping_address,
-    p_shipping_days, p_shipping_cost, p_items, p_user_id, p_notes
+    p_shipping_days, p_shipping_cost, p_items, p_user_id, p_notes, p_ppn_enabled
   );
 
   SELECT row_version INTO v_new FROM quotations WHERE id = p_id;

@@ -169,6 +169,28 @@ func TestQuotationPDF_PrintsStoredTotals(t *testing.T) {
 	}
 }
 
+// Without PPN prints no tax.
+// The quotation then ends at Sub Total and Grand Total, with no DPP Nilai
+// Lain or PPN row.
+func TestQuotationPDF_WithoutPPN(t *testing.T) {
+	data := sampleExport(1)
+	data.WithPPN = false
+	data.GrandTotal = data.Subtotal
+	text, _, log := renderQuotation(t, data)
+	flat := strings.Join(strings.Fields(text), " ")
+	for _, gone := range []string{"DPP Nilai Lain", "PPN"} {
+		if strings.Contains(flat, gone) {
+			t.Errorf("a quotation without PPN prints %q", gone)
+		}
+	}
+	if !strings.Contains(flat, "Grand Total Rp1.951,15") {
+		t.Error("Grand Total must equal Sub Total")
+	}
+	for _, ln := range badBoxes(log) {
+		t.Errorf("latex: %s", ln)
+	}
+}
+
 // One sheet fits five lines.
 // A short quotation stays on one A4 sheet, wrapped lines included.
 func TestQuotationPDF_OneSheetFitsFiveLines(t *testing.T) {

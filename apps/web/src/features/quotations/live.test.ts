@@ -64,6 +64,7 @@ describe("headerInput", () => {
     jatuhTempo: " 30 ",
     berlakuSampai: "14",
     clientRefNo: " V-26-2405-002-E ",
+    ppnEnabled: true,
   }
 
   // The typed reference replaces the stored one.
@@ -78,6 +79,7 @@ describe("headerInput", () => {
       shippingAddress: "Pelabuhan Tanjung Priok",
       shippingDays: 3,
       shippingCost: "150000",
+      ppnEnabled: true,
     })
   })
 
@@ -92,6 +94,7 @@ describe("headerInput", () => {
         jatuhTempo: " ",
         berlakuSampai: " ",
         clientRefNo: " ",
+        ppnEnabled: false,
       }),
     ).toEqual({
       clientRefNo: undefined,
@@ -103,6 +106,7 @@ describe("headerInput", () => {
       shippingAddress: undefined,
       shippingDays: undefined,
       shippingCost: undefined,
+      ppnEnabled: false,
     })
   })
 

@@ -153,6 +153,7 @@ func TestInvoicePaperSize(t *testing.T) {
 				TotalProduk:     "Rp 100.000,00",
 				Diskon:          "",
 				DPP:             "Rp 90.909,09",
+				WithPPN:         true,
 				DPPNilaiLain:    "Rp 9.090,91",
 				PPN:             "Rp 10.909,09",
 				Total:           "Rp 111.818,18",
@@ -183,5 +184,30 @@ func TestInvoicePaperSize(t *testing.T) {
 				t.Logf("WARNING: %d overfull hbox(es) in log", overfull)
 			}
 		})
+	}
+}
+
+// Tax rows follow PPN.
+// An invoice without PPN prints no DPP Nilai Lain or PPN row.
+func TestInvoiceTemplate_TaxRowsFollowPPN(t *testing.T) {
+	root, _ := filepath.Abs("../../templates/documents")
+	tmpl, err := template.New("Invoice.tex.tmpl").
+		Delims("[[", "]]").
+		Option("missingkey=error").
+		ParseFiles(filepath.Join(root, "invoice/Invoice.tex.tmpl"))
+	if err != nil {
+		t.Fatalf("parse template: %v", err)
+	}
+	for _, on := range []bool{true, false} {
+		var buf bytes.Buffer
+		data := exportData{Items: []exportItem{makeInvItem(1)}, WithPPN: on, PPN: "Rp 12,00", DPPNilaiLain: "Rp 91,00"}
+		if err := tmpl.ExecuteTemplate(&buf, "Invoice.tex.tmpl", data); err != nil {
+			t.Fatalf("execute: %v", err)
+		}
+		for _, row := range []string{"Size DPP Nilai Lain}", `PPN 12\%}`} {
+			if strings.Contains(buf.String(), row) != on {
+				t.Errorf("WithPPN %v: row %q printed %v", on, row, !on)
+			}
+		}
 	}
 }

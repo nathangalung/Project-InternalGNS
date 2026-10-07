@@ -10,7 +10,7 @@ SELECT id, quotation_no, legacy_no, version, company_client_id, company_client_n
        payment_terms, validity_days,
        discount_pct::text, total_produk::text, total::text, total_discount::text,
        subtotal::text, dpp_nilai_lain::text, ppn_amount::text, grand_total::text,
-       notes, row_version, created_at, updated_at
+       notes, ppn_enabled, row_version, created_at, updated_at
 FROM quotations
 WHERE id = $1;
 
@@ -79,21 +79,22 @@ SELECT COUNT(*) FROM quotations q WHERE 1=1;
 SELECT fn_create_quotation(
     $1, $2, $3, $4, $5, $6, $7::numeric(5,2),
     $8, $9, $10::numeric(15,2),
-    $11::jsonb, $12, $13, $14
+    $11::jsonb, $12, $13, $14,
+    COALESCE($15::boolean, TRUE)
 );
 
 -- name: quotations.fn_update
 SELECT fn_update_quotation(
     $1, $2, $3, $4, $5, $6::numeric(5,2),
     $7, $8, $9::numeric(15,2),
-    $10::jsonb, $11, $12
+    $10::jsonb, $11, $12, $13::boolean
 );
 
 -- name: quotations.fn_update_versioned
 SELECT fn_update_quotation_versioned(
     $1, $2, $3, $4, $5, $6, $7::numeric(5,2),
     $8, $9, $10::numeric(15,2),
-    $11::jsonb, $12, $13
+    $11::jsonb, $12, $13, $14::boolean
 );
 
 -- name: quotations.row_version
@@ -195,7 +196,7 @@ SELECT fn_quotation_delete_line($1, $2, $3);
 
 -- name: quotations.update_header
 SELECT fn_quotation_update_header(
-    $1, $2, $3, $4, $5, $6::numeric(5,2), $7, $8, $9::numeric(15,2), $10, $11
+    $1, $2, $3, $4, $5, $6::numeric(5,2), $7, $8, $9::numeric(15,2), $10, $11, $12::boolean
 );
 
 -- name: quotations.stored_line_price

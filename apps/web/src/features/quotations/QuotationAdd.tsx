@@ -56,6 +56,8 @@ export default function QuotationAdd() {
     setShowDiscountModal,
     discountPct,
     setDiscountPct,
+    ppnEnabled,
+    setPpnEnabled,
     products,
     setProducts,
     deleteProduct,
@@ -202,6 +204,7 @@ export default function QuotationAdd() {
       paymentTerms: jatuhTempo.trim() ? `${jatuhTempo.trim()} days` : undefined,
       validityDays: validityInput(berlakuSampai),
       discountPct: String(discountPct),
+      ppnEnabled: pricing ? ppnEnabled : undefined,
       shippingAddress: shippingAddress || undefined,
       shippingDays: Number.isFinite(shippingDays) && shippingDays > 0 ? shippingDays : undefined,
       shippingCost: shippingCost || undefined,
@@ -367,6 +370,8 @@ export default function QuotationAdd() {
             summarySubTotal={summarySubTotal}
             summaryDpp={summaryDpp}
             summaryPpn={summaryPpn}
+            withPPN={ppnEnabled}
+            setWithPPN={pricing ? setPpnEnabled : undefined}
             onImportProducts={(newProds) => setProducts((prev) => [...prev, ...newProds])}
             qtyErrors={qtyErrors}
           />
@@ -410,6 +415,7 @@ export default function QuotationAdd() {
             summarySubTotal={summarySubTotal}
             summaryDpp={summaryDpp}
             summaryPpn={summaryPpn}
+            withPPN={ppnEnabled}
             summaryShippingCost={summaryShippingCost}
             summaryProfit={summaryProfit}
             summaryGrandTotal={summaryGrandTotal}

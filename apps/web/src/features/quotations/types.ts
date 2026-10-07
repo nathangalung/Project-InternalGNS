@@ -60,6 +60,8 @@ export type QuotationData = {
   subtotal: number
   dppNilaiLain: number
   ppnAmount: number
+  // Taxed at 12%, or sold without PPN
+  ppnEnabled: boolean
   totalDiscount: number
   discountPct?: number
   products: ProductRow[]

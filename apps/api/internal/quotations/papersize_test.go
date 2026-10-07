@@ -123,6 +123,7 @@ func TestQuotationPaperSize(t *testing.T) {
 				DiscountPct:   "0",
 				TotalDiscount: "Rp 0",
 				Subtotal:      "Rp 100.000",
+				WithPPN:       true,
 				DPP:           "Rp 90.909",
 				PPN:           "Rp 10.909",
 				GrandTotal:    "Rp 111.818",

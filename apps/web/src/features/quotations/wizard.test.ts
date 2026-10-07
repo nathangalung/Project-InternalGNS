@@ -95,6 +95,11 @@ describe("wizardSummary", () => {
     expect(withNoOffer).toEqual(offeredOnly)
   })
 
+  it("totals the net without PPN", () => {
+    const s = wizardSummary([product(1)], 0, "50", false)
+    expect(s).toMatchObject({ dpp: 0, ppn: 0, grandTotal: s.subTotal + 50 })
+  })
+
   it("adds up products, discount, shipping and tax", () => {
     const s = wizardSummary(
       [product(1), product(2, { jumlah: 1, hargaBeli: 30, hargaJual: 50 })],
@@ -251,6 +256,7 @@ describe("seedFromDetail", () => {
     validityDays: 14,
     paymentTerms: "30 days",
     clientRefNo: "V-26-2405-002-E",
+    ppnEnabled: false,
     items: [
       {
         id: 11,
@@ -285,6 +291,7 @@ describe("seedFromDetail", () => {
       berlakuSampai: "14",
       jatuhTempo: "30",
       clientRefNo: "V-26-2405-002-E",
+      ppnEnabled: false,
     })
     expect(s.products.map((p) => [p.id, p.satuan])).toEqual([
       [11, "PCS"],
@@ -313,6 +320,7 @@ describe("seedFromDetail", () => {
       berlakuSampai: "",
       jatuhTempo: "",
       clientRefNo: "",
+      ppnEnabled: false,
     })
   })
 })

@@ -63,6 +63,7 @@ export type HeaderFields = {
   jatuhTempo: string
   berlakuSampai: string
   clientRefNo: string
+  ppnEnabled: boolean
 }
 
 // Full header save body.
@@ -83,6 +84,7 @@ export function headerInput(d: QuotationDetail, h: HeaderFields): QuotationHeade
     shippingAddress: h.shippingAddress || undefined,
     shippingDays: Number.isFinite(shipDays) && shipDays > 0 ? shipDays : undefined,
     shippingCost: h.shippingCost || undefined,
+    ppnEnabled: h.ppnEnabled,
   }
 }
 

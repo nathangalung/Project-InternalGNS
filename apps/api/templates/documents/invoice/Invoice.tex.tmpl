@@ -2,7 +2,7 @@
 % Compile: xelatex Invoice.tex
 % Requires Plus Jakarta Sans installed system-wide.
 
-% Mirrors the quotation layout; totals run DPP, DPP Nilai Lain, PPN, Total.
+% Mirrors the quotation layout; totals run DPP, then DPP Nilai Lain and PPN when taxed, then Total.
 
 % Portrait like the delivery note, so all three print alike.
 \documentclass[a4paper]{article}
@@ -200,11 +200,11 @@
   \multicolumn{2}{r|}{\DocCellSize -[[.Diskon]]} \\
 [[end]]\multicolumn{5}{|r|}{\DocCellSize DPP} &
   \multicolumn{2}{r|}{\DocCellSize [[.DPP]]} \\
-\multicolumn{5}{|r|}{\DocCellSize DPP Nilai Lain} &
+[[if .WithPPN]]\multicolumn{5}{|r|}{\DocCellSize DPP Nilai Lain} &
   \multicolumn{2}{r|}{\DocCellSize [[.DPPNilaiLain]]} \\
 \multicolumn{5}{|r|}{\DocCellSize PPN 12\%} &
   \multicolumn{2}{r|}{\DocCellSize [[.PPN]]} \\
-\hline
+[[end]]\hline
 \multicolumn{5}{|r|}{\DocCellSize\bfseries Total} &
   \multicolumn{2}{r|}{\DocCellSize\bfseries [[.Total]]} \\
 \hline

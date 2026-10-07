@@ -30,6 +30,7 @@ export function useQuotationWizard(
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null)
   const [showDiscountModal, setShowDiscountModal] = useState(false)
   const [discountPct, setDiscountPct] = useState<number>(0)
+  const [ppnEnabled, setPpnEnabled] = useState(true)
 
   const [products, setProducts] = useState<ProductItem[]>([])
   const [prodPageSize, setProdPageSize] = useState(5)
@@ -62,7 +63,7 @@ export function useQuotationWizard(
     berlakuSampai,
     productCount: products.length,
   })
-  const summary = wizardSummary(products, discountPct, shippingCost)
+  const summary = wizardSummary(products, discountPct, shippingCost, ppnEnabled)
   const unitIdByCode = useMemo(() => unitIdIndex(units), [units])
 
   function deleteProduct(id: number) {
@@ -96,6 +97,7 @@ export function useQuotationWizard(
     setSelectedClient(s.selectedClient)
     setSelectedContactId(s.selectedContactId)
     setDiscountPct(s.discountPct)
+    setPpnEnabled(s.ppnEnabled)
     setProducts(s.products)
     setProdPage(1)
     setShippingAddress(s.shippingAddress)
@@ -117,6 +119,7 @@ export function useQuotationWizard(
     setProducts(s.products)
     if (!header) return
     setDiscountPct(s.discountPct)
+    setPpnEnabled(s.ppnEnabled)
     setShippingAddress(s.shippingAddress)
     setShippingTime(s.shippingTime)
     setShippingCost(s.shippingCost)
@@ -148,6 +151,8 @@ export function useQuotationWizard(
     showDiscountModal,
     setShowDiscountModal,
     discountPct,
+    ppnEnabled,
+    setPpnEnabled,
     setDiscountPct,
     products,
     setProducts,

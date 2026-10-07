@@ -39,6 +39,8 @@ func (r *Repo) keepLinePrice(ctx context.Context, id, lineID int64, item *Create
 // keepHeaderPrices restores discount and shipping.
 // A missing quotation keeps no discount; the save then reports it missing.
 func (r *Repo) keepHeaderPrices(ctx context.Context, id int64, req *HeaderRequest) error {
+	// The PPN choice is a price too; nil keeps the stored one
+	req.PPNEnabled = nil
 	err := r.db.QueryRow(ctx, r.store.Get("quotations.stored_header_prices"), id).
 		Scan(&req.DiscountPct, &req.ShippingCost)
 	if errors.Is(err, pgx.ErrNoRows) {

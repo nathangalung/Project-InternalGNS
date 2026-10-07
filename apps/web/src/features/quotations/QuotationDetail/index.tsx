@@ -134,6 +134,7 @@ export default function QuotationDetail({
           subTotal={q.subtotal}
           dppNilaiLain={q.dppNilaiLain}
           ppn12={q.ppnAmount}
+          withPPN={q.ppnEnabled}
           totalShip={totalShip}
           totalProfit={profitAfterDiscount(q.products, q.totalDiscount)}
           grandTotal={q.totalBayar}

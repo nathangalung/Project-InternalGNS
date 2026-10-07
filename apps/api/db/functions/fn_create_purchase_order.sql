@@ -1,4 +1,4 @@
--- Canonical current body of fn_create_purchase_order (deployed by migration 00103).
+-- Canonical current body of fn_create_purchase_order (deployed by migration 00107).
 CREATE OR REPLACE FUNCTION public.fn_create_purchase_order(p_quotation_id bigint, p_user_id bigint)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -7,14 +7,15 @@ DECLARE
   v_po_id        BIGINT;
   v_company_id   BIGINT;
   v_contact_id   BIGINT;
+  v_ppn_on       BOOLEAN;
 BEGIN
   SELECT id INTO v_po_id FROM purchase_orders WHERE quotation_id = p_quotation_id;
   IF v_po_id IS NOT NULL THEN
     RETURN v_po_id;
   END IF;
 
-  SELECT company_client_id, contact_id
-  INTO v_company_id, v_contact_id
+  SELECT company_client_id, contact_id, ppn_enabled
+  INTO v_company_id, v_contact_id, v_ppn_on
   FROM quotations WHERE id = p_quotation_id;
 
   IF v_company_id IS NULL THEN
@@ -25,10 +26,10 @@ BEGIN
   -- po_number is the client's own, entered later.
   INSERT INTO purchase_orders (
     quotation_id, company_client_id, contact_id,
-    po_date, status, created_by, updated_by
+    po_date, status, created_by, updated_by, ppn_enabled
   ) VALUES (
     p_quotation_id, v_company_id, v_contact_id,
-    CURRENT_DATE, 'PENDING', p_user_id, p_user_id
+    CURRENT_DATE, 'PENDING', p_user_id, p_user_id, v_ppn_on
   ) RETURNING id INTO v_po_id;
 
   INSERT INTO purchase_order_items (

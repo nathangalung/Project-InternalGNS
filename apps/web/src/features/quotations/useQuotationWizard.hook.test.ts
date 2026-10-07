@@ -162,9 +162,11 @@ describe("useQuotationWizard seed", () => {
         berlakuSampai: "14",
         jatuhTempo: "30",
         clientRefNo: "RFQ-7",
+        ppnEnabled: false,
       }),
     )
     expect(result.current).toMatchObject({
+      ppnEnabled: false,
       selectedClient: "3",
       selectedContactId: 8,
       discountPct: 5,
@@ -191,6 +193,7 @@ describe("useQuotationWizard seed", () => {
       berlakuSampai: "14",
       jatuhTempo: "30",
       clientRefNo: "RFQ-7",
+      ppnEnabled: false,
     }
     act(() => result.current.saveProduct(FORM))
     act(() => result.current.setProdPage(2))
@@ -205,6 +208,7 @@ describe("useQuotationWizard seed", () => {
       shippingTime: "9",
       clientRefNo: "RFQ-8",
       selectedClient: "",
+      ppnEnabled: true,
     })
 
     act(() => result.current.syncFromServer(stored, true))
@@ -212,6 +216,7 @@ describe("useQuotationWizard seed", () => {
       prodPage: 2,
       selectedClient: "",
       discountPct: 5,
+      ppnEnabled: false,
       shippingAddress: "Jl. Pelabuhan No. 1, Jakarta Utara",
       shippingTime: "4",
       shippingCost: "75000",
@@ -234,6 +239,7 @@ describe("live contact", () => {
     berlakuSampai: "",
     jatuhTempo: "",
     clientRefNo: "",
+    ppnEnabled: true,
   })
 
   it("follows another editor's contact", () => {

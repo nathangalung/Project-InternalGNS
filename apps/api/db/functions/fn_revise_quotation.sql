@@ -1,4 +1,4 @@
--- Canonical current body of fn_revise_quotation (deployed by migration 00103).
+-- Canonical current body of fn_revise_quotation (deployed by migration 00107).
 CREATE OR REPLACE FUNCTION public.fn_revise_quotation(p_quotation_id bigint, p_user_id bigint, p_note text DEFAULT NULL::text)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -36,7 +36,7 @@ BEGIN
     payment_terms, validity_days, discount_pct,
     total_produk, total, total_discount,
     dpp_nilai_lain, ppn_amount, grand_total,
-    created_by, updated_by
+    created_by, updated_by, ppn_enabled
   ) VALUES (
     v_new_no, v_orig.version + 1, v_orig.id,
     v_orig.company_client_id, v_orig.company_client_name, v_orig.contact_id, v_orig.contact_name,
@@ -45,7 +45,7 @@ BEGIN
     v_orig.total_produk, v_orig.total, v_orig.total_discount,
     -- The lines are copied as they are, so their tax is too.
     v_orig.dpp_nilai_lain, v_orig.ppn_amount, v_orig.grand_total,
-    p_user_id, p_user_id
+    p_user_id, p_user_id, v_orig.ppn_enabled
   ) RETURNING id INTO v_new_id;
 
   UPDATE quotation_status_history

@@ -282,6 +282,7 @@ export type InvoiceBackendRow = {
     attachmentObjectKey?: string;
     paidAt?: string;
     paymentProofKey?: string;
+    ppnEnabled: boolean;
 };
 
 // From invoices/dto.go
@@ -681,6 +682,7 @@ export type PurchaseOrderRow = {
     notes?: string;
     objectKey?: string;
     discountPct?: string;
+    ppnEnabled: boolean;
     quotationTotal?: string;
     quotationSubtotal?: string;
     poSubtotal?: string;
@@ -726,6 +728,7 @@ export type QuotationCreateInput = {
     items: QuotationItemInput[];
     notes?: string;
     status?: QuotationStatus;
+    ppnEnabled?: boolean;
 };
 
 // From quotations/dto.go
@@ -776,6 +779,7 @@ export type QuotationHeader = {
     ppnAmount?: string;
     grandTotal?: string;
     notes?: string;
+    ppnEnabled: boolean;
     rowVersion: number;
     createdAt: string;
     updatedAt: string;
@@ -792,6 +796,7 @@ export type QuotationHeaderInput = {
     shippingDays?: number;
     shippingCost?: string;
     notes?: string;
+    ppnEnabled?: boolean;
 };
 
 // From quotations/dto.go
@@ -1017,6 +1022,7 @@ export type QuotationUpdateInput = {
     shippingCost?: string;
     items: QuotationItemInput[];
     notes?: string;
+    ppnEnabled?: boolean;
 };
 
 // From users/dto.go

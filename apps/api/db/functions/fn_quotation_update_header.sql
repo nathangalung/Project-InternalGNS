@@ -1,5 +1,5 @@
--- Canonical current body of fn_quotation_update_header (deployed by migration 00103).
-CREATE OR REPLACE FUNCTION public.fn_quotation_update_header(p_quotation_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_notes text, p_user_id bigint)
+-- Canonical current body of fn_quotation_update_header (deployed by migration 00107).
+CREATE OR REPLACE FUNCTION public.fn_quotation_update_header(p_quotation_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_notes text, p_user_id bigint, p_ppn_enabled boolean DEFAULT NULL::boolean)
  RETURNS void
  LANGUAGE plpgsql
 AS $function$
@@ -22,6 +22,7 @@ BEGIN
       validity_days = p_validity_days,
       discount_pct  = p_discount_pct,
       notes         = p_notes,
+      ppn_enabled   = COALESCE(p_ppn_enabled, ppn_enabled),
       updated_by    = p_user_id
   WHERE id = p_quotation_id;
 

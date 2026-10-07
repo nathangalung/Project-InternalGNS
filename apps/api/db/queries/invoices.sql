@@ -26,7 +26,8 @@ SELECT inv.id,
        inv.updated_at,
        inv.attachment_object_key,
        inv.paid_at,
-       inv.payment_proof_key
+       inv.payment_proof_key,
+       inv.ppn_enabled
 FROM invoices inv
 JOIN quotations q ON q.id = inv.quotation_id
 JOIN company_client cc ON cc.id = inv.company_client_id
@@ -67,7 +68,8 @@ SELECT inv.id,
        inv.updated_at,
        inv.attachment_object_key,
        inv.paid_at,
-       inv.payment_proof_key
+       inv.payment_proof_key,
+       inv.ppn_enabled
 FROM invoices inv
 JOIN quotations q ON q.id = inv.quotation_id
 WHERE inv.id = $1;
@@ -100,7 +102,8 @@ SELECT inv.id,
        inv.updated_at,
        inv.attachment_object_key,
        inv.paid_at,
-       inv.payment_proof_key
+       inv.payment_proof_key,
+       inv.ppn_enabled
 FROM invoices inv
 JOIN quotations q ON q.id = inv.quotation_id
 WHERE inv.quotation_id = $1
@@ -148,6 +151,7 @@ SELECT inv.id,
        inv.attachment_object_key,
        inv.paid_at,
        inv.payment_proof_key,
+       inv.ppn_enabled,
        inv.replaces_invoice_id,
        rp.invoice_no AS replaces_invoice_no,
        rb.id AS replaced_by_invoice_id
@@ -204,6 +208,7 @@ SELECT inv.id,
        inv.attachment_object_key,
        inv.paid_at,
        inv.payment_proof_key,
+       inv.ppn_enabled,
        inv.replaces_invoice_id,
        rp.invoice_no AS replaces_invoice_no,
        rb.id AS replaced_by_invoice_id

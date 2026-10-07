@@ -10,6 +10,8 @@ interface CostBreakdownProps {
   subTotal: number
   dppNilaiLain: number
   ppn12: number
+  // False when the document is sold without PPN
+  withPPN?: boolean
   totalShip: number
   totalProfit: number
   showProfit?: boolean
@@ -28,6 +30,7 @@ export default function CostBreakdown({
   subTotal,
   dppNilaiLain,
   ppn12,
+  withPPN = true,
   totalShip,
   totalProfit,
   showProfit = true,
@@ -59,14 +62,23 @@ export default function CostBreakdown({
               <span className={rowValue}>{formatRp(subTotal)}</span>
             </div>
           )}
-          <div className={row}>
-            <span>DPP Nilai Lain</span>
-            <span className={rowValue}>{formatRp(dppNilaiLain)}</span>
-          </div>
-          <div className={row}>
-            <span>PPN 12%</span>
-            <span className={rowValue}>{formatRp(ppn12)}</span>
-          </div>
+          {withPPN ? (
+            <>
+              <div className={row}>
+                <span>DPP Nilai Lain</span>
+                <span className={rowValue}>{formatRp(dppNilaiLain)}</span>
+              </div>
+              <div className={row}>
+                <span>PPN 12%</span>
+                <span className={rowValue}>{formatRp(ppn12)}</span>
+              </div>
+            </>
+          ) : (
+            <div className={row}>
+              <span>PPN</span>
+              <span className={rowValue}>Tanpa PPN</span>
+            </div>
+          )}
           <div className={row}>
             <span>Biaya Pengiriman</span>
             <span className={rowValue}>{formatRp(totalShip)}</span>

@@ -226,7 +226,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	if !roles.SetsPrices(deps.CurrentUserRole(r.Context())) {
 		unpriced(req.Items)
-		req.DiscountPct, req.ShippingCost = "0", nil
+		req.DiscountPct, req.ShippingCost, req.PPNEnabled = "0", nil, nil
 	}
 	// DB function does rest.
 	if req.CompanyClientID == 0 {

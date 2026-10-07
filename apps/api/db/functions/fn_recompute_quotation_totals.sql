@@ -1,4 +1,4 @@
--- Canonical current body of fn_recompute_quotation_totals (deployed by migration 00086).
+-- Canonical current body of fn_recompute_quotation_totals (deployed by migration 00107).
 CREATE OR REPLACE FUNCTION public.fn_recompute_quotation_totals(p_quotation_id bigint)
  RETURNS void
  LANGUAGE plpgsql
@@ -12,8 +12,9 @@ DECLARE
   v_total_disc   NUMERIC(15,2) := 0;
   v_dpp          NUMERIC(15,2) := 0;
   v_ppn          NUMERIC(15,2) := 0;
+  v_ppn_on       BOOLEAN;
 BEGIN
-  SELECT discount_pct INTO v_pct FROM quotations WHERE id = p_quotation_id;
+  SELECT discount_pct, ppn_enabled INTO v_pct, v_ppn_on FROM quotations WHERE id = p_quotation_id;
   -- Same accumulation as fn_create_quotation, so the header matches it.
   FOR v_line IN
     SELECT item_type, qty, selling_price FROM quotation_items
@@ -35,6 +36,12 @@ BEGIN
     v_dpp := v_dpp + fn_line_dpp(v_net);
     v_ppn := v_ppn + fn_line_ppn(v_net);
   END LOOP;
+
+  -- Without PPN there is no tax base either.
+  IF NOT v_ppn_on THEN
+    v_dpp := 0;
+    v_ppn := 0;
+  END IF;
 
   UPDATE quotations
   SET total_produk   = v_total_produk,

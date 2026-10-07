@@ -123,8 +123,12 @@ export function lineNet(qty: number, price: number, discountPct = 0): number {
 //
 // Each line net (shipping is a line of its own) gives DPP Nilai Lain =
 // ROUND(net × 11/12) and PPN = ROUND(that DPP × 12%), summed over the lines,
-// as the server stores them for the quotation, the PO and the invoice.
-export function computeTaxBreakdown(lineNets: number[]): {
+// as the server stores them for the quotation, the PO and the invoice. A
+// document without PPN carries neither, and its grand total is the net.
+export function computeTaxBreakdown(
+  lineNets: number[],
+  withPPN = true,
+): {
   subtotal: number
   dppNilaiLain: number
   ppnAmount: number
@@ -137,6 +141,7 @@ export function computeTaxBreakdown(lineNets: number[]): {
     const sen = toSen(rp)
     const lineDpp = divRound(BigInt(sen) * BigInt(11), BigInt(12))
     net += sen
+    if (!withPPN) continue
     dpp += Number(lineDpp)
     ppn += Number(divRound(lineDpp * BigInt(12), BigInt(100)))
   }

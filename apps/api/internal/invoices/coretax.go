@@ -110,6 +110,12 @@ func (h *CoretaxHandler) Export(w http.ResponseWriter, r *http.Request) {
 			"Invoice yang dibatalkan tidak dapat diekspor ke Coretax.", nil))
 		return
 	}
+	// No PPN, no faktur pajak.
+	if !inv.PPNEnabled {
+		httperr.Render(w, httperr.UnprocessableDetail(
+			"Invoice tanpa PPN tidak dibuat faktur pajak, jadi tidak diekspor ke Coretax.", nil))
+		return
+	}
 
 	items, err := h.repo.ListItems(r.Context(), id)
 	if err != nil {

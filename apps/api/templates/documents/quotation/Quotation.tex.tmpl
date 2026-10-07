@@ -194,11 +194,11 @@
   \multicolumn{2}{r|}{\DocCellSize [[.Shipping]]} \\
 [[end]]\multicolumn{5}{|r|}{\DocCellSize Sub Total} &
   \multicolumn{2}{r|}{\DocCellSize [[.Subtotal]]} \\
-\multicolumn{5}{|r|}{\DocCellSize DPP Nilai Lain} &
+[[if .WithPPN]]\multicolumn{5}{|r|}{\DocCellSize DPP Nilai Lain} &
   \multicolumn{2}{r|}{\DocCellSize [[.DPP]]} \\
 \multicolumn{5}{|r|}{\DocCellSize PPN 12\%} &
   \multicolumn{2}{r|}{\DocCellSize [[.PPN]]} \\
-\hline
+[[end]]\hline
 \multicolumn{5}{|r|}{\DocCellSize\bfseries Grand Total} &
   \multicolumn{2}{r|}{\DocCellSize\bfseries [[.GrandTotal]]} \\
 \hline

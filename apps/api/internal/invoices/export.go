@@ -53,6 +53,7 @@ type exportData struct {
 	TotalProduk       string
 	Diskon            string
 	DPP               string
+	WithPPN           bool
 	DPPNilaiLain      string
 	PPN               string
 	Total             string
@@ -165,6 +166,7 @@ func (h *ExportHandler) buildData(det InvoiceDetail, items []InvoiceItem) export
 		TotalProduk:       pdfgen.FormatIDRCents(totalProdukStr),
 		Diskon:            diskon,
 		DPP:               pdfgen.FormatIDRCents(pdfgen.StrDeref(det.Dpp)),
+		WithPPN:           det.PPNEnabled,
 		DPPNilaiLain:      pdfgen.FormatIDRCents(pdfgen.StrDeref(det.DppNilaiLain)),
 		PPN:               pdfgen.FormatIDRCents(pdfgen.StrDeref(det.PpnAmount)),
 		Total:             pdfgen.FormatIDRCents(pdfgen.StrDeref(det.Total)),

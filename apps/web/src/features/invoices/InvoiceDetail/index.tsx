@@ -98,7 +98,7 @@ export default function InvoiceDetail({ inv }: InvoiceDetailProps) {
   // The discount is snapshotted, so gross minus it lands on the stored DPP.
   const nominalDiskon = toNum(inv.totalDiscount)
   const subTotal = totalProduk - nominalDiskon
-  const fallback = computeTaxBreakdown([subTotal, totalShip])
+  const fallback = computeTaxBreakdown([subTotal, totalShip], inv.ppnEnabled)
   const dppNilaiLain = toNum(inv.dppNilaiLain) || fallback.dppNilaiLain
   const ppn12 = toNum(inv.ppnAmount) || fallback.ppnAmount
   const grandTotal = toNum(inv.total) || fallback.grandTotal
@@ -196,6 +196,7 @@ export default function InvoiceDetail({ inv }: InvoiceDetailProps) {
         subTotal={subTotal}
         dppNilaiLain={dppNilaiLain}
         ppn12={ppn12}
+        withPPN={inv.ppnEnabled}
         totalShip={totalShip}
         totalProfit={totalProfit}
         showProfit={hasCost}
