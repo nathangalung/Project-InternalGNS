@@ -134,19 +134,28 @@ JOIN vendors v ON v.id = vp.vendor_id
 WHERE vp.item_id = $1 AND v.is_active = TRUE
 ORDER BY vp.cost_price ASC NULLS LAST;
 
--- name: items.find_by_impa
+-- name: items.find_by_impa_bulk
+-- Exact active IMPA hit per import row, one statement per chunk.
 -- UPPER(impa_code) is the expression uq_items_impa_code_active indexes, so
 -- rows stored before normalisation still match. ORDER BY keeps the pick
 -- stable should an inactive duplicate ever be reactivated around the index.
-SELECT id FROM items
-WHERE UPPER(impa_code) = UPPER(BTRIM($1)) AND is_active = TRUE
-ORDER BY id
-LIMIT 1;
+-- idx is the 1-based position in $1; a code with no active item has no row.
+SELECT b.ord AS idx, m.id AS item_id
+FROM unnest($1::text[]) WITH ORDINALITY AS b(code, ord)
+CROSS JOIN LATERAL (
+    SELECT id FROM items
+    WHERE UPPER(impa_code) = UPPER(BTRIM(b.code)) AND is_active = TRUE
+    ORDER BY id
+    LIMIT 1
+) m;
 
 -- name: items.vendor_active
 SELECT is_active FROM vendors WHERE id = $1;
 
--- name: items.match_with_vendor_by_id
+-- name: items.match_with_vendor_by_ids
+-- One row per active item in $1, priced by its cheapest active vendor. The
+-- LATERAL keeps one link per item, so no item repeats; an inactive or
+-- missing id has no row.
 SELECT
     i.id              AS item_id,
     i.name            AS item_name,
@@ -171,7 +180,7 @@ LEFT JOIN LATERAL (
     LIMIT 1
 ) vp ON TRUE
 LEFT JOIN vendors v ON v.id = vp.vendor_id
-WHERE i.id = $1 AND i.is_active = TRUE;
+WHERE i.id = ANY($1::bigint[]) AND i.is_active = TRUE;
 
 -- name: items.suggest_selling_prices
 SELECT
