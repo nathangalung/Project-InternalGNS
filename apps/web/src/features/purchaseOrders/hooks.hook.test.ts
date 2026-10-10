@@ -7,7 +7,14 @@ import { ApiError } from "@/lib/api-client"
 import { queryKeys } from "@/lib/query-keys"
 import { toast } from "@/lib/toast"
 import { problem } from "@/test/problem"
-import { invalidated, renderQueryHook, seed, settle, until } from "@/test/query"
+import {
+  invalidated,
+  renderQueryHook,
+  seed,
+  settle,
+  throwingQueryClient,
+  until,
+} from "@/test/query"
 import type { PoIncompleteProblem, Role } from "@/types/api"
 import * as api from "./api"
 import {
@@ -15,6 +22,7 @@ import {
   useActorNames,
   useChangePoStatus,
   useInvoiceFiled,
+  usePoFileUrl,
   usePoHistory,
   usePoItems,
   usePoUpload,
@@ -127,6 +135,38 @@ describe("PO queries", () => {
     await until(() => expect(result.current.isSuccess).toBe(true))
     await act(() => qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all }))
     expect(m.listHistory).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe("usePoFileUrl", () => {
+  it.each<[string, number | undefined, string | undefined]>([
+    ["without an id", undefined, "po/3/a.pdf"],
+    ["without a stored file", 3, undefined],
+  ])("does not fetch %s", async (_name, id, key) => {
+    const { result } = renderQueryHook(() => usePoFileUrl(id, key))
+    await until(() => expect(result.current.fetchStatus).toBe("idle"))
+    expect(m.presignDownload).not.toHaveBeenCalled()
+  })
+
+  // A replaced file asks again.
+  it("reads the proxy path per stored file, under the PO's own key", async () => {
+    m.presignDownload.mockResolvedValue({
+      downloadUrl: "/storage/object?key=a",
+      expiresAt: 1,
+      fileName: "a.pdf",
+    })
+    const { qc, result } = renderQueryHook(() => usePoFileUrl(3, "po/3/a.pdf"))
+    await until(() => expect(result.current.data?.downloadUrl).toBe("/storage/object?key=a"))
+    expect(m.presignDownload).toHaveBeenCalledWith(3)
+    await act(() => qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.detail(3) }))
+    expect(m.presignDownload).toHaveBeenCalledTimes(2)
+  })
+
+  // The preview shows a failure itself.
+  it("keeps a failed lookup off the route error boundary", async () => {
+    m.presignDownload.mockRejectedValue(new ApiError(404, problem(404), "gone"))
+    const { result } = renderQueryHook(() => usePoFileUrl(3, "po/3/a.pdf"), throwingQueryClient())
+    await until(() => expect(result.current.isError).toBe(true))
   })
 })
 

@@ -2,7 +2,7 @@ import { act } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { fetchObjectUrl } from "@/lib/api-client"
 import { renderHook } from "@/test/renderHook"
-import { useObjectUrl } from "./useObjectUrl"
+import { useObjectUrl, useObjectUrlState } from "./useObjectUrl"
 
 vi.mock("@/lib/api-client", () => ({ fetchObjectUrl: vi.fn() }))
 
@@ -74,5 +74,47 @@ describe("useObjectUrl", () => {
     const { result } = render("/broken")
     await flush()
     expect(result.current).toBe("")
+  })
+})
+
+describe("useObjectUrlState", () => {
+  const renderState = (path?: string) =>
+    renderHook(({ path }: Props) => useObjectUrlState(path), { path } as Props)
+
+  it("tells a failed download from one still loading", async () => {
+    let fail: (e: Error) => void = () => {}
+    fetchUrl.mockReturnValueOnce(
+      new Promise<string>((_, reject) => {
+        fail = reject
+      }),
+    )
+    const { result } = renderState("/broken")
+    await flush()
+    expect(result.current).toEqual({ url: "", failed: false })
+    await act(async () => fail(new Error("gone")))
+    expect(result.current).toEqual({ url: "", failed: true })
+  })
+
+  it("forgets a failure once the path moves on", async () => {
+    fetchUrl.mockRejectedValueOnce(new Error("gone")).mockResolvedValueOnce("blob:b")
+    const { result, rerender } = renderState("/a")
+    await flush()
+    expect(result.current.failed).toBe(true)
+    rerender({ path: "/b" })
+    await flush()
+    expect(result.current).toEqual({ url: "blob:b", failed: false })
+  })
+
+  it("ignores a failure that lands after unmount", async () => {
+    let fail: (e: Error) => void = () => {}
+    fetchUrl.mockReturnValueOnce(
+      new Promise<string>((_, reject) => {
+        fail = reject
+      }),
+    )
+    const { result, unmount } = renderState("/slow")
+    unmount()
+    await act(async () => fail(new Error("gone")))
+    expect(result.current).toEqual({ url: "", failed: false })
   })
 })

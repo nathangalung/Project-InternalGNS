@@ -29,6 +29,7 @@ import type { PoStatus } from "../types"
 import UploadPoModal from "../UploadPoModal"
 import CompletenessModal from "./CompletenessModal"
 import FileCard from "./FileCard"
+import FilePreviewModal from "./FilePreviewModal"
 import Header from "./Header"
 import HistoryCard from "./HistoryCard"
 import {
@@ -37,6 +38,7 @@ import {
   deliveryNoteFileName,
   poBreakdown,
   poEditLockReason,
+  previewKind,
   uploadRules,
 } from "./helpers"
 import ReasonModal from "./ReasonModal"
@@ -68,6 +70,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
   const [showUpload, setShowUpload] = useState(false)
   const [showReason, setShowReason] = useState(false)
   const [confirmRemove, setConfirmRemove] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
   // Line whose store link is being set
   const [linkRow, setLinkRow] = useState<ProductRow | null>(null)
   // The gate refusal and the move it stopped
@@ -205,6 +208,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
           fileLocked={rules.fileLocked}
           onUpload={writes && rules.editable ? () => setShowUpload(true) : undefined}
           onDownload={() => void handleDownload()}
+          onPreview={previewKind(po.fileName) === "none" ? undefined : () => setShowPreview(true)}
           onRemove={writes && fileRemovable ? () => setConfirmRemove(true) : undefined}
         />
         <ClientSummaryCard
@@ -257,6 +261,16 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
           checking={upload.checking}
           onClose={() => setShowUpload(false)}
           onSubmit={handleUploadSubmit}
+        />
+      )}
+
+      {showPreview && po.objectKey && po.fileName && (
+        <FilePreviewModal
+          poId={po.id}
+          objectKey={po.objectKey}
+          fileName={po.fileName}
+          onDownload={() => void handleDownload()}
+          onClose={() => setShowPreview(false)}
         />
       )}
 

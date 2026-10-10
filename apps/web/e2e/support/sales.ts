@@ -348,8 +348,12 @@ export class SalesSeed {
     return api<PurchaseOrder>("GET", `/purchase-orders/by-quotation/${quotationId}`)
   }
 
-  attachPoFile(po: PurchaseOrder, fileName = "po-klien.pdf"): Promise<void> {
-    return uploadPoFile(adminToken(), po.id, fileName)
+  attachPoFile(
+    po: PurchaseOrder,
+    fileName = "po-klien.pdf",
+    content?: PoFileContent,
+  ): Promise<void> {
+    return uploadPoFile(adminToken(), po.id, fileName, content)
   }
 
   // Deliver a PO fully.
@@ -458,15 +462,28 @@ export function idFrom(href: string | null): number {
 const pdfText =
   "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[]/Count 0>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
 
-// Attach a PDF to PO.
+// 1x1 transparent PNG.
+export const tinyPng = new Uint8Array(
+  Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+    "base64",
+  ),
+)
+
+export type PoFileContent = { body: string | Uint8Array<ArrayBuffer>; type: string }
+
+const pdfContent: PoFileContent = { body: pdfText, type: "application/pdf" }
+
+// Attach a file to PO.
 //
 // The app's own path: presign, PUT through the storage proxy, then attach.
 // PENDING becomes UPLOADED. The server refuses a key with no upload behind
-// it, so the object must really exist.
+// it, so the object must really exist. A PDF unless content says otherwise.
 export async function uploadPoFile(
   token: string,
   poId: number,
   fileName = "po-klien.pdf",
+  content: PoFileContent = pdfContent,
 ): Promise<void> {
   const authed = async (what: string, path: string, init: RequestInit, type: string) => {
     const res = await fetch(`${apiURL}${path}`, {
@@ -487,8 +504,8 @@ export async function uploadPoFile(
   await authed(
     `upload ${fileName}`,
     presign.uploadUrl,
-    { method: "PUT", body: pdfText },
-    "application/pdf",
+    { method: "PUT", body: content.body },
+    content.type,
   )
   await authed(
     "attach PO file",
@@ -497,7 +514,7 @@ export async function uploadPoFile(
       method: "PATCH",
       body: JSON.stringify({
         fileName,
-        fileSize: Buffer.byteLength(pdfText),
+        fileSize: Buffer.byteLength(content.body),
         objectKey: presign.objectKey,
       }),
     },

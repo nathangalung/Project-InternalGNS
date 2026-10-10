@@ -10,6 +10,8 @@ type FileCardProps = {
   // Undefined when nothing is editable
   onUpload?: () => void
   onDownload: () => void
+  // A PDF or a photo; a spreadsheet only downloads
+  onPreview?: () => void
   // Only while PENDING or UPLOADED
   onRemove?: () => void
 }
@@ -41,6 +43,7 @@ export default function FileCard({
   fileLocked = false,
   onUpload,
   onDownload,
+  onPreview,
   onRemove,
 }: FileCardProps) {
   const hasFile = Boolean(fileName)
@@ -117,6 +120,25 @@ export default function FileCard({
           {hasFile && onRemove && (
             <button type="button" onClick={onRemove} className={btnRemove}>
               Hapus Berkas
+            </button>
+          )}
+          {hasFile && onPreview && (
+            <button type="button" onClick={onPreview} className={`${ui.btnOutline} min-w-[120px]`}>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              Lihat Berkas
             </button>
           )}
           {hasFile && (

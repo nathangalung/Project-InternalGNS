@@ -538,8 +538,15 @@ Shared pieces in `components/shared`, reuse them instead of copying markup:
 
 Stored files (logos, product photos, attachments) come through the
 authenticated API proxy, and the enforced CSP allows images only from self,
-`blob:` and `data:`, so show one through `hooks/useObjectUrl` (a blob URL it
-revokes) and never point an `<img>` at an API URL. Product photos are shrunk
+`blob:` and `data:` and frames only from `blob:` (`frame-src blob:`), so show
+one through `hooks/useObjectUrl` (a blob URL it revokes; `useObjectUrlState`
+also tells a failed download from one loading) and never point an `<img>` or
+an `<iframe>` at an API URL. The PO detail's Lihat Berkas
+(`PurchaseOrderDetail/FilePreviewModal`) shows the PO file that way: a photo
+in an `<img>`, a PDF in an `<iframe>` with Buka di Tab Baru for a browser
+that shows no PDF inline, and a spreadsheet only downloads
+(`previewKind`, by the extensions `storage/policy.go` allows). Closing the
+modal unmounts it, which revokes the URL. Product photos are shrunk
 in the browser before upload (`lib/image-shrink`, WebP within 1600px). A
 product keeps up to eight (`item_images`, `MaxItemImages`, enforced by
 `fn_item_image_add`); `items.image_object_key` names the cover (Foto Utama),
@@ -626,7 +633,8 @@ and every chip removes only its own filter.
   so every test fails on a violation its browser reports. `make e2e-csp` (and
   the CI e2e job) builds the SPA against a separate API origin, serves `dist`
   with that policy, and runs the whole suite against the throwaway
-  `gns_csp_test`; `e2e/csp.spec.ts` proves the header is live. A new
+  `gns_csp_test`; `e2e/csp.spec.ts` proves the header is live, and that a
+  `blob:` frame loads while a frame from another origin is refused. A new
   dependency that injects an inline `<style>` or loads from another host
   fails there: fix the cause, never add `unsafe-inline` or `unsafe-eval`.
 - Lighthouse CI (`bun run lighthouse`, the CI `lighthouse` job) audits 12
