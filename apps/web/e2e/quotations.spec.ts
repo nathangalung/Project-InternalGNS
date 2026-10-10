@@ -484,7 +484,7 @@ test.describe("quotation wizard import and requests", () => {
       rows: [
         ["No", "Kode IMPA", "Nama", "Jumlah", "Satuan"],
         [1, item.impaCode, item.name, 3, "PCS"],
-        [2, null, fresh, 2, "PC"],
+        [2, null, fresh, 2, "GLN"],
       ],
     })
 
@@ -510,7 +510,7 @@ test.describe("quotation wizard import and requests", () => {
     await expect(main).toContainText("Rp 150.000")
     await expect(main).toContainText("Belum lengkap: vendor, harga beli, harga jual")
     await expect(
-      page.getByRole("alert").filter({ hasText: 'Satuan "PC" tidak dikenal.' }),
+      page.getByRole("alert").filter({ hasText: 'Satuan "GLN" tidak dikenal.' }),
     ).toBeVisible()
 
     // A known unit is the one thing a draft cannot do without.
@@ -520,7 +520,7 @@ test.describe("quotation wizard import and requests", () => {
     await page.getByRole("option", { name: /^PCS/ }).click()
     await product.getByRole("button", { name: "Simpan Perubahan" }).click()
     await expect(product).toBeHidden()
-    await expect(page.getByText('Satuan "PC" tidak dikenal.')).toHaveCount(0)
+    await expect(page.getByText('Satuan "GLN" tidak dikenal.')).toHaveCount(0)
     await page.getByRole("button", { name: "Tidak Ditawarkan produk 2" }).click()
     await expect(main).toContainText("Tidak ditawarkan ke klien.")
 

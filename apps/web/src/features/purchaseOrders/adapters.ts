@@ -1,6 +1,7 @@
 import type { ProductAddFormData } from "@/features/items/ProductAdd/helpers"
 import type { ProductRow, ShippingRow } from "@/features/quotations/types"
 import { nextLineId, type ProductItem, productFields } from "@/features/quotations/wizard"
+import { resolveUnit, type UnitIndex } from "@/features/units/match"
 import { formatDateTime, formatRupiah, toNum } from "@/lib/format"
 import type {
   PoItemInput,
@@ -166,10 +167,9 @@ export function upsertPoLine(
   return [...lines, { id: nextLineId(lines), ...fields }]
 }
 
-function unitIdOf(line: PoEditLine, unitIdByCode: Map<string, number>): number | undefined {
-  const code = line.satuan.trim().toUpperCase()
-  if (code === "") return line.source?.unitId
-  return unitIdByCode.get(code)
+function unitIdOf(line: PoEditLine, unitByText: UnitIndex): number | undefined {
+  if (line.satuan.trim() === "") return line.source?.unitId
+  return resolveUnit(unitByText, line.satuan)?.id
 }
 
 // Save payload line.
@@ -179,7 +179,7 @@ function unitIdOf(line: PoEditLine, unitIdByCode: Map<string, number>): number |
 // unknown cost. An edited line keeps the stored fields the wizard cannot
 // show, and leaves its quotation line once the product changes. A vendor
 // picked without a link travels as vendorId and the server links it.
-export function lineToInput(line: PoEditLine, unitIdByCode: Map<string, number>): PoItemInput {
+export function lineToInput(line: PoEditLine, unitByText: UnitIndex): PoItemInput {
   const s = line.source
   // The stored line id lets a role that sets no price keep its harga jual
   const id = s ? line.id : undefined
@@ -193,7 +193,7 @@ export function lineToInput(line: PoEditLine, unitIdByCode: Map<string, number>)
     itemName: line.nama || line.requestedNama,
     itemCode: line.kodeImpa || undefined,
     qty: String(line.jumlah),
-    unitId: unitIdOf(line, unitIdByCode),
+    unitId: unitIdOf(line, unitByText),
     sellingPrice: sellingHidden ? undefined : String(line.hargaJual),
     costPrice: costUnknown ? undefined : String(line.hargaBeli),
     isAvailable: s?.isAvailable,
@@ -207,12 +207,12 @@ export function lineToInput(line: PoEditLine, unitIdByCode: Map<string, number>)
 //
 // A stored line with no unit may stay that way; an edited or new line must
 // name a unit the catalogue knows.
-export function linesMissingUnit(lines: PoEditLine[], unitIdByCode: Map<string, number>): string[] {
+export function linesMissingUnit(lines: PoEditLine[], unitByText: UnitIndex): string[] {
   return lines
     .filter((l) => !l.source || l.touched)
     .filter((l) => {
       if (l.source && l.source.unitId === undefined && l.satuan.trim() === "") return false
-      return unitIdOf(l, unitIdByCode) === undefined
+      return unitIdOf(l, unitByText) === undefined
     })
     .map((l) => l.nama || l.requestedNama)
 }

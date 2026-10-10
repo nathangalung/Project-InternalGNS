@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
-	"github.com/nathangalung/internalgns/apps/api/internal/units"
 )
 
 func TestHandler_List(t *testing.T) {
@@ -24,8 +23,16 @@ func TestHandler_List(t *testing.T) {
 	// A list endpoint reports its size like every other list.
 	total := res.Header.Get("X-Total-Count")
 
-	var got []units.Unit
+	var got []map[string]any
 	require.NoError(t, json.NewDecoder(res.Body).Decode(&got))
 	assert.Equal(t, strconv.Itoa(len(got)), total)
 	assert.GreaterOrEqual(t, len(got), 33)
+	// Every unit carries its aliases, an empty list included.
+	for _, u := range got {
+		aliases, ok := u["aliases"].([]any)
+		require.True(t, ok, "unit %v has an aliases list", u["code"])
+		if u["code"] == "PCS" {
+			assert.Contains(t, aliases, "PIECES")
+		}
+	}
 }

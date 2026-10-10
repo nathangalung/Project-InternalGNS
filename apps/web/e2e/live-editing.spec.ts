@@ -179,7 +179,7 @@ test.describe("live quotation editing", () => {
     const file = xlsx({
       rows: [
         ["No", "Kode IMPA", "Nama", "Jumlah", "Satuan"],
-        [1, null, fresh, 2, "PC"],
+        [1, null, fresh, 2, "GLN"],
       ],
     })
 

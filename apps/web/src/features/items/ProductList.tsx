@@ -21,6 +21,7 @@ import ProductCreateModal from "@/features/items/ProductCreateModal"
 import ProductFilter, { type ProductFilterValues } from "@/features/items/ProductFilter"
 import ProductThumb from "@/features/items/ProductThumb"
 import { useUnits } from "@/features/units/hooks"
+import { resolveUnit, unitIndex } from "@/features/units/match"
 import { filterChips } from "@/lib/filter-chips"
 import { statusFilterLabel } from "@/lib/filter-options"
 import { emptyListText } from "@/lib/list-empty"
@@ -76,13 +77,9 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
   const source = katalogSource(list.search, debouncedSearch)
   const isSearchActive = source === "search"
 
-  const unitIdByCode = useMemo(() => {
-    const map = new Map<string, number>()
-    for (const u of unitsData ?? []) map.set(u.code, u.id)
-    return map
-  }, [unitsData])
+  const unitByText = useMemo(() => unitIndex(unitsData), [unitsData])
 
-  const unitId = filters.unitCode ? unitIdByCode.get(filters.unitCode) : undefined
+  const unitId = filters.unitCode ? resolveUnit(unitByText, filters.unitCode)?.id : undefined
 
   const listParams = useMemo(() => {
     const out: Parameters<typeof useItems>[0] = {

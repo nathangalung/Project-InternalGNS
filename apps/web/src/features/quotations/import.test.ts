@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { unitIndex } from "@/features/units/match"
 import type { LineRecommendation, MatchRowResult } from "@/types/api"
 import { importedLines, importSummary } from "./import"
 import type { ProductItem } from "./wizard"
@@ -96,6 +97,21 @@ describe("importedLines", () => {
       hargaBeli: 0,
       hargaJual: 0,
     })
+  })
+
+  it("prints the unit code an RFQ unit resolves to", () => {
+    const index = unitIndex([
+      { id: 1, code: "PCS", aliases: ["EA", "PIECES"] },
+      { id: 2, code: "RLS", aliases: ["ROLL"] },
+    ])
+    const units = ["pcs.", "Pieces", "EA", "roll", "drum"]
+    const lines = importedLines(
+      units.map((unit, i) => row(i, { requested: { name: "Tali", impaCode: "", qty: 1, unit } })),
+      recs,
+      0,
+      index,
+    )
+    expect(lines.map((l) => l.satuan)).toEqual(["PCS", "PCS", "PCS", "RLS", "DRUM"])
   })
 })
 

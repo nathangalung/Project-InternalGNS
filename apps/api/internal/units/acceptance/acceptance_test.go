@@ -6,7 +6,9 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/cucumber/godog"
@@ -99,6 +101,44 @@ func (s *scenarioState) unitListed(code string) error {
 	return err
 }
 
+func (s *scenarioState) unitNotListed(code string) error {
+	if _, err := s.find(code); err == nil {
+		return fmt.Errorf("unit %s is listed", code)
+	}
+	return nil
+}
+
+func (s *scenarioState) unitAlsoWritten(code, alias string) error {
+	u, err := s.find(code)
+	if err != nil {
+		return err
+	}
+	if !slices.Contains(u.Aliases, alias) {
+		return fmt.Errorf("unit %s aliases %v lack %s", code, u.Aliases, alias)
+	}
+	return nil
+}
+
+func (s *scenarioState) noAliasIsACode() error {
+	codes := map[string]bool{}
+	for _, u := range s.rows {
+		codes[strings.ToUpper(u.Code)] = true
+	}
+	seen := map[string]string{}
+	for _, u := range s.rows {
+		for _, a := range u.Aliases {
+			if codes[a] {
+				return fmt.Errorf("alias %s of %s is a unit code", a, u.Code)
+			}
+			if other, dup := seen[a]; dup {
+				return fmt.Errorf("alias %s names %s and %s", a, other, u.Code)
+			}
+			seen[a] = u.Code
+		}
+	}
+	return nil
+}
+
 func TestUnitsFeatures(t *testing.T) {
 	testutil.RequireDB(t)
 	suite := godog.TestSuite{
@@ -111,6 +151,9 @@ func TestUnitsFeatures(t *testing.T) {
 			sc.Step(`^every unit has a name and a Coretax code$`, s.everyUnitComplete)
 			sc.Step(`^unit "([^"]+)" is "([^"]+)" with Coretax code "([^"]+)"$`, s.unitIs)
 			sc.Step(`^unit "([^"]+)" is listed$`, s.unitListed)
+			sc.Step(`^unit "([^"]+)" is not listed$`, s.unitNotListed)
+			sc.Step(`^unit "([^"]+)" is also written "([^"]+)"$`, s.unitAlsoWritten)
+			sc.Step(`^no alias equals a unit code$`, s.noAliasIsACode)
 		},
 		Options: &godog.Options{
 			Format:   "pretty",

@@ -2,7 +2,7 @@ import type { ReactNode } from "react"
 import SearchCombobox, { messageCls } from "@/components/shared/SearchCombobox"
 import { useUnits } from "@/features/units/hooks"
 import type { UnitRow } from "@/types/api"
-import { matchUnits, unitLabel } from "./match"
+import { matchUnits, unitOption } from "./match"
 
 type UnitComboboxProps = {
   // Picked unit code, "" for none
@@ -19,7 +19,7 @@ type UnitComboboxProps = {
   leading?: ReactNode
 }
 
-// Unit picker by code or name.
+// Unit picker by code, name, alias.
 //
 // The input shows the code once picked, as the hand-built pickers did.
 export default function UnitCombobox({
@@ -40,7 +40,7 @@ export default function UnitCombobox({
       onQueryChange={onQueryChange}
       itemKey={(u) => u.id}
       itemToString={(u) => u.code}
-      renderItem={unitLabel}
+      renderItem={(u) => unitOption(u, query)}
       clearLabel="Bersihkan satuan"
       empty={<div className={messageCls}>Tidak ada hasil</div>}
       {...field}

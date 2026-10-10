@@ -473,6 +473,31 @@ sees it.
 each offer on the quotation and PO detail, and beside the picked vendor in
 the quotation product dialog.
 
+## Units
+
+A unit (Satuan) keeps the short code every document prints and exports
+(PCS, PKT), never changed once used, so a reprint stays as filed. Units 1
+to 33 carry the DJP Coretax names and codes UM.0001 to UM.0033; the
+ship-supply units map to UM.0033 and are named by the long form of their
+code (TIN Tin, PKT Packet, RLS Rolls), one name with no slash. Every other
+way a unit is written is an alias in `unit_aliases` (migration 00109):
+PC, PIECES and EA for PCS, CAN for TIN, SHEET and LEMBAR for LBR, PACK for
+PKT. An alias is stored normalised by `fn_unit_text` (upper case, one
+space between words, no trailing dot), and triggers refuse an alias equal
+to a code and a code equal to an alias, so one text names one unit; an
+ambiguous text (MT is Metrik Ton, LB is also the pound) stays out.
+`GET /units` lists each unit's `aliases`, and the web resolves typed and
+imported unit text through one helper (`features/units/match`:
+`unitIndex`, `resolveUnit`, the same normalisation), used by the wizard
+check and its submit, the RFQ import (which shows the resolved code), Ubah
+PO and the unit picker, whose row reads `CODE - Name` and names the alias
+a query matched. Never add a unit for a new spelling: add an alias. A new
+unit or alias comes in a migration that names units by code in JOIN form
+(a database without master data skips it), and the same rows go into
+`db/seeds/01_master.sql` and `testutil.SeedMasterIfMissing`; a migration
+test keeps the three alias lists equal. The server reads no unit text, so
+nothing there resolves one.
+
 ## Kas Lain
 
 Kas Lain (`/cash-entries`, `internal/cashentries`, migration 00105) records
