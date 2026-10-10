@@ -102,7 +102,7 @@ async function main() {
     {
       name: "Sarung Tangan Kerja Katun",
       impa: "190105",
-      unit: "PACK",
+      unit: "PKT",
       qty: "10",
       cost: "45000",
       sell: "65000",
@@ -176,11 +176,16 @@ async function main() {
   await post(token, `/quotations/${q.id}/status`, { status: "accepted" }, "PATCH")
   const po = await json<PurchaseOrderRow>(`/purchase-orders/by-quotation/${q.id}`, token)
   await uploadPoFile(token, po.id)
-  await post(
-    token,
-    `/purchase-orders/${po.id}/details`,
-    { poNumber: "PO/SCN/2026/0088", poDate: wibToday() },
-    "PATCH",
+  // The upload moved the row version.
+  const filed = await json<PurchaseOrderRow>(`/purchase-orders/by-quotation/${q.id}`, token)
+  await expectOk(
+    await call(`/purchase-orders/${po.id}/details`, {
+      method: "PATCH",
+      token,
+      headers: { "If-Match": String(filed.rowVersion) },
+      body: JSON.stringify({ poNumber: "PO/SCN/2026/0088", poDate: wibToday() }),
+    }),
+    "PATCH details",
   )
   for (const status of ["ON_PROGRESS", "DELIVERED"]) {
     await post(token, `/purchase-orders/${po.id}/status`, { status }, "PATCH")
@@ -264,7 +269,7 @@ One file of every document and spreadsheet the app exports, made by
 (\`gns_examples_test\`). Every company, person, number and amount is made
 up; nothing comes from \`Data/\` or production.
 
-The sale: PT Samudra Contoh Nusantara asks for five products (COIL, PACK,
+The sale: PT Samudra Contoh Nusantara asks for five products (COIL, PKT,
 TIN, PCS and MTR lines from two vendors), with a 5% discount, a shipping
 charge and 12% PPN. Quotation ${quotationNo} is sent and accepted, the PO
 gets its file and the client's PO number, goes to ON_PROGRESS and

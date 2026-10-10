@@ -83,7 +83,6 @@ func TestRepo_BrokenStreams(t *testing.T) {
 		call func() error
 	}{
 		{"item meta scan", func() error { _, err := broken(1).ItemMetaByIDs(ctx, []int64{1}); return err }},
-		{"find by impa scan", func() error { _, err := broken(1).FindByIMPA(ctx, "X"); return err }},
 		{"recent quotations", func() error { _, err := broken(0).RecentQuotations(ctx, 1); return err }},
 		{"recommend", func() error {
 			_, err := items.NewRepo(testutil.FakeExec{}, store).Recommend(ctx, nil, []int64{1})
@@ -114,14 +113,11 @@ func TestRepo_MatchRows_AutoCreateKeepsIMPA(t *testing.T) {
 	assert.Equal(t, "CREATED", first[0].Source)
 	require.NotNil(t, first[0].Matched)
 
-	id, err := repo.FindByIMPA(ctx, impa)
-	require.NoError(t, err)
-	assert.Equal(t, first[0].Matched.ItemID, id)
-
 	again, err := repo.MatchRows(ctx, items.MatchRowsRequest{AutoCreate: true, Rows: []items.MatchRowInput{row}}, 0.99, seedUserID)
 	require.NoError(t, err)
 	assert.Equal(t, "IMPA_EXACT", again[0].Source)
-	assert.Equal(t, id, again[0].Matched.ItemID)
+	require.NotNil(t, again[0].Matched)
+	assert.Equal(t, first[0].Matched.ItemID, again[0].Matched.ItemID)
 }
 
 // Product page figures per role.
