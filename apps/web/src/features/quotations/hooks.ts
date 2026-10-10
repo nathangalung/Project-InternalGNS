@@ -11,7 +11,7 @@ import * as quotationsApi from "@/features/quotations/api"
 import { nextExpiry } from "@/features/quotations/live"
 import { statusChangeToast } from "@/features/quotations/status"
 import { errorMessage } from "@/lib/errors"
-import { followEventStream } from "@/lib/event-stream"
+import { followEventStream, isFinalRefusal } from "@/lib/event-stream"
 import { queryKeys } from "@/lib/query-keys"
 import { toast } from "@/lib/toast"
 import type {
@@ -240,8 +240,9 @@ export function useQuotationLive(
 // The caller's claims on a draft.
 //
 // acquire claims a part and toasts the server's refusal, which names the
-// editor holding it. Held parts are renewed on a heartbeat; one the server
-// no longer grants is dropped. Leaving the page releases them all, and a
+// editor holding it. Held parts are renewed on a heartbeat. One the server
+// refuses is dropped, and one whose renewal failed (offline, a 5xx) stays
+// held for the next beat. Leaving the page releases them all, and a
 // closed tab's claims lapse on the server.
 export function useEditLocks(id: number | undefined) {
   const held = useRef(new Set<string>())
@@ -286,7 +287,9 @@ export function useEditLocks(id: number | undefined) {
     active.current = true
     const timer = setInterval(() => {
       for (const part of parts) {
-        quotationsApi.lockPart(id, part).catch(() => {
+        quotationsApi.lockPart(id, part).catch((err: unknown) => {
+          // A failed request keeps the part for the next beat.
+          if (!isFinalRefusal(err)) return
           parts.delete(part)
           sync()
         })

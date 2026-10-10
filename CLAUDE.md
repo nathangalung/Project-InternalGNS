@@ -319,7 +319,10 @@ shows a missing one as Belum ada No. PO.
   The parts are the header (contact, client reference, shipping, terms,
   discount) and each line (`line:<id>`); `POST /quotations/{id}/locks`
   claims one for two
-  minutes (`EditLockTTL`, renewed every 30 s by `useEditLocks`), and a part
+  minutes (`EditLockTTL`, renewed every 30 s by `useEditLocks`, which drops
+  a claim only when the server refuses the renewal, a 4xx per
+  `isFinalRefusal`, and keeps it through a network error or a 5xx for the
+  next beat), and a part
   someone else holds is a 409 `edit_locked` whose detail names them. A line
   save and the header save need the caller's claim; add, delete, the
   Tidak Ditawarkan toggle and a contact change

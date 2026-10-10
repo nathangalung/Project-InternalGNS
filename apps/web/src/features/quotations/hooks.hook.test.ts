@@ -366,7 +366,9 @@ describe("useEditLocks", () => {
     // A renewal the server refuses drops the part.
     m.lockPart.mockImplementation((_id, part) =>
       part === "header"
-        ? Promise.reject(new Error("habis"))
+        ? Promise.reject(
+            new ApiError(409, problem(409, { code: "edit_locked" }), "Sedang diubah oleh Budi."),
+          )
         : Promise.resolve({ part, expiresAt: "" }),
     )
     await act(async () => {
@@ -391,6 +393,41 @@ describe("useEditLocks", () => {
     })
     unmount()
     expect(m.unlockPart).toHaveBeenLastCalledWith(5, "line:2", false)
+    vi.useRealTimers()
+  })
+
+  // A failed request is not a refusal.
+  //
+  // The claim stays held, so the next heartbeat renews it and leaving still
+  // frees it.
+  it.each([
+    ["network failure", new TypeError("Failed to fetch")],
+    ["server fault", new ApiError(503, null, "Permintaan gagal (503).")],
+  ])("keeps a part whose renewal hit a %s", async (_name, failure) => {
+    vi.useFakeTimers()
+    m.lockPart.mockResolvedValue({ part: "header", expiresAt: "" })
+    m.unlockPart.mockResolvedValue(undefined)
+    const { result, unmount } = renderQueryHook(() => useEditLocks(5))
+    await act(async () => {
+      await result.current.acquire("header")
+    })
+
+    m.lockPart.mockRejectedValueOnce(failure)
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(LOCK_HEARTBEAT_MS)
+    })
+    expect(m.lockPart).toHaveBeenCalledTimes(2)
+    expect(result.current.holds("header")).toBe(true)
+
+    // The next heartbeat retries it.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(LOCK_HEARTBEAT_MS)
+    })
+    expect(m.lockPart).toHaveBeenCalledTimes(3)
+    expect(result.current.holds("header")).toBe(true)
+
+    unmount()
+    expect(m.unlockPart).toHaveBeenCalledWith(5, "header", false)
     vi.useRealTimers()
   })
 
