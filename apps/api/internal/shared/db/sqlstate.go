@@ -29,6 +29,7 @@ const (
 	SQLStateCheckViolation            = "23514"
 	SQLStateInvalidTextRepresentation = "22P02"
 	SQLStateNumericOutOfRange         = "22003"
+	SQLStateLockNotAvailable          = "55P03"
 
 	// Unstorable input data exceptions.
 	SQLStateStringDataRightTruncation = "22001"

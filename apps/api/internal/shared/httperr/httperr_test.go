@@ -428,3 +428,36 @@ func TestUnprocessable_DetailJoinsSentences(t *testing.T) {
 		})
 	}
 }
+
+// A used record's delete is tagged.
+// The detail lists every use and points to deactivating.
+func TestInUse(t *testing.T) {
+	cases := []struct {
+		name string
+		uses []string
+		want string
+	}{
+		{"one use", []string{"3 quotation"}, "Klien ini sudah dipakai di 3 quotation. Nonaktifkan saja."},
+		{"two uses", []string{"2 quotation", "1 PO"}, "Klien ini sudah dipakai di 2 quotation dan 1 PO. Nonaktifkan saja."},
+		{"three uses", []string{"3 quotation", "2 PO", "1 invoice"},
+			"Klien ini sudah dipakai di 3 quotation, 2 PO dan 1 invoice. Nonaktifkan saja."},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			e := InUse("Klien ini", tc.uses)
+			assert.Equal(t, http.StatusConflict, e.Status)
+			assert.Equal(t, "in_use", e.Code)
+			assert.Equal(t, InUseCode, e.Code)
+			assert.Equal(t, tc.want, e.Detail)
+		})
+	}
+}
+
+// A row lock held elsewhere.
+// A refused NOWAIT lock is a retryable 409, never a 500.
+func TestFromDBErr_LockNotAvailable(t *testing.T) {
+	got := FromDBErr(&pgconn.PgError{Code: "55P03", Message: "could not obtain lock on row"})
+	assert.Equal(t, http.StatusConflict, got.Status)
+	assert.Equal(t, "Data ini sedang dipakai pengguna lain. Coba lagi sebentar lagi.", got.Detail)
+	assert.Equal(t, "55P03", db.SQLStateLockNotAvailable)
+}

@@ -39,6 +39,7 @@ func TestRouter_RoutePolicy(t *testing.T) {
 		{"GET", "/clients", all},
 		{"POST", "/clients", []string{s, o, oi, f}},
 		{"PUT", "/clients/999999999", []string{s, o, oi, f}},
+		{"DELETE", "/clients/999999999", []string{s, o, oi, f}},
 		{"POST", "/clients/999999999/contacts", []string{s, o, oi, f}},
 		{"PATCH", "/clients/999999999/contacts/1", []string{s, o, oi, f}},
 		{"DELETE", "/clients/999999999/contacts/1", []string{s, o, oi, f}},
@@ -52,6 +53,7 @@ func TestRouter_RoutePolicy(t *testing.T) {
 		{"GET", "/items/recommendations?itemId=999999999", []string{s, o, oi, f}},
 		{"GET", "/vendors", all},
 		{"POST", "/vendors", []string{s, o, oi}},
+		{"DELETE", "/vendors/999999999", []string{s, o, oi}},
 
 		{"GET", "/quotations", []string{s, o, oi, f}},
 		{"GET", "/quotations/export.xlsx", []string{s, o, f}},

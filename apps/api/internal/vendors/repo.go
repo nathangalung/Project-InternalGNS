@@ -23,6 +23,12 @@ func NewRepo(exec db.Executor, store queries.Store) *Repo {
 
 var ErrNotFound = errors.New("not found")
 
+// ErrInUse marks a vendor documents use.
+var ErrInUse = errors.New("vendor in use")
+
+// ErrNoTx marks a non-transactional executor.
+var ErrNoTx = errors.New("vendors: executor cannot begin a transaction")
+
 // totalPurchaseExpr sums accepted costs.
 // A deal counts at its PO line costs, since PO lines can be edited after
 // acceptance and the dashboard books them, each line under the vendor it
@@ -172,6 +178,68 @@ func (r *Repo) ListItems(ctx context.Context, vendorID int64, limit, offset int)
 		return out, fmt.Errorf("scan vendor %d items: %w", vendorID, err)
 	}
 	return out, nil
+}
+
+// Usage counts documents using a vendor.
+// A document counts once, however many of its lines use the vendor.
+type Usage struct {
+	Quotations     int64
+	PurchaseOrders int64
+}
+
+// Uses lists the non-zero counts.
+// Each reads as "3 quotation", the way the 409 detail prints it.
+func (u Usage) Uses() []string {
+	var out []string
+	if u.Quotations > 0 {
+		out = append(out, fmt.Sprintf("%d quotation", u.Quotations))
+	}
+	if u.PurchaseOrders > 0 {
+		out = append(out, fmt.Sprintf("%d PO", u.PurchaseOrders))
+	}
+	return out
+}
+
+// Delete removes an unused vendor.
+// The vendor and its links are locked without waiting, the documents with
+// a line through a link counted, and only with none are the links and the
+// vendor deleted, all in one transaction; the linked items stay. It
+// returns the deleted name, or ErrInUse with the usage. A lock another
+// transaction holds fails with SQLSTATE 55P03.
+func (r *Repo) Delete(ctx context.Context, id int64) (string, Usage, error) {
+	b, ok := r.db.(db.TxBeginner)
+	if !ok {
+		return "", Usage{}, ErrNoTx
+	}
+	var name string
+	var usage Usage
+	err := db.WithTx(ctx, b, func(tx pgx.Tx) error {
+		err := tx.QueryRow(ctx, r.store.Get("vendors.lock_for_delete"), id).Scan(&name)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrNotFound
+		}
+		if err != nil {
+			return fmt.Errorf("lock vendor %d: %w", id, err)
+		}
+		if _, err := tx.Exec(ctx, r.store.Get("vendors.lock_links_for_delete"), id); err != nil {
+			return fmt.Errorf("lock vendor %d links: %w", id, err)
+		}
+		if err := tx.QueryRow(ctx, r.store.Get("vendors.usage"), id).
+			Scan(&usage.Quotations, &usage.PurchaseOrders); err != nil {
+			return fmt.Errorf("count vendor %d usage: %w", id, err)
+		}
+		if len(usage.Uses()) > 0 {
+			return ErrInUse
+		}
+		if _, err := tx.Exec(ctx, r.store.Get("vendors.delete_links"), id); err != nil {
+			return fmt.Errorf("delete vendor %d links: %w", id, err)
+		}
+		if _, err := tx.Exec(ctx, r.store.Get("vendors.delete"), id); err != nil {
+			return fmt.Errorf("delete vendor %d: %w", id, err)
+		}
+		return nil
+	})
+	return name, usage, err
 }
 
 // RecentQuotations lists the newest quotations.

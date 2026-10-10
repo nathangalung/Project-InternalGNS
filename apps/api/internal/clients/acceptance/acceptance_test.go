@@ -445,6 +445,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the user changes the client number$`, state.changeNumber)
 		sc.Step(`^the client carries the new number$`, state.numberIsChanged)
 		registerRuleSteps(sc, state)
+		registerDeleteSteps(sc, state)
 	}
 }
 

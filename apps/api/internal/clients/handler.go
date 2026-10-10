@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -395,6 +396,33 @@ func (h *Handler) DeleteContact(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// Delete removes an unused client.
+// It serves DELETE /clients/{id}. A client a document uses is a 409
+// in_use naming where, and the logo object is left to cmd/orphan-blobs.
+func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	name, usage, err := h.repo.Delete(r.Context(), id)
+	switch {
+	case errors.Is(err, ErrNotFound):
+		httperr.Render(w, httperr.NotFound("client not found"))
+		return
+	case errors.Is(err, ErrInUse):
+		httperr.Render(w, httperr.InUse("Klien ini", usage.Uses()))
+		return
+	case err != nil:
+		httperr.RenderDBErrCtx(r.Context(), w, err)
+		return
+	}
+	// The row is gone, so the log keeps who and what.
+	slog.InfoContext(r.Context(), "permanent delete", "user_id", deps.CurrentUserID(r.Context()),
+		"entity", "client", "id", id, "name", name)
 	w.WriteHeader(http.StatusNoContent)
 }
 
