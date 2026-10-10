@@ -22,6 +22,7 @@ import {
   useClients,
   useCreateClient,
   useCreateContact,
+  useDeleteClient,
   useDeleteContact,
   useUpdateClient,
   useUpdateContact,
@@ -326,5 +327,36 @@ describe("wizard client lookups", () => {
     arm()
     const { result } = renderQueryHook(hook, throwingQueryClient())
     await until(() => expect(result.current.isError).toBe(true))
+  })
+})
+
+describe("useDeleteClient", () => {
+  // The open detail page is not refetched into a 404.
+  it("marks every client view stale, refetches none, and confirms", async () => {
+    m.get.mockResolvedValue({ id: 7 } as never)
+    m.remove.mockResolvedValue(undefined)
+    const { qc, result } = renderQueryHook(() => ({
+      client: useClient(7),
+      remove: useDeleteClient(),
+    }))
+    await until(() => expect(result.current.client.data).toEqual({ id: 7 }))
+    seed(qc, [list, unrelated])
+    await settle(() => result.current.remove.mutateAsync(7))
+    expect(m.remove).toHaveBeenCalledWith(7)
+    expect(invalidated(qc, [detail, list, unrelated])).toEqual([detail, list])
+    expect(m.get).toHaveBeenCalledTimes(1)
+    expect(toast.success).toHaveBeenCalledWith("Klien dihapus permanen.")
+  })
+
+  // The dialog shows every failure.
+  it("leaves a refused delete to the dialog", async () => {
+    m.remove.mockRejectedValue(
+      new ApiError(409, null, "Klien ini sudah dipakai di 1 quotation. Nonaktifkan saja."),
+    )
+    const { result } = renderQueryHook(() => useDeleteClient())
+    await settle(() => result.current.mutateAsync(7))
+    await until(() => expect(result.current.isError).toBe(true))
+    expect(toast.error).not.toHaveBeenCalled()
+    expect(toast.success).not.toHaveBeenCalled()
   })
 })

@@ -142,3 +142,32 @@ WHERE vp.vendor_id = $1
   AND q.status NOT IN ('draft', 'cancelled')
 ORDER BY q.created_at DESC, q.id DESC, qi.line_number
 LIMIT $2;
+
+-- name: vendors.lock_for_delete
+-- The vendor row, locked without waiting: a link being saved for it holds
+-- a key lock, so the delete is refused (55P03) instead of queueing into a
+-- deadlock, and a link saved after this waits and then fails its foreign
+-- key.
+SELECT name FROM vendors WHERE id = $1 FOR UPDATE NOWAIT;
+
+-- name: vendors.lock_links_for_delete
+-- Its links, locked the same way: a quotation or PO line being saved
+-- holds a key lock on the link it names, not on the vendor.
+SELECT id FROM vendor_products WHERE vendor_id = $1 FOR UPDATE NOWAIT;
+
+-- name: vendors.usage
+-- Quotations and POs with a line through any of its links, in any status.
+-- Read after the locks, so every committed line is counted.
+SELECT
+  (SELECT COUNT(DISTINCT qi.quotation_id) FROM quotation_items qi
+     JOIN vendor_products vp ON vp.id = qi.vendor_product_id
+    WHERE vp.vendor_id = $1) AS quotations,
+  (SELECT COUNT(DISTINCT poi.po_id) FROM purchase_order_items poi
+     JOIN vendor_products vp ON vp.id = poi.vendor_product_id
+    WHERE vp.vendor_id = $1) AS purchase_orders;
+
+-- name: vendors.delete_links
+DELETE FROM vendor_products WHERE vendor_id = $1;
+
+-- name: vendors.delete
+DELETE FROM vendors WHERE id = $1;

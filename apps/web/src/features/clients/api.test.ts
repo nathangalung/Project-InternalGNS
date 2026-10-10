@@ -58,6 +58,7 @@ describe("clients api", () => {
         body: { name: "PT A", countryCode: "ID", isActive: false },
       },
     ],
+    ["delete for good", () => api.remove(7), { path: "/clients/7", method: "DELETE" }],
     ["list contacts", () => api.listContacts(7), { path: "/clients/7/contacts" }],
     ["recent quotations", () => api.listRecentQuotations(7), { path: "/clients/7/quotations" }],
     [

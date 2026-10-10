@@ -555,11 +555,15 @@ export function pdfFile(name: string): { name: string; mimeType: string; buffer:
 
 // Deactivate a master row.
 //
-// Master data has no delete endpoint; deactivation is the undo.
+// A used row cannot be deleted, so deactivation is the undo. A row a test
+// already deleted for good is left as is.
 export async function deactivate(kind: "client" | "vendor" | "item", id: number): Promise<void> {
   const path = `${{ client: "/clients", vendor: "/vendors", item: "/items" }[kind]}/${id}`
-  const row = await api<Record<string, unknown>>("GET", path)
-  await api("PUT", path, { ...row, isActive: false })
+  const row = await api<Record<string, unknown>>("GET", path).catch((err: ApiError) => {
+    if (err.status === 404) return null
+    throw err
+  })
+  if (row) await api("PUT", path, { ...row, isActive: false })
 }
 
 // Imported contact with no channel.

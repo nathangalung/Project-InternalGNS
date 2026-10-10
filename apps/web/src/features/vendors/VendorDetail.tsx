@@ -1,10 +1,12 @@
 import { useId, useRef, useState } from "react"
 import EntityLink from "@/components/shared/EntityLink"
 import Pagination from "@/components/shared/Pagination"
+import PermanentDelete from "@/components/shared/PermanentDelete"
 import StoreLink from "@/components/shared/StoreLink"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useMe } from "@/features/auth/hooks"
 import {
+  useDeleteVendor,
   useUpdateVendor,
   useUploadVendorLogo,
   useVendorItems,
@@ -90,6 +92,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
   const showCost = seesCost(me?.role)
 
   const updateVendor = useUpdateVendor()
+  const removeVendor = useDeleteVendor()
   const uploadLogo = useUploadVendorLogo()
   const { data: logoDownload } = useVendorLogoDownloadUrl(vendor.id, vendor.logoObjectKey)
   const storedLogo = useObjectUrl(logoDownload?.downloadUrl)
@@ -211,7 +214,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
           </span>
         </nav>
 
-        <div className="flex items-center gap-5">
+        <div className="flex flex-wrap items-center gap-5">
           <button
             type="button"
             onClick={onBack}
@@ -234,6 +237,19 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
             </svg>
           </button>
           <h1 className={ui.pageTitle}>Detail Vendor</h1>
+          {canWrite && (
+            <div className="ml-auto">
+              <PermanentDelete
+                noun="vendor"
+                name={vendor.name}
+                along="tautan produknya"
+                onDelete={async () => {
+                  await removeVendor.mutateAsync(vendor.id)
+                  onBack()
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
 

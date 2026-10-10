@@ -77,6 +77,24 @@ Feature: Vendor lifecycle
     When the user attaches a logo stored under another vendor
     Then the response status is 422
 
+  Scenario: A vendor entered by mistake is deleted for good
+    Given an existing vendor
+    And the vendor offers a product
+    When the user deletes the vendor permanently
+    Then the response status is 204
+    And no product link of the vendor is left
+    When the user reads the vendor
+    Then the response status is 404
+
+  Scenario: A vendor a quotation line uses cannot be deleted
+    Given an existing vendor
+    And a quotation line uses the vendor
+    When the user deletes the vendor permanently
+    Then the response status is 409
+    And the problem is "in_use" reading "Vendor ini sudah dipakai di 1 quotation. Nonaktifkan saja."
+    When the user reads the vendor
+    Then the response status is 200
+
   Scenario: The vendor product list pages past 50 with its real total
     Given a vendor offering 51 products
     When the user lists the vendor's products with "limit=50"

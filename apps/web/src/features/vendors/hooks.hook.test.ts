@@ -13,6 +13,7 @@ import {
 import * as api from "./api"
 import {
   useCreateVendor,
+  useDeleteVendor,
   useUpdateVendor,
   useUploadVendorLogo,
   useVendor,
@@ -168,6 +169,44 @@ describe("useVendorRecentQuotations", () => {
     m.listRecentQuotations.mockRejectedValue(new Error("502"))
     const { result } = renderQueryHook(() => useVendorRecentQuotations(4), throwingQueryClient())
     await until(() => expect(result.current.isError).toBe(true))
+  })
+})
+
+describe("useDeleteVendor", () => {
+  // The open detail page is not refetched into a 404, and the product
+  // pages drop the vendor's offers.
+  it("marks vendor views and offer lists stale, refetches none, and confirms", async () => {
+    m.get.mockResolvedValue({ id: 4 } as never)
+    m.remove.mockResolvedValue(undefined)
+    const { qc, result } = renderQueryHook(() => ({
+      vendor: useVendor(4),
+      remove: useDeleteVendor(),
+    }))
+    await until(() => expect(result.current.vendor.data).toEqual({ id: 4 }))
+    const itemVendors = queryKeys.items.vendors(9)
+    const itemDetail = queryKeys.items.detail(9)
+    seed(qc, [list, itemVendors, itemDetail])
+    await settle(() => result.current.remove.mutateAsync(4))
+    expect(m.remove).toHaveBeenCalledWith(4)
+    expect(invalidated(qc, [detail, list, itemVendors, itemDetail])).toEqual([
+      detail,
+      list,
+      itemVendors,
+    ])
+    expect(m.get).toHaveBeenCalledTimes(1)
+    expect(toast.success).toHaveBeenCalledWith("Vendor dihapus permanen.")
+  })
+
+  // The dialog shows every failure.
+  it("leaves a refused delete to the dialog", async () => {
+    m.remove.mockRejectedValue(
+      new ApiError(409, null, "Vendor ini sudah dipakai di 1 quotation. Nonaktifkan saja."),
+    )
+    const { result } = renderQueryHook(() => useDeleteVendor())
+    await settle(() => result.current.mutateAsync(4))
+    await until(() => expect(result.current.isError).toBe(true))
+    expect(toast.error).not.toHaveBeenCalled()
+    expect(toast.success).not.toHaveBeenCalled()
   })
 })
 

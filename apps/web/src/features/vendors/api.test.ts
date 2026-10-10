@@ -62,6 +62,7 @@ describe("vendors api", () => {
         body: { name: "CV B", isActive: true, contactInfo: {} },
       },
     ],
+    ["delete for good", () => api.remove(4), { path: "/vendors/4", method: "DELETE" }],
     [
       "presign logo upload",
       () => api.presignLogoUpload(4, "l.png"),

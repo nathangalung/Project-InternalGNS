@@ -73,6 +73,11 @@ export async function update(id: number, input: UpdateClientInput): Promise<Clie
   })
 }
 
+// Unused client, deleted for good.
+export async function remove(id: number): Promise<void> {
+  await apiRequest<void>({ path: `/clients/${id}`, method: "DELETE" })
+}
+
 export async function listContacts(companyId: number): Promise<ContactRow[]> {
   return apiRequest<ContactRow[]>({ path: `/clients/${companyId}/contacts` })
 }

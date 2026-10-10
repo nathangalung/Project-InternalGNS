@@ -1,7 +1,8 @@
-import { Link } from "@tanstack/react-router"
+import { Link, useNavigate } from "@tanstack/react-router"
 import { useEffect, useId, useRef, useState } from "react"
 import FieldError from "@/components/shared/FieldError"
 import Modal from "@/components/shared/Modal"
+import PermanentDelete from "@/components/shared/PermanentDelete"
 import { useMe } from "@/features/auth/hooks"
 import * as clientsApi from "@/features/clients/api"
 import {
@@ -13,6 +14,7 @@ import {
   useClientContacts,
   useClientLogoDownloadUrl,
   useCreateContact,
+  useDeleteClient,
   useDeleteContact,
   useUpdateClient,
   useUpdateContact,
@@ -83,6 +85,8 @@ type ClientField = (typeof CLIENT_FIELDS)[number]
 export default function ClientDetail({ client }: ClientDetailProps) {
   // Finance input only reads a client
   const canEdit = editsClients(useMe().data?.role)
+  const navigate = useNavigate()
+  const removeClient = useDeleteClient()
   const [name, setName] = useState(client.name)
   const [tkuId, setTkuId] = useState(client.tkuId ?? "")
   const [countryCode, setCountryCode] = useState(client.countryCode)
@@ -328,7 +332,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
           </span>
         </nav>
 
-        <div className="flex items-center gap-5">
+        <div className="flex flex-wrap items-center gap-5">
           <Link
             to="/clients"
             aria-label="Kembali ke Daftar Klien"
@@ -350,6 +354,19 @@ export default function ClientDetail({ client }: ClientDetailProps) {
             </svg>
           </Link>
           <h1 className={ui.pageTitle}>Detail Klien</h1>
+          {canEdit && (
+            <div className="ml-auto">
+              <PermanentDelete
+                noun="klien"
+                name={client.name}
+                along="narahubungnya"
+                onDelete={async () => {
+                  await removeClient.mutateAsync(client.id)
+                  await navigate({ to: "/clients" })
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
 

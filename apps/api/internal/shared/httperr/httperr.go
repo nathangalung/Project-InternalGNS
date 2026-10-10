@@ -77,6 +77,23 @@ func VersionConflict() Error {
 // which names the editor.
 const EditLockedCode = "edit_locked"
 
+// InUseCode tags a refused delete.
+// Documents reference the record, so it can only be deactivated.
+const InUseCode = "in_use"
+
+// InUse refuses deleting used records.
+// subject names the record ("Klien ini") and uses lists each non-zero
+// count ("3 quotation"), joined as an Indonesian list.
+func InUse(subject string, uses []string) Error {
+	list := uses[len(uses)-1]
+	if len(uses) > 1 {
+		list = strings.Join(uses[:len(uses)-1], ", ") + " dan " + list
+	}
+	e := Conflict(subject + " sudah dipakai di " + list + ". Nonaktifkan saja.")
+	e.Code = InUseCode
+	return e
+}
+
 // genericInvalidPayload is the fallback detail.
 // It shows when no field carries a message.
 const genericInvalidPayload = "Data yang dikirim tidak valid. Periksa kembali isian Anda."
@@ -172,6 +189,9 @@ func FromDBErr(err error) Error {
 			return NotFound("Data yang dirujuk tidak ditemukan. Muat ulang halaman lalu coba lagi.")
 		case db.SQLStateUniqueViolation:
 			return Conflict("Data dengan nilai yang sama sudah ada. Periksa isian yang harus unik.")
+		// A NOWAIT row lock another transaction holds; retrying works.
+		case db.SQLStateLockNotAvailable:
+			return Conflict("Data ini sedang dipakai pengguna lain. Coba lagi sebentar lagi.")
 		// The constraint names the column, not the form input, so name the
 		// remedy instead of echoing an untranslatable identifier.
 		case db.SQLStateNotNullViolation:
