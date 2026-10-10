@@ -5,7 +5,7 @@ One file of every document and spreadsheet the app exports, made by
 (`gns_examples_test`). Every company, person, number and amount is made
 up; nothing comes from `Data/` or production.
 
-The sale: PT Samudra Contoh Nusantara asks for five products (COIL, PACK,
+The sale: PT Samudra Contoh Nusantara asks for five products (COIL, PKT,
 TIN, PCS and MTR lines from two vendors), with a 5% discount, a shipping
 charge and 12% PPN. Quotation Q-00001/GNS/X/2026 is sent and accepted, the PO
 gets its file and the client's PO number, goes to ON_PROGRESS and
