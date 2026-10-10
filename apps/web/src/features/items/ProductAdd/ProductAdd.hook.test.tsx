@@ -52,6 +52,24 @@ beforeEach(() => {
 })
 afterEach(unmount)
 
+describe("ProductAdd closed", () => {
+  // The edit pages keep it mounted.
+  //
+  // A closed dialog holds no queries, so a live save's invalidation
+  // refetches nothing behind it.
+  it("loads nothing while closed", async () => {
+    await mount(
+      <QueryClientProvider client={throwingQueryClient()}>
+        <ProductAdd open={false} onOpenChange={vi.fn()} onSuccess={vi.fn()} />
+      </QueryClientProvider>,
+    )
+    await settle()
+    expect(items.list).not.toHaveBeenCalled()
+    expect(vi.mocked(unitsApi.list)).not.toHaveBeenCalled()
+    expect(byRole("dialog")).toHaveLength(0)
+  })
+})
+
 describe("ProductAdd catalog", () => {
   it("never offers a deactivated product for a new line", async () => {
     await open()

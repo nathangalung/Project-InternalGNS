@@ -1,12 +1,17 @@
 import { ApiError } from "@/lib/api-client"
 
 // Map error to user-facing text.
+//
+// A failed fetch (TypeError) or an unreadable body (SyntaxError) carries the
+// browser's English text, so it shows the fallback. Errors the app throws
+// itself, such as the upload checks, carry Indonesian copy and pass through.
 export function errorMessage(err: unknown, fallback: string): string {
   if (err instanceof ApiError) {
     const msg = err.message?.trim()
     if (msg && msg.length > 0) return msg
     return fallback
   }
+  if (err instanceof TypeError || err instanceof SyntaxError) return fallback
   if (err instanceof Error) {
     const msg = err.message?.trim()
     if (msg && msg.length > 0) return msg

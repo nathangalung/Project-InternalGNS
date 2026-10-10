@@ -289,7 +289,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
     try {
       validateAsset("clientLogo", file)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Logo tidak valid.")
+      toast.error(errorMessage(err, "Logo tidak valid."))
       return
     }
     const previous = logoPreview

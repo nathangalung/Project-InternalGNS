@@ -9,7 +9,12 @@ function file(name: string, size: number, type: string): File {
 
 describe("validateAsset", () => {
   it.each<[string, AssetKind, File, string]>([
-    ["empty proof", "paymentProof", file("a.pdf", 0, "application/pdf"), "bukti pembayaran kosong"],
+    [
+      "empty proof",
+      "paymentProof",
+      file("a.pdf", 0, "application/pdf"),
+      "Berkas bukti pembayaran kosong.",
+    ],
     [
       "oversize proof",
       "paymentProof",

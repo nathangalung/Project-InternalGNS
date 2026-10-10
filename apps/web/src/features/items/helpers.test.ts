@@ -206,6 +206,7 @@ describe("addVendorError", () => {
       "Sudah terkait.",
     ],
     ["empty message", new ApiError(500, null, ""), "Gagal menambah vendor."],
+    ["network failure", new TypeError("Failed to fetch"), "Gagal menambah vendor."],
     ["unknown value", "nope", "Gagal menambah vendor."],
   ])("form error: %s", (_name, err, want) => {
     expect(addVendorError(err)).toEqual({ form: want })

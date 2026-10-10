@@ -3,6 +3,7 @@ import { useRef, useState } from "react"
 import PageButtons from "@/components/shared/PageButtons"
 import RowsPerPageMenu from "@/components/shared/RowsPerPageMenu"
 import { matchRows, recommend } from "@/features/items/api"
+import { errorMessage } from "@/lib/errors"
 import { clampPage, pageCount } from "@/lib/pagination"
 import { ui } from "@/lib/ui"
 import { parseRfq } from "./api"
@@ -137,7 +138,9 @@ export default function Step2Product({
       // Stays up: it says which lines still need work.
       setImportMsg({ text: importSummary(built, resp.rows, unknownUnits, pricing), ok: true })
     } catch (err) {
-      setImportMsg({ text: `Gagal membaca berkas: ${(err as Error).message}`, ok: false })
+      const detail = errorMessage(err, "")
+      const text = detail ? `Gagal membaca berkas: ${detail}` : "Gagal membaca berkas. Coba lagi."
+      setImportMsg({ text, ok: false })
     } finally {
       setImporting(false)
     }

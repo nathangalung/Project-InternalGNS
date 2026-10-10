@@ -119,7 +119,7 @@ describe("useUpdateUser", () => {
     m.update.mockRejectedValue(new TypeError("Failed to fetch"))
     const { result } = renderQueryHook(() => useUpdateUser())
     await settle(() => result.current.mutateAsync({ id: 3, input }))
-    expect(toast.error).toHaveBeenCalledWith("Failed to fetch")
+    expect(toast.error).toHaveBeenCalledWith("Gagal memperbarui pengguna.")
   })
 })
 
