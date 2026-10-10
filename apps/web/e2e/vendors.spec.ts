@@ -1,4 +1,4 @@
-import { api } from "./support/sales"
+import { type ApiError, api } from "./support/sales"
 import { expect, test } from "./support/seed"
 
 // Vendor master data flows.
@@ -70,6 +70,48 @@ test("the vendor's product list links to each product", async ({ page, seed }) =
   await expect(page).toHaveURL(new RegExp(`/vendors/${vendor.id}$`))
 })
 
+// Hapus Permanen.
+// A vendor entered by mistake goes for good with its links, the product
+// stays; a vendor a quotation line uses stays, and the dialog says where.
+test("Hapus Permanen deletes an unused vendor and keeps its product", async ({ page, seed }) => {
+  const vendor = await seed.vendor()
+  const item = await seed.item({ vendor })
+  await page.goto(`/vendors/${vendor.id}`)
+  await page.getByRole("button", { name: "Hapus Permanen" }).click()
+  const dialog = page.getByRole("dialog", { name: "Hapus vendor permanen?" })
+  await expect(dialog).toContainText(vendor.name)
+  await expect(dialog).toContainText("tidak dapat dibatalkan")
+  await dialog.getByRole("button", { name: "Hapus Permanen" }).click()
+
+  await expect(page).toHaveURL(/\/vendors$/)
+  await expect(page.getByText("Vendor dihapus permanen.")).toBeVisible()
+  const gone = await api("GET", `/vendors/${vendor.id}`).then(
+    () => 200,
+    (err: ApiError) => err.status,
+  )
+  expect(gone).toBe(404)
+  const offers = await api<{ vendorId: number }[]>("GET", `/items/${item.id}/vendors`)
+  expect(offers.map((o) => o.vendorId)).not.toContain(vendor.id)
+})
+
+test("Hapus Permanen keeps a quoted vendor and says why", async ({ page, seed }) => {
+  const vendor = await seed.vendor()
+  const item = await seed.item({ vendor })
+  await seed.quotation({ client: await seed.client(), lines: [{ item, qty: 1, price: 150_000 }] })
+  await page.goto(`/vendors/${vendor.id}`)
+  await page.getByRole("button", { name: "Hapus Permanen" }).click()
+  const dialog = page.getByRole("dialog", { name: "Hapus vendor permanen?" })
+  await dialog.getByRole("button", { name: "Hapus Permanen" }).click()
+
+  await expect(dialog.getByRole("alert")).toHaveText(
+    "Vendor ini sudah dipakai di 1 quotation. Nonaktifkan saja.",
+  )
+  await expect(page).toHaveURL(new RegExp(`/vendors/${vendor.id}$`))
+  await dialog.getByRole("button", { name: "Batal" }).click()
+  await expect(dialog).toBeHidden()
+  await api("GET", `/vendors/${vendor.id}`)
+})
+
 test.describe("as finance", () => {
   test.use({ session: "finance" })
 
@@ -83,6 +125,7 @@ test.describe("as finance", () => {
     await expect(page.getByLabel("Nama Vendor")).not.toBeEditable()
     await expect(page.getByRole("switch", { name: "Status Vendor" })).toBeDisabled()
     await expect(page.getByRole("button", { name: "Simpan Perubahan" })).toHaveCount(0)
+    await expect(page.getByRole("button", { name: "Hapus Permanen" })).toHaveCount(0)
   })
 })
 

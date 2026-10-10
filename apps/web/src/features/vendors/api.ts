@@ -71,6 +71,11 @@ export async function update(id: number, input: UpdateVendorInput): Promise<Vend
   })
 }
 
+// Unused vendor, deleted for good.
+export async function remove(id: number): Promise<void> {
+  await apiRequest<void>({ path: `/vendors/${id}`, method: "DELETE" })
+}
+
 export async function presignLogoUpload(id: number, fileName: string): Promise<PresignUpload> {
   const qs = new URLSearchParams({ fileName }).toString()
   return apiRequest<PresignUpload>({ path: `/vendors/${id}/logo/upload-url?${qs}` })
