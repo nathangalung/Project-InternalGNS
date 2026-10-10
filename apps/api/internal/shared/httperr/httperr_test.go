@@ -429,7 +429,7 @@ func TestUnprocessable_DetailJoinsSentences(t *testing.T) {
 	}
 }
 
-// A used record's delete is tagged.
+// Refused deletes are tagged.
 // The detail lists every use and points to deactivating.
 func TestInUse(t *testing.T) {
 	cases := []struct {

@@ -28,7 +28,7 @@ var ErrNotFound = errors.New("not found")
 // Number malformed or already taken.
 var ErrNumberInvalid = errors.New("client number invalid or taken")
 
-// ErrInUse marks a client documents use.
+// ErrInUse marks a used client.
 var ErrInUse = errors.New("client in use")
 
 // ErrNoTx marks a non-transactional executor.

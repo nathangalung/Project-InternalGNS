@@ -18,7 +18,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// linkedVendor inserts a vendor with one link.
+// linkedVendor inserts a linked vendor.
 // The item it offers is a fresh catalog row.
 func linkedVendor(t *testing.T, ctx context.Context, exec db.Executor, active bool) (id, itemID, linkID int64, name string) {
 	t.Helper()
@@ -35,8 +35,8 @@ func linkedVendor(t *testing.T, ctx context.Context, exec db.Executor, active bo
 	return id, itemID, linkID, name
 }
 
-// quoteLink offers the link on a quotation.
-// One sent quotation with lines product lines through it.
+// quoteLink quotes the link.
+// One sent quotation with that many product lines through it.
 func quoteLink(t *testing.T, ctx context.Context, exec db.Executor, itemID, linkID int64, lines int) int64 {
 	t.Helper()
 	var qid int64
@@ -75,7 +75,7 @@ func captureLog(t *testing.T) *bytes.Buffer {
 	return &buf
 }
 
-// An unused vendor goes for good.
+// Unused vendors go for good.
 // Active or not, its links go with it, the items stay in the catalog, and
 // the delete is logged with the name.
 func TestHandler_Delete_Unused(t *testing.T) {
@@ -187,7 +187,7 @@ func TestHandler_Delete_RacesALineSave(t *testing.T) {
 	assert.Equal(t, http.StatusNoContent, res.StatusCode)
 }
 
-// Each step's failure is a 500.
+// Failing steps answer 500.
 // Begin, the two locks, the usage count and the two deletes.
 func TestHandler_Delete_Faults(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)

@@ -18,7 +18,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// txClient inserts a client inside tx.
+// txClient inserts a transient client.
 // One active contact hangs off it; the whole tree rolls back with tx.
 func txClient(t *testing.T, ctx context.Context, tx pgx.Tx, active bool) (id, contactID int64, name string) {
 	t.Helper()
@@ -66,7 +66,7 @@ func captureLog(t *testing.T) *bytes.Buffer {
 	return &buf
 }
 
-// An unused client goes for good.
+// Unused clients go for good.
 // Active or not, its contacts go with it and the delete is logged with
 // the name, since the row is gone afterwards.
 func TestHandler_Delete_Unused(t *testing.T) {
@@ -191,7 +191,7 @@ func TestHandler_Delete_RacesASave(t *testing.T) {
 	assert.Equal(t, http.StatusNoContent, res.StatusCode)
 }
 
-// Each step's failure is a 500.
+// Failing steps answer 500.
 // Begin, the two locks, the usage count and the two deletes.
 func TestHandler_Delete_Faults(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)

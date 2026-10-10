@@ -23,7 +23,7 @@ func NewRepo(exec db.Executor, store queries.Store) *Repo {
 
 var ErrNotFound = errors.New("not found")
 
-// ErrInUse marks a vendor documents use.
+// ErrInUse marks a used vendor.
 var ErrInUse = errors.New("vendor in use")
 
 // ErrNoTx marks a non-transactional executor.

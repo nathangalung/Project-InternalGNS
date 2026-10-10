@@ -81,7 +81,7 @@ const EditLockedCode = "edit_locked"
 // Documents reference the record, so it can only be deactivated.
 const InUseCode = "in_use"
 
-// InUse refuses a used record's delete.
+// InUse refuses deleting used records.
 // subject names the record ("Klien ini") and uses lists each non-zero
 // count ("3 quotation"), joined as an Indonesian list.
 func InUse(subject string, uses []string) Error {
