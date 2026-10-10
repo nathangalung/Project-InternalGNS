@@ -136,6 +136,7 @@ make test           # Go tests, web typecheck, and Vitest
 make test-api       # Go tests on a throwaway database, as CI runs them
 make e2e            # Playwright against the running dev stack
 make e2e-csp        # The suite under the enforced production CSP
+make examples       # docs/example: one file of every export, invented data
 make cover          # Both coverage gates
 make lint           # go vet, golangci-lint when installed, and Biome
 make fmt            # gofmt and Biome format
@@ -625,6 +626,13 @@ and every chip removes only its own filter.
   restores its session from the refresh cookie and is scored as itself, not
   as `/login`. Fix a failing audit at its cause; never lower a threshold or
   drop a URL.
+- `docs/example` holds one file of every export (the three PDFs, the
+  Coretax XML and workbook, and the list, dashboard and Kas Lain
+  workbooks). `make examples` makes them by walking one invented sale
+  through the real API (`apps/web/e2e/examples.ts`) on the throwaway
+  `gns_examples_test`, with its settings in the Makefile and never from
+  `apps/api/.env`, so no real signer, bank or tax id is printed. Rerun it
+  after a template or export change and commit the result.
 
 Coverage gates fail CI below their tier; `make cover` runs both locally.
 
