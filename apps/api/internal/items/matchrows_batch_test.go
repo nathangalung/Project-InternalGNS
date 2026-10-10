@@ -170,6 +170,30 @@ func TestRepo_MatchRows_MixedBatchKeepsRowResults(t *testing.T) {
 	}
 }
 
+// A new code is created once.
+// Both lookups run before any create, so two rows sharing an unknown IMPA
+// code both miss and the dedup key gives them one new item with that code.
+func TestRepo_MatchRows_NewIMPACreatedOnce(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := items.NewRepo(tx, testutil.Store(t))
+	code := uniqueIMPA()
+	rows := []items.MatchRowInput{
+		{IMPACode: code, Name: uniqueItemName("BATCH NEW CODE"), Qty: 1},
+		{IMPACode: " " + strings.ToUpper(code), Name: "nama lain", Qty: 2},
+	}
+	out, err := repo.MatchRows(ctx, items.MatchRowsRequest{Rows: rows, AutoCreate: true}, 0.99, seedUserID)
+	require.NoError(t, err)
+	require.Len(t, out, 2)
+	for i, r := range out {
+		require.NotNil(t, r.Matched, "row %d", i)
+		assert.Equal(t, "CREATED", r.Source, "row %d", i)
+		require.NotNil(t, r.Matched.IMPACode, "row %d", i)
+		assert.True(t, strings.EqualFold(code, *r.Matched.IMPACode), "row %d code", i)
+	}
+	assert.Equal(t, out[0].Matched.ItemID, out[1].Matched.ItemID)
+	assert.Equal(t, rows[0].Name, out[1].Matched.ItemName, "the first row names the item")
+}
+
 // Statements stay per chunk.
 // A miss-only chunk skips the price statement, and a full import costs a
 // few statements per chunk whatever its row count.
