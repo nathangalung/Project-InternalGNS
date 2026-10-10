@@ -445,8 +445,8 @@ quote date, so Ubah sends the price only when it was changed. Three places
 write it: the Tambah Vendor and Ubah dialogs on the product page, and
 `features/items/StoreLinkModal` (Tambah Link Toko, Ubah Link Toko), which
 sends only `vendorId` and `productUrl` and is opened beside the picked
-vendor in the quotation and PO product dialog and under each PO line on
-the PO detail. It is offered only to the roles that write the catalog
+vendor in the quotation and PO product dialog and under each line on
+the quotation and PO detail. It is offered only to the roles that write the catalog
 (`canWriteCatalog`, passed as `storeLinks` to `ProductAdd` and as
 `onEditStoreLink` to `ProductTable`), and in the dialog only for a vendor
 the product already links (`vendorProductId`), since a link alone would
