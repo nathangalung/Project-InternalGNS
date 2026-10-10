@@ -53,7 +53,8 @@ management picks a role from a dropdown with an Indonesian label and hint
   and vendors, harga beli and harga jual. It edits drafts, sets selling
   prices and discounts, and downloads the quotation PDF, which is its last
   step; it runs a PO (file, number, notes, status, cancelling) with
-  superadmin (`roles.ManagesPOs`).
+  superadmin (`roles.ManagesPOs`). It deletes an unused client or vendor
+  for good (Hapus Permanen).
 - operational_input (Input Data Operasional): client data, client requests,
   harga beli and the catalog (products, photos, vendors, store links). It
   writes quotation drafts but never sees or sets a selling figure: no harga
@@ -65,18 +66,20 @@ management picks a role from a dropdown with an Indonesian label and hint
   current: in Ubah PO it changes harga beli and vendor of the stored lines,
   everything the client ordered stays as stored (`keepStoredSale`; each line
   carries its PO line `id`, adding or dropping one is a 403), and it neither
-  moves the PO nor touches its file, number or notes.
+  moves the PO nor touches its file, number or notes. It deletes an unused
+  client or vendor for good, as the heads do.
 - finance (Kepala Keuangan): invoices, Kas Lain and the financial dashboard,
   and reads quotations, POs, products and vendors without changing them.
-  Keeps client writes, so it fixes a client's NPWP and TKU.
+  Keeps client writes, so it fixes a client's NPWP and TKU and deletes an
+  unused client for good, but never a vendor.
 - finance_input (Input Data Keuangan): invoices and POs, with what is billed
   but no harga beli or profit. It records payment (Lunas is its one move,
   with the proof), prepares the Coretax export, and builds the payment
   reminders from the invoice export, whose Terlambat rows carry the days
   past due and the contact to write to. It reads clients without changing
-  them, and adds and edits Kas Lain entries but neither deletes nor exports
-  them. No quotations, no dashboards beyond the overview, no Pengganti, no
-  invoice dates or attachment.
+  or deleting them, and adds and edits Kas Lain entries but neither deletes
+  nor exports them. No quotations, no dashboards beyond the overview, no
+  Pengganti, no invoice dates or attachment.
 
 A hidden figure is left out of the JSON, never zeroed: each money field
 carries `omitempty`, each feature's `redact(role)` blanks what the role may
@@ -413,6 +416,29 @@ filled by `fn_next_client_number`; a typed one must be four digits and unused.
 It stays editable after quotations use it, since no document number embeds
 it.
 
+A client or vendor entered by mistake is deleted for good (Hapus Permanen,
+`DELETE /clients/{id}`, `DELETE /vendors/{id}`, no migration) only while no
+document uses it: for a client no quotation, PO or invoice, counted in any
+status and including a document that names one of its contacts; for a
+vendor no quotation or PO line through any of its links. Active and
+inactive records alike. A used one is a 409 `in_use` (`httperr.InUse`)
+whose detail says where, for example "Klien ini sudah dipakai di 3
+quotation, 1 PO dan 1 invoice. Nonaktifkan saja.", and deactivating stays
+the way to retire it; a missing one is a 404. The client's contacts or the
+vendor's links (`vendor_products`; there is no price history table) go in
+the same transaction, the linked items stay. The repo locks the row and its
+children `FOR UPDATE NOWAIT` before counting: a document being saved holds
+a key lock on them, so the delete is refused at once with a retryable 409
+(SQLSTATE 55P03, mapped by `httperr.FromDBErr`) instead of queueing into a
+deadlock, and a document saved after the locks waits and then fails its
+foreign key as a 404. The handler logs `permanent delete` with the user,
+entity, id and name, since the row is gone. The logo object stays for
+`cmd/orphan-blobs`, which sweeps any key no row names. The mount gates
+already decide who may: the client writers (all but finance input) and the
+catalog writers (superadmin and both operational roles), mirrored by
+`editsClients` and `canWriteCatalog` on the detail pages, whose
+`PermanentDelete` dialog shows any refusal inline.
+
 A client's NPWP follows one rule, `validate.ClientNPWP`, mirrored by
 `optionalNpwpError` in the web: an Indonesian client (country IDN or blank)
 has the 16 digits Coretax files, typed with or without separators and stored
@@ -508,6 +534,10 @@ Shared pieces in `components/shared`, reuse them instead of copying markup:
   focus returned to the opener, and a stack so only the top modal reacts.
 - `FilterFooter` is the Hapus Filter, Batal, Terapkan footer of every filter
   modal.
+- `PermanentDelete` is the Hapus Permanen button and its confirm dialog on
+  the client and vendor pages. It names the record, says the delete cannot
+  be undone, and shows any failure inline, so its mutation hooks only toast
+  the success and mark the views stale without refetching the open detail.
 - Page states: `LoadingState`, `NotFoundState`, `RouteErrorFallback` and
   `RouteNotFound`, all built on `StateMessage`; table rows use `TableStates`.
 - `LoadError` is the inline failed-lookup row with Coba Lagi. A query a form
