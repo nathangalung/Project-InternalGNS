@@ -1,6 +1,7 @@
 package purchaseorders_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -13,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
@@ -26,13 +28,14 @@ func TestHandler_UpdateDetails(t *testing.T) {
 		raw       string // overrides the JSON body when set
 		poNumber  string
 		poDate    string
-		ifMatch   string // "stale" sends an old row_version
+		ifMatch   string // "" sends the current row_version, "none" none, "stale" an old one
 		want      int
 		wantField string
 		wantMsg   string
 	}{
 		{name: "bad id", id: "abc", poNumber: "PO/1", poDate: "2026-01-15", want: http.StatusBadRequest},
 		{name: "malformed If-Match", poNumber: "PO/1", poDate: "2026-01-15", ifMatch: "abc", want: http.StatusBadRequest},
+		{name: "missing If-Match", poNumber: "PO/1", poDate: "2026-01-15", ifMatch: "none", want: http.StatusBadRequest},
 		{name: "bad json", raw: "{", want: http.StatusBadRequest},
 		{name: "blank number clears it before work", poNumber: "  ", poDate: "2026-01-15", want: http.StatusNoContent},
 		{name: "impossible date", poNumber: "PO/1", poDate: "2026-13-45",
@@ -57,6 +60,8 @@ func TestHandler_UpdateDetails(t *testing.T) {
 			headers := map[string]string{"Content-Type": "application/json"}
 			switch tc.ifMatch {
 			case "":
+				headers["If-Match"] = strconv.Itoa(int(po.RowVersion))
+			case "none":
 			case "stale":
 				headers["If-Match"] = strconv.Itoa(int(po.RowVersion) + 7)
 			default:
@@ -73,6 +78,9 @@ func TestHandler_UpdateDetails(t *testing.T) {
 				return
 			}
 			p := readProblem(t, res)
+			if tc.ifMatch == "none" {
+				assert.Equal(t, "If-Match header required", p.Detail)
+			}
 			if tc.wantField != "" {
 				assert.Contains(t, p.Fields[tc.wantField], tc.wantMsg)
 			}
@@ -170,11 +178,11 @@ func TestRepo_UpdateDetails_NumberRule(t *testing.T) {
 
 // Clearing in work refused.
 func TestHandler_UpdateDetails_ClearInWork(t *testing.T) {
-	_, tx, srv := txServer(t)
+	ctx, tx, srv := txServer(t)
 	_, poID := poAt(t, tx, purchaseorders.StatusOnProgress)
 
-	res := doJSON(t, srv, http.MethodPatch, fmt.Sprintf("/purchase-orders/%d/details", poID),
-		purchaseorders.UpdateDetailsRequest{PoNumber: " ", PoDate: "2026-01-15"})
+	res := doJSONWithHeaders(t, srv, http.MethodPatch, fmt.Sprintf("/purchase-orders/%d/details", poID),
+		purchaseorders.UpdateDetailsRequest{PoNumber: " ", PoDate: "2026-01-15"}, currentIfMatch(t, ctx, tx, poID))
 	defer res.Body.Close()
 	require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 	assert.Equal(t, "No. PO klien wajib diisi untuk PO yang sudah Dalam Progres atau Dikirim.",
@@ -213,11 +221,20 @@ func TestHandler_UpdateDetails_DuplicateForClient(t *testing.T) {
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
 	require.NoError(t, repo.UpdateDetails(ctx, first, "PO/DUP/1", poDateFixture(), seedUserID, nil))
 
-	res := doJSON(t, srv, http.MethodPatch, fmt.Sprintf("/purchase-orders/%d/details", second),
-		purchaseorders.UpdateDetailsRequest{PoNumber: "PO/DUP/1", PoDate: "2026-01-15"})
+	res := doJSONWithHeaders(t, srv, http.MethodPatch, fmt.Sprintf("/purchase-orders/%d/details", second),
+		purchaseorders.UpdateDetailsRequest{PoNumber: "PO/DUP/1", PoDate: "2026-01-15"}, currentIfMatch(t, ctx, tx, second))
 	defer res.Body.Close()
 	require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 	assert.Equal(t, "sudah dipakai PO lain untuk klien ini", readProblem(t, res).Fields["poNumber"])
+}
+
+// currentIfMatch names the stored version.
+// Details and notes writes require it.
+func currentIfMatch(t *testing.T, ctx context.Context, exec db.Executor, poID int64) map[string]string {
+	t.Helper()
+	po, err := purchaseorders.NewRepo(exec, testutil.Store(t)).GetByID(ctx, poID)
+	require.NoError(t, err)
+	return map[string]string{"If-Match": strconv.Itoa(int(po.RowVersion))}
 }
 
 // rawRequest sends body verbatim.

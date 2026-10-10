@@ -243,6 +243,15 @@ func (sc *scenario) upload(file string, size int, bucket string) error {
 	return sc.put(bucket, sc.freshKey(file), sc.payloadOf(size), "application/octet-stream")
 }
 
+// uploadToInvoice stores invoice objects.
+// sub "payment" is the proof folder; "" is the attachment folder.
+func (sc *scenario) uploadToInvoice(sub string) func(string, int) error {
+	return func(file string, size int) error {
+		key := storage.OwnerFolder("invoices", sc.run, sub) + fmt.Sprintf("%d-%s", sc.seq.Add(1), file)
+		return sc.put(storage.BucketInvoiceAttachments, key, sc.payloadOf(size), "application/octet-stream")
+	}
+}
+
 func (sc *scenario) uploadClaiming(file string, size int, bucket, contentType string) error {
 	return sc.put(bucket, sc.freshKey(file), sc.payloadOf(size), contentType)
 }
@@ -475,6 +484,8 @@ func initScenario(s *suite) func(*godog.ScenarioContext) {
 		ctx.Step(`^I upload "([^"]*)" of (\d+) bytes to "([^"]*)"$`, sc.upload)
 		ctx.Step(`^I upload "([^"]*)" of (\d+) bytes to "([^"]*)" claiming type "([^"]*)"$`, sc.uploadClaiming)
 		ctx.Step(`^I uploaded "([^"]*)" of (\d+) bytes to "([^"]*)"$`, sc.uploaded)
+		ctx.Step(`^I upload "([^"]*)" of (\d+) bytes to the payment folder of an invoice$`, sc.uploadToInvoice("payment"))
+		ctx.Step(`^I upload "([^"]*)" of (\d+) bytes to the folder of an invoice$`, sc.uploadToInvoice(""))
 		ctx.Step(`^I upload different bytes to the same key$`, sc.uploadAgain)
 		ctx.Step(`^I upload to bucket "([^"]*)" at key "([^"]*)"$`, sc.uploadAt)
 		ctx.Step(`^I download that object$`, sc.download)

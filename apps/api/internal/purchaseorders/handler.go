@@ -266,6 +266,10 @@ func (h *Handler) UpdateNotes(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest(err.Error()))
 		return
 	}
+	if ifMatch == nil {
+		httperr.Render(w, httperr.BadRequest("If-Match header required"))
+		return
+	}
 	var req UpdateNotesRequest
 	if !httpx.DecodeJSON(w, r, &req) {
 		return
@@ -294,6 +298,10 @@ func (h *Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 	ifMatch, err := httpx.ParseIfMatch(r.Header.Get("If-Match"))
 	if err != nil {
 		httperr.Render(w, httperr.BadRequest(err.Error()))
+		return
+	}
+	if ifMatch == nil {
+		httperr.Render(w, httperr.BadRequest("If-Match header required"))
 		return
 	}
 	var req UpdateDetailsRequest
@@ -353,11 +361,14 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"note": "Alasan pembatalan wajib diisi."}))
 		return
 	}
-	if !h.allowWork(w, r, id, req.Status) {
+	actor := deps.CurrentUserID(r.Context())
+	issues, err := h.repo.GatedTransition(r.Context(), id, req.Status, req.Note, actor)
+	if len(issues) > 0 {
+		p := incompleteProblem(issues)
+		httperr.RenderAs(w, p.Status, p)
 		return
 	}
-	actor := deps.CurrentUserID(r.Context())
-	if err := h.repo.Transition(r.Context(), id, req.Status, req.Note, actor); err != nil {
+	if err != nil {
 		switch {
 		case errors.Is(err, ErrNotFound):
 			httperr.Render(w, httperr.NotFound("purchase order not found"))
@@ -434,42 +445,11 @@ func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 // gatedMove names the gated moves.
 // Starting work and delivering both need complete master data: edits in
 // ON_PROGRESS and client edits can reopen a gap after the promotion passed.
-// The database refuses every other move into these states.
+// The database refuses every other move into these states. The move judges
+// from the status it locked, never from an earlier read.
 func gatedMove(from, to Status) bool {
 	return (from == StatusUploaded && to == StatusOnProgress) ||
 		(from == StatusOnProgress && to == StatusDelivered)
-}
-
-// allowWork requires complete master data.
-// It reports whether the caller may continue; it has already written the
-// response when it returns false.
-func (h *Handler) allowWork(w http.ResponseWriter, r *http.Request, id int64, target Status) bool {
-	if target != StatusOnProgress && target != StatusDelivered {
-		return true
-	}
-	po, err := h.repo.GetByID(r.Context(), id)
-	if errors.Is(err, ErrNotFound) {
-		httperr.Render(w, httperr.NotFound("purchase order not found"))
-		return false
-	}
-	if err != nil {
-		httperr.RenderDBErrCtx(r.Context(), w, err)
-		return false
-	}
-	if !gatedMove(po.Status, target) {
-		return true
-	}
-	issues, err := h.repo.Completeness(r.Context(), id)
-	if err != nil {
-		httperr.RenderDBErrCtx(r.Context(), w, err)
-		return false
-	}
-	if len(issues) == 0 {
-		return true
-	}
-	p := incompleteProblem(issues)
-	httperr.RenderAs(w, p.Status, p)
-	return false
 }
 
 // RemoveFile detaches the PO document.

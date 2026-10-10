@@ -552,12 +552,7 @@ func (s *scenarioState) errorNamesIncompleteClient() error {
 }
 
 func (s *scenarioState) editPODetails(poNumber string) error {
-	body := purchaseorders.UpdateDetailsRequest{PoNumber: poNumber, PoDate: "2026-01-15"}
-	return s.sendRequest(
-		http.MethodPatch,
-		"/purchase-orders/"+strconv.FormatInt(s.poID, 10)+"/details",
-		body,
-	)
+	return s.editPODetailsDated(poNumber, "2026-01-15")
 }
 
 // Stale If-Match loses the race.
