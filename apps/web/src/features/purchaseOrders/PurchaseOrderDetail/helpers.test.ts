@@ -23,6 +23,7 @@ import {
   poErrorMessage,
   poNumberRequired,
   poRef,
+  previewKind,
   shortDocNo,
   uploadRules,
 } from "./helpers"
@@ -311,5 +312,24 @@ describe("PO number", () => {
     ["a plain error", new Error("boom")],
   ])("leaves %s to the toast", (_name, err) => {
     expect(poDetailsErrors(err)).toBeNull()
+  })
+})
+
+describe("previewKind", () => {
+  it.each([
+    ["scan.pdf", "pdf"],
+    ["SCAN.PDF", "pdf"],
+    ["foto.png", "image"],
+    ["foto.jpg", "image"],
+    ["foto.JPEG", "image"],
+    ["foto.webp", "image"],
+    ["po.xlsx", "none"],
+    ["po.xls", "none"],
+    ["berkas", "none"],
+    ["arsip.pdf.zip", "none"],
+    ["", "none"],
+    [undefined, "none"],
+  ] as const)("reads %s as %s", (name, kind) => {
+    expect(previewKind(name)).toBe(kind)
   })
 })

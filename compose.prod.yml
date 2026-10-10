@@ -209,7 +209,7 @@ services:
       # and data: images for logos and previews, and the API host. The whole
       # e2e suite runs under it (make e2e-csp, docs/deploy_vps.md section 12).
       # The API sets its own stricter policy on its responses.
-      - "traefik.http.middlewares.internalgns-web-headers.headers.customResponseHeaders.Content-Security-Policy=default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self' https://${API_HOST}; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+      - "traefik.http.middlewares.internalgns-web-headers.headers.customResponseHeaders.Content-Security-Policy=default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self' https://${API_HOST}; object-src 'none'; frame-src blob:; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
       # Plain http redirects to https.
       - "traefik.http.routers.internalgns-web-http.rule=Host(`${WEB_HOST}`)"
       - "traefik.http.routers.internalgns-web-http.entrypoints=web"

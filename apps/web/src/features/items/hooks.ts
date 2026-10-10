@@ -149,10 +149,13 @@ export function useAddVendorToItem() {
   return useMutation({
     mutationFn: ({ itemId, input }: { itemId: number; input: itemsApi.AddVendorToItemInput }) =>
       itemsApi.addVendor(itemId, input),
-    // Vendor detail, counts change too.
+    // Vendor detail, counts change too. The quotation and PO lines read the
+    // store link live, so they refresh as well.
     onSuccess: (_data, { itemId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.items.vendors(itemId) })
       qc.invalidateQueries({ queryKey: queryKeys.vendors.all })
+      qc.invalidateQueries({ queryKey: queryKeys.quotations.all })
+      qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
     },
   })
 }

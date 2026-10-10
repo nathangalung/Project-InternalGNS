@@ -12,6 +12,8 @@ import {
   katalogSearchView,
   katalogSource,
   productInitials,
+  storeLinkBody,
+  storeLinkError,
   vendorInitials,
   wholeRupiah,
 } from "./helpers"
@@ -210,6 +212,58 @@ describe("addVendorError", () => {
     ["unknown value", "nope", "Gagal menambah vendor."],
   ])("form error: %s", (_name, err, want) => {
     expect(addVendorError(err)).toEqual({ form: want })
+  })
+})
+
+describe("storeLinkError", () => {
+  it("puts a refused link under its input", () => {
+    const msg = "Link toko harus diawali http:// atau https://."
+    expect(
+      storeLinkError(new ApiError(422, problem(422, { fields: { productUrl: msg } }), msg)),
+    ).toEqual({ field: msg })
+  })
+
+  it.each([
+    [
+      "inactive vendor",
+      new ApiError(
+        422,
+        problem(422, { fields: { vendorId: "Vendor sudah nonaktif." } }),
+        "Vendor sudah nonaktif.",
+      ),
+      "Vendor sudah nonaktif.",
+    ],
+    [
+      "unknown vendor",
+      new ApiError(404, problem(404, { detail: "vendor not found" }), "vendor not found"),
+      "Vendor tidak ditemukan.",
+    ],
+    [
+      "api detail",
+      new ApiError(403, problem(403, { detail: "Akses ditolak." }), "Akses ditolak."),
+      "Akses ditolak.",
+    ],
+    ["empty message", new ApiError(500, null, ""), "Gagal menyimpan link toko."],
+    ["unknown value", "nope", "Gagal menyimpan link toko."],
+  ])("form error: %s", (_name, err, want) => {
+    expect(storeLinkError(err)).toEqual({ form: want })
+  })
+})
+
+describe("storeLinkBody", () => {
+  it.each<[string, string, string | undefined, string | null | undefined]>([
+    ["a new link, trimmed", "  https://toko.example/a ", undefined, "https://toko.example/a"],
+    [
+      "a changed link",
+      "https://toko.example/b",
+      "https://toko.example/a",
+      "https://toko.example/b",
+    ],
+    ["a cleared link", "   ", "https://toko.example/a", null],
+    ["nothing typed and none stored", "", undefined, undefined],
+    ["the stored link again", " https://toko.example/a", "https://toko.example/a", undefined],
+  ])("%s", (_name, typed, stored, want) => {
+    expect(storeLinkBody(typed, stored)).toBe(want)
   })
 })
 

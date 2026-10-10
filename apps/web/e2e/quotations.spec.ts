@@ -1136,6 +1136,48 @@ test.describe("quotation list", () => {
   })
 })
 
+test.describe("quotation store link", () => {
+  test("the product dialog adds the vendor's store link and keeps its harga beli", async ({
+    page,
+    seed,
+  }) => {
+    const link = "https://www.example.com/baut-baja"
+    const client = await seed.client()
+    const vendor = await seed.vendor()
+    const item = await seed.item({ vendor, cost: 75_000 })
+    const q = await seed.quotation({
+      client,
+      lines: [{ item, qty: 1, price: 100_000, cost: 75_000 }],
+    })
+
+    await page.goto(`/quotations/${q.id}/edit`)
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Ubah produk 1" }).click()
+    const product = page.getByRole("dialog", { name: "Ubah Produk Quotation" })
+    await product.getByRole("button", { name: "Tambah Link Toko" }).click()
+    const dialog = page.getByRole("dialog", { name: "Tambah Link Toko" })
+    await expect(dialog).toContainText(vendor.name)
+    await dialog.getByLabel("Link Toko").fill(link)
+    await dialog.getByRole("button", { name: "Simpan" }).click()
+    await expect(dialog).toBeHidden()
+
+    // The link shows at once beside the vendor, ready to change.
+    await expect(
+      product.getByRole("link", { name: "Buka toko example.com di tab baru" }),
+    ).toHaveAttribute("href", link)
+    await expect(product.getByRole("button", { name: "Ubah Link Toko" })).toBeVisible()
+    await product.getByRole("button", { name: "Batal" }).click()
+
+    const [stored] = (
+      await api<{ vendorId: number; productUrl?: string; costPrice?: string }[]>(
+        "GET",
+        `/items/${item.id}/vendors`,
+      )
+    ).filter((v) => v.vendorId === vendor.id)
+    expect([stored.productUrl, stored.costPrice]).toEqual([link, "75000.00"])
+  })
+})
+
 test.describe("quotation PPN", () => {
   test("a draft switched to Tanpa PPN totals without tax", async ({ page, seed }) => {
     const client = await seed.client()

@@ -126,6 +126,24 @@ export function uploadRules(
   }
 }
 
+// How a PO file previews.
+export type PreviewKind = "pdf" | "image" | "none"
+
+const IMAGE_EXT = new Set(["png", "jpg", "jpeg", "webp"])
+
+// Preview by file extension.
+//
+// The upload takes PDF, the photo types and Excel (storage/policy.go), and
+// the download proxy types the object by the same extension. A browser shows
+// a PDF and a photo inline; a spreadsheet only downloads.
+export function previewKind(fileName: string | undefined): PreviewKind {
+  const name = (fileName ?? "").toLowerCase()
+  const dot = name.lastIndexOf(".")
+  const ext = dot < 0 ? "" : name.slice(dot + 1)
+  if (ext === "pdf") return "pdf"
+  return IMAGE_EXT.has(ext) ? "image" : "none"
+}
+
 // Surat Jalan needs issued number.
 export function canDownloadDeliveryNote(
   po: Pick<PurchaseOrderRow, "status" | "deliveryNoteNumber">,

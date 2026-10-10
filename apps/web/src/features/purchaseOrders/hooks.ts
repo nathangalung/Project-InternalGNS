@@ -81,6 +81,20 @@ export function usePurchaseOrderByQuotation(quotationId: number | undefined) {
   })
 }
 
+// Proxy path of the PO file.
+//
+// Keyed by the stored object, so a replaced file asks again. The preview
+// shows a failure itself, never on the route error boundary.
+export function usePoFileUrl(id: number | undefined, objectKey: string | undefined) {
+  return useQuery({
+    queryKey: id
+      ? [...queryKeys.purchaseOrders.detail(id), "file-url", objectKey]
+      : queryKeys.purchaseOrders.all,
+    queryFn: id !== undefined && id > 0 && objectKey ? () => poApi.presignDownload(id) : skipToken,
+    throwOnError: false,
+  })
+}
+
 export function usePoHistory(id: number | undefined) {
   return useQuery({
     queryKey: id ? historyKey(id) : queryKeys.purchaseOrders.all,

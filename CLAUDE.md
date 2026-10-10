@@ -455,10 +455,20 @@ by name ten at a time (`pickerWindow`), a search paging its hits the same way.
 A vendor link's `product_url` is where the vendor sells the item (Link
 Toko). `validate.ProductURL` keeps only an http or https address with a host
 (a 422 on `productUrl`), mirrored by `lib/store-link`, so the anchor never
-runs script. Only `POST /items/{id}/vendors` writes it: the Tambah Vendor
-and Ubah dialogs on the product page, where a cleared link is sent as null.
-An unsent `costPrice` keeps the stored harga beli and its quote date, so Ubah
-sends the price only when it was changed.
+runs script. Only `POST /items/{id}/vendors` writes it, and a cleared link
+is sent as null. An unsent `costPrice` keeps the stored harga beli and its
+quote date, so Ubah sends the price only when it was changed. Three places
+write it: the Tambah Vendor and Ubah dialogs on the product page, and
+`features/items/StoreLinkModal` (Tambah Link Toko, Ubah Link Toko), which
+sends only `vendorId` and `productUrl` and is opened beside the picked
+vendor in the quotation and PO product dialog and under each line on
+the quotation and PO detail. It is offered only to the roles that write the catalog
+(`canWriteCatalog`, passed as `storeLinks` to `ProductAdd` and as
+`onEditStoreLink` to `ProductTable`), and in the dialog only for a vendor
+the product already links (`vendorProductId`), since a link alone would
+create one at harga beli 0. A save refreshes the item's vendors and the
+quotation and PO queries, which read the link live. Every other role only
+sees it.
 `StoreLink` shows it in a new tab on the product and vendor pages, under
 each offer on the quotation and PO detail, and beside the picked vendor in
 the quotation product dialog.
@@ -544,8 +554,15 @@ Shared pieces in `components/shared`, reuse them instead of copying markup:
 
 Stored files (logos, product photos, attachments) come through the
 authenticated API proxy, and the enforced CSP allows images only from self,
-`blob:` and `data:`, so show one through `hooks/useObjectUrl` (a blob URL it
-revokes) and never point an `<img>` at an API URL. Product photos are shrunk
+`blob:` and `data:` and frames only from `blob:` (`frame-src blob:`), so show
+one through `hooks/useObjectUrl` (a blob URL it revokes; `useObjectUrlState`
+also tells a failed download from one loading) and never point an `<img>` or
+an `<iframe>` at an API URL. The PO detail's Lihat Berkas
+(`PurchaseOrderDetail/FilePreviewModal`) shows the PO file that way: a photo
+in an `<img>`, a PDF in an `<iframe>` with Buka di Tab Baru for a browser
+that shows no PDF inline, and a spreadsheet only downloads
+(`previewKind`, by the extensions `storage/policy.go` allows). Closing the
+modal unmounts it, which revokes the URL. Product photos are shrunk
 in the browser before upload (`lib/image-shrink`, WebP within 1600px). A
 product keeps up to eight (`item_images`, `MaxItemImages`, enforced by
 `fn_item_image_add`); `items.image_object_key` names the cover (Foto Utama),
@@ -632,7 +649,8 @@ and every chip removes only its own filter.
   so every test fails on a violation its browser reports. `make e2e-csp` (and
   the CI e2e job) builds the SPA against a separate API origin, serves `dist`
   with that policy, and runs the whole suite against the throwaway
-  `gns_csp_test`; `e2e/csp.spec.ts` proves the header is live. A new
+  `gns_csp_test`; `e2e/csp.spec.ts` proves the header is live, and that a
+  `blob:` frame loads while a frame from another origin is refused. A new
   dependency that injects an inline `<style>` or loads from another host
   fails there: fix the cause, never add `unsafe-inline` or `unsafe-eval`.
 - Lighthouse CI (`bun run lighthouse`, the CI `lighthouse` job) audits 12

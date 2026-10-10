@@ -1,14 +1,21 @@
 import { useState } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { LookupFailure } from "@/lib/lookup"
-import { byRole, click, mount, type, unmount } from "@/test/dom"
-import { type DropdownKey, INITIAL_FORM, type ProductAddFormData } from "./helpers"
+import { button, byRole, click, mount, type, unmount } from "@/test/dom"
+import {
+  type DropdownKey,
+  INITIAL_FORM,
+  type ProductAddFormData,
+  type VendorOption,
+} from "./helpers"
 import VendorPriceCard from "./VendorPriceCard"
 
 type Failures = {
   vendorFailure?: LookupFailure | null
   historyFailure?: LookupFailure | null
   recommendationFailure?: LookupFailure | null
+  exactVendor?: VendorOption
+  onEditStoreLink?: () => void
 }
 
 function Harness(failures: Failures) {
@@ -80,5 +87,38 @@ describe("VendorPriceCard lookups", () => {
     await click(history)
     expect(recommendationFailure.onRetry).toHaveBeenCalledTimes(1)
     expect(historyFailure.onRetry).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe("VendorPriceCard store link", () => {
+  const linked: VendorOption = {
+    nama: "PT Tali Jaya",
+    harga: 1000,
+    vendorId: 4,
+    vendorProductId: 7,
+  }
+  const storeLink = () => document.querySelector('a[target="_blank"]')
+
+  it("offers Tambah Link Toko beside a linked vendor without one", async () => {
+    const onEditStoreLink = vi.fn()
+    await mount(<Harness exactVendor={linked} onEditStoreLink={onEditStoreLink} />)
+    expect(storeLink()).toBeNull()
+    await click(button("Tambah Link Toko"))
+    expect(onEditStoreLink).toHaveBeenCalledTimes(1)
+  })
+
+  it("shows the stored link and offers to change it", async () => {
+    const onEditStoreLink = vi.fn()
+    const withLink = { ...linked, storeUrl: "https://toko.example/tali" }
+    await mount(<Harness exactVendor={withLink} onEditStoreLink={onEditStoreLink} />)
+    expect(storeLink()?.getAttribute("href")).toBe("https://toko.example/tali")
+    await click(button("Ubah Link Toko"))
+    expect(onEditStoreLink).toHaveBeenCalledTimes(1)
+  })
+
+  it("only shows the link when the role may not change it", async () => {
+    await mount(<Harness exactVendor={{ ...linked, storeUrl: "https://toko.example/tali" }} />)
+    expect(storeLink()).not.toBeNull()
+    expect(document.body.textContent).not.toContain("Link Toko")
   })
 })
