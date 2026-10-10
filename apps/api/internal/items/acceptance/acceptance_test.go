@@ -187,7 +187,7 @@ func (s *scenarioState) vendorListAtLeast(min int) error {
 func (s *scenarioState) importUnknownAutoCreate() error {
 	body := items.MatchRowsRequest{
 		AutoCreate: true,
-		MinScore:   0.99, // isolate the no-match -> create path
+		MinScore:   new(float32(0.99)), // isolate the no-match -> create path
 		Rows:       []items.MatchRowInput{{Name: s.uniqueName("BDD AutoCreate Unknown"), Qty: 1, Unit: "PCS"}},
 	}
 	if err := s.sendRequest(http.MethodPost, "/items/match-rows", body); err != nil {

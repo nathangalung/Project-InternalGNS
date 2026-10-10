@@ -297,7 +297,9 @@ shows a missing one as Belum ada No. PO.
   matcher and threshold: the IMPA code, then the closest name, reuses an
   item (a look-alike asks the user to check it), anything else is added to
   the catalog, and the pick then applies the line recommendation as an
-  import does. Every product line shows the
+  import does. Its `minScore` defaults to 0.5, and one outside (0, 1] is a
+  422 on the field, since above 1 nothing matches and `autoCreate` would
+  add every row again. Every product line shows the
   request and the offer side by side at one size (`RequestOffer`, in the
   wizard cards, the summary and the detail table), and an offer that is not
   what was asked turns orange. A line's Belum lengkap badge opens its editor,

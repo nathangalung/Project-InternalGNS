@@ -287,6 +287,9 @@ func (h *Handler) SearchAdvanced(w http.ResponseWriter, r *http.Request) {
 // an upload to the same cap, since the wizard matches it in one call.
 const MaxMatchRows = 500
 
+// msgMinScoreRange refuses a useless threshold.
+const msgMinScoreRange = "Skor minimal harus di atas 0 dan paling tinggi 1."
+
 // MatchRows batch-matches imported xlsx rows.
 // IMPA exact wins; else fuzzy.
 // No-match rows return Matched=nil so FE keeps row empty.
@@ -294,6 +297,15 @@ func (h *Handler) MatchRows(w http.ResponseWriter, r *http.Request) {
 	var req MatchRowsRequest
 	if !httpx.DecodeJSON(w, r, &req) {
 		return
+	}
+	// Above 1 nothing matches, so autoCreate would duplicate the catalog.
+	minScore := float32(0.5)
+	if req.MinScore != nil {
+		minScore = *req.MinScore
+		if minScore <= 0 || minScore > 1 {
+			httperr.Render(w, httperr.Unprocessable(map[string]string{"minScore": msgMinScoreRange}))
+			return
+		}
 	}
 	if len(req.Rows) == 0 {
 		httpx.WriteJSON(w, http.StatusOK, MatchRowsResponse{Rows: []MatchRowResult{}})
@@ -304,10 +316,6 @@ func (h *Handler) MatchRows(w http.ResponseWriter, r *http.Request) {
 			"rows": fmt.Sprintf("Terlalu banyak baris dalam satu permintaan: paling banyak %d. Bagi menjadi beberapa kelompok.", MaxMatchRows),
 		}))
 		return
-	}
-	minScore := req.MinScore
-	if minScore <= 0 {
-		minScore = 0.5
 	}
 
 	ctx := r.Context()
