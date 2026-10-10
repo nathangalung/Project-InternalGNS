@@ -278,7 +278,7 @@ func (r *Repo) Completeness(ctx context.Context, poID int64) ([]CompletenessIssu
 // It cannot open a transaction, so the gate could not hold the PO row.
 var errNoTx = errors.New("purchase orders: executor cannot begin a transaction")
 
-// errGateRefused rolls back a refused move.
+// errGateRefused rolls back refusals.
 var errGateRefused = errors.New("purchase order incomplete")
 
 // GatedTransition gates, then moves.

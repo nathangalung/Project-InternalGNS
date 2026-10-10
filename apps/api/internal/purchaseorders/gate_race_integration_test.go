@@ -20,7 +20,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// committedPO builds a PO that commits.
+// committedPO builds committed POs.
 // A race needs a second connection to see the rows, so they cannot live in
 // a test transaction; the Cleaner removes them after the test.
 func committedPO(t *testing.T, pool *pgxpool.Pool, build func(tx pgx.Tx) int64) int64 {
@@ -127,7 +127,7 @@ func requireRefusedFor(t *testing.T, pool *pgxpool.Pool, res *http.Response, poI
 	assert.Zero(t, invoices, "no invoice is issued")
 }
 
-// The gate reads the locked status.
+// Gate reads the locked status.
 // A delivery that starts while the PO is still UPLOADED, behind a move to
 // ON_PROGRESS, is judged from ON_PROGRESS once the move commits, so an
 // incomplete client still stops it.

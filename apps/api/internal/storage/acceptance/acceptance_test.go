@@ -243,7 +243,7 @@ func (sc *scenario) upload(file string, size int, bucket string) error {
 	return sc.put(bucket, sc.freshKey(file), sc.payloadOf(size), "application/octet-stream")
 }
 
-// uploadToInvoice stores in an invoice folder.
+// uploadToInvoice stores invoice objects.
 // sub "payment" is the proof folder; "" is the attachment folder.
 func (sc *scenario) uploadToInvoice(sub string) func(string, int) error {
 	return func(file string, size int) error {
