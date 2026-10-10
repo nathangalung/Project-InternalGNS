@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -64,10 +65,17 @@ func holder(t *testing.T, pool *pgxpool.Pool) (pgx.Tx, int32) {
 	return tx, pid
 }
 
+// reply is a read response.
+type reply struct {
+	status int
+	body   []byte
+	err    error
+}
+
 // deliverBehind races a delivery.
 // The request starts while held is open, must wait for it, and finishes once
 // held commits.
-func deliverBehind(t *testing.T, pool *pgxpool.Pool, srv *httptest.Server, held pgx.Tx, pid int32, poID int64) *http.Response {
+func deliverBehind(t *testing.T, pool *pgxpool.Pool, srv *httptest.Server, held pgx.Tx, pid int32, poID int64) reply {
 	t.Helper()
 	ctx := context.Background()
 	raw, err := json.Marshal(purchaseorders.ChangeStatusRequest{Status: purchaseorders.StatusDelivered})
@@ -76,14 +84,16 @@ func deliverBehind(t *testing.T, pool *pgxpool.Pool, srv *httptest.Server, held 
 	require.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
 
-	type result struct {
-		res *http.Response
-		err error
-	}
-	done := make(chan result, 1)
+	done := make(chan reply, 1)
 	go func() {
 		res, err := srv.Client().Do(req)
-		done <- result{res, err}
+		if err != nil {
+			done <- reply{err: err}
+			return
+		}
+		defer res.Body.Close()
+		body, err := io.ReadAll(res.Body)
+		done <- reply{status: res.StatusCode, body: body, err: err}
 	}()
 	require.Eventually(t, func() bool {
 		var waiting bool
@@ -96,23 +106,22 @@ func deliverBehind(t *testing.T, pool *pgxpool.Pool, srv *httptest.Server, held 
 	select {
 	case r := <-done:
 		require.NoError(t, r.err)
-		return r.res
+		return r
 	case <-time.After(10 * time.Second):
 		t.Fatal("the delivery never finished")
-		return nil
+		return reply{}
 	}
 }
 
 // requireRefusedFor asserts the gate refusal.
 // The PO stays ON_PROGRESS and no invoice is issued.
-func requireRefusedFor(t *testing.T, pool *pgxpool.Pool, res *http.Response, poID int64, gap purchaseorders.GapCode) {
+func requireRefusedFor(t *testing.T, pool *pgxpool.Pool, res reply, poID int64, gap purchaseorders.GapCode) {
 	t.Helper()
-	defer res.Body.Close()
-	require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+	require.Equal(t, http.StatusUnprocessableEntity, res.status)
 	var p purchaseorders.IncompleteProblem
-	readJSON(t, res, &p)
+	require.NoError(t, json.Unmarshal(res.body, &p))
 	assert.Equal(t, purchaseorders.IncompleteCode, p.Code)
-	var codes []purchaseorders.GapCode
+	codes := make([]purchaseorders.GapCode, 0, len(p.Issues))
 	for _, issue := range p.Issues {
 		codes = append(codes, gapCodes(issue)...)
 	}
