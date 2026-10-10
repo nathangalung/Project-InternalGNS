@@ -27,9 +27,11 @@ function PurchaseOrderDetailRoute() {
   const quotationId = Number.isInteger(numericId) && numericId > 0 ? numericId : undefined
   const { data: po, isLoading, error, refetch } = usePurchaseOrderByQuotation(quotationId)
   // Client card only; the PO carries its own figures. Finance input reads
-  // POs but not quotations, so its card shows the client alone.
+  // POs but not quotations, so its card shows the client alone. The id is
+  // the quotation's, so it loads beside the PO; a missing one is a 404 that
+  // stays out of the error boundary.
   const readsQuotation = roleCanAccess(useMe().data?.role, "quotation")
-  const { data: detail } = useQuotation(po && readsQuotation ? quotationId : undefined)
+  const { data: detail } = useQuotation(readsQuotation ? quotationId : undefined)
   const { data: units } = useUnits()
   const { data: client } = useClient(po?.companyClientId)
 
