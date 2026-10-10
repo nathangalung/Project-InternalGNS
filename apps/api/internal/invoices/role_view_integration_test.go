@@ -93,3 +93,30 @@ func TestHandler_InvoiceByRole(t *testing.T) {
 	res.Body.Close()
 	assert.Equal(t, http.StatusForbidden, res.StatusCode, "only Lunas")
 }
+
+// Finance input may collect.
+// A sent invoice offers finance input Lunas alone, never Batalkan, while
+// the finance head keeps both.
+func TestHandler_SentInvoiceMovesByRole(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, _, invID := deliveredPOWithInvoice(t, tx)
+	_, err := tx.Exec(ctx, `SELECT fn_change_invoice_status($1, 'sent', $2, NULL, NULL)`, invID, seedUserID)
+	require.NoError(t, err)
+
+	for _, tt := range []struct {
+		role  string
+		moves []string
+	}{
+		{roles.Finance, []string{"paid", "cancelled"}},
+		{roles.FinanceInput, []string{"paid"}},
+	} {
+		t.Run(tt.role, func(t *testing.T) {
+			d := getJSON[map[string]any](t, roleServer(t, tx, tt.role), fmt.Sprintf("/invoices/%d", invID))
+			moves := []string{}
+			for _, m := range d["allowedTransitions"].([]any) {
+				moves = append(moves, m.(map[string]any)["to"].(string))
+			}
+			assert.ElementsMatch(t, tt.moves, moves)
+		})
+	}
+}
