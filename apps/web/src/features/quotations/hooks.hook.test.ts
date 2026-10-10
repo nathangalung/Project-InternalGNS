@@ -511,6 +511,22 @@ describe("useLiveChange", () => {
     expect(invalidated(qc, keys)).toEqual([qDetail, qList, dash, itemVendors, vendorItems])
   })
 
+  // One reload per own save.
+  //
+  // The save's own notice also reloads the draft; cancelling that refetch
+  // would fetch the draft twice.
+  it("lets a reload already in flight finish", async () => {
+    const { qc, result } = renderQueryHook(() => useLiveChange(5))
+    const spy = vi.spyOn(qc, "invalidateQueries")
+    await settle(() => result.current.mutateAsync(async () => undefined))
+    expect(spy).toHaveBeenCalledTimes(4)
+    for (const [, opts] of spy.mock.calls) expect(opts).toEqual({ cancelRefetch: false })
+    expect(spy).toHaveBeenCalledWith(
+      { queryKey: queryKeys.quotations.all },
+      { cancelRefetch: false },
+    )
+  })
+
   it("toasts a refusal and still reloads", async () => {
     const { qc, result } = renderQueryHook(() => useLiveChange(5))
     seed(qc, [qDetail])

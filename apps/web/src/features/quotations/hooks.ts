@@ -39,12 +39,14 @@ function invalidateQuotationDeps(qc: QueryClient) {
 //
 // The list total and product count move, and a line naming a new vendor
 // links it to the product. A draft is on no recent list and the client is
-// fixed, so client pages stay put.
+// fixed, so client pages stay put. The save's own live notice may already
+// be reloading the draft, so a refetch in flight is joined, not cancelled.
 function invalidateDraftDeps(qc: QueryClient) {
-  qc.invalidateQueries({ queryKey: queryKeys.quotations.all })
-  qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
-  qc.invalidateQueries({ queryKey: queryKeys.vendors.all })
-  qc.invalidateQueries({ queryKey: queryKeys.items.all })
+  const join = { cancelRefetch: false }
+  qc.invalidateQueries({ queryKey: queryKeys.quotations.all }, join)
+  qc.invalidateQueries({ queryKey: queryKeys.dashboard.all }, join)
+  qc.invalidateQueries({ queryKey: queryKeys.vendors.all }, join)
+  qc.invalidateQueries({ queryKey: queryKeys.items.all }, join)
 }
 
 export function useQuotations(params: QuotationListParams = {}) {
