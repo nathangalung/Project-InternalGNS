@@ -216,7 +216,7 @@ test.describe("purchase order file", () => {
     ).toBeVisible()
     await page.getByRole("button", { name: "Unggah Berkas" }).click()
     const modal = page.getByRole("dialog", { name: /Unggah Berkas PO/ })
-    const upload = modal.getByRole("button", { name: "Upload" })
+    const upload = modal.getByRole("button", { name: "Unggah", exact: true })
     await expect(upload).toBeDisabled()
     await modal.getByLabel("Nomor PO").fill(clientPo)
     await modal.locator('input[type="file"]').setInputFiles(pdfFile("po-klien.pdf"))

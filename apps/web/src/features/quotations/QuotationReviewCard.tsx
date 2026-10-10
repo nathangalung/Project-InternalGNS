@@ -293,7 +293,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
                           onClick={() => startEdit(r)}
                           className="mr-2 text-xs text-primary-700"
                         >
-                          Edit
+                          Ubah
                         </button>
                         <button
                           type="button"

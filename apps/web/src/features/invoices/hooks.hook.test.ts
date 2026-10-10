@@ -147,7 +147,7 @@ describe("useMarkInvoicePaid", () => {
     await settle(() => result.current.mutateAsync({ id: 4, proof: pdf(0) }))
     expect(m.presignPaymentProofUpload).not.toHaveBeenCalled()
     expect(m.changeStatus).not.toHaveBeenCalled()
-    expect(toast.error).toHaveBeenCalledWith("File bukti pembayaran kosong.")
+    expect(toast.error).toHaveBeenCalledWith("Berkas bukti pembayaran kosong.")
   })
 
   it("shows the Indonesian transfer failure, not the proxy detail", async () => {
