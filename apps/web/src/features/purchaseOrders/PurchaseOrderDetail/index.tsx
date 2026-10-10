@@ -3,11 +3,12 @@ import { useMemo, useState } from "react"
 import Modal from "@/components/shared/Modal"
 import { useMe } from "@/features/auth/hooks"
 import { getCompanyInitials } from "@/features/clients/helpers"
+import StoreLinkModal from "@/features/items/StoreLinkModal"
 import ClientSummaryCard from "@/features/quotations/QuotationDetail/ClientSummaryCard"
 import CostBreakdown from "@/features/quotations/QuotationDetail/CostBreakdown"
 import ProductTable from "@/features/quotations/QuotationDetail/ProductTable"
 import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
-import type { QuotationData } from "@/features/quotations/types"
+import type { ProductRow, QuotationData } from "@/features/quotations/types"
 import { downloadFile, downloadPdf } from "@/lib/api-client"
 import { formatDate, toNum } from "@/lib/format"
 import { canWriteCatalog, managesPOs } from "@/lib/rbac"
@@ -28,6 +29,7 @@ import type { PoStatus } from "../types"
 import UploadPoModal from "../UploadPoModal"
 import CompletenessModal from "./CompletenessModal"
 import FileCard from "./FileCard"
+import FilePreviewModal from "./FilePreviewModal"
 import Header from "./Header"
 import HistoryCard from "./HistoryCard"
 import {
@@ -36,6 +38,7 @@ import {
   deliveryNoteFileName,
   poBreakdown,
   poEditLockReason,
+  previewKind,
   uploadRules,
 } from "./helpers"
 import ReasonModal from "./ReasonModal"
@@ -67,6 +70,9 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
   const [showUpload, setShowUpload] = useState(false)
   const [showReason, setShowReason] = useState(false)
   const [confirmRemove, setConfirmRemove] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
+  // Line whose store link is being set
+  const [linkRow, setLinkRow] = useState<ProductRow | null>(null)
   // The gate refusal and the move it stopped
   const [gate, setGate] = useState<{ issues: PoCompletenessIssue[]; target: string } | null>(null)
 
@@ -202,6 +208,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
           fileLocked={rules.fileLocked}
           onUpload={writes && rules.editable ? () => setShowUpload(true) : undefined}
           onDownload={() => void handleDownload()}
+          onPreview={previewKind(po.fileName) === "none" ? undefined : () => setShowPreview(true)}
           onRemove={writes && fileRemovable ? () => setConfirmRemove(true) : undefined}
         />
         <ClientSummaryCard
@@ -223,6 +230,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
             showPrices={sellingShown}
             showRequest={false}
             showVendor
+            onEditStoreLink={editsLines ? setLinkRow : undefined}
           />
         </div>
         {sellingShown && (
@@ -253,6 +261,26 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
           checking={upload.checking}
           onClose={() => setShowUpload(false)}
           onSubmit={handleUploadSubmit}
+        />
+      )}
+
+      {showPreview && po.objectKey && po.fileName && (
+        <FilePreviewModal
+          poId={po.id}
+          objectKey={po.objectKey}
+          fileName={po.fileName}
+          onDownload={() => void handleDownload()}
+          onClose={() => setShowPreview(false)}
+        />
+      )}
+
+      {linkRow?.itemId !== undefined && linkRow.vendorId !== undefined && (
+        <StoreLinkModal
+          itemId={linkRow.itemId}
+          vendorId={linkRow.vendorId}
+          vendorName={linkRow.vendor ?? ""}
+          current={linkRow.storeUrl}
+          onClose={() => setLinkRow(null)}
         />
       )}
 

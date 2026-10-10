@@ -1,3 +1,4 @@
+import { type UnitIndex, unitCode } from "@/features/units/match"
 import type { LineRecommendation, MatchRowResult } from "@/types/api"
 import { isLineComplete } from "./lines"
 import type { ProductItem } from "./wizard"
@@ -14,11 +15,13 @@ function amount(v: string | undefined): number {
 // vendor this client was last quoted with, else the cheapest active one, at
 // that vendor's current harga beli, and the harga jual of the last deal.
 // Anything without a recommendation stays at 0 with no vendor; the
-// quotation saves as a draft and is completed before it is sent.
+// quotation saves as a draft and is completed before it is sent. A
+// requested unit shows as the code it resolves to (Pieces as PCS).
 export function importedLines(
   rows: MatchRowResult[],
   recs: LineRecommendation[],
   baseId: number,
+  unitByText: UnitIndex = new Map(),
 ): ProductItem[] {
   const byItem = new Map(recs.map((r) => [r.itemId, r]))
   return rows.map((r, i) => {
@@ -36,7 +39,7 @@ export function importedLines(
       requestedKodeImpa: requestedCode,
       vendor: rec?.vendorName ?? "",
       jumlah: r.requested.qty,
-      satuan: m?.defaultUnitCode ?? r.requested.unit.toUpperCase(),
+      satuan: m?.defaultUnitCode ?? unitCode(unitByText, r.requested.unit),
       hargaBeli: amount(rec?.costPrice),
       hargaJual: amount(rec?.sellingPrice),
     }

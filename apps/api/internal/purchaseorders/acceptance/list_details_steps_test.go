@@ -26,8 +26,29 @@ const (
 )
 
 func (s *scenarioState) editPODetailsDated(poNumber, poDate string) error {
+	version, err := s.currentVersion()
+	if err != nil {
+		return err
+	}
 	body := purchaseorders.UpdateDetailsRequest{PoNumber: poNumber, PoDate: poDate}
-	return s.sendRequest(http.MethodPatch, s.poPath("/details"), body)
+	return s.sendRequestWithHeaders(http.MethodPatch, s.poPath("/details"), body,
+		map[string]string{"If-Match": version})
+}
+
+// currentVersion reads the PO's version.
+// A details or notes write needs it as If-Match.
+func (s *scenarioState) currentVersion() (string, error) {
+	if err := s.sendRequest(http.MethodGet, s.poPath(""), nil); err != nil {
+		return "", err
+	}
+	if s.last.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("read PO want 200 got %d body=%s", s.last.StatusCode, s.body)
+	}
+	po, err := s.readPO()
+	if err != nil {
+		return "", err
+	}
+	return strconv.FormatInt(int64(po.RowVersion), 10), nil
 }
 
 func (s *scenarioState) editPODetailsOfLength(n int) error {

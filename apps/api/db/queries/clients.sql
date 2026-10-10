@@ -225,6 +225,35 @@ UPDATE company_contacts
    SET is_active = FALSE, updated_by = $3
  WHERE id = $2 AND company_id = $1 AND is_active = TRUE;
 
+-- name: clients.lock_for_delete
+-- The client row, locked without waiting: a document being saved for it
+-- holds a key lock, so the delete is refused (55P03) instead of queueing
+-- into a deadlock, and a document saved after this waits and then fails
+-- its foreign key.
+SELECT name FROM company_client WHERE id = $1 FOR UPDATE NOWAIT;
+
+-- name: clients.lock_contacts_for_delete
+-- Its contacts, locked the same way, since a document names one by id.
+SELECT id FROM company_contacts WHERE company_id = $1 FOR UPDATE NOWAIT;
+
+-- name: clients.usage
+-- Documents of the client, or naming one of its contacts, in any status.
+-- Read after the locks, so every committed document is counted.
+SELECT
+  (SELECT COUNT(*) FROM quotations q
+    WHERE q.company_client_id = $1
+       OR q.contact_id IN (SELECT id FROM company_contacts WHERE company_id = $1)) AS quotations,
+  (SELECT COUNT(*) FROM purchase_orders po
+    WHERE po.company_client_id = $1
+       OR po.contact_id IN (SELECT id FROM company_contacts WHERE company_id = $1)) AS purchase_orders,
+  (SELECT COUNT(*) FROM invoices i WHERE i.company_client_id = $1) AS invoices;
+
+-- name: clients.delete_contacts
+DELETE FROM company_contacts WHERE company_id = $1;
+
+-- name: clients.delete
+DELETE FROM company_client WHERE id = $1;
+
 
 -- name: clients.summary
 SELECT

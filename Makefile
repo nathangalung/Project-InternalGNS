@@ -7,7 +7,7 @@
         tidy \
         build build-api build-web \
         test test-db-reset test-api test-api-ci test-web \
-        cover cover-api cover-web e2e e2e-csp \
+        cover cover-api cover-web e2e e2e-csp examples \
         lint lint-fix fmt types gen-types rfq-fixtures \
         hooks-install hooks-run \
         docker-build docker-build-api docker-build-web \
@@ -275,6 +275,27 @@ e2e-csp: deps-up ## Playwright suite under the enforcing production CSP
 	  for _ in $$(seq 1 30); do curl -fsS http://localhost:8091/readyz >/dev/null 2>&1 && break; sleep 1; done; \
 	  cd ../web && E2E_ADMIN_EMAIL=$$SUPERADMIN_EMAIL E2E_ADMIN_PASSWORD=$$SUPERADMIN_PASSWORD \
 	    E2E_BASE_URL=http://localhost:4173 E2E_API_URL=http://localhost:8091/api/v1 bun run e2e:csp; }
+
+# One file of every export, from invented data.
+# Its own API on :8093 and the throwaway gns_examples_test. Nothing is read
+# from apps/api/.env, so no real signer, bank or tax id reaches docs/example.
+examples: deps-up ## Regenerate docs/example with one file of every export
+	$(MAKE) test-db-reset CI_TEST_DB=gns_examples_test
+	cd $(API_DIR) && go build -o bin/api-examples ./cmd/api
+	@pw="Ex!$$(openssl rand -hex 10)7"; \
+	export ENV=development HTTP_ADDR=:8093 \
+	  DATABASE_URL=postgres://gns_app:gns_app@localhost:5432/gns_examples_test?sslmode=disable \
+	  JWT_SECRET=$$(openssl rand -hex 32) CORS_ALLOWED_ORIGINS=http://localhost:5174 \
+	  SUPERADMIN_EMAIL=contoh@example.com SUPERADMIN_NAME=Contoh SUPERADMIN_PASSWORD=$$pw \
+	  MINIO_ENDPOINT=localhost:9000 MINIO_ACCESS_KEY=minioadmin MINIO_SECRET_KEY=minioadmin \
+	  PDF_SIGNER_NAME=Direktur PDF_BANK_ACCOUNT_NO=1234567890 \
+	  CORETAX_SELLER_TIN=0987654321098765 CORETAX_SELLER_IDTKU=0987654321098765000000; \
+	cd $(API_DIR) && ./bin/api-examples -bootstrap >/dev/null && \
+	PGCLIENTENCODING=UTF8 psql "$$DATABASE_URL" -q -v ON_ERROR_STOP=1 < db/seeds/01_master.sql >/dev/null && \
+	{ ./bin/api-examples > bin/api-examples.log 2>&1 & pid=$$!; trap 'kill $$pid' EXIT; \
+	  for _ in $$(seq 1 30); do curl -fsS http://localhost:8093/readyz >/dev/null 2>&1 && break; sleep 1; done; \
+	  cd ../web && E2E_ADMIN_EMAIL=$$SUPERADMIN_EMAIL E2E_ADMIN_PASSWORD=$$pw \
+	    E2E_API_URL=http://localhost:8093/api/v1 bun e2e/examples.ts; }
 
 lint: ## Lint api and web
 	cd $(API_DIR) && go vet ./...

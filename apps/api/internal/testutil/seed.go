@@ -29,12 +29,41 @@ func SeedMasterIfMissing(ctx context.Context, pool *pgxpool.Pool) error {
 		   ('WK','Minggu','UM.0025'),('DAY','Hari','UM.0026'),('HR','Jam','UM.0027'),
 		   ('MIN','Menit','UM.0028'),('PCT','Persen','UM.0029'),('KEG','Kegiatan','UM.0030'),
 		   ('LAP','Laporan','UM.0031'),('BHN','Bahan','UM.0032'),('OTH','Lainnya','UM.0033'),
-		   ('TIN','Tin/Can','UM.0033'),('TUB','Tube','UM.0033'),('PKT','Pack/Packet','UM.0033'),
-		   ('BTL','Botol/Bottle','UM.0033'),('PRS','Pairs/Pasang','UM.0033'),('RLS','Roll/Gulung','UM.0033'),
-		   ('SPL','Spool','UM.0033')
+		   ('TIN','Tin','UM.0033'),('TUB','Tube','UM.0033'),('PKT','Packet','UM.0033'),
+		   ('BTL','Bottle','UM.0033'),('PRS','Pairs','UM.0033'),('RLS','Rolls','UM.0033'),
+		   ('SPL','Spool','UM.0033'),('LGH','Length','UM.0033'),('COIL','Coil','UM.0033'),
+		   ('PAIL','Pail','UM.0033'),('DRUM','Drum','UM.0033')
 		 ON CONFLICT (code) DO NOTHING`,
 
 		`SELECT setval('units_id_seq', GREATEST(40, (SELECT COALESCE(MAX(id), 1) FROM units)), true)`,
+
+		// Same list as migration 00109, kept in step by its test.
+		`INSERT INTO unit_aliases (alias, unit_id)
+		 SELECT v.alias, u.id
+		 FROM (VALUES
+		   ('PC','PCS'),('PCE','PCS'),('PIECE','PCS'),('PIECES','PCS'),
+		   ('EA','PCS'),('EACH','PCS'),('BUAH','PCS'),('BH','PCS'),
+		   ('UNITS','UNIT'),('SETS','SET'),
+		   ('SHEET','LBR'),('SHEETS','LBR'),('SHT','LBR'),('LEMBAR','LBR'),
+		   ('BOXES','BOX'),('BX','BOX'),('KOTAK','BOX'),('DUS','BOX'),
+		   ('DZ','DOZ'),('DOZEN','DOZ'),('LUSIN','DOZ'),('LSN','DOZ'),
+		   ('KGS','KG'),('KILO','KG'),('KILOGRAM','KG'),('G','GR'),('GRAM','GR'),
+		   ('L','LTR'),('LT','LTR'),('LITER','LTR'),('LITRE','LTR'),('LITERS','LTR'),
+		   ('METER','MTR'),('METRE','MTR'),('METERS','MTR'),('MTRS','MTR'),
+		   ('CAN','TIN'),('CANS','TIN'),('KALENG','TIN'),('TINS','TIN'),
+		   ('TUBE','TUB'),('TUBES','TUB'),
+		   ('PACK','PKT'),('PACKS','PKT'),('PAX','PKT'),('PAC','PKT'),('PCK','PKT'),
+		   ('PK','PKT'),('PAK','PKT'),('PACKET','PKT'),('PACKETS','PKT'),('BUNGKUS','PKT'),
+		   ('BOTTLE','BTL'),('BOTTLES','BTL'),('BOTOL','BTL'),
+		   ('PR','PRS'),('PAIR','PRS'),('PASANG','PRS'),('PSG','PRS'),
+		   ('ROLL','RLS'),('ROLLS','RLS'),('RL','RLS'),('ROL','RLS'),('GULUNG','RLS'),
+		   ('SPOOL','SPL'),('SPOOLS','SPL'),
+		   ('LENGTH','LGH'),('LENGTHS','LGH'),('BATANG','LGH'),('BTG','LGH'),
+		   ('COILS','COIL'),('PAILS','PAIL'),('EMBER','PAIL'),('DRUMS','DRUM'),('DRM','DRUM'),
+		   ('DAYS','DAY'),('HARI','DAY'),('HOUR','HR'),('HOURS','HR'),('JAM','HR')
+		 ) v(alias, code)
+		 JOIN units u ON u.code = v.code
+		 ON CONFLICT (alias) DO NOTHING`,
 
 		`INSERT INTO company_client (id, number, name, npwp, address, country_code, created_by, updated_by)
 		 VALUES (1, '2641', 'PT. IMC Ship Management', '0612345678901000',

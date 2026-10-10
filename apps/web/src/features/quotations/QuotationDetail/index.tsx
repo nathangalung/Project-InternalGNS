@@ -3,9 +3,10 @@ import EntityLink from "@/components/shared/EntityLink"
 import HistoryTimeline from "@/components/shared/HistoryTimeline"
 import { useMe } from "@/features/auth/hooks"
 import { getCompanyInitials } from "@/features/clients/helpers"
+import StoreLinkModal from "@/features/items/StoreLinkModal"
 import { downloadQuotationPdf } from "@/features/quotations/hooks"
-import type { QuotationData } from "@/features/quotations/types"
-import { exportsQuotation, writesQuotation } from "@/lib/rbac"
+import type { ProductRow, QuotationData } from "@/features/quotations/types"
+import { canWriteCatalog, exportsQuotation, writesQuotation } from "@/lib/rbac"
 import { ui } from "@/lib/ui"
 import type { QuotationTransition } from "@/types/api"
 import { isEditable, quotationStatusFromLabel, splitTransitions, statusHint } from "../status"
@@ -53,6 +54,7 @@ export default function QuotationDetail({
   const { data: me } = useMe()
   const [picked, setPicked] = useState<QuotationTransition | null>(null)
   const [revising, setRevising] = useState(false)
+  const [linkRow, setLinkRow] = useState<ProductRow | null>(null)
 
   const id = Number(q.id)
   const status = quotationStatusFromLabel(q.status)
@@ -124,7 +126,12 @@ export default function QuotationDetail({
       {(q.seesSelling ? totalShip > 0 : q.shipping.nama !== "") && (
         <ShippingTable shipping={q.shipping} showPrice={q.seesSelling} />
       )}
-      <ProductTable products={q.products} showVendor showPrices={q.seesSelling} />
+      <ProductTable
+        products={q.products}
+        showVendor
+        showPrices={q.seesSelling}
+        onEditStoreLink={canWriteCatalog(me?.role) ? setLinkRow : undefined}
+      />
       {q.seesSelling && (
         <CostBreakdown
           hasProducts={hasProducts}
@@ -160,6 +167,15 @@ export default function QuotationDetail({
           companyId={q.clientId}
           contactId={contactId}
           onClose={() => setChangingContact(false)}
+        />
+      )}
+      {linkRow?.itemId !== undefined && linkRow.vendorId !== undefined && (
+        <StoreLinkModal
+          itemId={linkRow.itemId}
+          vendorId={linkRow.vendorId}
+          vendorName={linkRow.vendor ?? ""}
+          current={linkRow.storeUrl}
+          onClose={() => setLinkRow(null)}
         />
       )}
     </div>

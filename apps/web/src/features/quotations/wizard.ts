@@ -1,4 +1,5 @@
 import type { ProductAddFormData } from "@/features/items/ProductAdd/helpers"
+import { resolveUnit, type UnitIndex } from "@/features/units/match"
 import { computeTaxBreakdown, lineNet, sumRupiah } from "@/lib/format"
 import { isValidAddress, optionalAddressError } from "@/lib/validation"
 import type { QuotationDetail } from "@/types/api"
@@ -177,32 +178,20 @@ export function productFields(data: ProductAddFormData): Omit<ProductItem, "id" 
   }
 }
 
-// Unit ids by upper-case code.
-export function unitIdIndex(
-  units: { id: number; code: string }[] | undefined,
-): Map<string, number> {
-  const m = new Map<string, number>()
-  for (const u of units ?? []) m.set(u.code.toUpperCase(), u.id)
-  return m
-}
-
 // Why a line's unit fails.
-// Null when the unit is a known code. An RFQ often carries units the
-// catalog does not use (PC, EA, ROLL), and such a line cannot be saved
-// until a known unit is picked for it.
-export function unitIssue(satuan: string, unitIdByCode: Map<string, number>): string | null {
+// Null when the unit is a known code or alias (PC, EA and ROLL name PCS,
+// PCS and RLS). A line with any other unit cannot be saved until a known
+// unit is picked for it.
+export function unitIssue(satuan: string, unitByText: UnitIndex): string | null {
   // Same lookup as the submit, so a passing line always sends a unit id.
-  if (unitIdByCode.has(satuan.toUpperCase())) return null
+  if (resolveUnit(unitByText, satuan)) return null
   const code = satuan.trim()
   return code ? `Satuan "${code}" tidak dikenal.` : "Satuan belum diisi."
 }
 
 // Lines with an unknown unit.
-export function countUnknownUnits(
-  products: ProductItem[],
-  unitIdByCode: Map<string, number>,
-): number {
-  return products.filter((p) => unitIssue(p.satuan, unitIdByCode) !== null).length
+export function countUnknownUnits(products: ProductItem[], unitByText: UnitIndex): number {
+  return products.filter((p) => unitIssue(p.satuan, unitByText) !== null).length
 }
 
 // Values the wizard edits.

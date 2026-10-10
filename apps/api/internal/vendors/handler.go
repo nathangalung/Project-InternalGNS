@@ -3,6 +3,7 @@ package vendors
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -149,6 +150,34 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, v)
+}
+
+// Delete removes an unused vendor.
+// It serves DELETE /vendors/{id}. A vendor a quotation or PO line uses is
+// a 409 in_use naming where, and the logo object is left to
+// cmd/orphan-blobs.
+func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	name, usage, err := h.repo.Delete(r.Context(), id)
+	switch {
+	case errors.Is(err, ErrNotFound):
+		httperr.Render(w, httperr.NotFound("vendor not found"))
+		return
+	case errors.Is(err, ErrInUse):
+		httperr.Render(w, httperr.InUse("Vendor ini", usage.Uses()))
+		return
+	case err != nil:
+		httperr.RenderDBErrCtx(r.Context(), w, err)
+		return
+	}
+	// The row is gone, so the log keeps who and what.
+	slog.InfoContext(r.Context(), "permanent delete", "user_id", deps.CurrentUserID(r.Context()),
+		"entity", "vendor", "id", id, "name", name)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Handler) ListItems(w http.ResponseWriter, r *http.Request) {

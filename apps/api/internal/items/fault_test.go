@@ -86,11 +86,10 @@ func TestRepo_MatchRows_FailureNamesStage(t *testing.T) {
 		budget int
 		want   string
 	}{
-		{0, "match row 0 by IMPA"},
+		{0, "match rows 0-1 by IMPA"},
 		{1, "match rows 0-1 by name"},
-		{2, "price row 0"},
-		{3, "create row 1"},
-		{4, "price row 1"},
+		{2, "create row 1"},
+		{3, "price rows 0-1"},
 	}
 	for _, c := range cases {
 		t.Run(c.want, func(t *testing.T) {
@@ -133,8 +132,6 @@ func TestRepo_MoreErrorPaths(t *testing.T) {
 			return err
 		}},
 		{"item meta", testutil.ErrFake, func() error { _, err := r.ItemMetaByIDs(ctx, []int64{1}); return err }},
-		{"find by impa", testutil.ErrFake, func() error { _, err := r.FindByIMPA(ctx, "X"); return err }},
-		{"match with vendor", testutil.ErrFake, func() error { _, err := r.MatchWithVendorByID(ctx, 1); return err }},
 		{"match rows without tx", items.ErrNoTx, func() error {
 			_, err := r.MatchRows(ctx, items.MatchRowsRequest{}, 0.5, 1)
 			return err
@@ -145,11 +142,4 @@ func TestRepo_MoreErrorPaths(t *testing.T) {
 			assert.ErrorIs(t, c.call(), c.want)
 		})
 	}
-}
-
-// Missing item has no match.
-func TestRepo_MatchWithVendorByID_Missing(t *testing.T) {
-	ctx, tx := testutil.BeginTx(t)
-	_, err := items.NewRepo(tx, testutil.Store(t)).MatchWithVendorByID(ctx, 999999999)
-	assert.ErrorIs(t, err, items.ErrNotFound)
 }

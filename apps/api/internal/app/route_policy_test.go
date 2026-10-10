@@ -4,12 +4,15 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/rolegate"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/roles"
 )
@@ -39,6 +42,7 @@ func TestRouter_RoutePolicy(t *testing.T) {
 		{"GET", "/clients", all},
 		{"POST", "/clients", []string{s, o, oi, f}},
 		{"PUT", "/clients/999999999", []string{s, o, oi, f}},
+		{"DELETE", "/clients/999999999", []string{s, o, oi, f}},
 		{"POST", "/clients/999999999/contacts", []string{s, o, oi, f}},
 		{"PATCH", "/clients/999999999/contacts/1", []string{s, o, oi, f}},
 		{"DELETE", "/clients/999999999/contacts/1", []string{s, o, oi, f}},
@@ -52,6 +56,7 @@ func TestRouter_RoutePolicy(t *testing.T) {
 		{"GET", "/items/recommendations?itemId=999999999", []string{s, o, oi, f}},
 		{"GET", "/vendors", all},
 		{"POST", "/vendors", []string{s, o, oi}},
+		{"DELETE", "/vendors/999999999", []string{s, o, oi}},
 
 		{"GET", "/quotations", []string{s, o, oi, f}},
 		{"GET", "/quotations/export.xlsx", []string{s, o, f}},
@@ -125,6 +130,58 @@ func TestRouter_RoutePolicy(t *testing.T) {
 				}
 				require.NoError(t, json.NewDecoder(res.Body).Decode(&p))
 				assert.Equal(t, rolegate.RefusedDetail, p.Detail)
+			})
+		}
+	}
+}
+
+// Storage writes across every role.
+// The bucket gate answers its own refusal. Operational input stores no PO
+// document and finance input stores only a payment proof, never an invoice
+// attachment. The gate runs alone, so a reached upload stores nothing.
+func TestAuthorizeBucket_WritePolicy(t *testing.T) {
+	reached := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	})
+	gate := authorizeBucket(reached)
+
+	const (
+		s  = roles.Superadmin
+		o  = roles.Operational
+		oi = roles.OperationalInput
+		f  = roles.Finance
+		fi = roles.FinanceInput
+	)
+	all := []string{s, o, oi, f, fi}
+	rows := []struct {
+		bucket, key string
+		allowed     []string
+	}{
+		{"client-logos", "clients/999999999/1-logo.png", []string{s, o, oi, f}},
+		{"vendor-logos", "vendors/999999999/1-logo.png", []string{s, o, oi}},
+		{"item-images", "items/999999999/1-photo.webp", []string{s, o, oi}},
+		{"po-docs", "po/999999999/1-po.pdf", []string{s, o}},
+		{"invoice-attachments", "invoices/999999999/1-lampiran.pdf", []string{s, f}},
+		{"invoice-attachments", "invoices/999999999/payment/1-bukti.pdf", []string{s, f, fi}},
+	}
+	for _, row := range rows {
+		for _, role := range all {
+			t.Run(row.key+" "+role, func(t *testing.T) {
+				q := url.Values{"bucket": {row.bucket}, "key": {row.key}}
+				req := httptest.NewRequest(http.MethodPut, "/storage/object?"+q.Encode(), nil)
+				req = req.WithContext(deps.WithUserRole(req.Context(), role))
+				rec := httptest.NewRecorder()
+				gate.ServeHTTP(rec, req)
+				if slices.Contains(row.allowed, role) {
+					assert.Equal(t, http.StatusNoContent, rec.Code)
+					return
+				}
+				require.Equal(t, http.StatusForbidden, rec.Code)
+				var p struct {
+					Detail string `json:"detail"`
+				}
+				require.NoError(t, json.NewDecoder(rec.Body).Decode(&p))
+				assert.Equal(t, detailBucketRefused, p.Detail)
 			})
 		}
 	}

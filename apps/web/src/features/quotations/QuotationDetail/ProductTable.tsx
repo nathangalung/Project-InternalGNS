@@ -6,7 +6,7 @@ import StoreLink from "@/components/shared/StoreLink"
 import type { ProductRow } from "@/features/quotations/types"
 import { formatRupiah as formatRp } from "@/lib/format"
 import { clampPage, PAGE_SIZE_OPTIONS, pageCount } from "@/lib/pagination"
-import { ui } from "@/lib/ui"
+import { linkAction, ui } from "@/lib/ui"
 import RequestOffer from "../RequestOffer"
 import { qe } from "../wizard-styles"
 import { offerDiffers } from "./helpers"
@@ -19,6 +19,8 @@ type ProductTableProps = {
   showVendor?: boolean
   // Harga jual and totals, absent for a role that sees none
   showPrices?: boolean
+  // Adds or changes a line's store link; absent for a role that only reads
+  onEditStoreLink?: (row: ProductRow) => void
   products: ProductRow[]
 }
 
@@ -32,8 +34,16 @@ const tdProfit =
   "truncate p-5 text-center align-middle text-sm font-bold text-primary-700 bg-[rgba(99,14,212,0.05)]"
 
 // Vendor, then its store.
-function VendorNote({ row }: { row: ProductRow }) {
+function VendorNote({
+  row,
+  onEditStoreLink,
+}: {
+  row: ProductRow
+  onEditStoreLink?: (row: ProductRow) => void
+}) {
   if (!row.vendor && !row.storeUrl) return null
+  // The link belongs to the product and vendor pair
+  const editable = onEditStoreLink && row.itemId !== undefined && row.vendorId !== undefined
   return (
     <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[#6B7280]">
       {row.vendor && (
@@ -42,6 +52,11 @@ function VendorNote({ row }: { row: ProductRow }) {
         </EntityLink>
       )}
       <StoreLink url={row.storeUrl} />
+      {editable && (
+        <button type="button" className={linkAction} onClick={() => onEditStoreLink(row)}>
+          {row.storeUrl ? "Ubah Link Toko" : "Tambah Link Toko"}
+        </button>
+      )}
     </div>
   )
 }
@@ -53,6 +68,7 @@ export default function ProductTable({
   showRequest = true,
   showVendor = false,
   showPrices = true,
+  onEditStoreLink,
 }: ProductTableProps) {
   const [rawPage, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(5)
@@ -157,7 +173,11 @@ export default function ProductTable({
                         }}
                         differs={showRequest && offerDiffers(p)}
                         noOffer={p.noOffer}
-                        offerNote={showVendor && !p.noOffer ? <VendorNote row={p} /> : undefined}
+                        offerNote={
+                          showVendor && !p.noOffer ? (
+                            <VendorNote row={p} onEditStoreLink={onEditStoreLink} />
+                          ) : undefined
+                        }
                       />
                       <td className={`${ui.tdCenter} truncate`}>{p.qty}</td>
                       <td className={`${ui.tdCenter} truncate`}>{p.satuan}</td>

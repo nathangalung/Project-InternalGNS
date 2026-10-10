@@ -134,6 +134,24 @@ Feature: Client lifecycle
     Then the response status is 200
     And the client carries the new number
 
+  Scenario: A client entered by mistake is deleted for good
+    Given an existing client
+    And the client has a contact with an email and a title
+    When the user deletes the client permanently
+    Then the response status is 204
+    And no contact of the client is left
+    When the user reads the client
+    Then the response status is 404
+
+  Scenario: A client a quotation uses cannot be deleted
+    Given an existing client
+    And a quotation references the client
+    When the user deletes the client permanently
+    Then the response status is 409
+    And the problem is "in_use" reading "Klien ini sudah dipakai di 1 quotation. Nonaktifkan saja."
+    When the user reads the client
+    Then the response status is 200
+
   Scenario Outline: Whitespace-only names are rejected on create and update
     Given an existing client
     When the user creates a client named with only <blank>

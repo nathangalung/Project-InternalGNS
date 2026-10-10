@@ -90,6 +90,27 @@ func TestRepo_SecondQueryFailures(t *testing.T) {
 	})
 }
 
+// Late detail reads surface.
+// The edit claims and the contact's channels are read after the header,
+// lines and history; a failure there fails the detail instead of serving it
+// without them. The fifth read is the last one.
+func TestRepo_GetDetail_LateReadFaults(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	store := testutil.Store(t)
+	id, err := quotations.NewRepo(tx, store).Create(ctx, sampleCreate(), seedUserID)
+	require.NoError(t, err)
+	detail := func(failAfter int) error {
+		_, err := quotations.NewRepo(&testutil.CountingExec{Inner: tx, FailAfter: failAfter}, store).GetDetail(ctx, id)
+		return err
+	}
+
+	err = detail(3)
+	assert.ErrorIs(t, err, testutil.ErrFake)
+	assert.ErrorContains(t, err, "edit locks")
+	assert.ErrorIs(t, detail(4), testutil.ErrFake, "contact channels")
+	assert.NoError(t, detail(5))
+}
+
 // Unscannable rows are errors.
 func TestRepo_ScanFailuresPropagate(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)

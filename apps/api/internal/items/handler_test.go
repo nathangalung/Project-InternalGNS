@@ -349,6 +349,63 @@ func TestHandler_MatchRows_TooManyRows(t *testing.T) {
 	assert.Equal(t, want, p.Fields["rows"])
 }
 
+// minScore stays within (0, 1].
+// Above 1 no fuzzy match passes, so with autoCreate every row without an
+// IMPA hit would become a duplicate catalog item. Nothing is written.
+func TestHandler_MatchRows_MinScoreOutOfRange(t *testing.T) {
+	srv := newSrv(t)
+	name := uniqueItemName("MINSCORE")
+	row := []map[string]any{{"name": name, "qty": 1}}
+	cases := []struct {
+		name string
+		body map[string]any
+	}{
+		{"zero", map[string]any{"rows": row, "autoCreate": true, "minScore": 0}},
+		{"negative", map[string]any{"rows": row, "autoCreate": true, "minScore": -0.5}},
+		{"above one", map[string]any{"rows": row, "autoCreate": true, "minScore": 1.01}},
+		{"far above one", map[string]any{"rows": row, "autoCreate": true, "minScore": 2}},
+		{"no rows", map[string]any{"rows": []any{}, "minScore": 2}},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			res := doJSON(t, srv, http.MethodPost, "/items/match-rows", c.body)
+			defer res.Body.Close()
+			require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+			var p struct {
+				Detail string            `json:"detail"`
+				Fields map[string]string `json:"fields"`
+			}
+			require.NoError(t, json.NewDecoder(res.Body).Decode(&p))
+			want := "Skor minimal harus di atas 0 dan paling tinggi 1."
+			assert.Equal(t, want, p.Fields["minScore"])
+			assert.Equal(t, want, p.Detail)
+		})
+	}
+	list, err := items.NewRepo(testutil.Pool(t), testutil.Store(t)).List(context.Background(), items.ListFilter{Q: name, Limit: 5})
+	require.NoError(t, err)
+	assert.Zero(t, list.Total, "a refused import creates nothing")
+}
+
+// minScore bounds stay usable.
+func TestHandler_MatchRows_MinScoreInRange(t *testing.T) {
+	srv := newSrv(t)
+	for _, score := range []any{nil, 0.01, 1} {
+		t.Run(fmt.Sprint(score), func(t *testing.T) {
+			body := map[string]any{"rows": []map[string]any{{"impaCode": "TF9000001", "qty": 1}}}
+			if score != nil {
+				body["minScore"] = score
+			}
+			res := doJSON(t, srv, http.MethodPost, "/items/match-rows", body)
+			defer res.Body.Close()
+			require.Equal(t, http.StatusOK, res.StatusCode)
+			var out items.MatchRowsResponse
+			require.NoError(t, json.NewDecoder(res.Body).Decode(&out))
+			require.Len(t, out.Rows, 1)
+			assert.Equal(t, "IMPA_EXACT", out.Rows[0].Source)
+		})
+	}
+}
+
 func TestHandler_MatchRows_IMPAExact(t *testing.T) {
 	srv := newSrv(t)
 	body := items.MatchRowsRequest{
@@ -369,7 +426,7 @@ func TestHandler_MatchRows_IMPAExact(t *testing.T) {
 func TestHandler_MatchRows_FuzzyFallback(t *testing.T) {
 	srv := newSrv(t)
 	body := items.MatchRowsRequest{
-		MinScore: 0.05,
+		MinScore: new(float32(0.05)),
 		Rows: []items.MatchRowInput{
 			{IMPACode: "", Name: "PUNCHING TOOL SET", Qty: 1, Unit: "PCS"},
 		},
@@ -457,7 +514,7 @@ func TestHandler_MatchRows_AutoCreate_CreatesProduct(t *testing.T) {
 	name := fmt.Sprintf("AutoCreate New Product %d", time.Now().UnixNano())
 	body := items.MatchRowsRequest{
 		AutoCreate: true,
-		MinScore:   0.99, // isolate the no-match -> create path
+		MinScore:   new(float32(0.99)), // isolate the no-match -> create path
 		Rows: []items.MatchRowInput{
 			{IMPACode: "", Name: name, Qty: 2, Unit: "PCS"},
 		},
@@ -480,7 +537,7 @@ func TestHandler_MatchRows_AutoCreate_DedupsSameName(t *testing.T) {
 	base := fmt.Sprintf("Duplicate Import Item %d", time.Now().UnixNano())
 	body := items.MatchRowsRequest{
 		AutoCreate: true,
-		MinScore:   0.99, // first row creates; second dedups within the batch
+		MinScore:   new(float32(0.99)), // first row creates; second dedups within the batch
 		Rows: []items.MatchRowInput{
 			{Name: base, Qty: 1, Unit: "PCS"},
 			{Name: strings.ToLower(base) + " ", Qty: 3, Unit: "PCS"},
@@ -541,7 +598,7 @@ func TestHandler_MatchRows_FailedBatchRollsBack(t *testing.T) {
 
 	failing := items.MatchRowsRequest{
 		AutoCreate: true,
-		MinScore:   0.99, // isolate the no-match -> create path
+		MinScore:   new(float32(0.99)), // isolate the no-match -> create path
 		Rows: []items.MatchRowInput{
 			{Name: first, Qty: 1, Unit: "PCS"},
 			{Name: second, Qty: 1, Unit: "PCS"},

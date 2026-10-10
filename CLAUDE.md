@@ -38,8 +38,10 @@ Bun-managed monorepo.
 Five roles (migration 00104), named in `shared/roles` with what each may see
 or change. The backend enforces them at the router mount (`requireRole`,
 `readOnlyFor` in `internal/app`), per route (`rolegate.Deny` inside a
-feature's `Routes`), and in the handlers that hide figures or keep stored
-prices. The frontend mirrors them in `src/lib/rbac.ts`, whose capability
+feature's `Routes`), in the handlers that hide figures or keep stored
+prices, and at the storage proxy, whose bucket gate (`authorizeBucket`)
+lets a role store only what its routes attach (`storage.CanWriteObject`).
+The frontend mirrors them in `src/lib/rbac.ts`, whose capability
 checks fail closed for an unknown role, and in the route guard
 (`roleCanOpen`, which also keeps read-only roles out of the editors). User
 management picks a role from a dropdown with an Indonesian label and hint
@@ -53,7 +55,8 @@ management picks a role from a dropdown with an Indonesian label and hint
   and vendors, harga beli and harga jual. It edits drafts, sets selling
   prices and discounts, and downloads the quotation PDF, which is its last
   step; it runs a PO (file, number, notes, status, cancelling) with
-  superadmin (`roles.ManagesPOs`).
+  superadmin (`roles.ManagesPOs`). It deletes an unused client or vendor
+  for good (Hapus Permanen).
 - operational_input (Input Data Operasional): client data, client requests,
   harga beli and the catalog (products, photos, vendors, store links). It
   writes quotation drafts but never sees or sets a selling figure: no harga
@@ -65,18 +68,22 @@ management picks a role from a dropdown with an Indonesian label and hint
   current: in Ubah PO it changes harga beli and vendor of the stored lines,
   everything the client ordered stays as stored (`keepStoredSale`; each line
   carries its PO line `id`, adding or dropping one is a 403), and it neither
-  moves the PO nor touches its file, number or notes.
+  moves the PO nor touches its file, number or notes. The storage proxy
+  refuses it a PO document upload too. It deletes an unused client or
+  vendor for good, as the heads do.
 - finance (Kepala Keuangan): invoices, Kas Lain and the financial dashboard,
   and reads quotations, POs, products and vendors without changing them.
-  Keeps client writes, so it fixes a client's NPWP and TKU.
+  Keeps client writes, so it fixes a client's NPWP and TKU and deletes an
+  unused client for good, but never a vendor.
 - finance_input (Input Data Keuangan): invoices and POs, with what is billed
   but no harga beli or profit. It records payment (Lunas is its one move,
   with the proof), prepares the Coretax export, and builds the payment
   reminders from the invoice export, whose Terlambat rows carry the days
   past due and the contact to write to. It reads clients without changing
-  them, and adds and edits Kas Lain entries but neither deletes nor exports
-  them. No quotations, no dashboards beyond the overview, no Pengganti, no
-  invoice dates or attachment.
+  or deleting them, and adds and edits Kas Lain entries but neither deletes
+  nor exports them. No quotations, no dashboards beyond the overview, no
+  Pengganti, no invoice dates or attachment. In the invoice bucket it stores
+  only a key directly under `invoices/<id>/payment/`, the proof folder.
 
 A hidden figure is left out of the JSON, never zeroed: each money field
 carries `omitempty`, each feature's `redact(role)` blanks what the role may
@@ -136,6 +143,7 @@ make test           # Go tests, web typecheck, and Vitest
 make test-api       # Go tests on a throwaway database, as CI runs them
 make e2e            # Playwright against the running dev stack
 make e2e-csp        # The suite under the enforced production CSP
+make examples       # docs/example: one file of every export, invented data
 make cover          # Both coverage gates
 make lint           # go vet, golangci-lint when installed, and Biome
 make fmt            # gofmt and Biome format
@@ -196,7 +204,9 @@ under `/api/v1`. Errors are RFC 7807 problem+json (`shared/httperr`). List
 endpoints return the total count in the `X-Total-Count` header. A stale
 `If-Match` is a 409 from `httperr.VersionConflict()` with `code:
 "version_conflict"` (a PO lock carries `po_locked`); the web branches on the
-code through `lib/errors.ts`, never on the detail text.
+code through `lib/errors.ts`, never on the detail text. A PO's lines,
+details and notes writes refuse a request without `If-Match` with a 400,
+so no caller overwrites them unguarded.
 
 Every query key a repo reads is listed in `db/queries/required.go`, and
 `Load()` fails at startup when one is missing; add the key in the same commit
@@ -297,7 +307,9 @@ shows a missing one as Belum ada No. PO.
   matcher and threshold: the IMPA code, then the closest name, reuses an
   item (a look-alike asks the user to check it), anything else is added to
   the catalog, and the pick then applies the line recommendation as an
-  import does. Every product line shows the
+  import does. Its `minScore` defaults to 0.5, and one outside (0, 1] is a
+  422 on the field, since above 1 nothing matches and `autoCreate` would
+  add every row again. Every product line shows the
   request and the offer side by side at one size (`RequestOffer`, in the
   wizard cards, the summary and the detail table), and an offer that is not
   what was asked turns orange. A line's Belum lengkap badge opens its editor,
@@ -319,7 +331,10 @@ shows a missing one as Belum ada No. PO.
   The parts are the header (contact, client reference, shipping, terms,
   discount) and each line (`line:<id>`); `POST /quotations/{id}/locks`
   claims one for two
-  minutes (`EditLockTTL`, renewed every 30 s by `useEditLocks`), and a part
+  minutes (`EditLockTTL`, renewed every 30 s by `useEditLocks`, which drops
+  a claim only when the server refuses the renewal, a 4xx per
+  `isFinalRefusal`, and keeps it through a network error or a 5xx for the
+  next beat), and a part
   someone else holds is a 409 `edit_locked` whose detail names them. A line
   save and the header save need the caller's claim; add, delete, the
   Tidak Ditawarkan toggle and a contact change
@@ -368,7 +383,11 @@ shows a missing one as Belum ada No. PO.
   ON_PROGRESS and DELIVERED need one product line with a quantity. Both
   moves also pass the completeness gate (the client's PO number, client,
   vendor and shipping-address data), a 422 `po_incomplete`; delivery runs it
-  again, since ON_PROGRESS edits and client edits can reopen a gap. Each PO
+  again, since ON_PROGRESS edits and client edits can reopen a gap. The
+  gate and the move run in one transaction (`Repo.GatedTransition`): the PO
+  row is locked first, so the gate judges the status the move starts from,
+  and the gate's client read holds the client row `FOR SHARE`, so a client
+  edit waits and DELIVERED copies the buyer the gate passed. Each PO
   line stores its own supplier (`vendor_product_id`), copied from the quotation line only when
   that link is for the line's product, and the items list and the gate
   read it from the PO line. The line edit takes `vendorProductId` (a link
@@ -413,6 +432,29 @@ filled by `fn_next_client_number`; a typed one must be four digits and unused.
 It stays editable after quotations use it, since no document number embeds
 it.
 
+A client or vendor entered by mistake is deleted for good (Hapus Permanen,
+`DELETE /clients/{id}`, `DELETE /vendors/{id}`, no migration) only while no
+document uses it: for a client no quotation, PO or invoice, counted in any
+status and including a document that names one of its contacts; for a
+vendor no quotation or PO line through any of its links. Active and
+inactive records alike. A used one is a 409 `in_use` (`httperr.InUse`)
+whose detail says where, for example "Klien ini sudah dipakai di 3
+quotation, 1 PO dan 1 invoice. Nonaktifkan saja.", and deactivating stays
+the way to retire it; a missing one is a 404. The client's contacts or the
+vendor's links (`vendor_products`; there is no price history table) go in
+the same transaction, the linked items stay. The repo locks the row and its
+children `FOR UPDATE NOWAIT` before counting: a document being saved holds
+a key lock on them, so the delete is refused at once with a retryable 409
+(SQLSTATE 55P03, mapped by `httperr.FromDBErr`) instead of queueing into a
+deadlock, and a document saved after the locks waits and then fails its
+foreign key as a 404. The handler logs `permanent delete` with the user,
+entity, id and name, since the row is gone. The logo object stays for
+`cmd/orphan-blobs`, which sweeps any key no row names. The mount gates
+already decide who may: the client writers (all but finance input) and the
+catalog writers (superadmin and both operational roles), mirrored by
+`editsClients` and `canWriteCatalog` on the detail pages, whose
+`PermanentDelete` dialog shows any refusal inline.
+
 A client's NPWP follows one rule, `validate.ClientNPWP`, mirrored by
 `optionalNpwpError` in the web: an Indonesian client (country IDN or blank)
 has the 16 digits Coretax files, typed with or without separators and stored
@@ -439,13 +481,48 @@ by name ten at a time (`pickerWindow`), a search paging its hits the same way.
 A vendor link's `product_url` is where the vendor sells the item (Link
 Toko). `validate.ProductURL` keeps only an http or https address with a host
 (a 422 on `productUrl`), mirrored by `lib/store-link`, so the anchor never
-runs script. Only `POST /items/{id}/vendors` writes it: the Tambah Vendor
-and Ubah dialogs on the product page, where a cleared link is sent as null.
-An unsent `costPrice` keeps the stored harga beli and its quote date, so Ubah
-sends the price only when it was changed.
+runs script. Only `POST /items/{id}/vendors` writes it, and a cleared link
+is sent as null. An unsent `costPrice` keeps the stored harga beli and its
+quote date, so Ubah sends the price only when it was changed. Three places
+write it: the Tambah Vendor and Ubah dialogs on the product page, and
+`features/items/StoreLinkModal` (Tambah Link Toko, Ubah Link Toko), which
+sends only `vendorId` and `productUrl` and is opened beside the picked
+vendor in the quotation and PO product dialog and under each line on
+the quotation and PO detail. It is offered only to the roles that write the catalog
+(`canWriteCatalog`, passed as `storeLinks` to `ProductAdd` and as
+`onEditStoreLink` to `ProductTable`), and in the dialog only for a vendor
+the product already links (`vendorProductId`), since a link alone would
+create one at harga beli 0. A save refreshes the item's vendors and the
+quotation and PO queries, which read the link live. Every other role only
+sees it.
 `StoreLink` shows it in a new tab on the product and vendor pages, under
 each offer on the quotation and PO detail, and beside the picked vendor in
 the quotation product dialog.
+
+## Units
+
+A unit (Satuan) keeps the short code every document prints and exports
+(PCS, PKT), never changed once used, so a reprint stays as filed. Units 1
+to 33 carry the DJP Coretax names and codes UM.0001 to UM.0033; the
+ship-supply units map to UM.0033 and are named by the long form of their
+code (TIN Tin, PKT Packet, RLS Rolls), one name with no slash. Every other
+way a unit is written is an alias in `unit_aliases` (migration 00109):
+PC, PIECES and EA for PCS, CAN for TIN, SHEET and LEMBAR for LBR, PACK for
+PKT. An alias is stored normalised by `fn_unit_text` (upper case, one
+space between words, no trailing dot), and triggers refuse an alias equal
+to a code and a code equal to an alias, so one text names one unit; an
+ambiguous text (MT is Metrik Ton, LB is also the pound) stays out.
+`GET /units` lists each unit's `aliases`, and the web resolves typed and
+imported unit text through one helper (`features/units/match`:
+`unitIndex`, `resolveUnit`, the same normalisation), used by the wizard
+check and its submit, the RFQ import (which shows the resolved code), Ubah
+PO and the unit picker, whose row reads `CODE - Name` and names the alias
+a query matched. Never add a unit for a new spelling: add an alias. A new
+unit or alias comes in a migration that names units by code in JOIN form
+(a database without master data skips it), and the same rows go into
+`db/seeds/01_master.sql` and `testutil.SeedMasterIfMissing`; a migration
+test keeps the three alias lists equal. The server reads no unit text, so
+nothing there resolves one.
 
 ## Kas Lain
 
@@ -508,6 +585,10 @@ Shared pieces in `components/shared`, reuse them instead of copying markup:
   focus returned to the opener, and a stack so only the top modal reacts.
 - `FilterFooter` is the Hapus Filter, Batal, Terapkan footer of every filter
   modal.
+- `PermanentDelete` is the Hapus Permanen button and its confirm dialog on
+  the client and vendor pages. It names the record, says the delete cannot
+  be undone, and shows any failure inline, so its mutation hooks only toast
+  the success and mark the views stale without refetching the open detail.
 - Page states: `LoadingState`, `NotFoundState`, `RouteErrorFallback` and
   `RouteNotFound`, all built on `StateMessage`; table rows use `TableStates`.
 - `LoadError` is the inline failed-lookup row with Coba Lagi. A query a form
@@ -528,8 +609,15 @@ Shared pieces in `components/shared`, reuse them instead of copying markup:
 
 Stored files (logos, product photos, attachments) come through the
 authenticated API proxy, and the enforced CSP allows images only from self,
-`blob:` and `data:`, so show one through `hooks/useObjectUrl` (a blob URL it
-revokes) and never point an `<img>` at an API URL. Product photos are shrunk
+`blob:` and `data:` and frames only from `blob:` (`frame-src blob:`), so show
+one through `hooks/useObjectUrl` (a blob URL it revokes; `useObjectUrlState`
+also tells a failed download from one loading) and never point an `<img>` or
+an `<iframe>` at an API URL. The PO detail's Lihat Berkas
+(`PurchaseOrderDetail/FilePreviewModal`) shows the PO file that way: a photo
+in an `<img>`, a PDF in an `<iframe>` with Buka di Tab Baru for a browser
+that shows no PDF inline, and a spreadsheet only downloads
+(`previewKind`, by the extensions `storage/policy.go` allows). Closing the
+modal unmounts it, which revokes the URL. Product photos are shrunk
 in the browser before upload (`lib/image-shrink`, WebP within 1600px). A
 product keeps up to eight (`item_images`, `MaxItemImages`, enforced by
 `fn_item_image_add`); `items.image_object_key` names the cover (Foto Utama),
@@ -616,7 +704,8 @@ and every chip removes only its own filter.
   so every test fails on a violation its browser reports. `make e2e-csp` (and
   the CI e2e job) builds the SPA against a separate API origin, serves `dist`
   with that policy, and runs the whole suite against the throwaway
-  `gns_csp_test`; `e2e/csp.spec.ts` proves the header is live. A new
+  `gns_csp_test`; `e2e/csp.spec.ts` proves the header is live, and that a
+  `blob:` frame loads while a frame from another origin is refused. A new
   dependency that injects an inline `<style>` or loads from another host
   fails there: fix the cause, never add `unsafe-inline` or `unsafe-eval`.
 - Lighthouse CI (`bun run lighthouse`, the CI `lighthouse` job) audits 12
@@ -625,6 +714,13 @@ and every chip removes only its own filter.
   restores its session from the refresh cookie and is scored as itself, not
   as `/login`. Fix a failing audit at its cause; never lower a threshold or
   drop a URL.
+- `docs/example` holds one file of every export (the three PDFs, the
+  Coretax XML and workbook, and the list, dashboard and Kas Lain
+  workbooks). `make examples` makes them by walking one invented sale
+  through the real API (`apps/web/e2e/examples.ts`) on the throwaway
+  `gns_examples_test`, with its settings in the Makefile and never from
+  `apps/api/.env`, so no real signer, bank or tax id is printed. Rerun it
+  after a template or export change and commit the result.
 
 Coverage gates fail CI below their tier; `make cover` runs both locally.
 

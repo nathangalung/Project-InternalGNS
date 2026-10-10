@@ -81,6 +81,22 @@ export function useUpdateClient() {
   })
 }
 
+// Permanent delete of a client.
+//
+// The dialog shows every failure, the 409 naming where it is used included.
+// Client views are only marked stale: the open detail page would refetch
+// the deleted id into a 404 before the page leaves for the list.
+export function useDeleteClient() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => clientsApi.remove(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.clients.all, refetchType: "none" })
+      toast.success("Klien dihapus permanen.")
+    },
+  })
+}
+
 // Contacts of a client.
 //
 // A secondary card: a failure shows in it, not on the route error boundary,

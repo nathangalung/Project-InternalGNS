@@ -1,6 +1,14 @@
 import type { Page } from "@playwright/test"
 import type { InvoiceDetail, PurchaseOrderItemRow } from "../src/types/generated"
-import { api, idFrom, pdfFile, rupiah, type SalesSeed, type SeedClient } from "./support/sales"
+import {
+  api,
+  idFrom,
+  pdfFile,
+  rupiah,
+  type SalesSeed,
+  type SeedClient,
+  tinyPng,
+} from "./support/sales"
 import { expect, test } from "./support/seed"
 
 // PO flows through the UI.
@@ -216,7 +224,7 @@ test.describe("purchase order file", () => {
     ).toBeVisible()
     await page.getByRole("button", { name: "Unggah Berkas" }).click()
     const modal = page.getByRole("dialog", { name: /Unggah Berkas PO/ })
-    const upload = modal.getByRole("button", { name: "Upload" })
+    const upload = modal.getByRole("button", { name: "Unggah", exact: true })
     await expect(upload).toBeDisabled()
     await modal.getByLabel("Nomor PO").fill(clientPo)
     await modal.locator('input[type="file"]').setInputFiles(pdfFile("po-klien.pdf"))
@@ -237,6 +245,51 @@ test.describe("purchase order file", () => {
     await expect(page.getByRole("button", { name: "Pending", exact: true })).toBeVisible()
     await expect(page.getByText("Berkas PO dihapus")).toBeVisible()
     expect((await seed.poByQuotation(q.id)).status).toBe("PENDING")
+  })
+
+  // The enforced CSP allows the blob frame; the fixture fails on a refusal.
+  test("Lihat Berkas frames the PDF from a blob and drops it on close", async ({ page, seed }) => {
+    const { q, po } = await acceptedPo(seed)
+    await seed.attachPoFile(po, "lembar-po.pdf")
+
+    await page.goto(`/purchase-orders/${q.id}`)
+    await page.getByRole("button", { name: "Lihat Berkas" }).click()
+    const dialog = page.getByRole("dialog", { name: "Pratinjau Berkas PO" })
+    const frame = dialog.locator('iframe[title="lembar-po.pdf"]')
+    await expect(frame).toHaveAttribute("src", /^blob:/)
+    await expect(dialog.getByRole("button", { name: "Buka di Tab Baru" })).toBeEnabled()
+    await expect(dialog.getByRole("button", { name: "Unduh Berkas" })).toBeVisible()
+
+    // Closing unmounts the frame; useObjectUrl revokes its URL then.
+    await dialog.getByRole("button", { name: "Tutup" }).click()
+    await expect(dialog).toBeHidden()
+    await expect(page.locator("iframe")).toHaveCount(0)
+  })
+
+  test("Lihat Berkas shows a photographed PO as an image", async ({ page, seed }) => {
+    const { q, po } = await acceptedPo(seed)
+    await seed.attachPoFile(po, "foto-po.png", { body: tinyPng, type: "image/png" })
+
+    await page.goto(`/purchase-orders/${q.id}`)
+    await page.getByRole("button", { name: "Lihat Berkas" }).click()
+    const dialog = page.getByRole("dialog", { name: "Pratinjau Berkas PO" })
+    const img = dialog.getByRole("img", { name: "foto-po.png" })
+    await expect(img).toHaveAttribute("src", /^blob:/)
+    await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.naturalWidth)).toBe(1)
+    await expect(dialog.getByRole("button", { name: "Buka di Tab Baru" })).toHaveCount(0)
+  })
+
+  test("a spreadsheet PO offers only the download", async ({ page, seed }) => {
+    const { q, po } = await acceptedPo(seed)
+    await seed.attachPoFile(po, "po-klien.xlsx", {
+      body: "PK",
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    })
+
+    await page.goto(`/purchase-orders/${q.id}`)
+    await expect(page.getByText("po-klien.xlsx", { exact: true })).toBeVisible()
+    await expect(page.getByRole("button", { name: "Unduh Berkas" })).toBeVisible()
+    await expect(page.getByRole("button", { name: "Lihat Berkas" })).toHaveCount(0)
   })
 })
 

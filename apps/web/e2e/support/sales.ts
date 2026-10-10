@@ -331,11 +331,15 @@ export class SalesSeed {
   }
 
   // Enter the client's PO number.
+  //
+  // The write needs the version po was read at.
   async setPoNumber(po: PurchaseOrder, poNumber: string): Promise<void> {
-    await api("PATCH", `/purchase-orders/${po.id}/details`, {
-      poNumber,
-      poDate: po.poDate.slice(0, 10),
-    })
+    await api(
+      "PATCH",
+      `/purchase-orders/${po.id}/details`,
+      { poNumber, poDate: po.poDate.slice(0, 10) },
+      { "If-Match": String(po.rowVersion) },
+    )
   }
 
   async revise(id: number, note?: string): Promise<number> {
@@ -348,8 +352,12 @@ export class SalesSeed {
     return api<PurchaseOrder>("GET", `/purchase-orders/by-quotation/${quotationId}`)
   }
 
-  attachPoFile(po: PurchaseOrder, fileName = "po-klien.pdf"): Promise<void> {
-    return uploadPoFile(adminToken(), po.id, fileName)
+  attachPoFile(
+    po: PurchaseOrder,
+    fileName = "po-klien.pdf",
+    content?: PoFileContent,
+  ): Promise<void> {
+    return uploadPoFile(adminToken(), po.id, fileName, content)
   }
 
   // Deliver a PO fully.
@@ -363,7 +371,13 @@ export class SalesSeed {
   }
 
   async setPoNotes(poId: number, notes: string): Promise<void> {
-    await api("PATCH", `/purchase-orders/${poId}/notes`, { notes })
+    const po = await api<PurchaseOrder>("GET", `/purchase-orders/${poId}`)
+    await api(
+      "PATCH",
+      `/purchase-orders/${poId}/notes`,
+      { notes },
+      { "If-Match": String(po.rowVersion) },
+    )
   }
 
   async setPoStatus(poId: number, status: string, note?: string): Promise<void> {
@@ -458,15 +472,28 @@ export function idFrom(href: string | null): number {
 const pdfText =
   "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[]/Count 0>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
 
-// Attach a PDF to PO.
+// 1x1 transparent PNG.
+export const tinyPng = new Uint8Array(
+  Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+    "base64",
+  ),
+)
+
+export type PoFileContent = { body: string | Uint8Array<ArrayBuffer>; type: string }
+
+const pdfContent: PoFileContent = { body: pdfText, type: "application/pdf" }
+
+// Attach a file to PO.
 //
 // The app's own path: presign, PUT through the storage proxy, then attach.
 // PENDING becomes UPLOADED. The server refuses a key with no upload behind
-// it, so the object must really exist.
+// it, so the object must really exist. A PDF unless content says otherwise.
 export async function uploadPoFile(
   token: string,
   poId: number,
   fileName = "po-klien.pdf",
+  content: PoFileContent = pdfContent,
 ): Promise<void> {
   const authed = async (what: string, path: string, init: RequestInit, type: string) => {
     const res = await fetch(`${apiURL}${path}`, {
@@ -487,8 +514,8 @@ export async function uploadPoFile(
   await authed(
     `upload ${fileName}`,
     presign.uploadUrl,
-    { method: "PUT", body: pdfText },
-    "application/pdf",
+    { method: "PUT", body: content.body },
+    content.type,
   )
   await authed(
     "attach PO file",
@@ -497,7 +524,7 @@ export async function uploadPoFile(
       method: "PATCH",
       body: JSON.stringify({
         fileName,
-        fileSize: Buffer.byteLength(pdfText),
+        fileSize: Buffer.byteLength(content.body),
         objectKey: presign.objectKey,
       }),
     },
@@ -528,11 +555,15 @@ export function pdfFile(name: string): { name: string; mimeType: string; buffer:
 
 // Deactivate a master row.
 //
-// Master data has no delete endpoint; deactivation is the undo.
+// A used row cannot be deleted, so deactivation is the undo. A row a test
+// already deleted for good is left as is.
 export async function deactivate(kind: "client" | "vendor" | "item", id: number): Promise<void> {
   const path = `${{ client: "/clients", vendor: "/vendors", item: "/items" }[kind]}/${id}`
-  const row = await api<Record<string, unknown>>("GET", path)
-  await api("PUT", path, { ...row, isActive: false })
+  const row = await api<Record<string, unknown>>("GET", path).catch((err: ApiError) => {
+    if (err.status === 404) return null
+    throw err
+  })
+  if (row) await api("PUT", path, { ...row, isActive: false })
 }
 
 // Imported contact with no channel.

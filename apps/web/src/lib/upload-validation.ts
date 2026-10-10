@@ -77,7 +77,7 @@ function fmtMB(bytes: number): string {
 export function validateAsset(kind: AssetKind, file: File): void {
   const policy = POLICIES[kind]
   if (file.size <= 0) {
-    throw new Error(`File ${policy.label} kosong.`)
+    throw new Error(`Berkas ${policy.label} kosong.`)
   }
   if (file.size > policy.maxBytes) {
     throw new Error(`Ukuran ${policy.label} melebihi ${fmtMB(policy.maxBytes)}.`)

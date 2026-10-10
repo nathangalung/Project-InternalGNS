@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test"
 import { CONTACT_REACH_ERROR } from "../src/lib/validation"
 import type { PurchaseOrderItemRow } from "../src/types/generated"
-import { api, deactivate, idFrom, rupiah } from "./support/sales"
+import { type ApiError, api, deactivate, idFrom, rupiah } from "./support/sales"
 import { expect, test } from "./support/seed"
 
 // Client master data flows.
@@ -95,6 +95,59 @@ test("renaming and deactivating a client saves both", async ({ page, seed }) => 
   await page.goto("/quotations/add")
   await page.getByLabel("Cari klien").fill(seed.prefix)
   await expect(page.getByRole("button", { name: new RegExp(renamed) })).toHaveCount(0)
+})
+
+// Hapus Permanen.
+// A client entered by mistake goes for good; a used one stays, and the
+// dialog says where it is used.
+test("Hapus Permanen deletes an unused client and returns to the list", async ({ page, seed }) => {
+  const client = await seed.client()
+  await page.goto(`/clients/${client.id}`)
+  await page.getByRole("button", { name: "Hapus Permanen" }).click()
+  const dialog = page.getByRole("dialog", { name: "Hapus klien permanen?" })
+  await expect(dialog).toContainText(client.name)
+  await expect(dialog).toContainText("tidak dapat dibatalkan")
+  await dialog.getByRole("button", { name: "Hapus Permanen" }).click()
+
+  await expect(page).toHaveURL(/\/clients$/)
+  await expect(page.getByText("Klien dihapus permanen.")).toBeVisible()
+  const gone = await api("GET", `/clients/${client.id}`).then(
+    () => 200,
+    (err: ApiError) => err.status,
+  )
+  expect(gone).toBe(404)
+  await page.getByPlaceholder("Cari nama klien...").fill(client.name)
+  await expect(page.getByRole("link", { name: client.name, exact: true })).toHaveCount(0)
+})
+
+test("Hapus Permanen keeps a quoted client and says why", async ({ page, seed }) => {
+  const client = await seed.client()
+  const item = await seed.item({ vendor: await seed.vendor() })
+  await seed.quotation({ client, lines: [{ item, qty: 1, price: 150_000 }] })
+  await page.goto(`/clients/${client.id}`)
+  await page.getByRole("button", { name: "Hapus Permanen" }).click()
+  const dialog = page.getByRole("dialog", { name: "Hapus klien permanen?" })
+  await dialog.getByRole("button", { name: "Hapus Permanen" }).click()
+
+  await expect(dialog.getByRole("alert")).toHaveText(
+    "Klien ini sudah dipakai di 1 quotation. Nonaktifkan saja.",
+  )
+  await expect(page).toHaveURL(new RegExp(`/clients/${client.id}$`))
+  await dialog.getByRole("button", { name: "Batal" }).click()
+  await expect(dialog).toBeHidden()
+  await expect(page.getByRole("heading", { name: client.name, level: 2 })).toBeVisible()
+  await api("GET", `/clients/${client.id}`)
+})
+
+test.describe("as finance input", () => {
+  test.use({ session: "finance_input" })
+
+  test("finance input cannot delete a client", async ({ page, seed }) => {
+    const client = await seed.client()
+    await page.goto(`/clients/${client.id}`)
+    await expect(page.getByRole("heading", { name: client.name, level: 2 })).toBeVisible()
+    await expect(page.getByRole("button", { name: "Hapus Permanen" })).toHaveCount(0)
+  })
 })
 
 test.describe("as finance", () => {

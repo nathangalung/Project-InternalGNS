@@ -117,7 +117,7 @@ type AddVendorToItemRequest struct {
 	ProductURL httpx.OptionalText `json:"productUrl"`
 }
 
-// Result row from items.match_with_vendor_by_id.
+// Result row from items.match_with_vendor_by_ids.
 type MatchedItemWithVendor struct {
 	ItemID          int64   `db:"item_id"            json:"itemId"`
 	ItemName        string  `db:"item_name"          json:"itemName"`
@@ -150,7 +150,7 @@ type MatchRowResult struct {
 
 type MatchRowsRequest struct {
 	Rows       []MatchRowInput `json:"rows"`
-	MinScore   float32         `json:"minScore,omitempty"`   // default 0.5
+	MinScore   *float32        `json:"minScore,omitempty"`   // default 0.5, else within (0, 1]
 	AutoCreate bool            `json:"autoCreate,omitempty"` // create catalog item for no-match rows
 }
 

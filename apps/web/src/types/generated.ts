@@ -1034,6 +1034,7 @@ export type UnitRow = {
     code: string;
     name?: string;
     coretaxCode?: string;
+    aliases: string[];
 };
 
 // From clients/dto.go

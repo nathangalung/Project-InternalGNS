@@ -182,6 +182,27 @@ describe("item writes", () => {
       vendorDetail,
     ])
   })
+
+  // The quotation and PO lines read the link live.
+  it("refreshes the quotation and PO lines that show the store link", async () => {
+    m.addVendor.mockResolvedValue({ id: 1 } as never)
+    const { qc, result } = renderQueryHook(() => useAddVendorToItem())
+    const poItems = queryKeys.purchaseOrders.items(3)
+    const quotation = queryKeys.quotations.detail(7)
+    const invoice = queryKeys.invoices.items(3)
+    seed(qc, [poItems, quotation, invoice])
+    await settle(() =>
+      result.current.mutateAsync({
+        itemId: 9,
+        input: { vendorId: 4, productUrl: "https://toko.example/tali" },
+      }),
+    )
+    expect(m.addVendor).toHaveBeenCalledWith(9, {
+      vendorId: 4,
+      productUrl: "https://toko.example/tali",
+    })
+    expect(invalidated(qc, [poItems, quotation, invoice])).toEqual([poItems, quotation])
+  })
 })
 
 describe("useItemGallery", () => {

@@ -72,6 +72,26 @@ export function useUpdateVendor() {
   })
 }
 
+// Permanent delete of a vendor.
+//
+// The dialog shows every failure, the 409 naming where it is used included.
+// Vendor views are only marked stale: the open detail page would refetch
+// the deleted id into a 404 before the page leaves for the list. The
+// product pages list the offers that went with it.
+export function useDeleteVendor() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => vendorsApi.remove(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.vendors.all, refetchType: "none" })
+      void qc.invalidateQueries({
+        predicate: (q) => q.queryKey[0] === "items" && q.queryKey[2] === "vendors",
+      })
+      toast.success("Vendor dihapus permanen.")
+    },
+  })
+}
+
 export function useUploadVendorLogo() {
   const qc = useQueryClient()
   return useMutation({

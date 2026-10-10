@@ -10,7 +10,7 @@ import {
   AutocompleteList,
 } from "@/components/ui/autocomplete"
 import type { LookupFailure } from "@/lib/lookup"
-import { dropdown, dropdownLabel, ui } from "@/lib/ui"
+import { dropdown, dropdownLabel, linkAction, ui } from "@/lib/ui"
 import { cn } from "@/lib/utils"
 import {
   AddNewButton,
@@ -44,6 +44,8 @@ type VendorPriceCardProps = {
   recommendationFailure?: LookupFailure | null
   // False for a role that sets no harga jual
   pricing?: boolean
+  // Opens the store link dialog; absent when the role or vendor cannot
+  onEditStoreLink?: () => void
 }
 
 // Vendor and price card.
@@ -67,6 +69,7 @@ export default function VendorPriceCard({
   historyFailure = null,
   recommendationFailure = null,
   pricing = true,
+  onEditStoreLink,
 }: VendorPriceCardProps) {
   const vendorId = useId()
   const buyId = useId()
@@ -140,9 +143,18 @@ export default function VendorPriceCard({
             <AddNewButton label="Tambah Vendor Baru" onClick={onAddVendorNew} />
           </AutocompleteContent>
         </Autocomplete>
-        {exactVendor?.storeUrl && (
-          <span className="flex items-center gap-1.5 text-xs text-dark-600">
-            Link toko <StoreLink url={exactVendor.storeUrl} />
+        {exactVendor && (exactVendor.storeUrl || onEditStoreLink) && (
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-dark-600">
+            {exactVendor.storeUrl && (
+              <span className="flex min-w-0 items-center gap-1.5">
+                Link toko <StoreLink url={exactVendor.storeUrl} />
+              </span>
+            )}
+            {onEditStoreLink && (
+              <button type="button" className={linkAction} onClick={onEditStoreLink}>
+                {exactVendor.storeUrl ? "Ubah Link Toko" : "Tambah Link Toko"}
+              </button>
+            )}
           </span>
         )}
       </div>

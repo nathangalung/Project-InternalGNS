@@ -1,4 +1,5 @@
 import { ApiError } from "@/lib/api-client"
+import { errorMessage } from "@/lib/errors"
 import type {
   AdvancedSearchHit,
   AdvancedSearchResponse,
@@ -142,8 +143,35 @@ export function addVendorError(err: unknown): AddVendorError {
   if (err instanceof ApiError && err.status === 404) {
     return { field: "Vendor tidak ditemukan. Pilih vendor lain." }
   }
+  return { form: errorMessage(err, "Gagal menambah vendor.") }
+}
+
+// Store link save failure placement.
+//
+// A refused address belongs under the link input. A vendor deactivated or
+// removed since the line was saved, and anything else, is a form error.
+export function storeLinkError(err: unknown): AddVendorError {
+  const field = apiFieldError(err, "productUrl")
+  if (field) return { field }
+  const vendor = apiFieldError(err, "vendorId")
+  if (vendor) return { form: vendor }
+  if (err instanceof ApiError && err.status === 404) return { form: "Vendor tidak ditemukan." }
   const msg = err instanceof Error ? err.message.trim() : ""
-  return { form: msg || "Gagal menambah vendor." }
+  return { form: msg || "Gagal menyimpan link toko." }
+}
+
+// Store link to send, if changed.
+//
+// The typed link trimmed, null to clear a stored one, or undefined when
+// there is nothing to save.
+export function storeLinkBody(
+  typed: string,
+  stored: string | undefined,
+): string | null | undefined {
+  const next = typed.trim()
+  const prev = stored?.trim() ?? ""
+  if (next === prev) return undefined
+  return next || null
 }
 
 // Exact name match, any case.

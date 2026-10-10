@@ -214,9 +214,6 @@ func (r *Repo) History(ctx context.Context, invoiceID int64) ([]StatusHistoryEnt
 	if err != nil {
 		return nil, fmt.Errorf("invoice history: %w", err)
 	}
-	if out == nil {
-		out = []StatusHistoryEntry{}
-	}
 	return out, nil
 }
 

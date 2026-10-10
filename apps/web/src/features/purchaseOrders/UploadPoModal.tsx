@@ -131,7 +131,7 @@ export default function UploadPoModal({
             onClick={() => void handleSubmit()}
             disabled={!canSubmit}
           >
-            {submitting ? "Menyimpan..." : isEdit ? "Simpan" : "Upload"}
+            {submitting ? "Menyimpan..." : isEdit ? "Simpan" : "Unggah"}
           </button>
         </>
       }

@@ -183,7 +183,8 @@ func (r *Repo) History(ctx context.Context, id int64) ([]StatusHistoryEntry, err
 }
 
 // UpdateNotes rewrites the internal note.
-// ifMatch nil skips the optimistic-lock guard.
+// The handler refuses a request without If-Match, so ifMatch nil, which
+// skips the optimistic-lock guard, comes only from seeding callers.
 func (r *Repo) UpdateNotes(ctx context.Context, id int64, notes string, actorID int64, ifMatch *int32) error {
 	_, err := r.db.Exec(ctx, r.store.Get("purchase_orders.update_notes"),
 		id, ifMatch, notes, actorID)
@@ -192,10 +193,11 @@ func (r *Repo) UpdateNotes(ctx context.Context, id int64, notes string, actorID 
 
 // UpdateDetails rewrites PO number, date.
 // Both are the client's PO number and date; a blank number stores none.
-// ifMatch nil skips the optimistic-lock guard; a filed invoice locks both
-// fields, which the function reports as ErrLocked. Clearing the number of
-// a PO in ON_PROGRESS or DELIVERED is ErrPoNumberRequired, the only P0014
-// fn_update_po_details raises.
+// The handler refuses a request without If-Match, so ifMatch nil, which
+// skips the optimistic-lock guard, comes only from seeding callers. A filed
+// invoice locks both fields, which the function reports as ErrLocked.
+// Clearing the number of a PO in ON_PROGRESS or DELIVERED is
+// ErrPoNumberRequired, the only P0014 fn_update_po_details raises.
 func (r *Repo) UpdateDetails(
 	ctx context.Context, id int64, poNumber string, poDate time.Time, actorID int64, ifMatch *int32,
 ) error {
@@ -226,7 +228,8 @@ func (r *Repo) ListItems(ctx context.Context, poID int64) ([]PurchaseOrderItem, 
 
 // Completeness lists ON_PROGRESS blockers.
 // Each is a PO number, client, vendor or shipping gap.
-// An empty slice means the PO may be worked on.
+// An empty slice means the PO may be worked on. The client read
+// share-locks the client row until the caller's transaction ends.
 func (r *Repo) Completeness(ctx context.Context, poID int64) ([]CompletenessIssue, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("purchase_orders.completeness_client"), poID)
 	if err != nil {
@@ -269,6 +272,52 @@ func (r *Repo) Completeness(ctx context.Context, poID int64) ([]CompletenessIssu
 		}
 	}
 	return append(issues, shippingIssues(poID, lines)...), nil
+}
+
+// errNoTx marks a non-transactional executor.
+// It cannot open a transaction, so the gate could not hold the PO row.
+var errNoTx = errors.New("purchase orders: executor cannot begin a transaction")
+
+// errGateRefused rolls back refusals.
+var errGateRefused = errors.New("purchase order incomplete")
+
+// GatedTransition gates, then moves.
+// The PO row is locked first, so the gate judges the status the move starts
+// from, and the gate's client read share-locks the client row, so a client
+// edit cannot reopen a gap before DELIVERED copies the buyer into the
+// invoice. A non-empty slice is the gate's refusal and nothing moved.
+func (r *Repo) GatedTransition(
+	ctx context.Context, id int64, status Status, note string, actorID int64,
+) ([]CompletenessIssue, error) {
+	b, ok := r.db.(db.TxBeginner)
+	if !ok {
+		return nil, errNoTx
+	}
+	var issues []CompletenessIssue
+	err := db.WithTx(ctx, b, func(tx pgx.Tx) error {
+		q := &Repo{db: tx, store: r.store}
+		var from Status
+		err := tx.QueryRow(ctx, r.store.Get("purchase_orders.lock_status"), id).Scan(&from)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrNotFound
+		}
+		if err != nil {
+			return fmt.Errorf("lock po: %w", err)
+		}
+		if gatedMove(from, status) {
+			if issues, err = q.Completeness(ctx, id); err != nil {
+				return err
+			}
+			if len(issues) > 0 {
+				return errGateRefused
+			}
+		}
+		return q.Transition(ctx, id, status, note, actorID)
+	})
+	if errors.Is(err, errGateRefused) {
+		return issues, nil
+	}
+	return nil, err
 }
 
 // ChangeStatus transitions without note.

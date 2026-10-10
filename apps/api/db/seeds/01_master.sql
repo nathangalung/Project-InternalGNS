@@ -1,5 +1,5 @@
 -- MASTER DATA — required for app to run
--- Tables: units (43), countries (251)
+-- Tables: units (44), unit_aliases, countries (251)
 -- Idempotent: row-level ON CONFLICT, safe to re-run any time.
 -- Run after migrations applied (make migrate-up).
 
@@ -8,8 +8,12 @@ BEGIN;
 -- UNITS (Coretax DJP UM.XXXX + ship-supply extras)
 -- IDs 1-33  = Coretax official UM.0001-UM.0033 (exact UM.XXXX order)
 -- IDs 34-40 = ship-supply extras (mapped to UM.0033 Lainnya)
--- Explicit ids keep contract with dev samples (e.g. unit_id 19=SET, 21=PCS).
-INSERT INTO units (id, code, name, coretax_code) VALUES
+-- Later units take the next id (LGH, COIL, PAIL, DRUM).
+-- The code is what documents print; a ship-supply name is the long form
+-- of its code, and other spellings are aliases below.
+-- LGH: one length of pipe or bar as cut (a 6 m pipe), not a metre.
+CREATE TEMP TABLE seed_units (id SMALLINT, code TEXT, name TEXT, coretax_code TEXT) ON COMMIT DROP;
+INSERT INTO seed_units (id, code, name, coretax_code) VALUES
   (1,  'MT',    'Metrik Ton',         'UM.0001'),
   (2,  'WT',    'Wet Ton',            'UM.0002'),
   (3,  'KG',    'Kilogram',           'UM.0003'),
@@ -44,25 +48,72 @@ INSERT INTO units (id, code, name, coretax_code) VALUES
   (32, 'BHN',   'Bahan',              'UM.0032'),
   (33, 'OTH',   'Lainnya',            'UM.0033'),
   -- Ship-supply specific (mapped to UM.0033)
-  (34, 'TIN',   'Tin/Can',            'UM.0033'),
+  (34, 'TIN',   'Tin',                'UM.0033'),
   (35, 'TUB',   'Tube',               'UM.0033'),
-  (36, 'PKT',   'Pack/Packet',        'UM.0033'),
-  (37, 'BTL',   'Botol/Bottle',       'UM.0033'),
-  (38, 'PRS',   'Pairs/Pasang',       'UM.0033'),
-  (39, 'RLS',   'Roll/Gulung',        'UM.0033'),
-  (40, 'SPL',   'Spool',              'UM.0033')
-ON CONFLICT (id) DO NOTHING;
+  (36, 'PKT',   'Packet',             'UM.0033'),
+  (37, 'BTL',   'Bottle',             'UM.0033'),
+  (38, 'PRS',   'Pairs',              'UM.0033'),
+  (39, 'RLS',   'Rolls',              'UM.0033'),
+  (40, 'SPL',   'Spool',              'UM.0033'),
+  (NULL, 'LGH',  'Length',            'UM.0033'),
+  (NULL, 'COIL', 'Coil',              'UM.0033'),
+  (NULL, 'PAIL', 'Pail',              'UM.0033'),
+  (NULL, 'DRUM', 'Drum',              'UM.0033');
+
+-- Explicit ids keep contract with dev samples (e.g. unit_id 19=SET, 21=PCS)
+-- wherever the id and the code are both free.
+INSERT INTO units (id, code, name, coretax_code)
+SELECT s.id, s.code, s.name, s.coretax_code FROM seed_units s
+WHERE s.id IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM units u WHERE u.id = s.id OR u.code = s.code);
 
 -- Realign sequence to MAX(id) so future API inserts don't collide.
 SELECT setval('units_id_seq', (SELECT MAX(id) FROM units));
 
--- Later units take the next id; a unit already there by code is kept.
--- LGH: one length of pipe or bar as cut (a 6 m pipe), not a metre.
-INSERT INTO units (code, name, coretax_code) VALUES
-  ('LGH', 'Length/Batang', 'UM.0033'),
-  ('PACK', 'Pack', 'UM.0033'),
-  ('COIL', 'Coil', 'UM.0033')
+-- The rest take the next id. A migration that ran before this seed may
+-- hold a low id (00106 put COIL into an empty table), and the unit that id
+-- was meant for still lands here. A unit already there by code is kept,
+-- and draws no id, so a re-run leaves the sequence alone.
+INSERT INTO units (code, name, coretax_code)
+SELECT s.code, s.name, s.coretax_code FROM seed_units s
+WHERE NOT EXISTS (SELECT 1 FROM units u WHERE u.code = s.code)
+ORDER BY s.id NULLS LAST
 ON CONFLICT (code) DO NOTHING;
+
+-- Unit aliases
+-- Other spellings of a unit, stored normalised (fn_unit_text). The same
+-- list as migration 00109, which a test keeps in step.
+INSERT INTO unit_aliases (alias, unit_id)
+SELECT v.alias, u.id
+FROM (VALUES
+  ('PC', 'PCS'), ('PCE', 'PCS'), ('PIECE', 'PCS'), ('PIECES', 'PCS'),
+  ('EA', 'PCS'), ('EACH', 'PCS'), ('BUAH', 'PCS'), ('BH', 'PCS'),
+  ('UNITS', 'UNIT'),
+  ('SETS', 'SET'),
+  ('SHEET', 'LBR'), ('SHEETS', 'LBR'), ('SHT', 'LBR'), ('LEMBAR', 'LBR'),
+  ('BOXES', 'BOX'), ('BX', 'BOX'), ('KOTAK', 'BOX'), ('DUS', 'BOX'),
+  ('DZ', 'DOZ'), ('DOZEN', 'DOZ'), ('LUSIN', 'DOZ'), ('LSN', 'DOZ'),
+  ('KGS', 'KG'), ('KILO', 'KG'), ('KILOGRAM', 'KG'),
+  ('G', 'GR'), ('GRAM', 'GR'),
+  ('L', 'LTR'), ('LT', 'LTR'), ('LITER', 'LTR'), ('LITRE', 'LTR'), ('LITERS', 'LTR'),
+  ('METER', 'MTR'), ('METRE', 'MTR'), ('METERS', 'MTR'), ('MTRS', 'MTR'),
+  ('CAN', 'TIN'), ('CANS', 'TIN'), ('KALENG', 'TIN'), ('TINS', 'TIN'),
+  ('TUBE', 'TUB'), ('TUBES', 'TUB'),
+  ('PACK', 'PKT'), ('PACKS', 'PKT'), ('PAX', 'PKT'), ('PAC', 'PKT'), ('PCK', 'PKT'),
+  ('PK', 'PKT'), ('PAK', 'PKT'), ('PACKET', 'PKT'), ('PACKETS', 'PKT'), ('BUNGKUS', 'PKT'),
+  ('BOTTLE', 'BTL'), ('BOTTLES', 'BTL'), ('BOTOL', 'BTL'),
+  ('PR', 'PRS'), ('PAIR', 'PRS'), ('PASANG', 'PRS'), ('PSG', 'PRS'),
+  ('ROLL', 'RLS'), ('ROLLS', 'RLS'), ('RL', 'RLS'), ('ROL', 'RLS'), ('GULUNG', 'RLS'),
+  ('SPOOL', 'SPL'), ('SPOOLS', 'SPL'),
+  ('LENGTH', 'LGH'), ('LENGTHS', 'LGH'), ('BATANG', 'LGH'), ('BTG', 'LGH'),
+  ('COILS', 'COIL'),
+  ('PAILS', 'PAIL'), ('EMBER', 'PAIL'),
+  ('DRUMS', 'DRUM'), ('DRM', 'DRUM'),
+  ('DAYS', 'DAY'), ('HARI', 'DAY'),
+  ('HOUR', 'HR'), ('HOURS', 'HR'), ('JAM', 'HR')
+) v(alias, code)
+JOIN units u ON u.code = v.code
+ON CONFLICT (alias) DO NOTHING;
 
 -- COUNTRIES (ISO 3166 alpha-3 + ITU-T E.164 dial codes)
 -- Migration 00006 also loads these on first migrate-up;

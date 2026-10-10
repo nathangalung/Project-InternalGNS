@@ -495,7 +495,9 @@ TLS. They are set in the `compose.prod.yml` labels:
   `/.well-known/acme-challenge/` ahead of every router.
 - `Content-Security-Policy` on the web host, enforced. It allows exactly what
   the SPA loads: its own scripts, styles and fonts, `blob:` and `data:` images
-  (logos and upload previews), and `https://<API_HOST>` for API calls. The API
+  (logos and upload previews), `blob:` frames only (the PDF preview of a PO
+  file, fetched through the API and shown as a blob URL), and
+  `https://<API_HOST>` for API calls. The API
   already sends its own `default-src 'none'` policy on its responses. The label
   is the only copy: `nginx.conf` and `index.html` carry no policy, since two
   layers setting one intersect.

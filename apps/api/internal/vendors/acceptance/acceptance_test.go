@@ -182,6 +182,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the user lists items for vendor (\d+)$`, state.listItemsForVendor)
 		sc.Step(`^the items list contains at least (\d+) row(?:s)?$`, state.itemsListAtLeast)
 		registerRuleSteps(sc, state)
+		registerDeleteSteps(sc, state)
 	}
 }
 

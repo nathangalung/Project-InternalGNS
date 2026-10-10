@@ -28,6 +28,12 @@ var ErrNotFound = errors.New("not found")
 // Number malformed or already taken.
 var ErrNumberInvalid = errors.New("client number invalid or taken")
 
+// ErrInUse marks a used client.
+var ErrInUse = errors.New("client in use")
+
+// ErrNoTx marks a non-transactional executor.
+var ErrNoTx = errors.New("clients: executor cannot begin a transaction")
+
 // ErrEmailTaken marks taken emails.
 // Another active contact, at any client, owns the email.
 var ErrEmailTaken = errors.New("contact email taken")
@@ -290,6 +296,70 @@ func (r *Repo) DeactivateContact(ctx context.Context, companyID, contactID, user
 		return ErrNotFound
 	}
 	return nil
+}
+
+// Usage counts documents using a client.
+type Usage struct {
+	Quotations     int64
+	PurchaseOrders int64
+	Invoices       int64
+}
+
+// Uses lists the non-zero counts.
+// Each reads as "3 quotation", the way the 409 detail prints it.
+func (u Usage) Uses() []string {
+	var out []string
+	for _, c := range []struct {
+		n    int64
+		noun string
+	}{{u.Quotations, "quotation"}, {u.PurchaseOrders, "PO"}, {u.Invoices, "invoice"}} {
+		if c.n > 0 {
+			out = append(out, fmt.Sprintf("%d %s", c.n, c.noun))
+		}
+	}
+	return out
+}
+
+// Delete removes an unused client.
+// The client and its contacts are locked without waiting, the documents
+// using them counted, and only with none are the contacts and the client
+// deleted, all in one transaction. It returns the deleted name, or
+// ErrInUse with the usage. A lock another transaction holds fails with
+// SQLSTATE 55P03.
+func (r *Repo) Delete(ctx context.Context, id int64) (string, Usage, error) {
+	b, ok := r.db.(db.TxBeginner)
+	if !ok {
+		return "", Usage{}, ErrNoTx
+	}
+	var name string
+	var usage Usage
+	err := db.WithTx(ctx, b, func(tx pgx.Tx) error {
+		err := tx.QueryRow(ctx, r.store.Get("clients.lock_for_delete"), id).Scan(&name)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrNotFound
+		}
+		if err != nil {
+			return fmt.Errorf("lock client %d: %w", id, err)
+		}
+		if _, err := tx.Exec(ctx, r.store.Get("clients.lock_contacts_for_delete"), id); err != nil {
+			return fmt.Errorf("lock client %d contacts: %w", id, err)
+		}
+		if err := tx.QueryRow(ctx, r.store.Get("clients.usage"), id).
+			Scan(&usage.Quotations, &usage.PurchaseOrders, &usage.Invoices); err != nil {
+			return fmt.Errorf("count client %d usage: %w", id, err)
+		}
+		if len(usage.Uses()) > 0 {
+			return ErrInUse
+		}
+		if _, err := tx.Exec(ctx, r.store.Get("clients.delete_contacts"), id); err != nil {
+			return fmt.Errorf("delete client %d contacts: %w", id, err)
+		}
+		if _, err := tx.Exec(ctx, r.store.Get("clients.delete"), id); err != nil {
+			return fmt.Errorf("delete client %d: %w", id, err)
+		}
+		return nil
+	})
+	return name, usage, err
 }
 
 // RecentQuotations lists the newest quotations.

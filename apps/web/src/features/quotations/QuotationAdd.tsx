@@ -8,11 +8,12 @@ import { useClient, useClientContacts, useClientSearch, useClients } from "@/fea
 import ProductAdd from "@/features/items/ProductAdd"
 import { useCreateQuotation } from "@/features/quotations/hooks"
 import { useUnits } from "@/features/units/hooks"
+import { resolveUnit } from "@/features/units/match"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { formatNumber as formatRp } from "@/lib/format"
 import { lookupFailure } from "@/lib/lookup"
 import { INLINE_LOOKUP } from "@/lib/query-client"
-import { setsPrices } from "@/lib/rbac"
+import { canWriteCatalog, setsPrices } from "@/lib/rbac"
 import { ui } from "@/lib/ui"
 import type { QuotationCreateInput, QuotationItemInput } from "@/types/api"
 import { toItemInput } from "./adapters"
@@ -38,7 +39,8 @@ export default function QuotationAdd() {
   const navigate = useNavigate()
   const { data: unitsData } = useUnits()
   // A role that sets no harga jual sees and sends none
-  const pricing = setsPrices(useMe().data?.role)
+  const role = useMe().data?.role
+  const pricing = setsPrices(role)
   const {
     step,
     setStep,
@@ -84,7 +86,7 @@ export default function QuotationAdd() {
     setClientRefNo,
     gates: { isAlamatOk, isWaktuFilled, isTenggatWaktuFilled, hasContent },
     summary,
-    unitIdByCode,
+    unitByText,
     unitsOk,
     unknownUnits,
     invalidQty,
@@ -189,9 +191,7 @@ export default function QuotationAdd() {
     isAlamatOk
 
   function buildItems(): QuotationItemInput[] {
-    return products.map((p) =>
-      toItemInput(p, unitIdByCode.get(p.satuan.toUpperCase()) ?? 0, pricing),
-    )
+    return products.map((p) => toItemInput(p, resolveUnit(unitByText, p.satuan)?.id ?? 0, pricing))
   }
 
   function handleSubmit() {
@@ -349,7 +349,7 @@ export default function QuotationAdd() {
           <Step2Product
             pricing={pricing}
             products={products}
-            unitIdByCode={unitIdByCode}
+            unitByText={unitByText}
             clientId={numericClientId > 0 ? numericClientId : undefined}
             deleteProduct={deleteProduct}
             toggleNoOffer={toggleNoOffer}
@@ -454,6 +454,7 @@ export default function QuotationAdd() {
         onSuccess={saveProduct}
         clientId={numericClientId > 0 ? numericClientId : undefined}
         allowIncomplete
+        storeLinks={canWriteCatalog(role)}
       />
     </>
   )

@@ -55,6 +55,13 @@ func TestHandler_IfMatchRefusals(t *testing.T) {
 			"stale", http.StatusConflict, httperr.VersionConflict().Detail, httperr.VersionConflictCode},
 		{"items stale", http.MethodPut, "/items", itemsAt("1000"),
 			"stale", http.StatusConflict, httperr.VersionConflict().Detail, httperr.VersionConflictCode},
+		{"notes missing", http.MethodPatch, "/notes", purchaseorders.UpdateNotesRequest{Notes: "x"},
+			"", http.StatusBadRequest, "If-Match header required", ""},
+		{"details missing", http.MethodPatch, "/details",
+			purchaseorders.UpdateDetailsRequest{PoNumber: "PO/KLIEN/1", PoDate: "2026-01-15"},
+			"", http.StatusBadRequest, "If-Match header required", ""},
+		{"items missing", http.MethodPut, "/items", itemsAt("1000"),
+			"", http.StatusBadRequest, "If-Match header required", ""},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -201,6 +208,7 @@ func TestHandler_DatabaseFaults(t *testing.T) {
 		{"export", http.MethodGet, "/purchase-orders/export.xlsx", nil},
 		{"history", http.MethodGet, "/purchase-orders/1/history", nil},
 		{"remove file", http.MethodDelete, "/purchase-orders/1/file", nil},
+		{"notes", http.MethodPatch, "/purchase-orders/1/notes", purchaseorders.UpdateNotesRequest{Notes: "x"}},
 		{"details", http.MethodPatch, "/purchase-orders/1/details",
 			purchaseorders.UpdateDetailsRequest{PoNumber: "PO/1", PoDate: "2026-01-15"}},
 		{"items", http.MethodPut, "/purchase-orders/1/items", itemsAt("1000")},
@@ -229,8 +237,6 @@ func TestHandler_SecondQueryFaults(t *testing.T) {
 		suffix string
 		body   func(poID int64) any
 	}{
-		{"completeness check", purchaseorders.StatusUploaded, http.MethodPatch, "/status",
-			func(int64) any { return purchaseorders.ChangeStatusRequest{Status: purchaseorders.StatusOnProgress} }},
 		{"attach after the owner check", purchaseorders.StatusPending, http.MethodPatch, "/file",
 			func(poID int64) any { return ownedPOFile(poID) }},
 	}

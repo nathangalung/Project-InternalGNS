@@ -26,6 +26,7 @@ func Routes(d deps.Deps) chi.Router {
 	r.Post("/", h.Create)
 	r.Get("/{id}", h.Get)
 	r.Put("/{id}", h.Update)
+	r.Delete("/{id}", h.Delete)
 	r.Get("/{id}/items", h.ListItems)
 	r.Get("/{id}/quotations", h.RecentQuotations)
 

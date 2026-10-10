@@ -19,8 +19,9 @@ import {
   useUpdateQuotationContact,
 } from "@/features/quotations/hooks"
 import { useUnits } from "@/features/units/hooks"
+import { resolveUnit } from "@/features/units/match"
 import { formatNumber as formatRp } from "@/lib/format"
-import { setsPrices } from "@/lib/rbac"
+import { canWriteCatalog, setsPrices } from "@/lib/rbac"
 import { ui } from "@/lib/ui"
 import type { QuotationDetail } from "@/types/api"
 import { toItemInput } from "./adapters"
@@ -97,7 +98,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     setClientRefNo,
     gates: { isAlamatOk, isWaktuFilled, isTenggatWaktuFilled },
     summary,
-    unitIdByCode,
+    unitByText,
     unknownUnits,
     invalidQty,
     incompleteLines,
@@ -231,7 +232,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
   }
 
   function lineInput(p: ProductItem) {
-    return toItemInput(p, unitIdByCode.get(p.satuan.toUpperCase()) ?? 0, pricing)
+    return toItemInput(p, resolveUnit(unitByText, p.satuan)?.id ?? 0, pricing)
   }
 
   // Claim a line, then open it.
@@ -533,7 +534,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
           <Step2Product
             pricing={pricing}
             products={products}
-            unitIdByCode={unitIdByCode}
+            unitByText={unitByText}
             clientId={detail?.companyClientId}
             deleteProduct={deleteLine}
             toggleNoOffer={toggleLine}
@@ -629,6 +630,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
         onSuccess={saveLine}
         clientId={detail?.companyClientId}
         allowIncomplete
+        storeLinks={canWriteCatalog(me?.role)}
       />
       {pendingDelete !== null && (
         <Modal

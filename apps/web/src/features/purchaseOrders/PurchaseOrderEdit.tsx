@@ -12,9 +12,10 @@ import Step3Shipping from "@/features/quotations/Step3Shipping"
 import Step4Summary from "@/features/quotations/Step4Summary"
 import { wizardGates, wizardSummary } from "@/features/quotations/wizard"
 import { useUnits } from "@/features/units/hooks"
+import { unitIndex } from "@/features/units/match"
 import { isVersionConflict } from "@/lib/errors"
 import { formatNumber as formatRp, toNum } from "@/lib/format"
-import { setsPrices } from "@/lib/rbac"
+import { canWriteCatalog, setsPrices } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import type { PoUpdateItemsInput, PurchaseOrderItemRow, PurchaseOrderRow } from "@/types/api"
@@ -65,7 +66,8 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
   const navigate = useNavigate()
   // A role that sets no harga jual edits harga beli, vendor and qty of the
   // stored lines only
-  const pricing = setsPrices(useMe().data?.role)
+  const role = useMe().data?.role
+  const pricing = setsPrices(role)
   const [step, setStep] = useState(1)
 
   const { refetch: refetchPo } = usePurchaseOrderByQuotation(po.quotationId)
@@ -104,11 +106,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
     return m
   }, [unitsData])
 
-  const unitIdByCode = useMemo(() => {
-    const m = new Map<string, number>()
-    for (const u of unitsData ?? []) m.set(u.code.toUpperCase(), u.id)
-    return m
-  }, [unitsData])
+  const unitByText = useMemo(() => unitIndex(unitsData), [unitsData])
 
   // Form state from stored PO.
   const hydrate = useCallback(
@@ -185,7 +183,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
   } = wizardSummary(products, discountPct, shippingCost, po.ppnEnabled)
 
   async function handleSave() {
-    const missing = linesMissingUnit(products, unitIdByCode)
+    const missing = linesMissingUnit(products, unitByText)
     if (missing.length > 0) {
       toast.error(`Satuan belum dikenali untuk: ${missing.join(", ")}.`)
       return
@@ -203,7 +201,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
       shippingAddress: shippingAddress.trim() || undefined,
       shippingDays: Number.isFinite(shipDays) && shipDays > 0 ? shipDays : undefined,
       shippingCost: shippingCost || undefined,
-      items: products.map((p) => lineToInput(p, unitIdByCode)),
+      items: products.map((p) => lineToInput(p, unitByText)),
     }
     try {
       await updateMutation.mutateAsync({ id: po.id, input, rowVersion: po.rowVersion })
@@ -357,7 +355,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
                 pricing={pricing}
                 fixedLines={!pricing}
                 products={products}
-                unitIdByCode={unitIdByCode}
+                unitByText={unitByText}
                 clientId={po.companyClientId}
                 deleteProduct={(id) => setProducts((prev) => prev.filter((p) => p.id !== id))}
                 setEditingProduct={(p) => setEditingId(p?.id ?? null)}
@@ -441,6 +439,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
         initialData={editingProduct}
         clientId={po.companyClientId}
         docKind="po"
+        storeLinks={canWriteCatalog(role)}
         onOpenChange={(open) => {
           setShowProductAdd(open)
           if (!open) setEditingId(null)

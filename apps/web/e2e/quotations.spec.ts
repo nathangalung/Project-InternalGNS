@@ -484,7 +484,7 @@ test.describe("quotation wizard import and requests", () => {
       rows: [
         ["No", "Kode IMPA", "Nama", "Jumlah", "Satuan"],
         [1, item.impaCode, item.name, 3, "PCS"],
-        [2, null, fresh, 2, "PC"],
+        [2, null, fresh, 2, "GLN"],
       ],
     })
 
@@ -510,7 +510,7 @@ test.describe("quotation wizard import and requests", () => {
     await expect(main).toContainText("Rp 150.000")
     await expect(main).toContainText("Belum lengkap: vendor, harga beli, harga jual")
     await expect(
-      page.getByRole("alert").filter({ hasText: 'Satuan "PC" tidak dikenal.' }),
+      page.getByRole("alert").filter({ hasText: 'Satuan "GLN" tidak dikenal.' }),
     ).toBeVisible()
 
     // A known unit is the one thing a draft cannot do without.
@@ -520,7 +520,7 @@ test.describe("quotation wizard import and requests", () => {
     await page.getByRole("option", { name: /^PCS/ }).click()
     await product.getByRole("button", { name: "Simpan Perubahan" }).click()
     await expect(product).toBeHidden()
-    await expect(page.getByText('Satuan "PC" tidak dikenal.')).toHaveCount(0)
+    await expect(page.getByText('Satuan "GLN" tidak dikenal.')).toHaveCount(0)
     await page.getByRole("button", { name: "Tidak Ditawarkan produk 2" }).click()
     await expect(main).toContainText("Tidak ditawarkan ke klien.")
 
@@ -1133,6 +1133,48 @@ test.describe("quotation list", () => {
       "aria-current",
       "page",
     )
+  })
+})
+
+test.describe("quotation store link", () => {
+  test("the product dialog adds the vendor's store link and keeps its harga beli", async ({
+    page,
+    seed,
+  }) => {
+    const link = "https://www.example.com/baut-baja"
+    const client = await seed.client()
+    const vendor = await seed.vendor()
+    const item = await seed.item({ vendor, cost: 75_000 })
+    const q = await seed.quotation({
+      client,
+      lines: [{ item, qty: 1, price: 100_000, cost: 75_000 }],
+    })
+
+    await page.goto(`/quotations/${q.id}/edit`)
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Ubah produk 1" }).click()
+    const product = page.getByRole("dialog", { name: "Ubah Produk Quotation" })
+    await product.getByRole("button", { name: "Tambah Link Toko" }).click()
+    const dialog = page.getByRole("dialog", { name: "Tambah Link Toko" })
+    await expect(dialog).toContainText(vendor.name)
+    await dialog.getByLabel("Link Toko").fill(link)
+    await dialog.getByRole("button", { name: "Simpan" }).click()
+    await expect(dialog).toBeHidden()
+
+    // The link shows at once beside the vendor, ready to change.
+    await expect(
+      product.getByRole("link", { name: "Buka toko example.com di tab baru" }),
+    ).toHaveAttribute("href", link)
+    await expect(product.getByRole("button", { name: "Ubah Link Toko" })).toBeVisible()
+    await product.getByRole("button", { name: "Batal" }).click()
+
+    const [stored] = (
+      await api<{ vendorId: number; productUrl?: string; costPrice?: string }[]>(
+        "GET",
+        `/items/${item.id}/vendors`,
+      )
+    ).filter((v) => v.vendorId === vendor.id)
+    expect([stored.productUrl, stored.costPrice]).toEqual([link, "75000.00"])
   })
 })
 

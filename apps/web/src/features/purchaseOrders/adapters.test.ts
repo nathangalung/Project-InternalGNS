@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { ProductAddFormData } from "@/features/items/ProductAdd/helpers"
+import { unitIndex } from "@/features/units/match"
 import { formatRupiah } from "@/lib/format"
 import type { PurchaseOrderItemRow, PurchaseOrderRow } from "@/types/api"
 import {
@@ -32,9 +33,9 @@ const line = (over: Partial<PurchaseOrderItemRow>): PurchaseOrderItemRow => ({
   ...over,
 })
 
-const units = new Map([
-  ["PCS", 1],
-  ["MTR", 2],
+const units = unitIndex([
+  { id: 1, code: "PCS", aliases: ["PIECES"] },
+  { id: 2, code: "MTR", aliases: ["METER"] },
 ])
 
 describe("poItemsToProducts", () => {
@@ -324,6 +325,12 @@ describe("linesMissingUnit", () => {
 
   it("flags an edited line with an unknown unit", () => {
     expect(linesMissingUnit([{ ...known, satuan: "BOX", touched: true }], units)).toEqual(["Known"])
+  })
+
+  it("takes a unit alias as its unit", () => {
+    const edited = { ...known, satuan: "meter.", touched: true }
+    expect(linesMissingUnit([edited], units)).toEqual([])
+    expect(lineToInput(edited, units).unitId).toBe(2)
   })
 
   it("flags a new line with no unit", () => {

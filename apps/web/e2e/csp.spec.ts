@@ -42,4 +42,23 @@ test.describe("served under the production policy", () => {
     expect(ran).toBe(false)
     await expect.poll(() => violations().some((v) => v.includes("script-src"))).toBe(true)
   })
+
+  // The PO file preview frames a blob URL; nothing else may be framed.
+  test("a blob frame loads and a frame from another origin is refused", async ({ page }) => {
+    await page.goto("/login")
+    await expect(page.getByRole("button", { name: "Masuk" })).toBeVisible()
+    takeViolations()
+    await page.evaluate(() => {
+      const blob = URL.createObjectURL(new Blob(["<p>ok</p>"], { type: "text/html" }))
+      for (const src of [blob, "https://example.com/"]) {
+        const frame = document.createElement("iframe")
+        frame.src = src
+        document.body.append(frame)
+      }
+    })
+    await expect
+      .poll(() => violations().some((v) => v.includes("frame-src refused https://example.com")))
+      .toBe(true)
+    expect(violations().filter((v) => !v.includes("https://example.com"))).toEqual([])
+  })
 })

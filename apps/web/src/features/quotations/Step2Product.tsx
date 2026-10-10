@@ -3,6 +3,8 @@ import { useRef, useState } from "react"
 import PageButtons from "@/components/shared/PageButtons"
 import RowsPerPageMenu from "@/components/shared/RowsPerPageMenu"
 import { matchRows, recommend } from "@/features/items/api"
+import type { UnitIndex } from "@/features/units/match"
+import { errorMessage } from "@/lib/errors"
 import { clampPage, pageCount } from "@/lib/pagination"
 import { ui } from "@/lib/ui"
 import { parseRfq } from "./api"
@@ -56,7 +58,7 @@ type Step2ProductProps = {
   // Server qty errors by card id
   qtyErrors?: Record<number, string>
   // Known unit ids by code
-  unitIdByCode: Map<string, number>
+  unitByText: UnitIndex
   // Client whose history prices imports
   clientId?: number
   // Marks a line Tidak Ditawarkan
@@ -98,7 +100,7 @@ export default function Step2Product({
   onImportProducts,
   quotationId,
   qtyErrors = {},
-  unitIdByCode,
+  unitByText,
   clientId,
   toggleNoOffer,
   editProduct,
@@ -108,7 +110,7 @@ export default function Step2Product({
   fixedLines = false,
 }: Step2ProductProps) {
   // No unit warnings before the list loads
-  const unitsReady = unitIdByCode.size > 0
+  const unitsReady = unitByText.size > 0
   const importFileRef = useRef<HTMLInputElement>(null)
   const [importMsg, setImportMsg] = useState<{ text: string; ok: boolean } | null>(null)
   const [prodExpanded, setProdExpanded] = useState(true)
@@ -131,13 +133,15 @@ export default function Step2Product({
       const itemIds = [...new Set(resp.rows.flatMap((r) => (r.matched ? [r.matched.itemId] : [])))]
       const recs = itemIds.length ? await recommend(itemIds, clientId).catch(() => []) : []
       const baseId = products.reduce((m, p) => Math.max(m, p.id), 0)
-      const built = importedLines(resp.rows, recs, baseId)
+      const built = importedLines(resp.rows, recs, baseId, unitByText)
       onImportProducts(built)
-      const unknownUnits = unitsReady ? countUnknownUnits(built, unitIdByCode) : 0
+      const unknownUnits = unitsReady ? countUnknownUnits(built, unitByText) : 0
       // Stays up: it says which lines still need work.
       setImportMsg({ text: importSummary(built, resp.rows, unknownUnits, pricing), ok: true })
     } catch (err) {
-      setImportMsg({ text: `Gagal membaca berkas: ${(err as Error).message}`, ok: false })
+      const detail = errorMessage(err, "")
+      const text = detail ? `Gagal membaca berkas: ${detail}` : "Gagal membaca berkas. Coba lagi."
+      setImportMsg({ text, ok: false })
     } finally {
       setImporting(false)
     }
@@ -339,7 +343,7 @@ export default function Step2Product({
                 const requestKode = requestedCode(p)
                 const isDifferent = requestDiffers(p)
                 const qtyError = qtyErrors[p.id] ?? qtyIssue(p.jumlah, allowZeroQty)
-                const unitError = unitsReady ? unitIssue(p.satuan, unitIdByCode) : null
+                const unitError = unitsReady ? unitIssue(p.satuan, unitByText) : null
                 // Only a quotation has a send rule to fill in for
                 const gaps = toggleNoOffer ? lineGaps(p, pricing) : []
                 const editor = lockedBy[p.id]

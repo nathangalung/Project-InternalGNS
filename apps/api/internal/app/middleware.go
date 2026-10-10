@@ -232,15 +232,16 @@ const (
 )
 
 // authorizeBucket gates storage by role.
-// Any method but GET or HEAD stores bytes, so it needs the write set.
+// Any method but GET or HEAD stores bytes, so it needs write access to the
+// key itself.
 func authorizeBucket(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		role, bucket := deps.CurrentUserRole(r.Context()), r.URL.Query().Get("bucket")
-		allowed := storage.CanReadBucket
+		role, q := deps.CurrentUserRole(r.Context()), r.URL.Query()
+		allowed := storage.CanReadBucket(role, q.Get("bucket"))
 		if r.Method != http.MethodGet && r.Method != http.MethodHead {
-			allowed = storage.CanWriteBucket
+			allowed = storage.CanWriteObject(role, q.Get("bucket"), q.Get("key"))
 		}
-		if !allowed(role, bucket) {
+		if !allowed {
 			httperr.Render(w, httperr.Forbidden(detailBucketRefused))
 			return
 		}

@@ -1,5 +1,6 @@
 import { useId, useRef, useState } from "react"
 import CountryCombobox from "@/features/countries/CountryCombobox"
+import { errorMessage } from "@/lib/errors"
 import { ui } from "@/lib/ui"
 import { validateAsset } from "@/lib/upload-validation"
 import {
@@ -37,7 +38,7 @@ export default function CompanyCard({
     try {
       validateAsset("clientLogo", file)
     } catch (err) {
-      setLogoError(err instanceof Error ? err.message : "Logo tidak valid.")
+      setLogoError(errorMessage(err, "Logo tidak valid."))
       return
     }
     setLogoError(null)
