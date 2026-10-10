@@ -198,8 +198,9 @@ func aliasPairs(t *testing.T, sql string) []string {
 	block, _, found = strings.Cut(block, "ON CONFLICT")
 	require.True(t, found, "alias block has no end")
 	re := regexp.MustCompile(`\('([^']+)',\s*'([^']+)'\)`)
-	var out []string
-	for _, m := range re.FindAllStringSubmatch(block, -1) {
+	matches := re.FindAllStringSubmatch(block, -1)
+	out := make([]string, 0, len(matches))
+	for _, m := range matches {
 		out = append(out, m[1]+"="+m[2])
 	}
 	sort.Strings(out)
