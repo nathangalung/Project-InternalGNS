@@ -6,7 +6,7 @@ import { problem } from "@/test/problem"
 import { renderHook } from "@/test/renderHook"
 import { useQuotationWizard } from "./useQuotationWizard"
 
-const UNITS = [{ id: 1, code: "PCS" }]
+const UNITS = [{ id: 1, code: "PCS", aliases: ["PIECES"] }]
 
 const FORM: ProductAddFormData = {
   requestedKodeImpaNama: "",
@@ -91,7 +91,14 @@ describe("useQuotationWizard", () => {
     expect(result.current.unitsOk).toBe(false)
     expect(result.current.unknownUnits).toBe(1)
     rerender(undefined)
-    expect(result.current.unitIdByCode.size).toBe(0)
+    expect(result.current.unitByText.size).toBe(0)
+  })
+
+  it("takes a unit alias as a known unit", () => {
+    const { result } = wizard()
+    act(() => result.current.saveProduct({ ...FORM, satuan: "pieces" }))
+    expect(result.current.unitsOk).toBe(true)
+    expect(result.current.unknownUnits).toBe(0)
   })
 
   it("clears the cost when the days are cleared, not when the address changes", () => {

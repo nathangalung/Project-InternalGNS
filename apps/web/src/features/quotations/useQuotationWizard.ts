@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { ProductAddFormData } from "@/features/items/ProductAdd/helpers"
+import { unitIndex } from "@/features/units/match"
+import type { UnitRow } from "@/types/api"
 import { countInvalidQty, isLineComplete, qtyErrorIndexes, qtyErrorsById } from "./lines"
 import {
   countUnknownUnits,
   type ProductItem,
-  unitIdIndex,
   upsertProduct,
   type WizardSeed,
   wizardGates,
@@ -17,10 +18,7 @@ import {
 // fields; each keeps only its own client picking, loading and save call.
 // pricing is false for a role that sets no harga jual, whose lines are
 // complete without one.
-export function useQuotationWizard(
-  units: { id: number; code: string }[] | undefined,
-  pricing = true,
-) {
+export function useQuotationWizard(units: UnitRow[] | undefined, pricing = true) {
   const [step, setStep] = useState(1)
 
   const [selectedClient, setSelectedClient] = useState("")
@@ -64,7 +62,7 @@ export function useQuotationWizard(
     productCount: products.length,
   })
   const summary = wizardSummary(products, discountPct, shippingCost, ppnEnabled)
-  const unitIdByCode = useMemo(() => unitIdIndex(units), [units])
+  const unitByText = useMemo(() => unitIndex(units), [units])
 
   function deleteProduct(id: number) {
     setProducts((prev) => prev.filter((p) => p.id !== id))
@@ -133,7 +131,7 @@ export function useQuotationWizard(
     setQtyFail({ lines: products, byId: qtyErrorsById(products, qtyErrorIndexes(err)) })
   }
 
-  const unknownUnits = countUnknownUnits(products, unitIdByCode)
+  const unknownUnits = countUnknownUnits(products, unitByText)
 
   return {
     step,
@@ -179,7 +177,7 @@ export function useQuotationWizard(
     setClientRefNo,
     gates,
     summary,
-    unitIdByCode,
+    unitByText,
     unknownUnits,
     unitsOk: unknownUnits === 0,
     invalidQty: countInvalidQty(products),

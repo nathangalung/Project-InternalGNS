@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { unitIndex } from "@/features/units/match"
 import { byRole, mount, unmount } from "@/test/dom"
 import { PO_QTY_ERROR, QTY_ERROR } from "./lines"
 import Step2Product from "./Step2Product"
@@ -42,7 +43,7 @@ const base = {
   summaryDpp: 0,
   summaryPpn: 0,
   onImportProducts: vi.fn(),
-  unitIdByCode: new Map([["PCS", 1]]),
+  unitByText: unitIndex([{ id: 1, code: "PCS", aliases: [] }]),
 }
 
 function alerts(): string[] {

@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest"
 import type { ProductAddFormData } from "@/features/items/ProductAdd/helpers"
+import { unitIndex } from "@/features/units/match"
 import type { QuotationDetail } from "@/types/api"
 import {
   countUnknownUnits,
   type ProductItem,
   seedFromDetail,
   splitOffer,
-  unitIdIndex,
   unitIssue,
   upsertProduct,
   validityInput,
@@ -214,25 +214,19 @@ describe("upsertProduct", () => {
 })
 
 describe("units", () => {
-  const index = unitIdIndex([
-    { id: 1, code: "pcs" },
-    { id: 2, code: "SET" },
+  const index = unitIndex([
+    { id: 1, code: "PCS", aliases: ["EA", "PC", "PIECES"] },
+    { id: 2, code: "SET", aliases: [] },
+    { id: 3, code: "RLS", aliases: ["ROLL"] },
   ])
 
-  it("indexes unit ids by upper-case code", () => {
-    expect([...index.entries()]).toEqual([
-      ["PCS", 1],
-      ["SET", 2],
-    ])
-    expect(unitIdIndex(undefined).size).toBe(0)
-  })
-
-  it("counts lines whose unit is not a known code, whatever its case", () => {
+  it("counts lines whose unit is not a known code or alias, whatever its case", () => {
     const lines = [
       product(1, { satuan: "pcs" }),
       product(2, { satuan: "BOX" }),
       product(3, { satuan: "" }),
       product(4, { satuan: "set" }),
+      product(5, { satuan: "Pieces" }),
     ]
     expect(countUnknownUnits(lines, index)).toBe(2)
     expect(countUnknownUnits([product(1, { satuan: "PCS" })], index)).toBe(0)
@@ -240,9 +234,13 @@ describe("units", () => {
 
   it.each([
     ["a known code", "Pcs", null],
-    ["an unknown code", "pc", 'Satuan "pc" tidak dikenal.'],
+    ["a padded known code", " PCS ", null],
+    ["a code with a dot", "pcs.", null],
+    ["an alias", "Pieces", null],
+    ["a short alias", "EA", null],
+    ["an alias in lower case", "roll", null],
+    ["an unknown unit", "drum", 'Satuan "drum" tidak dikenal.'],
     ["a blank unit", "  ", "Satuan belum diisi."],
-    ["a padded known code", " PCS ", 'Satuan "PCS" tidak dikenal.'],
   ])("explains %s", (_name, satuan, want) => {
     expect(unitIssue(satuan, index)).toBe(want)
   })
