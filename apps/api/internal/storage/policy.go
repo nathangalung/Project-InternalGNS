@@ -40,13 +40,14 @@ var bucketReaders = map[string][]string{
 // bucketWriters mirrors the write RBAC.
 // The finance roles only read /items, /vendors and purchase orders. The
 // finance head keeps client writes, logo included; finance input changes
-// only NPWP and TKU, so it stores no logo, but it stores payment proofs.
+// only NPWP and TKU, so it stores no logo. Only the heads store a PO
+// document, since operational input never touches a PO's file.
 var bucketWriters = map[string][]string{
 	BucketClientLogos:        {roles.Superadmin, roles.Operational, roles.OperationalInput, roles.Finance},
 	BucketVendorLogos:        opsWrite,
 	BucketItemImages:         opsWrite,
-	BucketInvoiceAttachments: finance,
-	BucketPODocs:             opsWrite,
+	BucketInvoiceAttachments: {roles.Superadmin, roles.Finance},
+	BucketPODocs:             {roles.Superadmin, roles.Operational},
 }
 
 // CanReadBucket checks role read access.
@@ -54,9 +55,29 @@ func CanReadBucket(role, bucket string) bool {
 	return slices.Contains(bucketReaders[bucket], role)
 }
 
-// CanWriteBucket checks role write access.
-func CanWriteBucket(role, bucket string) bool {
-	return slices.Contains(bucketWriters[bucket], role)
+// CanWriteObject checks role write access.
+// Finance input records payment, so beyond the bucket writers it stores a
+// payment proof and nothing else of an invoice.
+func CanWriteObject(role, bucket, key string) bool {
+	if slices.Contains(bucketWriters[bucket], role) {
+		return true
+	}
+	return role == roles.FinanceInput && bucket == BucketInvoiceAttachments && isPaymentProofKey(key)
+}
+
+// isPaymentProofKey matches a proof key.
+// The name sits directly in invoices/<id>/payment/, the folder
+// OwnerFolder gives a proof, so no attachment key passes.
+func isPaymentProofKey(key string) bool {
+	rest, ok := strings.CutPrefix(key, "invoices/")
+	if !ok {
+		return false
+	}
+	id, name, ok := strings.Cut(rest, "/payment/")
+	if !ok || id == "" || strings.Trim(id, "0123456789") != "" {
+		return false
+	}
+	return name != "" && name != "." && name != ".." && !strings.Contains(name, "/")
 }
 
 // Per-bucket size cap in bytes.

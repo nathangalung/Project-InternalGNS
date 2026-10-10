@@ -38,8 +38,10 @@ Bun-managed monorepo.
 Five roles (migration 00104), named in `shared/roles` with what each may see
 or change. The backend enforces them at the router mount (`requireRole`,
 `readOnlyFor` in `internal/app`), per route (`rolegate.Deny` inside a
-feature's `Routes`), and in the handlers that hide figures or keep stored
-prices. The frontend mirrors them in `src/lib/rbac.ts`, whose capability
+feature's `Routes`), in the handlers that hide figures or keep stored
+prices, and at the storage proxy, whose bucket gate (`authorizeBucket`)
+lets a role store only what its routes attach (`storage.CanWriteObject`).
+The frontend mirrors them in `src/lib/rbac.ts`, whose capability
 checks fail closed for an unknown role, and in the route guard
 (`roleCanOpen`, which also keeps read-only roles out of the editors). User
 management picks a role from a dropdown with an Indonesian label and hint
@@ -65,7 +67,8 @@ management picks a role from a dropdown with an Indonesian label and hint
   current: in Ubah PO it changes harga beli and vendor of the stored lines,
   everything the client ordered stays as stored (`keepStoredSale`; each line
   carries its PO line `id`, adding or dropping one is a 403), and it neither
-  moves the PO nor touches its file, number or notes.
+  moves the PO nor touches its file, number or notes. The storage proxy
+  refuses it a PO document upload too.
 - finance (Kepala Keuangan): invoices, Kas Lain and the financial dashboard,
   and reads quotations, POs, products and vendors without changing them.
   Keeps client writes, so it fixes a client's NPWP and TKU.
@@ -76,7 +79,8 @@ management picks a role from a dropdown with an Indonesian label and hint
   past due and the contact to write to. It reads clients without changing
   them, and adds and edits Kas Lain entries but neither deletes nor exports
   them. No quotations, no dashboards beyond the overview, no Pengganti, no
-  invoice dates or attachment.
+  invoice dates or attachment. In the invoice bucket it stores only a key
+  directly under `invoices/<id>/payment/`, the proof folder.
 
 A hidden figure is left out of the JSON, never zeroed: each money field
 carries `omitempty`, each feature's `redact(role)` blanks what the role may

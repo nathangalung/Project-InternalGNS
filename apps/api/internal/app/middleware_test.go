@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strconv"
 	"testing"
 	"time"
@@ -301,32 +302,38 @@ func TestAuthorizeBucket(t *testing.T) {
 	guarded := authorizeBucket(next)
 
 	cases := []struct {
-		role, method, bucket string
-		want                 int
+		role, method, bucket, key string
+		want                      int
 	}{
-		{"finance", http.MethodGet, "invoice-attachments", http.StatusOK},
-		{"operational", http.MethodGet, "invoice-attachments", http.StatusForbidden},
-		{"operational", http.MethodGet, "po-docs", http.StatusOK},
-		{"finance", http.MethodGet, "po-docs", http.StatusOK},
-		{"finance", http.MethodPut, "po-docs", http.StatusForbidden},
-		{"finance_input", http.MethodPut, "invoice-attachments", http.StatusOK},
-		{"finance_input", http.MethodPut, "client-logos", http.StatusForbidden},
-		{"operational_input", http.MethodPut, "po-docs", http.StatusOK},
-		{"operational_input", http.MethodGet, "invoice-attachments", http.StatusForbidden},
-		{"operational", http.MethodGet, "client-logos", http.StatusOK},
-		{"operational", http.MethodGet, "", http.StatusForbidden},
-		{"finance", http.MethodPut, "invoice-attachments", http.StatusOK},
-		{"finance", http.MethodPut, "client-logos", http.StatusOK},
-		{"finance", http.MethodGet, "item-images", http.StatusOK},
-		{"finance", http.MethodGet, "vendor-logos", http.StatusOK},
-		{"finance", http.MethodPut, "item-images", http.StatusForbidden},
-		{"finance", http.MethodPut, "vendor-logos", http.StatusForbidden},
-		{"operational", http.MethodPut, "item-images", http.StatusOK},
-		{"superadmin", http.MethodPut, "vendor-logos", http.StatusOK},
-		{"operational", http.MethodPut, "invoice-attachments", http.StatusForbidden},
+		{"finance", http.MethodGet, "invoice-attachments", "invoices/7/1-a.pdf", http.StatusOK},
+		{"operational", http.MethodGet, "invoice-attachments", "invoices/7/1-a.pdf", http.StatusForbidden},
+		{"operational", http.MethodGet, "po-docs", "po/7/1-po.pdf", http.StatusOK},
+		{"finance", http.MethodGet, "po-docs", "po/7/1-po.pdf", http.StatusOK},
+		{"finance", http.MethodPut, "po-docs", "po/7/1-po.pdf", http.StatusForbidden},
+		{"finance_input", http.MethodPut, "invoice-attachments", "invoices/7/payment/1-proof.pdf", http.StatusOK},
+		{"finance_input", http.MethodPut, "invoice-attachments", "invoices/7/1-a.pdf", http.StatusForbidden},
+		{"finance_input", http.MethodGet, "invoice-attachments", "invoices/7/1-a.pdf", http.StatusOK},
+		{"finance_input", http.MethodPut, "client-logos", "clients/7/1-logo.png", http.StatusForbidden},
+		{"operational_input", http.MethodPut, "po-docs", "po/7/1-po.pdf", http.StatusForbidden},
+		{"operational_input", http.MethodGet, "po-docs", "po/7/1-po.pdf", http.StatusOK},
+		{"operational_input", http.MethodGet, "invoice-attachments", "invoices/7/1-a.pdf", http.StatusForbidden},
+		{"operational", http.MethodPut, "po-docs", "po/7/1-po.pdf", http.StatusOK},
+		{"operational", http.MethodGet, "client-logos", "clients/7/1-logo.png", http.StatusOK},
+		{"operational", http.MethodGet, "", "a.pdf", http.StatusForbidden},
+		{"finance", http.MethodPut, "invoice-attachments", "invoices/7/1-a.pdf", http.StatusOK},
+		{"finance", http.MethodPut, "client-logos", "clients/7/1-logo.png", http.StatusOK},
+		{"finance", http.MethodGet, "item-images", "items/7/1-a.png", http.StatusOK},
+		{"finance", http.MethodGet, "vendor-logos", "vendors/7/1-a.png", http.StatusOK},
+		{"finance", http.MethodPut, "item-images", "items/7/1-a.png", http.StatusForbidden},
+		{"finance", http.MethodPut, "vendor-logos", "vendors/7/1-a.png", http.StatusForbidden},
+		{"operational", http.MethodPut, "item-images", "items/7/1-a.png", http.StatusOK},
+		{"superadmin", http.MethodPut, "vendor-logos", "vendors/7/1-a.png", http.StatusOK},
+		{"superadmin", http.MethodPut, "po-docs", "po/7/1-po.pdf", http.StatusOK},
+		{"operational", http.MethodPut, "invoice-attachments", "invoices/7/payment/1-proof.pdf", http.StatusForbidden},
 	}
 	for _, c := range cases {
-		req := httptest.NewRequest(c.method, "/storage/object?bucket="+c.bucket, nil)
+		q := url.Values{"bucket": {c.bucket}, "key": {c.key}}
+		req := httptest.NewRequest(c.method, "/storage/object?"+q.Encode(), nil)
 		req = req.WithContext(deps.WithUserRole(req.Context(), c.role))
 		rec := httptest.NewRecorder()
 		guarded.ServeHTTP(rec, req)

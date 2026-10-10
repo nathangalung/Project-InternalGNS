@@ -59,13 +59,12 @@ Feature: Asset storage through the authenticated proxy
       | operational | po-docs             | scan.jpg   |
       | operational | item-images         | item.webp  |
       | superadmin  | vendor-logos        | logo.gif   |
-      | finance_input | invoice-attachments | proof.png |
-      | operational_input | po-docs         | scan.pdf   |
+      | operational_input | item-images   | item.png   |
 
-  Scenario Outline: Finance reads catalog images and PO files but cannot store them
+  Scenario Outline: A role that only reads a bucket cannot store in it
     Given I am signed in as "operational"
     And I uploaded "<file>" of 16 bytes to "<bucket>"
-    And I am signed in as "finance"
+    And I am signed in as "<role>"
     When I download that object
     Then the response status is 200
     And the download carries the uploaded bytes
@@ -75,10 +74,24 @@ Feature: Asset storage through the authenticated proxy
     And nothing is stored under that key
 
     Examples:
-      | bucket       | file      |
-      | item-images  | item.png  |
-      | vendor-logos | logo.webp |
-      | po-docs      | scan.pdf  |
+      | role              | bucket       | file      |
+      | finance           | item-images  | item.png  |
+      | finance           | vendor-logos | logo.webp |
+      | finance           | po-docs      | scan.pdf  |
+      | finance_input     | po-docs      | scan.pdf  |
+      | operational_input | po-docs      | scan.pdf  |
+
+  Scenario: Finance input stores a payment proof and nothing else of an invoice
+    Given I am signed in as "finance_input"
+    When I upload "proof.png" of 16 bytes to the payment folder of an invoice
+    Then the response status is 204
+    When I download that object
+    Then the response status is 200
+    And the download carries the uploaded bytes
+    When I upload "lampiran.pdf" of 16 bytes to the folder of an invoice
+    Then the response status is 403
+    And the response is problem+json
+    And nothing is stored under that key
 
   Scenario: A request without a session is told to sign in
     Given I am not signed in
