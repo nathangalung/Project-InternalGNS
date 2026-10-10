@@ -69,8 +69,51 @@ const DIALOG_TITLE = {
 }
 
 // Product creation orchestrator.
-export default function ProductAdd({
-  open,
+//
+// The edit pages keep it mounted, so the dialog renders only while open:
+// closing unmounts it, which stops its queries and starts the next open
+// fresh.
+export default function ProductAdd({ open, ...props }: ProductAddProps) {
+  if (!open) return null
+  return <ProductAddDialog {...props} />
+}
+
+// Form from the saved line.
+function formFrom(initialData: ProductAddInitialData): ProductAddFormData {
+  const reqKode = initialData.requestedKodeImpa ?? initialData.kodeImpa ?? ""
+  const reqNama = initialData.requestedNama ?? initialData.nama ?? ""
+  return {
+    requestedKodeImpaNama: formatKodeNama(reqKode, reqNama),
+    kodeImpaNama: formatKodeNama(initialData.kodeImpa, initialData.nama),
+    jumlahProduk: String(initialData.jumlah),
+    satuan: initialData.satuan,
+    namaVendor: initialData.vendor,
+    hargaBeli: String(initialData.hargaBeli),
+    hargaJual: String(initialData.hargaJual),
+    itemId: initialData.itemId,
+    requestedItemId: initialData.requestedItemId,
+    vendorProductId: initialData.vendorProductId,
+    vendorId: initialData.vendorId,
+  }
+}
+
+// The saved line's vendor.
+//
+// It stays pickable before the vendor lists load.
+function savedVendors(initialData: ProductAddInitialData | null | undefined): VendorOption[] {
+  if (!initialData?.vendor || initialData.vendorId === undefined) return []
+  return [
+    {
+      nama: initialData.vendor,
+      harga: initialData.hargaBeli,
+      vendorId: initialData.vendorId,
+      vendorProductId: initialData.vendorProductId,
+    },
+  ]
+}
+
+// The open dialog itself.
+function ProductAddDialog({
   onOpenChange,
   onSuccess,
   initialData,
@@ -79,24 +122,25 @@ export default function ProductAdd({
   docKind = "quotation",
   pricing = true,
   purchaseOnly = false,
-}: ProductAddProps) {
-  const [form, setForm] = useState<ProductAddFormData>(INITIAL_FORM)
+}: Omit<ProductAddProps, "open">) {
+  const [form, setForm] = useState<ProductAddFormData>(() =>
+    initialData ? formFrom(initialData) : INITIAL_FORM,
+  )
   const [openDropdown, setOpenDropdown] = useState<DropdownKey | null>(null)
 
-  const [initialPrices, setInitialPrices] = useState<{ beli: number | null; jual: number | null }>({
-    beli: null,
-    jual: null,
-  })
+  const [initialPrices, setInitialPrices] = useState<{ beli: number | null; jual: number | null }>(
+    () => ({ beli: initialData?.hargaBeli ?? null, jual: initialData?.hargaJual ?? null }),
+  )
   const [showConfirm, setShowConfirm] = useState(false)
 
-  const [pickedItemId, setPickedItemId] = useState<number | null>(null)
+  const [pickedItemId, setPickedItemId] = useState<number | null>(initialData?.itemId ?? null)
   // Item whose defaults are still to apply
   const [autofillFor, setAutofillFor] = useState<number | null>(null)
   // Vendor and prices as they were at the pick
   const autofillBase = useRef<AutofillBase>({ namaVendor: "", hargaBeli: "", hargaJual: "" })
   // Catalog item picked as the request
   const [requestedItem, setRequestedItem] = useState<CatalogItem | null>(null)
-  const [extraVendors, setExtraVendors] = useState<VendorOption[]>([])
+  const [extraVendors, setExtraVendors] = useState<VendorOption[]>(() => savedVendors(initialData))
   const [showProductNew, setShowProductNew] = useState(false)
   const [showVendorNew, setShowVendorNew] = useState(false)
   const [newVendorForm, setNewVendorForm] = useState<NewVendorForm>({ nama: "", harga: "" })
@@ -213,50 +257,6 @@ export default function ProductAdd({
 
   const createVendor = useCreateVendor()
 
-  useEffect(() => {
-    if (open) {
-      setAutofillFor(null)
-      // The saved vendor stays pickable before the lists load.
-      setExtraVendors(
-        initialData?.vendor && initialData.vendorId !== undefined
-          ? [
-              {
-                nama: initialData.vendor,
-                harga: initialData.hargaBeli,
-                vendorId: initialData.vendorId,
-                vendorProductId: initialData.vendorProductId,
-              },
-            ]
-          : [],
-      )
-      if (initialData) {
-        const reqKode = initialData.requestedKodeImpa ?? initialData.kodeImpa ?? ""
-        const reqNama = initialData.requestedNama ?? initialData.nama ?? ""
-        setForm({
-          requestedKodeImpaNama: formatKodeNama(reqKode, reqNama),
-          kodeImpaNama: formatKodeNama(initialData.kodeImpa, initialData.nama),
-          jumlahProduk: String(initialData.jumlah),
-          satuan: initialData.satuan,
-          namaVendor: initialData.vendor,
-          hargaBeli: String(initialData.hargaBeli),
-          hargaJual: String(initialData.hargaJual),
-          itemId: initialData.itemId,
-          requestedItemId: initialData.requestedItemId,
-          vendorProductId: initialData.vendorProductId,
-          vendorId: initialData.vendorId,
-        })
-        setInitialPrices({ beli: initialData.hargaBeli, jual: initialData.hargaJual })
-        setPickedItemId(initialData.itemId ?? null)
-      } else {
-        setForm(INITIAL_FORM)
-        setInitialPrices({ beli: null, jual: null })
-        setPickedItemId(null)
-      }
-    }
-  }, [open, initialData])
-
-  if (!open) return null
-
   const productOpen = openDropdown === "product"
   const productRequestOpen = openDropdown === "productRequest"
   const vendorOpen = openDropdown === "vendor"
@@ -317,17 +317,12 @@ export default function ProductAdd({
       ? { ...form, vendorId: exactVendor.vendorId, vendorProductId: exactVendor.vendorProductId }
       : { ...form, namaVendor: "", vendorId: undefined, vendorProductId: undefined }
     onSuccess?.({ ...data, profit })
-    setForm(INITIAL_FORM)
-    setInitialPrices({ beli: null, jual: null })
-    setOpenDropdown(null)
     setShowConfirm(false)
     onOpenChange(false)
   }
 
+  // Closing unmounts, which resets everything.
   function handleCancel() {
-    setForm(INITIAL_FORM)
-    setInitialPrices({ beli: null, jual: null })
-    setOpenDropdown(null)
     setShowConfirm(false)
     onOpenChange(false)
   }
