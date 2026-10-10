@@ -117,7 +117,7 @@ type AddVendorToItemRequest struct {
 	ProductURL httpx.OptionalText `json:"productUrl"`
 }
 
-// Result row from items.match_with_vendor_by_id.
+// Result row from items.match_with_vendor_by_ids.
 type MatchedItemWithVendor struct {
 	ItemID          int64   `db:"item_id"            json:"itemId"`
 	ItemName        string  `db:"item_name"          json:"itemName"`
