@@ -3,11 +3,12 @@ import { useMemo, useState } from "react"
 import Modal from "@/components/shared/Modal"
 import { useMe } from "@/features/auth/hooks"
 import { getCompanyInitials } from "@/features/clients/helpers"
+import StoreLinkModal from "@/features/items/StoreLinkModal"
 import ClientSummaryCard from "@/features/quotations/QuotationDetail/ClientSummaryCard"
 import CostBreakdown from "@/features/quotations/QuotationDetail/CostBreakdown"
 import ProductTable from "@/features/quotations/QuotationDetail/ProductTable"
 import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
-import type { QuotationData } from "@/features/quotations/types"
+import type { ProductRow, QuotationData } from "@/features/quotations/types"
 import { downloadFile, downloadPdf } from "@/lib/api-client"
 import { formatDate, toNum } from "@/lib/format"
 import { canWriteCatalog, managesPOs } from "@/lib/rbac"
@@ -67,6 +68,8 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
   const [showUpload, setShowUpload] = useState(false)
   const [showReason, setShowReason] = useState(false)
   const [confirmRemove, setConfirmRemove] = useState(false)
+  // Line whose store link is being set
+  const [linkRow, setLinkRow] = useState<ProductRow | null>(null)
   // The gate refusal and the move it stopped
   const [gate, setGate] = useState<{ issues: PoCompletenessIssue[]; target: string } | null>(null)
 
@@ -223,6 +226,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
             showPrices={sellingShown}
             showRequest={false}
             showVendor
+            onEditStoreLink={editsLines ? setLinkRow : undefined}
           />
         </div>
         {sellingShown && (
@@ -253,6 +257,16 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
           checking={upload.checking}
           onClose={() => setShowUpload(false)}
           onSubmit={handleUploadSubmit}
+        />
+      )}
+
+      {linkRow?.itemId !== undefined && linkRow.vendorId !== undefined && (
+        <StoreLinkModal
+          itemId={linkRow.itemId}
+          vendorId={linkRow.vendorId}
+          vendorName={linkRow.vendor ?? ""}
+          current={linkRow.storeUrl}
+          onClose={() => setLinkRow(null)}
         />
       )}
 

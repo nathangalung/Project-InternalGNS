@@ -14,7 +14,7 @@ import { wizardGates, wizardSummary } from "@/features/quotations/wizard"
 import { useUnits } from "@/features/units/hooks"
 import { isVersionConflict } from "@/lib/errors"
 import { formatNumber as formatRp, toNum } from "@/lib/format"
-import { setsPrices } from "@/lib/rbac"
+import { canWriteCatalog, setsPrices } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import type { PoUpdateItemsInput, PurchaseOrderItemRow, PurchaseOrderRow } from "@/types/api"
@@ -65,7 +65,8 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
   const navigate = useNavigate()
   // A role that sets no harga jual edits harga beli, vendor and qty of the
   // stored lines only
-  const pricing = setsPrices(useMe().data?.role)
+  const role = useMe().data?.role
+  const pricing = setsPrices(role)
   const [step, setStep] = useState(1)
 
   const { refetch: refetchPo } = usePurchaseOrderByQuotation(po.quotationId)
@@ -441,6 +442,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
         initialData={editingProduct}
         clientId={po.companyClientId}
         docKind="po"
+        storeLinks={canWriteCatalog(role)}
         onOpenChange={(open) => {
           setShowProductAdd(open)
           if (!open) setEditingId(null)

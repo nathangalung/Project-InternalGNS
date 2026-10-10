@@ -3,10 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import * as itemsApi from "@/features/items/api"
 import * as unitsApi from "@/features/units/api"
 import { ApiError } from "@/lib/api-client"
-import { byRole, mount, settle, unmount } from "@/test/dom"
+import { button, byRole, click, mount, settle, type, unmount } from "@/test/dom"
 import { throwingQueryClient } from "@/test/query"
-import type { ItemRow } from "@/types/api"
+import type { ItemRow, ItemVendorRow } from "@/types/api"
 import ProductAdd from "."
+import type { ProductAddInitialData } from "./helpers"
 
 vi.mock("@/features/items/api")
 vi.mock("@/features/vendors/api")
@@ -67,5 +68,76 @@ describe("ProductAdd catalog", () => {
     await focusProduct()
     expect(document.body.textContent).toContain("Gagal memuat katalog produk.")
     expect(byRole("dialog")).toHaveLength(1)
+  })
+})
+
+describe("ProductAdd store link", () => {
+  const line: ProductAddInitialData = {
+    kodeImpa: "330212",
+    nama: "Baut Baja",
+    jumlah: 2,
+    satuan: "PCS",
+    vendor: "PT Tali Jaya",
+    hargaBeli: 1000,
+    hargaJual: 1500,
+    itemId: 1,
+    vendorId: 4,
+    vendorProductId: 7,
+  }
+  const link: ItemVendorRow = {
+    vendorProductId: 7,
+    vendorId: 4,
+    vendorName: "PT Tali Jaya",
+    costPrice: "1000.00",
+  }
+
+  async function openLine(initialData: ProductAddInitialData, storeLinks: boolean) {
+    await mount(
+      <QueryClientProvider client={throwingQueryClient()}>
+        <ProductAdd
+          open
+          onOpenChange={vi.fn()}
+          onSuccess={vi.fn()}
+          initialData={initialData}
+          storeLinks={storeLinks}
+        />
+      </QueryClientProvider>,
+    )
+    await settle()
+  }
+
+  const hasAction = () =>
+    [...document.querySelectorAll("button")].some((b) => b.textContent === "Tambah Link Toko")
+
+  it("adds the store link of the line's linked vendor from the dialog", async () => {
+    items.listVendors.mockResolvedValue([link])
+    items.addVendor.mockResolvedValue({ ...link, productUrl: "https://toko.example/baut" })
+    await openLine(line, true)
+    await click(button("Tambah Link Toko"))
+    expect(byRole("dialog").map((d) => d.querySelector("h2")?.textContent)).toContain(
+      "Tambah Link Toko",
+    )
+    const input = document.querySelector<HTMLInputElement>('input[type="url"]')
+    if (!input) throw new Error("no url input")
+    await type(input, "https://toko.example/baut")
+    await click(button("Simpan"))
+    await settle()
+    expect(items.addVendor).toHaveBeenCalledWith(1, {
+      vendorId: 4,
+      productUrl: "https://toko.example/baut",
+    })
+  })
+
+  it("offers nothing to a role that may not write the catalog", async () => {
+    items.listVendors.mockResolvedValue([link])
+    await openLine(line, false)
+    expect(hasAction()).toBe(false)
+  })
+
+  // A URL alone would create the link at harga beli 0.
+  it("offers nothing for a vendor the product is not linked to yet", async () => {
+    items.listVendors.mockResolvedValue([])
+    await openLine({ ...line, itemId: 2, vendorProductId: undefined }, true)
+    expect(hasAction()).toBe(false)
   })
 })

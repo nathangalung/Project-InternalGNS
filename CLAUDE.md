@@ -439,10 +439,20 @@ by name ten at a time (`pickerWindow`), a search paging its hits the same way.
 A vendor link's `product_url` is where the vendor sells the item (Link
 Toko). `validate.ProductURL` keeps only an http or https address with a host
 (a 422 on `productUrl`), mirrored by `lib/store-link`, so the anchor never
-runs script. Only `POST /items/{id}/vendors` writes it: the Tambah Vendor
-and Ubah dialogs on the product page, where a cleared link is sent as null.
-An unsent `costPrice` keeps the stored harga beli and its quote date, so Ubah
-sends the price only when it was changed.
+runs script. Only `POST /items/{id}/vendors` writes it, and a cleared link
+is sent as null. An unsent `costPrice` keeps the stored harga beli and its
+quote date, so Ubah sends the price only when it was changed. Three places
+write it: the Tambah Vendor and Ubah dialogs on the product page, and
+`features/items/StoreLinkModal` (Tambah Link Toko, Ubah Link Toko), which
+sends only `vendorId` and `productUrl` and is opened beside the picked
+vendor in the quotation and PO product dialog and under each PO line on
+the PO detail. It is offered only to the roles that write the catalog
+(`canWriteCatalog`, passed as `storeLinks` to `ProductAdd` and as
+`onEditStoreLink` to `ProductTable`), and in the dialog only for a vendor
+the product already links (`vendorProductId`), since a link alone would
+create one at harga beli 0. A save refreshes the item's vendors and the
+quotation and PO queries, which read the link live. Every other role only
+sees it.
 `StoreLink` shows it in a new tab on the product and vendor pages, under
 each offer on the quotation and PO detail, and beside the picked vendor in
 the quotation product dialog.

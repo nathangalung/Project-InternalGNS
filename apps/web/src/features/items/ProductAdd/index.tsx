@@ -19,6 +19,7 @@ import { lookupFailure } from "@/lib/lookup"
 import { INLINE_LOOKUP } from "@/lib/query-client"
 import { ui } from "@/lib/ui"
 import ProductCreateModal from "../ProductCreateModal"
+import StoreLinkModal from "../StoreLinkModal"
 import {
   type AutofillBase,
   applyUntouched,
@@ -61,6 +62,8 @@ type ProductAddProps = {
   pricing?: boolean
   // Only harga beli and vendor change: the product and qty are the client's
   purchaseOnly?: boolean
+  // The role writes the catalog, so it may set the vendor's store link
+  storeLinks?: boolean
 }
 
 const DIALOG_TITLE = {
@@ -79,8 +82,10 @@ export default function ProductAdd({
   docKind = "quotation",
   pricing = true,
   purchaseOnly = false,
+  storeLinks = false,
 }: ProductAddProps) {
   const [form, setForm] = useState<ProductAddFormData>(INITIAL_FORM)
+  const [showStoreLink, setShowStoreLink] = useState(false)
   const [openDropdown, setOpenDropdown] = useState<DropdownKey | null>(null)
 
   const [initialPrices, setInitialPrices] = useState<{ beli: number | null; jual: number | null }>({
@@ -216,6 +221,7 @@ export default function ProductAdd({
   useEffect(() => {
     if (open) {
       setAutofillFor(null)
+      setShowStoreLink(false)
       // The saved vendor stays pickable before the lists load.
       setExtraVendors(
         initialData?.vendor && initialData.vendorId !== undefined
@@ -280,6 +286,15 @@ export default function ProductAdd({
     ? isRequestFilled && isJumlahFilled && (!vendorTyped || exactVendor !== undefined)
     : isRequestFilled && isVendorFilled && isHargaJualValid
   const pricesUnlocked = allowIncomplete ? isJumlahFilled : isVendorFilled
+  // Only a vendor the product already links: a link alone would create one
+  // at harga beli 0.
+  const storeLinkTarget =
+    storeLinks &&
+    pickedItemId !== null &&
+    exactVendor?.vendorId !== undefined &&
+    exactVendor.vendorProductId !== undefined
+      ? { itemId: pickedItemId, vendorId: exactVendor.vendorId, vendor: exactVendor }
+      : null
 
   function handleChange(field: keyof ProductAddFormData, value: string) {
     if (field === "requestedKodeImpaNama") {
@@ -573,9 +588,20 @@ export default function ProductAdd({
               setNewVendorError(null)
               setShowVendorNew(true)
             }}
+            onEditStoreLink={storeLinkTarget ? () => setShowStoreLink(true) : undefined}
           />
         </Modal>
       </div>
+
+      {showStoreLink && storeLinkTarget && (
+        <StoreLinkModal
+          itemId={storeLinkTarget.itemId}
+          vendorId={storeLinkTarget.vendorId}
+          vendorName={storeLinkTarget.vendor.nama}
+          current={storeLinkTarget.vendor.storeUrl}
+          onClose={() => setShowStoreLink(false)}
+        />
+      )}
 
       <ProductCreateModal
         open={showProductNew}

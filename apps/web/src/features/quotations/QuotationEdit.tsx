@@ -20,7 +20,7 @@ import {
 } from "@/features/quotations/hooks"
 import { useUnits } from "@/features/units/hooks"
 import { formatNumber as formatRp } from "@/lib/format"
-import { setsPrices } from "@/lib/rbac"
+import { canWriteCatalog, setsPrices } from "@/lib/rbac"
 import { ui } from "@/lib/ui"
 import type { QuotationDetail } from "@/types/api"
 import { toItemInput } from "./adapters"
@@ -629,6 +629,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
         onSuccess={saveLine}
         clientId={detail?.companyClientId}
         allowIncomplete
+        storeLinks={canWriteCatalog(me?.role)}
       />
       {pendingDelete !== null && (
         <Modal
