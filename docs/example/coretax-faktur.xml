@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TaxInvoiceBulk>
+  <TIN>0987654321098765</TIN>
+  <ListOfTaxInvoice>
+    <TaxInvoice>
+      <TaxInvoiceDate>2026-10-10</TaxInvoiceDate>
+      <TaxInvoiceOpt>Normal</TaxInvoiceOpt>
+      <TrxCode>04</TrxCode>
+      <AddInfo></AddInfo>
+      <CustomDoc></CustomDoc>
+      <RefDesc>INV-00001/GNS/X/2026</RefDesc>
+      <FacilityStamp></FacilityStamp>
+      <SellerIDTKU>0987654321098765000000</SellerIDTKU>
+      <BuyerTin>0123456789012345</BuyerTin>
+      <BuyerDocument>TIN</BuyerDocument>
+      <BuyerCountry>IDN</BuyerCountry>
+      <BuyerDocumentNumber></BuyerDocumentNumber>
+      <BuyerName>PT Samudra Contoh Nusantara</BuyerName>
+      <BuyerAdress>Jl. Pelabuhan Raya No. 12, Tanjung Priok, Jakarta Utara 14310</BuyerAdress>
+      <BuyerEmail>procurement@samudracontoh.example.com</BuyerEmail>
+      <BuyerIDTKU>0123456789012345000000</BuyerIDTKU>
+      <ListOfGoodService>
+        <GoodService>
+          <Opt>A</Opt>
+          <Code>210101</Code>
+          <Name>Tali Tambat Polypropylene 24 mm</Name>
+          <Unit>UM.0033</Unit>
+          <Price>2400000</Price>
+          <Qty>2</Qty>
+          <TotalDiscount>240000</TotalDiscount>
+          <TaxBase>4560000</TaxBase>
+          <OtherTaxBase>4180000</OtherTaxBase>
+          <VATRate>12</VATRate>
+          <VAT>501600</VAT>
+          <STLGRate>0</STLGRate>
+          <STLG>0</STLG>
+        </GoodService>
+        <GoodService>
+          <Opt>A</Opt>
+          <Code>190105</Code>
+          <Name>Sarung Tangan Kerja Katun</Name>
+          <Unit>UM.0033</Unit>
+          <Price>65000</Price>
+          <Qty>10</Qty>
+          <TotalDiscount>32500</TotalDiscount>
+          <TaxBase>617500</TaxBase>
+          <OtherTaxBase>566041.67</OtherTaxBase>
+          <VATRate>12</VATRate>
+          <VAT>67925</VAT>
+          <STLGRate>0</STLGRate>
+          <STLG>0</STLG>
+        </GoodService>
+        <GoodService>
+          <Opt>A</Opt>
+          <Code>250201</Code>
+          <Name>Cat Anti Karat Merah 5 Liter</Name>
+          <Unit>UM.0033</Unit>
+          <Price>525000</Price>
+          <Qty>6</Qty>
+          <TotalDiscount>157500</TotalDiscount>
+          <TaxBase>2992500</TaxBase>
+          <OtherTaxBase>2743125</OtherTaxBase>
+          <VATRate>12</VATRate>
+          <VAT>329175</VAT>
+          <STLGRate>0</STLGRate>
+          <STLG>0</STLG>
+        </GoodService>
+        <GoodService>
+          <Opt>A</Opt>
+          <Code>370612</Code>
+          <Name>Lampu Navigasi LED 24V</Name>
+          <Unit>UM.0021</Unit>
+          <Price>1690000</Price>
+          <Qty>4</Qty>
+          <TotalDiscount>338000</TotalDiscount>
+          <TaxBase>6422000</TaxBase>
+          <OtherTaxBase>5886833.33</OtherTaxBase>
+          <VATRate>12</VATRate>
+          <VAT>706420</VAT>
+          <STLGRate>0</STLGRate>
+          <STLG>0</STLG>
+        </GoodService>
+        <GoodService>
+          <Opt>A</Opt>
+          <Code>350831</Code>
+          <Name>Kabel Listrik NYY 3 x 2,5 mm</Name>
+          <Unit>UM.0013</Unit>
+          <Price>24000</Price>
+          <Qty>100</Qty>
+          <TotalDiscount>120000</TotalDiscount>
+          <TaxBase>2280000</TaxBase>
+          <OtherTaxBase>2090000</OtherTaxBase>
+          <VATRate>12</VATRate>
+          <VAT>250800</VAT>
+          <STLGRate>0</STLGRate>
+          <STLG>0</STLG>
+        </GoodService>
+        <GoodService>
+          <Opt>B</Opt>
+          <Code></Code>
+          <Name>SHIPPING - Gudang Pelabuhan Tanjung Priok, Jl. Pelabuhan Raya No. 12, Jakarta Utara</Name>
+          <Unit>UM.0018</Unit>
+          <Price>750000</Price>
+          <Qty>1</Qty>
+          <TotalDiscount>0</TotalDiscount>
+          <TaxBase>750000</TaxBase>
+          <OtherTaxBase>687500</OtherTaxBase>
+          <VATRate>12</VATRate>
+          <VAT>82500</VAT>
+          <STLGRate>0</STLGRate>
+          <STLG>0</STLG>
+        </GoodService>
+      </ListOfGoodService>
+    </TaxInvoice>
+  </ListOfTaxInvoice>
+</TaxInvoiceBulk>
