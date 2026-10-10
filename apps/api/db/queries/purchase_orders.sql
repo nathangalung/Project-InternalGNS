@@ -168,6 +168,8 @@ ORDER BY poi.line_number;
 -- The narahubung is the quotation's chosen contact, even when it has since
 -- been deactivated, so the gate can say so; only a quotation with no chosen
 -- contact falls back to the client's first active one.
+-- The client row is share-locked: under the move's transaction a client
+-- edit waits for the move, so DELIVERED copies the client the gate passed.
 SELECT po.po_number,
        cc.id,
        cc.name,
@@ -191,7 +193,13 @@ LEFT JOIN LATERAL (
     ORDER BY id ASC
     LIMIT 1
 ) co ON TRUE
-WHERE po.id = $1;
+WHERE po.id = $1
+FOR SHARE OF cc;
+
+-- name: purchase_orders.lock_status
+-- Locks the PO row for a status move and reads the status it holds;
+-- $1=po id.
+SELECT status FROM purchase_orders WHERE id = $1 FOR UPDATE;
 
 -- name: purchase_orders.completeness_lines
 -- Every PO line's type and shipping address; $1=po id.

@@ -95,6 +95,7 @@ var RequiredKeys = []string{
 	"purchase_orders.list_base",
 	"purchase_orders.list_count_base",
 	"purchase_orders.list_items",
+	"purchase_orders.lock_status",
 	"purchase_orders.remove_file",
 	"purchase_orders.row_version",
 	"purchase_orders.status_history",

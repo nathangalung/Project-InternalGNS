@@ -368,7 +368,11 @@ shows a missing one as Belum ada No. PO.
   ON_PROGRESS and DELIVERED need one product line with a quantity. Both
   moves also pass the completeness gate (the client's PO number, client,
   vendor and shipping-address data), a 422 `po_incomplete`; delivery runs it
-  again, since ON_PROGRESS edits and client edits can reopen a gap. Each PO
+  again, since ON_PROGRESS edits and client edits can reopen a gap. The
+  gate and the move run in one transaction (`Repo.GatedTransition`): the PO
+  row is locked first, so the gate judges the status the move starts from,
+  and the gate's client read holds the client row `FOR SHARE`, so a client
+  edit waits and DELIVERED copies the buyer the gate passed. Each PO
   line stores its own supplier (`vendor_product_id`), copied from the quotation line only when
   that link is for the line's product, and the items list and the gate
   read it from the PO line. The line edit takes `vendorProductId` (a link

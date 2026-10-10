@@ -70,6 +70,11 @@ func TestHandler_DeliveredGate_ReopenedGaps(t *testing.T) {
 				WHERE id = (SELECT company_client_id FROM purchase_orders WHERE id = $1)`, poID)
 			require.NoError(t, err)
 		}, purchaseorders.GapClientNpwp},
+		{"client NPWP malformed", func(t *testing.T, tx pgx.Tx, _ *httptest.Server, poID int64) {
+			_, err := tx.Exec(context.Background(), `UPDATE company_client SET npwp = '123'
+				WHERE id = (SELECT company_client_id FROM purchase_orders WHERE id = $1)`, poID)
+			require.NoError(t, err)
+		}, purchaseorders.GapClientNpwp},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

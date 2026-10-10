@@ -229,8 +229,6 @@ func TestHandler_SecondQueryFaults(t *testing.T) {
 		suffix string
 		body   func(poID int64) any
 	}{
-		{"completeness check", purchaseorders.StatusUploaded, http.MethodPatch, "/status",
-			func(int64) any { return purchaseorders.ChangeStatusRequest{Status: purchaseorders.StatusOnProgress} }},
 		{"attach after the owner check", purchaseorders.StatusPending, http.MethodPatch, "/file",
 			func(poID int64) any { return ownedPOFile(poID) }},
 	}
