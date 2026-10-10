@@ -266,6 +266,10 @@ func (h *Handler) UpdateNotes(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest(err.Error()))
 		return
 	}
+	if ifMatch == nil {
+		httperr.Render(w, httperr.BadRequest("If-Match header required"))
+		return
+	}
 	var req UpdateNotesRequest
 	if !httpx.DecodeJSON(w, r, &req) {
 		return
@@ -294,6 +298,10 @@ func (h *Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 	ifMatch, err := httpx.ParseIfMatch(r.Header.Get("If-Match"))
 	if err != nil {
 		httperr.Render(w, httperr.BadRequest(err.Error()))
+		return
+	}
+	if ifMatch == nil {
+		httperr.Render(w, httperr.BadRequest("If-Match header required"))
 		return
 	}
 	var req UpdateDetailsRequest

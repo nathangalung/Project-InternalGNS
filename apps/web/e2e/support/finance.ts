@@ -25,11 +25,18 @@ async function json<T>(res: Promise<Response>, what: string): Promise<T> {
   return (await (await expectOk(await res, what)).json()) as T
 }
 
-async function send(token: string, method: string, path: string, body?: unknown) {
+async function send(
+  token: string,
+  method: string,
+  path: string,
+  body?: unknown,
+  headers?: Record<string, string>,
+) {
   return expectOk(
     await call(path, {
       method,
       token,
+      headers,
       body: body === undefined ? undefined : JSON.stringify(body),
     }),
     `${method} ${path}`,
@@ -127,12 +134,16 @@ export async function deliveredInvoice(token: string, client: SeedClient): Promi
     call(`/purchase-orders/by-quotation/${q.id}`, { token }),
     "get PO",
   )
+  // Work needs the client's PO number. It goes first, while po still
+  // carries the stored version, since the file upload bumps it.
+  await send(
+    token,
+    "PATCH",
+    `/purchase-orders/${po.id}/details`,
+    { poNumber: `PO-E2E-${po.id}`, poDate: po.poDate.slice(0, 10) },
+    { "If-Match": String(po.rowVersion) },
+  )
   await uploadPoFile(token, po.id)
-  // Work needs the client's PO number.
-  await send(token, "PATCH", `/purchase-orders/${po.id}/details`, {
-    poNumber: `PO-E2E-${po.id}`,
-    poDate: po.poDate.slice(0, 10),
-  })
   for (const status of ["ON_PROGRESS", "DELIVERED"]) {
     await send(token, "PATCH", `/purchase-orders/${po.id}/status`, { status })
   }

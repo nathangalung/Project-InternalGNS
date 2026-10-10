@@ -208,8 +208,8 @@ func TestHandler_UpdateNotes_BadID(t *testing.T) {
 
 func TestHandler_UpdateNotes_NotFound(t *testing.T) {
 	srv := newSrv(t)
-	res := doJSON(t, srv, http.MethodPatch, "/purchase-orders/99999999/notes",
-		purchaseorders.UpdateNotesRequest{Notes: "x"})
+	res := doJSONWithHeaders(t, srv, http.MethodPatch, "/purchase-orders/99999999/notes",
+		purchaseorders.UpdateNotesRequest{Notes: "x"}, map[string]string{"If-Match": "1"})
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 }
@@ -268,6 +268,7 @@ func TestHandler_UpdateNotes_BadJSON(t *testing.T) {
 		bytes.NewReader([]byte("not-json")))
 	require.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("If-Match", "1")
 	res, err := srv.Client().Do(req)
 	require.NoError(t, err)
 	defer res.Body.Close()

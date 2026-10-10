@@ -237,11 +237,13 @@ WHERE po_id = $1
 ORDER BY changed_at, id;
 
 -- name: purchase_orders.update_notes
--- $2 is the If-Match row_version, NULL to skip the optimistic-lock guard.
+-- $2 is the If-Match row_version. The handler requires it. NULL, which skips
+-- the optimistic-lock guard, is left to seeding callers.
 SELECT fn_update_po_notes($1::bigint, $2::int, $3::text, $4::bigint);
 
 -- name: purchase_orders.update_details
--- $2 is the If-Match row_version, NULL to skip the optimistic-lock guard.
+-- $2 is the If-Match row_version. The handler requires it. NULL, which skips
+-- the optimistic-lock guard, is left to seeding callers.
 SELECT fn_update_po_details($1::bigint, $2::int, $3::text, $4::date, $5::bigint);
 
 -- name: purchase_orders.change_status

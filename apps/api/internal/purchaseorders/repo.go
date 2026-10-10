@@ -183,7 +183,8 @@ func (r *Repo) History(ctx context.Context, id int64) ([]StatusHistoryEntry, err
 }
 
 // UpdateNotes rewrites the internal note.
-// ifMatch nil skips the optimistic-lock guard.
+// The handler refuses a request without If-Match, so ifMatch nil, which
+// skips the optimistic-lock guard, comes only from seeding callers.
 func (r *Repo) UpdateNotes(ctx context.Context, id int64, notes string, actorID int64, ifMatch *int32) error {
 	_, err := r.db.Exec(ctx, r.store.Get("purchase_orders.update_notes"),
 		id, ifMatch, notes, actorID)
@@ -192,10 +193,11 @@ func (r *Repo) UpdateNotes(ctx context.Context, id int64, notes string, actorID 
 
 // UpdateDetails rewrites PO number, date.
 // Both are the client's PO number and date; a blank number stores none.
-// ifMatch nil skips the optimistic-lock guard; a filed invoice locks both
-// fields, which the function reports as ErrLocked. Clearing the number of
-// a PO in ON_PROGRESS or DELIVERED is ErrPoNumberRequired, the only P0014
-// fn_update_po_details raises.
+// The handler refuses a request without If-Match, so ifMatch nil, which
+// skips the optimistic-lock guard, comes only from seeding callers. A filed
+// invoice locks both fields, which the function reports as ErrLocked.
+// Clearing the number of a PO in ON_PROGRESS or DELIVERED is
+// ErrPoNumberRequired, the only P0014 fn_update_po_details raises.
 func (r *Repo) UpdateDetails(
 	ctx context.Context, id int64, poNumber string, poDate time.Time, actorID int64, ifMatch *int32,
 ) error {

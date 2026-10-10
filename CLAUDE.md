@@ -200,7 +200,9 @@ under `/api/v1`. Errors are RFC 7807 problem+json (`shared/httperr`). List
 endpoints return the total count in the `X-Total-Count` header. A stale
 `If-Match` is a 409 from `httperr.VersionConflict()` with `code:
 "version_conflict"` (a PO lock carries `po_locked`); the web branches on the
-code through `lib/errors.ts`, never on the detail text.
+code through `lib/errors.ts`, never on the detail text. A PO's lines,
+details and notes writes refuse a request without `If-Match` with a 400,
+so no caller overwrites them unguarded.
 
 Every query key a repo reads is listed in `db/queries/required.go`, and
 `Load()` fails at startup when one is missing; add the key in the same commit

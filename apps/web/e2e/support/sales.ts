@@ -331,11 +331,15 @@ export class SalesSeed {
   }
 
   // Enter the client's PO number.
+  //
+  // The write needs the version po was read at.
   async setPoNumber(po: PurchaseOrder, poNumber: string): Promise<void> {
-    await api("PATCH", `/purchase-orders/${po.id}/details`, {
-      poNumber,
-      poDate: po.poDate.slice(0, 10),
-    })
+    await api(
+      "PATCH",
+      `/purchase-orders/${po.id}/details`,
+      { poNumber, poDate: po.poDate.slice(0, 10) },
+      { "If-Match": String(po.rowVersion) },
+    )
   }
 
   async revise(id: number, note?: string): Promise<number> {
@@ -363,7 +367,13 @@ export class SalesSeed {
   }
 
   async setPoNotes(poId: number, notes: string): Promise<void> {
-    await api("PATCH", `/purchase-orders/${poId}/notes`, { notes })
+    const po = await api<PurchaseOrder>("GET", `/purchase-orders/${poId}`)
+    await api(
+      "PATCH",
+      `/purchase-orders/${poId}/notes`,
+      { notes },
+      { "If-Match": String(po.rowVersion) },
+    )
   }
 
   async setPoStatus(poId: number, status: string, note?: string): Promise<void> {
