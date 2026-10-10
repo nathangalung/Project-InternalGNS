@@ -112,8 +112,9 @@ func TestHandler_SentInvoiceMovesByRole(t *testing.T) {
 	} {
 		t.Run(tt.role, func(t *testing.T) {
 			d := getJSON[map[string]any](t, roleServer(t, tx, tt.role), fmt.Sprintf("/invoices/%d", invID))
-			moves := []string{}
-			for _, m := range d["allowedTransitions"].([]any) {
+			allowed := d["allowedTransitions"].([]any)
+			moves := make([]string, 0, len(allowed))
+			for _, m := range allowed {
 				moves = append(moves, m.(map[string]any)["to"].(string))
 			}
 			assert.ElementsMatch(t, tt.moves, moves)
