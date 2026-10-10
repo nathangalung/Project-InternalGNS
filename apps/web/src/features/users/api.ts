@@ -1,4 +1,5 @@
 import { apiList, apiRequest, buildQuery, type PaginatedList } from "@/lib/api-client"
+import { errorMessage } from "@/lib/errors"
 import type {
   ChangeUserPasswordInput,
   CreateUserInput,
@@ -43,7 +44,7 @@ export type UpdateUserInput = UserProfileInput & { password?: string }
 export class PartialUserUpdateError extends Error {
   readonly profileSaved = true
   constructor(readonly passwordError: unknown) {
-    super(passwordError instanceof Error ? passwordError.message : "Kata sandi gagal diperbarui")
+    super(errorMessage(passwordError, "Kata sandi gagal diperbarui"))
     this.name = "PartialUserUpdateError"
   }
 }

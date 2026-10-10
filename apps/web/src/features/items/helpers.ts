@@ -1,4 +1,5 @@
 import { ApiError } from "@/lib/api-client"
+import { errorMessage } from "@/lib/errors"
 import type {
   AdvancedSearchHit,
   AdvancedSearchResponse,
@@ -142,8 +143,7 @@ export function addVendorError(err: unknown): AddVendorError {
   if (err instanceof ApiError && err.status === 404) {
     return { field: "Vendor tidak ditemukan. Pilih vendor lain." }
   }
-  const msg = err instanceof Error ? err.message.trim() : ""
-  return { form: msg || "Gagal menambah vendor." }
+  return { form: errorMessage(err, "Gagal menambah vendor.") }
 }
 
 // Exact name match, any case.

@@ -2,6 +2,7 @@ import { useState } from "react"
 import Modal from "@/components/shared/Modal"
 import { contactEmailError } from "@/features/clients/helpers"
 import { useCreateClient, useCreateContact, useUploadClientLogo } from "@/features/clients/hooks"
+import { errorMessage } from "@/lib/errors"
 import { ui } from "@/lib/ui"
 import {
   CONTACT_REACH_ERROR,
@@ -90,8 +91,7 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
         setEmailTaken(taken)
         return
       }
-      const msg = err instanceof Error ? err.message : "Gagal menyimpan klien."
-      setSubmitError(msg)
+      setSubmitError(errorMessage(err, "Gagal menyimpan klien."))
     }
   }
 

@@ -67,6 +67,9 @@ describe("users api", () => {
 
   it("gives a partial failure Indonesian copy when the cause has none", () => {
     expect(new api.PartialUserUpdateError("boom").message).toBe("Kata sandi gagal diperbarui")
+    expect(new api.PartialUserUpdateError(new TypeError("Failed to fetch")).message).toBe(
+      "Kata sandi gagal diperbarui",
+    )
   })
 
   it("does not touch the password when the profile PUT fails", async () => {
