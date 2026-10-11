@@ -334,6 +334,12 @@ shows a missing one as Belum ada No. PO.
   chosen contact's own email and phone, read by id even once that contact
   is deactivated, and none when the quotation has no contact. Its DELIVERY
   PLACE prints the shipping line's address, else the vessel.
+  The list export (`GET /quotations/export.xlsx`) carries the same stored
+  breakdown in the PDF's order: Total Produk, Diskon, Pengiriman (total
+  minus total_produk, as the PDF computes it), Sub Total, then PPN as text
+  (12% or Tanpa PPN) beside Nilai PPN (0 without PPN), and Grand Total.
+  These figures ride on the list row as `json:"-"` fields, so the list
+  JSON stays as it was.
   A saved draft is edited live, by several users at once, one part each.
   The parts are the header (contact, client reference, shipping, terms,
   discount) and each line (`line:<id>`); `POST /quotations/{id}/locks`

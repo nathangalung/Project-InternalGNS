@@ -58,6 +58,11 @@ SELECT
     q.grand_total::text       AS grand_total,
     q.subtotal::text          AS subtotal,
     q.total_discount::text    AS total_discount,
+    -- The export's breakdown, as the PDF prints it
+    q.total_produk::text      AS total_produk,
+    (q.total - q.total_produk)::text AS shipping_total,
+    q.ppn_amount::text        AS ppn_amount,
+    q.ppn_enabled,
     COALESCE(c.total_harga_beli, '0') AS total_harga_beli,
     c.product_count,
     q.created_at
