@@ -368,6 +368,17 @@ def quotations(model: Model) -> str:
         "  PERFORM fn_recompute_quotation_totals(id) FROM quotations ORDER BY id;\n"
         "END $$;\n"
     )
+    parts.append(
+        "-- A quotation past draft keeps the offer it was sent with, as the app\n"
+        "-- freezes it when a quotation leaves draft. That is no line edit, so\n"
+        "-- trg_quotation_items_updated_at is off while it runs.\n"
+        "ALTER TABLE quotation_items DISABLE TRIGGER trg_quotation_items_updated_at;\n"
+        "DO $$\nBEGIN\n"
+        "  PERFORM fn_freeze_quotation_offer(id) FROM quotations WHERE status <> 'draft'\n"
+        "  ORDER BY id;\n"
+        "END $$;\n"
+        "ALTER TABLE quotation_items ENABLE TRIGGER trg_quotation_items_updated_at;\n"
+    )
     first = [(q.id, h.to_status, h.at, h.note) for q in qs for h in q.history[:1]]
     parts.append(
         "-- trg_log_quotation_creation logged each insert at NOW(); date it.\n"

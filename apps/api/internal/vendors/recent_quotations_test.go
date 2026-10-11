@@ -85,3 +85,22 @@ func TestHandler_RecentQuotations_Faults(t *testing.T) {
 		})
 	}
 }
+
+// A sent line keeps its offer.
+// The vendor page lists what each quotation offered when it was sent, not
+// the product's name and code after a later catalog edit.
+func TestRepo_RecentQuotations_KeepsSentOffer(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	d := testutil.SeedQuotationHistory(t, ctx, tx, "sent")
+	_, err := tx.Exec(ctx, `SELECT fn_freeze_quotation_offer($1)`, d.Quotations[0])
+	require.NoError(t, err)
+	_, err = tx.Exec(ctx, `UPDATE items SET name = name || ' Baru', impa_code = 'X' || impa_code WHERE id = $1`, d.Item)
+	require.NoError(t, err)
+
+	got, err := vendors.NewRepo(tx, testutil.Store(t)).RecentQuotations(ctx, d.Vendor)
+	require.NoError(t, err)
+	require.Len(t, got, 1)
+	assert.Equal(t, d.ItemName, got[0].ItemName)
+	require.NotNil(t, got[0].IMPACode)
+	assert.Equal(t, d.ItemImpa, *got[0].IMPACode)
+}

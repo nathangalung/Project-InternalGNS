@@ -1,4 +1,4 @@
--- Canonical current body of fn_update_po_items (deployed by migration 00106).
+-- Canonical current body of fn_update_po_items (deployed by migration 00112).
 CREATE OR REPLACE FUNCTION public.fn_update_po_items(p_po_id bigint, p_user_id bigint, p_discount_pct numeric, p_notes text, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb)
  RETURNS void
  LANGUAGE plpgsql
@@ -58,6 +58,15 @@ BEGIN
     WHERE COALESCE(NULLIF(e->>'sellingPrice', '')::NUMERIC, 0) <= 0
   ) THEN
     RAISE EXCEPTION 'Semua baris produk harus memiliki harga jual.'
+      USING ERRCODE = 'P0014';
+  END IF;
+
+  -- A PO line prints only its own name.
+  IF EXISTS (
+    SELECT 1 FROM jsonb_array_elements(p_items) AS e
+    WHERE NULLIF(BTRIM(e->>'itemName'), '') IS NULL
+  ) THEN
+    RAISE EXCEPTION 'Isi nama produk di setiap baris produk.'
       USING ERRCODE = 'P0014';
   END IF;
 

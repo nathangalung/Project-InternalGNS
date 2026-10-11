@@ -2,9 +2,11 @@ package purchaseorders_test
 
 import (
 	"context"
+	"strconv"
 	"testing"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -135,4 +137,46 @@ func TestPurchaseOrder_EditedLineNameSurvives(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, items)
 	assert.Equal(t, "Nama hasil kesepakatan", items[0].ItemName)
+}
+
+// Ubah PO keeps every line named.
+// A PO line prints only its own snapshot, so a product line saved without
+// a name is refused instead of printing blank.
+func TestPurchaseOrder_BlankLineNameRefused(t *testing.T) {
+	for _, name := range []string{"", "   "} {
+		t.Run("name "+strconv.Quote(name), func(t *testing.T) {
+			ctx, tx := testutil.BeginTx(t)
+			offered := seedItemID
+			poID := acceptedQuotationWithOffer(t, tx, "tolong carikan punching tool", &offered)
+			_, err := purchaseorders.NewRepo(tx, testutil.Store(t)).UpdateItems(ctx, poID, purchaseorders.UpdateItemsRequest{
+				DiscountPct: "0",
+				Items: []purchaseorders.UpdateItemsLine{{
+					OfferedItemID: &offered, ItemName: name, Qty: "1",
+					UnitID: int16Ptr(seedUnitID), SellingPrice: "100000",
+				}},
+			}, seedUserID, nil)
+			var pgErr *pgconn.PgError
+			require.ErrorAs(t, err, &pgErr)
+			assert.Equal(t, "P0014", pgErr.Code)
+			assert.Equal(t, "Isi nama produk di setiap baris produk.", pgErr.Message)
+		})
+	}
+}
+
+// PO lines never read the catalog.
+// Renaming a product, or giving a code to one that had none, leaves the
+// PO line as the PO stored it.
+func TestPurchaseOrder_LineIgnoresCatalogEdits(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	offered := insertUncodedItem(t, tx)
+	poID := acceptedQuotationWithOffer(t, tx, "tolong carikan punching tool", offered)
+	name := catalogName(t, tx, offered)
+	_, err := tx.Exec(ctx, `UPDATE items SET name = 'Nama katalog baru', impa_code = 'BARU' || id WHERE id = $1`, *offered)
+	require.NoError(t, err)
+
+	lines, err := purchaseorders.NewRepo(tx, testutil.Store(t)).ListItems(ctx, poID)
+	require.NoError(t, err)
+	require.NotEmpty(t, lines)
+	assert.Equal(t, name, lines[0].ItemName)
+	assert.Nil(t, lines[0].ItemCode, "a code the PO never had stays off")
 }

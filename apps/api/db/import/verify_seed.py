@@ -16,6 +16,8 @@ inside one transaction that is rolled back, so nothing is written:
 - a PO in ON_PROGRESS or DELIVERED without a PO number has a reason in
   pos.json, and every PO product line is priced above zero;
 - every offered line of an accepted quotation has its product and unit;
+- every offered line of a quotation past draft keeps the offer it was
+  sent with (offered_name);
 - each quotation's, PO's and invoice's status is its last history move;
 - an imported invoice is paid exactly when dated before PAID_BEFORE,
   with paid_at at its paid move as the model dates it, else sent;
@@ -280,6 +282,14 @@ def checks(model: Model) -> list[tuple[str, str]]:
             FROM quotation_items l JOIN quotations q ON q.id = l.quotation_id
             WHERE q.status = 'accepted' AND l.item_type = 'product' AND l.is_available
               AND (l.offered_item_id IS NULL OR l.unit_id IS NULL)""",
+        ),
+        (
+            "every offered line past draft keeps its offer",
+            """
+            SELECT q.quotation_no || ' line ' || l.line_number
+            FROM quotation_items l JOIN quotations q ON q.id = l.quotation_id
+            WHERE q.status <> 'draft' AND l.offered_item_id IS NOT NULL
+              AND l.offered_name IS NULL""",
         ),
         (
             "accepted exactly where a PO exists",
