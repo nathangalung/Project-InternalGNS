@@ -121,6 +121,11 @@ type ListRow struct {
 	TotalHargaBeli  string    `db:"total_harga_beli"  json:"totalHargaBeli,omitempty"`
 	ProductCount    int64     `db:"product_count"     json:"productCount"`
 	CreatedAt       time.Time `db:"created_at"        json:"createdAt"`
+	// The export's breakdown, never sent
+	TotalProduk   string `db:"total_produk"   json:"-"`
+	ShippingTotal string `db:"shipping_total" json:"-"`
+	PpnAmount     string `db:"ppn_amount"     json:"-"`
+	PPNEnabled    bool   `db:"ppn_enabled"    json:"-"`
 }
 
 // ListResult wraps rows with total.

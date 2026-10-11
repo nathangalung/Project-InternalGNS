@@ -304,6 +304,7 @@ export type InvoiceDetail = InvoiceBackendRow & {
     contactName?: string;
     contactEmail?: string;
     contactPhone?: string;
+    paymentTerms?: string;
     replacesInvoiceId?: number;
     replacesInvoiceNo?: string;
     replacedByInvoiceId?: number;

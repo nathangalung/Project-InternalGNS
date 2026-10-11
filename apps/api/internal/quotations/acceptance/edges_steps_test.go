@@ -217,7 +217,46 @@ func (s *scenarioState) callPathAs(role, method, path string) error {
 	return s.callAs(role, method, path, body)
 }
 
+// firstLine reads the first product line.
+func (s *scenarioState) firstLine() (quotations.QuotationItem, error) {
+	d, err := s.readByID(s.lastID)
+	if err != nil {
+		return quotations.QuotationItem{}, err
+	}
+	for _, it := range d.Items {
+		if it.ItemType == "product" {
+			return it, nil
+		}
+	}
+	return quotations.QuotationItem{}, fmt.Errorf("quotation %d has no product line", s.lastID)
+}
+
+// markFirstLine toggles Tidak Ditawarkan.
+func (s *scenarioState) markFirstLine(role, move string) error {
+	it, err := s.firstLine()
+	if err != nil {
+		return err
+	}
+	path := idPath(s.lastID, "/lines/"+strconv.FormatInt(it.ID, 10)+"/offer")
+	return s.callAs(role, http.MethodPatch, path,
+		quotations.LineOfferRequest{IsAvailable: move == "puts the first line back on offer"})
+}
+
+func (s *scenarioState) firstLineIs(state, price string) error {
+	it, err := s.firstLine()
+	if err != nil {
+		return err
+	}
+	if it.IsAvailable != (state == "offered") || it.SellingPrice != price {
+		return fmt.Errorf("first line available %v at %s, want %s at %s",
+			it.IsAvailable, it.SellingPrice, state, price)
+	}
+	return nil
+}
+
 func registerEdgeSteps(sc *godog.ScenarioContext, s *scenarioState) {
+	sc.Step(`^a "([^"]+)" user (marks the first line Tidak Ditawarkan|puts the first line back on offer)$`, s.markFirstLine)
+	sc.Step(`^the first line is (offered|not offered) at harga jual "([^"]+)"$`, s.firstLineIs)
 	sc.Step(`^a draft quotation for vessel "([^"]+)" shipped in (\d+) days$`, s.createForVessel)
 	sc.Step(`^the PDF prints "([^"]+)"$`, s.pdfPrints)
 	sc.Step(`^the user edits the quotation (resending|leaving out) vessel and notes$`, s.editVesselAndNotes)

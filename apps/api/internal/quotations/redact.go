@@ -40,6 +40,7 @@ func (d *QuotationDetail) redact(role string) {
 func (r *ListRow) redact(role string) {
 	if !roles.SeesSelling(role) {
 		r.GrandTotal, r.Subtotal, r.TotalDiscount = "", "", ""
+		r.TotalProduk, r.ShippingTotal, r.PpnAmount = "", "", ""
 	}
 	if !roles.SeesCost(role) {
 		r.TotalHargaBeli = ""

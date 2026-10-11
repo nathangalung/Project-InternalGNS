@@ -27,6 +27,8 @@ async function json<T>(path: string, token: string, init: RequestInit = {}): Pro
     await call(path, { ...init, token }),
     `${init.method ?? "GET"} ${path}`,
   )
+  // A move such as send answers 204 with no body.
+  if (res.status === 204) return undefined as T
   return (await res.json()) as T
 }
 

@@ -90,20 +90,32 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WarnIfTruncated(r.Context(), "quotations.export", res.Total, len(res.Rows))
-	headers := []string{"No. Quotation", "Tanggal", "Klien", "Status", "Subtotal", "Diskon", "Grand Total"}
+	// The money columns follow the PDF breakdown, from the stored totals.
+	headers := []string{
+		"No. Quotation", "Tanggal", "Klien", "Status", "Total Produk", "Diskon",
+		"Pengiriman", "Sub Total", "PPN", "Nilai PPN", "Grand Total",
+	}
 	rows := make([][]string, 0, len(res.Rows))
 	for _, q := range res.Rows {
+		ppn := "Tanpa PPN"
+		if q.PPNEnabled {
+			ppn = "12%"
+		}
 		rows = append(rows, []string{
 			q.QuotationNo,
 			q.CreatedAt.In(tz.Jakarta()).Format("2006-01-02"),
 			q.CompanyName,
 			StatusLabel(q.Status),
-			q.Subtotal,
+			q.TotalProduk,
 			q.TotalDiscount,
+			q.ShippingTotal,
+			q.Subtotal,
+			ppn,
+			q.PpnAmount,
 			q.GrandTotal,
 		})
 	}
-	data, err := sheet.Write("Quotation", headers, rows, 4, 5, 6)
+	data, err := sheet.Write("Quotation", headers, rows, 4, 5, 6, 7, 9, 10)
 	if err != nil {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return

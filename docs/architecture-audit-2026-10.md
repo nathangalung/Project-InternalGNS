@@ -64,19 +64,29 @@ closed with fault-path tests, never by lowering a threshold.
    effect on the whole `detail`). Fix: key on `detail.items` and the header
    fields.
 
-## Needs the owner's decision
+## Owner decisions (v0.33.0)
 
-- **Coretax bulk export includes drafts** and silently skips invoices with
-  no lines (`coretax_xlsx.go`). Should only sent and paid invoices go to
-  DJP?
-- **Tidak Ditawarkan by operational input** zeroes the harga jual a head
-  set, and turning it back on restores nothing. Deny the toggle to that
-  role, or remember the price?
-- **Invoice payment terms** print `PDF_PAYMENT_TERMS` (Net 30 days) while
-  the quotation prints its own terms. Should the invoice follow the
-  quotation?
-- **Quotation export** labels the after-discount figure "Subtotal" and has
-  no PPN column now that PPN is optional.
+The owner delegated these; each follows the rule the code already holds.
+
+- **Coretax bulk export keeps drafts.** The faktur is prepared and
+  uploaded before the invoice and FP go to the client together, so a
+  draft is exactly the invoice that needs one. Cancelled and non-PPN
+  invoices stay out. The line-less skip never fires: `fn_create_invoice`
+  and `fn_replace_invoice` refuse a PO with no billable line, and prod has
+  none.
+- **Tidak Ditawarkan by operational input** is refused on a line a head
+  priced, since it would set harga jual to 0 and that role never changes a
+  selling figure. An unpriced line and a restore stay allowed. Remembering
+  the old price was rejected: it adds state that can drift from the line.
+- **Invoice payment terms** follow the quotation: migration 00110 copies
+  them onto each new invoice and sets its due date from a plain day count.
+  An invoice without terms still prints the setting, and filed invoices
+  keep what they printed.
+- **Quotation export** follows the PDF breakdown: Total Produk, Diskon,
+  Pengiriman, Sub Total, PPN, Nilai PPN, Grand Total.
+
+## Still for the owner
+
 - **The import tool's unit map** (`db/import/unit_map.py`) disagrees with
   the alias table (ea to UNIT, coil to RLS, pail to OTH). Aligning it
   changes what a re-import stores.

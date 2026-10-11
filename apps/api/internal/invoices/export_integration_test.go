@@ -235,19 +235,24 @@ func exportRouter(t *testing.T, exec db.Executor, root string) http.Handler {
 		Pool:          exec,
 		Queries:       testutil.Store(t),
 		TemplatesRoot: root,
-		Pdf: deps.PdfSettings{
-			PaymentTerms:  "Net 30",
-			BankName:      "BCA",
-			BankAccountNo: "1234567890",
-			BankAccountNm: "PT GNS",
-			SignerName:    "Bryan",
-		},
+		Pdf:           exportSettings(),
 	}
 
 	r := chi.NewRouter()
 	r.Use(injectUser(seedUserID))
 	r.Mount("/invoices", invoices.Routes(d))
 	return r
+}
+
+// exportSettings is the configured footer.
+func exportSettings() deps.PdfSettings {
+	return deps.PdfSettings{
+		PaymentTerms:  "Net 30",
+		BankName:      "BCA",
+		BankAccountNo: "1234567890",
+		BankAccountNm: "PT GNS",
+		SignerName:    "Bryan",
+	}
 }
 
 func injectUser(uid int64) func(http.Handler) http.Handler {

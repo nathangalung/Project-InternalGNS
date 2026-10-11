@@ -175,3 +175,59 @@ func TestLatexExports_LongDestinationWraps(t *testing.T) {
 		})
 	}
 }
+
+// Long payment terms wrap.
+// The invoice prints its quotation's terms, up to the 100 characters the
+// column holds; they wrap inside the terms block, clear of the signature.
+func TestLatexExports_LongPaymentTermsWraps(t *testing.T) {
+	widest := "Payment in Advance (Before Delivery) by bank transfer to the account below, balance within 30 days"
+	if len(widest) > 100 {
+		t.Fatalf("terms have %d characters, more than the column holds", len(widest))
+	}
+	cases := []struct {
+		name, terms string
+	}{
+		{"advance payment", "Payment in Advance (Before Delivery)"},
+		{"the widest terms", widest},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			d := invoiceData(sampleItems(2))
+			d["PaymentTerms"] = LatexEscape(c.terms)
+			log, dir := compileDir(t, "invoice/Invoice.tex.tmpl", d)
+			if !producedOutput(log) {
+				t.Skip("xelatex produced no output")
+			}
+			if over, under, warn := badBoxes(log); over != 0 || under != 0 || warn != 0 {
+				t.Errorf("overfull=%d underfull=%d warnings=%d, want all 0", over, under, warn)
+			}
+			words := firstPageWords(t, filepath.Join(dir, "doc.pdf"))
+			sign, ok := lowest(words, "Jakarta,")
+			if !ok {
+				t.Fatal("signature date line not found on page 1")
+			}
+			for _, tw := range strings.Fields(c.terms) {
+				w, ok := lowest(words, tw)
+				if !ok {
+					t.Errorf("terms word %q not found whole", tw)
+					continue
+				}
+				if w.xMax >= sign.xMin {
+					t.Errorf("terms word %q ends at x=%.1f, past the signature at x=%.1f", tw, w.xMax, sign.xMin)
+				}
+			}
+		})
+	}
+}
+
+// lowest finds the last match.
+func lowest(words []pdfWord, text string) (pdfWord, bool) {
+	var best pdfWord
+	found := false
+	for _, w := range words {
+		if w.text == text && (!found || w.yMin > best.yMin) {
+			best, found = w, true
+		}
+	}
+	return best, found
+}

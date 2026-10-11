@@ -1,4 +1,4 @@
--- Canonical current body of fn_create_invoice (deployed by migration 00107).
+-- Canonical current body of fn_create_invoice (deployed by migration 00110).
 -- Snapshots a delivered PO's items into a draft invoice. Line tax figures are
 -- rounded per line; the header tax figures are the SUM of those per-line values
 -- so the invoice matches what is filed with DJP per line via e-faktur.
@@ -16,6 +16,7 @@ DECLARE
   v_dpp           NUMERIC(15,2);
   v_replaces_id   BIGINT;
   v_ppn_on        BOOLEAN;
+  v_terms         TEXT;
 BEGIN
   -- A cancelled invoice is void, so only a live one makes this a no-op.
   SELECT id INTO v_inv_id FROM invoices
@@ -32,6 +33,10 @@ BEGIN
       USING ERRCODE = 'P0011';
   END IF;
 
+  -- The terms the client agreed on the quotation.
+  SELECT NULLIF(btrim(payment_terms), '') INTO v_terms
+  FROM quotations WHERE id = v_quotation_id;
+
   -- The newest cancelled invoice nothing replaces yet is the one corrected.
   SELECT c.id INTO v_replaces_id
   FROM invoices c
@@ -46,17 +51,17 @@ BEGIN
 
   v_inv_no := fn_next_doc_no('INV');
 
-  -- The buyer is stored as the client is now.
+  -- The buyer and the terms are stored as they are now.
   INSERT INTO invoices (
     invoice_no, quotation_id, po_id, company_client_id,
-    buyer_name, buyer_npwp, buyer_address,
+    buyer_name, buyer_npwp, buyer_address, payment_terms,
     invoice_date, due_date, subtotal, dpp,
     status, faktur_type, replaces_invoice_id, created_by, updated_by, ppn_enabled
   )
   SELECT
     v_inv_no, v_quotation_id, p_po_id, v_company_id,
-    cc.name, cc.npwp, cc.address,
-    CURRENT_DATE, CURRENT_DATE + INTERVAL '30 days',
+    cc.name, cc.npwp, cc.address, v_terms,
+    CURRENT_DATE, CURRENT_DATE + COALESCE(fn_terms_days(v_terms), 30),
     v_dpp, v_dpp,
     'draft',
     CASE WHEN v_replaces_id IS NULL THEN 'Normal' ELSE 'Pengganti' END,

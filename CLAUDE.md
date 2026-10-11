@@ -64,7 +64,12 @@ management picks a role from a dropdown with an Indonesian label and hint
   history, no quotation PDF and no quotation or PO export. Its line and
   header saves keep the stored harga jual, discount and shipping charge
   (`quotations/price_guard.go`), and its new lines start at harga jual 0
-  for a head to price. On a PO it only views and keeps the purchase data
+  for a head to price. Since Tidak Ditawarkan stores harga jual 0, it marks
+  only a line no head has priced: on a draft line with a harga jual, the
+  toggle and a line save with `isAvailable` false are a 403
+  (`ErrPricedNoOffer`, the price read after the quotation row lock, in the
+  save's transaction), while its new lines may start unoffered and putting
+  a line back on offer stays open to it. On a PO it only views and keeps the purchase data
   current: in Ubah PO it changes harga beli and vendor of the stored lines,
   everything the client ordered stays as stored (`keepStoredSale`; each line
   carries its PO line `id`, adding or dropping one is a 403), and it neither
@@ -290,6 +295,8 @@ shows a missing one as Belum ada No. PO.
   `fn_prepare_quotation_lines` stores it at harga jual 0 with no vendor, the
   PDF prints No Offer, it never blocks sending, `fn_create_purchase_order`
   leaves it out of the PO, and accepting needs at least one offered line.
+  Putting it back on offer restores no price, so operational input marks
+  only an unpriced line (see Roles), and the web toasts the refusal.
   The same function links a vendor a line names by `vendorId` when the item
   has no link to it yet, and refuses a `vendorProductId` that names another
   product (P0014). A save of a draft, the full `PUT` included, runs it only
@@ -327,6 +334,12 @@ shows a missing one as Belum ada No. PO.
   chosen contact's own email and phone, read by id even once that contact
   is deactivated, and none when the quotation has no contact. Its DELIVERY
   PLACE prints the shipping line's address, else the vessel.
+  The list export (`GET /quotations/export.xlsx`) carries the same stored
+  breakdown in the PDF's order: Total Produk, Diskon, Pengiriman (total
+  minus total_produk, as the PDF computes it), Sub Total, then PPN as text
+  (12% or Tanpa PPN) beside Nilai PPN (0 without PPN), and Grand Total.
+  These figures ride on the list row as `json:"-"` fields, so the list
+  JSON stays as it was.
   A saved draft is edited live, by several users at once, one part each.
   The parts are the header (contact, client reference, shipping, terms,
   discount) and each line (`line:<id>`); `POST /quotations/{id}/locks`
@@ -414,6 +427,16 @@ shows a missing one as Belum ada No. PO.
   DELIVERED); only a Pengganti, which copies the client as it is then,
   changes it. Coretax refuses an invoice without a valid NPWP with that
   Pengganti route.
+  The same way it keeps its quotation's payment terms (`payment_terms`,
+  trimmed, NULL when blank, 00110), which the PDF prints as PAYMENT TERMS
+  and the detail shows as Syarat Pembayaran; an invoice without terms (its
+  quotation named none, or it was made before 00110) prints
+  `PDF_PAYMENT_TERMS`, so a reprint never changes. A new invoice
+  or Pengganti falls due on its date plus the day count the terms name
+  (`fn_terms_days`: 1 to 365, an optional Net, then day, days or hari, any
+  case or spacing, so "7 days", "Net 45 days", "14 hari", "30days"), else
+  30 days ("Payment in Advance", "TRANSFER - CASH", "30 hari kerja", none).
+  The web never computes a due date.
   An invoice without PPN (`ppn_enabled` false, see convention 9) has no
   faktur: its Coretax XML is a 422 and the bulk XLSX leaves it out.
   Country, email and TKU stay live. Terlambat is derived, never set: `fn_invoice_effective_status`
@@ -776,7 +799,9 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    change all three together. The quotation addresses To, Attn, Email and
    Contact No.; the delivery note To and Address only, with no vessel or
    attention; the invoice its Client, NPWP and Address, with no vessel.
-   The terms and the signature sit clear of the table. All three keep 1.8 cm
+   The terms and the signature sit clear of the table, and a long terms
+   value wraps whole words inside its block (`tabularx`,
+   `TestLatexExports_LongPaymentTermsWraps`). All three keep 1.8 cm
    side margins and every table spans exactly the text width (`\LTleft`,
    `\LTright` 0pt, the text columns sharing what the fixed ones leave), so
    the letterhead, party block, table rules and signature start and end on
@@ -833,7 +858,8 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    so a fractional quantity still adds up. Do not restate already-filed
    invoices: their amounts are never recomputed, and a wrong invoice is
    cancelled and replaced by a Pengganti. Only the invoice and due dates stay
-   editable, and only until the invoice is paid or cancelled.
+   editable, and only until the invoice is paid or cancelled; the due date
+   the payment terms set is only where it starts.
 
 ## Tooling and style
 

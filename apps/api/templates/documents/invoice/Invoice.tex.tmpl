@@ -216,12 +216,13 @@
 \noindent
 \begin{minipage}[t]{0.55\textwidth}
   \DocPartySize
-  \begin{tabular}[t]{@{}l@{\;}l@{\;}l@{}}
+  % The quotation's terms wrap whole words.
+  \begin{tabularx}{\linewidth}[t]{@{}l@{\;}l@{\;}>{\raggedright\hyphenpenalty=10000\arraybackslash}X@{}}
     PAYMENT TERMS  & : & [[.PaymentTerms]] \\[3pt]
     BANK           & : & [[.BankName]] \\[3pt]
     ACCOUNT NO     & : & [[.BankAccountNo]] \\[3pt]
     ACCOUNT NAME   & : & [[.BankAccountName]] \\
-  \end{tabular}
+  \end{tabularx}
 \end{minipage}%
 \hfill
 \begin{minipage}[t]{0.40\textwidth}

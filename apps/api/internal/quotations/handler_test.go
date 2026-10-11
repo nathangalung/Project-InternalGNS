@@ -308,12 +308,21 @@ func TestHandler_ChangeStatus(t *testing.T) {
 }
 
 // Filtered list exports as XLSX.
-// The sheet holds a header plus one row per quotation.
+// One row per quotation, its money columns the stored breakdown the PDF
+// prints, in its order, and a PPN column telling a quotation without PPN
+// from one whose tax is zero.
 func TestHandler_Export_XLSX(t *testing.T) {
 	srv, _ := resetServer(t)
-	mustCreate(t, srv)
+	withPPN := mustCreate(t, srv)
+	req := sampleCreate()
+	req.PPNEnabled = boolPtr(false)
+	res := doJSON(t, srv, http.MethodPost, "/quotations/", req)
+	require.Equal(t, http.StatusCreated, res.StatusCode)
+	var created quotations.CreatedResponse
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&created))
+	res.Body.Close()
 
-	res := doJSON(t, srv, http.MethodGet, "/quotations/export.xlsx", nil)
+	res = doJSON(t, srv, http.MethodGet, "/quotations/export.xlsx", nil)
 	defer res.Body.Close()
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	assert.Contains(t, res.Header.Get("Content-Type"), "spreadsheetml")
@@ -322,16 +331,60 @@ func TestHandler_Export_XLSX(t *testing.T) {
 	require.NoError(t, err)
 	f, err := excelize.OpenReader(bytes.NewReader(body))
 	require.NoError(t, err)
-	rows, err := f.GetRows("Quotation")
+	rows, err := f.GetRows("Quotation", excelize.Options{RawCellValue: true})
 	require.NoError(t, err)
-	require.GreaterOrEqual(t, len(rows), 2, "header + at least one data row")
-	assert.Equal(t, "No. Quotation", rows[0][0])
-	assert.Equal(t, "Draf", rows[1][3], "the status reads as the app shows it")
-	styleID, err := f.GetCellStyle("Quotation", "G2")
-	require.NoError(t, err)
-	style, err := f.GetStyle(styleID)
-	require.NoError(t, err)
-	require.NotNil(t, style.CustomNumFmt, "Grand Total is a number Excel can sum")
+	require.Len(t, rows, 3, "header + one row per quotation")
+	assert.Equal(t, []string{
+		"No. Quotation", "Tanggal", "Klien", "Status", "Total Produk", "Diskon",
+		"Pengiriman", "Sub Total", "PPN", "Nilai PPN", "Grand Total",
+	}, rows[0])
+
+	byNo := map[string][]string{}
+	for _, row := range rows[1:] {
+		byNo[row[0]] = row
+	}
+	cases := []struct {
+		name string
+		id   int64
+		ppn  string
+	}{
+		{"with PPN", withPPN, "12%"},
+		{"without PPN", created.ID, "Tanpa PPN"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			d := readDetail(t, srv, c.id)
+			row := byNo[d.QuotationNo]
+			require.Len(t, row, 11)
+			assert.Equal(t, "Draf", row[3], "the status reads as the app shows it")
+			assert.Equal(t, c.ppn, row[8])
+			for i, want := range map[int]string{
+				4:  d.TotalProduk,
+				5:  d.TotalDiscount,
+				6:  "150000",
+				7:  d.Subtotal,
+				9:  d.PpnAmount,
+				10: d.GrandTotal,
+			} {
+				assert.InDelta(t, money(t, want), money(t, row[i]), 0.001, rows[0][i])
+			}
+		})
+	}
+	for _, col := range []string{"E", "F", "G", "H", "J", "K"} {
+		styleID, err := f.GetCellStyle("Quotation", col+"2")
+		require.NoError(t, err)
+		style, err := f.GetStyle(styleID)
+		require.NoError(t, err)
+		require.NotNil(t, style.CustomNumFmt, "column %s is a number Excel can sum", col)
+	}
+}
+
+// money reads a figure.
+func money(t *testing.T, s string) float64 {
+	t.Helper()
+	v, err := strconv.ParseFloat(s, 64)
+	require.NoError(t, err, s)
+	return v
 }
 
 // Unpriced product lines block sending.
