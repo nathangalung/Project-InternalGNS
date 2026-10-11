@@ -131,6 +131,35 @@ func (r *Repo) Update(ctx context.Context, id int64, req UpdateItemRequest, user
 	return item, impaErr(err)
 }
 
+// IMPAHolder finds a code's active owner.
+// self is never returned, so an update never names the item being saved;
+// no other active owner is ErrNotFound.
+func (r *Repo) IMPAHolder(ctx context.Context, code string, self int64) (IMPAHolder, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("items.impa_holder"), code, self)
+	if err != nil {
+		return IMPAHolder{}, fmt.Errorf("impa holder: %w", err)
+	}
+	h, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[IMPAHolder])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return IMPAHolder{}, ErrNotFound
+	}
+	return h, err
+}
+
+// Rename changes the name only.
+// A missing product is ErrNotFound.
+func (r *Repo) Rename(ctx context.Context, id int64, name string, userID int64) (Item, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("items.rename"), id, name, userID)
+	if err != nil {
+		return Item{}, fmt.Errorf("rename item %d: %w", id, err)
+	}
+	item, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Item])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Item{}, ErrNotFound
+	}
+	return item, err
+}
+
 // impaErr marks taken codes.
 // The database error stays wrapped, so a caller without a field to show it
 // on still renders the generic conflict.

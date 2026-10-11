@@ -177,22 +177,32 @@ func buildCoretaxWorkbook(
 		return nil, err
 	}
 
-	dateStyle, err := f.NewStyle(&excelize.Style{NumFmt: 17}) // dd-mmm-yy
+	// Every written cell sits mid-row.
+	middle := &excelize.Alignment{Vertical: "center"}
+	cellStyle, err := f.NewStyle(&excelize.Style{Alignment: middle})
+	if err != nil {
+		return nil, err
+	}
+	dateStyle, err := f.NewStyle(&excelize.Style{NumFmt: 17, Alignment: middle}) // dd-mmm-yy
 	if err != nil {
 		return nil, err
 	}
 
 	// Faktur sheet: NPWP header, then column headers at row 3.
-	_ = f.SetCellStr(coretaxSheetFaktur, "A1", "NPWP Penjual")
-	_ = f.SetCellStr(coretaxSheetFaktur, "C1", settings.SellerTIN)
+	for cell, v := range map[string]string{"A1": "NPWP Penjual", "C1": settings.SellerTIN} {
+		_ = f.SetCellStr(coretaxSheetFaktur, cell, v)
+		_ = f.SetCellStyle(coretaxSheetFaktur, cell, cell, cellStyle)
+	}
 	for c, head := range coretaxFakturHeaders {
 		cell, _ := excelize.CoordinatesToCellName(c+1, 3)
 		_ = f.SetCellStr(coretaxSheetFaktur, cell, head)
+		_ = f.SetCellStyle(coretaxSheetFaktur, cell, cell, cellStyle)
 	}
 	// DetailFaktur sheet: column headers at row 1.
 	for c, head := range coretaxDetailHeaders {
 		cell, _ := excelize.CoordinatesToCellName(c+1, 1)
 		_ = f.SetCellStr(coretaxSheetDetail, cell, head)
+		_ = f.SetCellStyle(coretaxSheetDetail, cell, cell, cellStyle)
 	}
 
 	fakturRow := 4 // first data row on Faktur
@@ -210,7 +220,7 @@ func buildCoretaxWorkbook(
 			tx.BuyerDocument, tx.BuyerCountry, buyerDocNo, tx.BuyerName,
 			tx.BuyerAdress, tx.BuyerEmail, tx.BuyerIDTKU,
 		}
-		writeRow(f, coretaxSheetFaktur, fakturRow, faktur)
+		writeRow(f, coretaxSheetFaktur, fakturRow, faktur, cellStyle)
 		// Column B carries the real invoice date with a date number format.
 		dateCell, _ := excelize.CoordinatesToCellName(2, fakturRow)
 		_ = f.SetCellValue(coretaxSheetFaktur, dateCell, inv.InvoiceDate)
@@ -228,7 +238,7 @@ func buildCoretaxWorkbook(
 				num(g.OtherTaxBase), num(g.VATRate), num(g.VAT),
 				num(g.STLGRate), num(g.STLG), inv.InvoiceNo,
 			}
-			writeRow(f, coretaxSheetDetail, detailRow, detail)
+			writeRow(f, coretaxSheetDetail, detailRow, detail, cellStyle)
 			detailRow++
 		}
 	}
@@ -256,13 +266,14 @@ func resetSheet(f *excelize.File, name string) error {
 // writeRow writes mixed row values.
 // Nil entries are skipped so the date cell can be set separately with its
 // own format.
-func writeRow(f *excelize.File, sheet string, row int, vals []any) {
+func writeRow(f *excelize.File, sheet string, row int, vals []any, style int) {
 	for c, v := range vals {
 		if v == nil {
 			continue
 		}
 		cell, _ := excelize.CoordinatesToCellName(c+1, row)
 		_ = f.SetCellValue(sheet, cell, v)
+		_ = f.SetCellStyle(sheet, cell, cell, style)
 	}
 }
 

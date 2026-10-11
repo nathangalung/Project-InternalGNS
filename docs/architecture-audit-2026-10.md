@@ -84,11 +84,9 @@ The owner delegated these; each follows the rule the code already holds.
   keep what they printed.
 - **Quotation export** follows the PDF breakdown: Total Produk, Diskon,
   Pengiriman, Sub Total, PPN, Nilai PPN, Grand Total.
-
-## Still for the owner
-
-- **The import tool's unit map** (`db/import/unit_map.py`) disagrees with
-  the alias table (ea to UNIT, coil to RLS, pail to OTH). Aligning it
-  changes what a re-import stores.
-- **Purchase-side shipping** (a vendor's delivery charge) is not recorded
-  anywhere.
+- **The import tool reads the app's units.** `db/import/unit_map.py`
+  resolves through the master seed, and the old spellings only it knew
+  became aliases (00111), so a re-import stores what the app would pick:
+  ea is PCS, batang LGH, coil COIL, pail PAIL. Rows already in production
+  keep their stored unit.
+- **Purchase-side shipping** stays unrecorded: not needed.

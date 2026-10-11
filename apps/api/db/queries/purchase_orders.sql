@@ -131,14 +131,16 @@ LEFT JOIN v_po_totals t ON t.po_id = po.id
 WHERE po.quotation_id = $1;
 
 -- name: purchase_orders.list_items
+-- Names and codes come from the line's own snapshot, never the live
+-- catalog, so a rename never restates a PO or its delivery note.
 SELECT poi.id,
        poi.po_id,
        poi.quotation_item_id,
        poi.line_number,
        poi.item_type,
        poi.offered_item_id,
-       COALESCE(poi.item_code, i.impa_code) AS item_code,
-       COALESCE(NULLIF(poi.item_name, ''), i.name, '') AS item_name,
+       poi.item_code,
+       COALESCE(poi.item_name, '') AS item_name,
        poi.qty::text          AS qty,
        poi.unit_id,
        u.code AS unit_code,
@@ -155,7 +157,6 @@ SELECT poi.id,
        v.name AS vendor_name,
        vp.product_url
 FROM purchase_order_items poi
-LEFT JOIN items i ON i.id = poi.offered_item_id
 LEFT JOIN units u ON u.id = poi.unit_id
 LEFT JOIN vendor_products vp ON vp.id = poi.vendor_product_id
 LEFT JOIN vendors v ON v.id = vp.vendor_id

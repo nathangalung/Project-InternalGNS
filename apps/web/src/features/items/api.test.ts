@@ -42,6 +42,11 @@ describe("items api", () => {
       { path: "/items/9", method: "PUT", body: { name: "Baut", isActive: true } },
     ],
     [
+      "rename",
+      () => api.rename(9, "Baut Baja"),
+      { path: "/items/9/rename", method: "POST", body: { name: "Baut Baja" } },
+    ],
+    [
       "advanced search pages with an offset",
       () => api.searchAdvanced("baut", { minScore: 0.2, limit: 10, offset: 20, isActive: true }),
       { path: "/items/search-advanced?q=baut&minScore=0.2&limit=10&offset=20&isActive=true" },

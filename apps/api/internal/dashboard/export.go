@@ -113,6 +113,12 @@ func buildDashboardWorkbook(
 	f := excelize.NewFile()
 	defer func() { _ = f.Close() }()
 
+	// Every cell sits mid-row.
+	middle, err := f.NewStyle(&excelize.Style{Alignment: &excelize.Alignment{Vertical: "center"}})
+	if err != nil {
+		return err
+	}
+
 	const sumSheet = "Ringkasan"
 	_ = f.SetSheetName("Sheet1", sumSheet)
 	summaryRows := [][]any{
@@ -129,7 +135,7 @@ func buildDashboardWorkbook(
 		{"Invoice Segera Jatuh Tempo", s.InvoicesDueSoon},
 		{"Invoice Terlambat", s.InvoicesOverdue},
 	}
-	writeGrid(f, sumSheet, summaryRows)
+	writeGrid(f, sumSheet, summaryRows, middle)
 
 	const monthSheet = "Bulanan"
 	if _, err := f.NewSheet(monthSheet); err != nil {
@@ -147,7 +153,7 @@ func buildDashboardWorkbook(
 		}
 		monthRows = append(monthRows, row)
 	}
-	writeGrid(f, monthSheet, monthRows)
+	writeGrid(f, monthSheet, monthRows, middle)
 
 	if err := f.Write(w); err != nil {
 		return fmt.Errorf("write dashboard xlsx: %w", err)
@@ -155,11 +161,12 @@ func buildDashboardWorkbook(
 	return nil
 }
 
-func writeGrid(f *excelize.File, sheet string, rows [][]any) {
+func writeGrid(f *excelize.File, sheet string, rows [][]any, style int) {
 	for r, row := range rows {
 		for c, v := range row {
 			cell, _ := excelize.CoordinatesToCellName(c+1, r+1)
 			_ = f.SetCellValue(sheet, cell, v)
+			_ = f.SetCellStyle(sheet, cell, cell, style)
 		}
 	}
 }

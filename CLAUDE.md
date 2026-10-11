@@ -326,6 +326,18 @@ shows a missing one as Belum ada No. PO.
   Revisi is not a manual move: Buat Revisi (`POST /quotations/{id}/revise`,
   offered when `canRevise`, i.e. from sent) clones a new draft version with
   `parent_id` and a `Rev.n` number and moves the original to revision.
+  A quotation keeps its offer as it left draft: every move out of draft
+  (and `fn_create_quotation` given a status past draft, and the historical
+  seed) runs `fn_freeze_quotation_offer`, which copies each line's offered
+  product name and IMPA code into `quotation_items.offered_name` and
+  `offered_impa` (00112, which froze every quotation already past draft).
+  The detail and the PDF (`quotations.get_items`), the vendor page's
+  Quotation Terakhir (`vendors.recent_quotations`) and the PO made on
+  acceptance (`fn_create_purchase_order`) read the frozen pair, so a catalog
+  rename or code change never restates a quotation the client received. A
+  draft, its Buat Revisi clone included, keeps both NULL and reads the
+  catalog live. `offered_name` marks a frozen line, so a product that had no
+  code when sent keeps none even after it gains one.
   The quotation PDF is dated at its last send, a draft to sent move, so
   the Validity it prints runs from the day the client received it; a draft
   prints today, and a row with no such move (legacy, or
@@ -400,7 +412,12 @@ shows a missing one as Belum ada No. PO.
   gate and the move run in one transaction (`Repo.GatedTransition`): the PO
   row is locked first, so the gate judges the status the move starts from,
   and the gate's client read holds the client row `FOR SHARE`, so a client
-  edit waits and DELIVERED copies the buyer the gate passed. Each PO
+  edit waits and DELIVERED copies the buyer the gate passed. Each PO line
+  stores its own name and code (`item_name`, `item_code`), copied from the
+  quotation's frozen offer, and the PO detail, delivery note and invoice
+  read only those, never the catalog (00112 filled the blank ones with what
+  they printed). Ubah PO saves the name and code each line sends and
+  refuses a product line without a name (422, `fn_update_po_items`). Each PO
   line stores its own supplier (`vendor_product_id`), copied from the quotation line only when
   that link is for the line's product, and the items list and the gate
   read it from the PO line. The line edit takes `vendorProductId` (a link
@@ -522,6 +539,25 @@ sees it.
 each offer on the quotation and PO detail, and beside the picked vendor in
 the quotation product dialog.
 
+One IMPA code belongs to one active product (`uq_items_impa_code_active`,
+stored trimmed and upper-cased). The import and Salin ke Offer match the
+code first, so a row whose code an active product holds reuses it whatever
+its name, and only an unknown code is auto-created, under the request text
+as typed. When that text was abbreviated or wrong, Tambah Produk Baru with
+the right name and the same code is refused: the 422 on `impaCode` (create
+and `PUT /items/{id}`) keeps its field message and carries `code:
+"impa_taken"` with `impaHolder` (`items.IMPATakenProblem`: id, name, code,
+default unit), never the item being saved. Inside a document's product
+dialog the refusal names the holder and offers Pakai Produk Ini, which
+picks it as a search hit does, and, for roles that write the catalog, Ganti
+Nama Jadi the typed name. That calls `POST /items/{id}/rename`, which
+changes the name only, wherever the product is used: a quotation past draft
+keeps its frozen offer, and PO and invoice lines their own name, so a
+rename reaches only the catalog and the drafts that read it, exactly as the
+product page Ubah (`PUT /items/{id}`) always has. Items carry no row
+version, so the rename takes no `If-Match`. The product page Ubah and the
+catalog's Tambah Produk link the holder's name to its page instead.
+
 ## Units
 
 A unit (Satuan) keeps the short code every document prints and exports
@@ -529,7 +565,8 @@ A unit (Satuan) keeps the short code every document prints and exports
 to 33 carry the DJP Coretax names and codes UM.0001 to UM.0033; the
 ship-supply units map to UM.0033 and are named by the long form of their
 code (TIN Tin, PKT Packet, RLS Rolls), one name with no slash. Every other
-way a unit is written is an alias in `unit_aliases` (migration 00109):
+way a unit is written is an alias in `unit_aliases` (migrations 00109 and
+00111):
 PC, PIECES and EA for PCS, CAN for TIN, SHEET and LEMBAR for LBR, PACK for
 PKT. An alias is stored normalised by `fn_unit_text` (upper case, one
 space between words, no trailing dot), and triggers refuse an alias equal
@@ -545,7 +582,10 @@ unit or alias comes in a migration that names units by code in JOIN form
 (a database without master data skips it), and the same rows go into
 `db/seeds/01_master.sql` and `testutil.SeedMasterIfMissing`; a migration
 test keeps the three alias lists equal. The server reads no unit text, so
-nothing there resolves one.
+nothing there resolves one. The historical import (`db/import/unit_map.py`)
+reads the codes and aliases from `01_master.sql`, so it resolves a spelling
+as the app does; only its reviewed `IMPORT_OVERRIDES` come first, each to
+OTH (AMP in the old files is an ampoule, never Ampere).
 
 ## Kas Lain
 
@@ -807,7 +847,9 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    the letterhead, party block, table rules and signature start and end on
    the same two lines; `TestLatexExports_TableMeetsTextEdges` renders the
    page and checks the outer rules against the text edges. Text cells do
-   not hyphenate. The quotation prints
+   not hyphenate. Every item table cell is centred vertically in its row
+   (`m` columns, while the party and terms blocks stay top-aligned), and
+   `TestLatexExports_TableCellsCentred` holds it. The quotation prints
    `PDF_QUOTATION_SIGNER_NAME` under the scanned `Signature.jpg`; the
    invoice prints `PDF_SIGNER_NAME` over blank space, signed by hand.
    No printed text carries a dash, a minus or a semicolon (the font's

@@ -127,11 +127,12 @@ LIMIT $2 OFFSET $3;
 -- name: vendors.recent_quotations
 -- The vendor's newest quotation lines: lines supplied through it on quotations that
 -- reached the client (every status but draft and cancelled), newest
--- quotation first. $2 = limit.
+-- quotation first, each with the offer it was sent with. $2 = limit.
 SELECT qi.id AS line_id, q.id AS quotation_id, q.quotation_no, q.created_at AS quotation_date, q.status,
        q.company_client_id AS client_id, q.company_client_name AS client_name, q.contact_name,
-       it.id AS item_id, COALESCE(it.name, qi.requested_name) AS item_name,
-       COALESCE(it.impa_code, qi.requested_impa) AS impa_code
+       it.id AS item_id, COALESCE(qi.offered_name, it.name, qi.requested_name) AS item_name,
+       COALESCE(CASE WHEN qi.offered_name IS NOT NULL THEN qi.offered_impa ELSE it.impa_code END,
+                qi.requested_impa) AS impa_code
 FROM quotation_items qi
 JOIN vendor_products vp ON vp.id = qi.vendor_product_id
 JOIN quotations q ON q.id = qi.quotation_id

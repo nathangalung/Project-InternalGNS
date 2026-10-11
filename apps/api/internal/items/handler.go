@@ -37,12 +37,31 @@ func NewHandler(repo *Repo) *Handler {
 }
 
 // renderSaveErr maps save failures.
-func renderSaveErr(w http.ResponseWriter, r *http.Request, err error) {
-	if errors.Is(err, ErrIMPATaken) {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"impaCode": msgIMPATaken}))
+// A taken IMPA code names its active holder, never self, the item being
+// saved (0 on create). A failed holder read still sends the refusal.
+func (h *Handler) renderSaveErr(w http.ResponseWriter, r *http.Request, err error, code *string, self int64) {
+	if !errors.Is(err, ErrIMPATaken) {
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
-	httperr.RenderDBErrCtx(r.Context(), w, err)
+	p := IMPATakenProblem{Error: httperr.Unprocessable(map[string]string{"impaCode": msgIMPATaken})}
+	p.Code = IMPATakenCode
+	holder, herr := h.repo.IMPAHolder(r.Context(), deref(code), self)
+	switch {
+	case herr == nil:
+		p.IMPAHolder = &holder
+	case !errors.Is(herr, ErrNotFound):
+		slog.WarnContext(r.Context(), "impa holder read failed", "error", herr.Error())
+	}
+	httperr.RenderAs(w, p.Status, p)
+}
+
+// deref reads an optional text.
+func deref(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
@@ -116,7 +135,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	userID := deps.CurrentUserID(r.Context())
 	item, err := h.repo.Create(r.Context(), req, userID)
 	if err != nil {
-		renderSaveErr(w, r, err)
+		h.renderSaveErr(w, r, err, req.IMPACode, 0)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusCreated, item)
@@ -146,10 +165,39 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		renderSaveErr(w, r, err)
+		h.renderSaveErr(w, r, err, req.IMPACode, id)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, item)
+}
+
+// Rename renames a product.
+// POST /items/{id}/rename. Every other field stays as stored. Documents
+// past draft keep their own copy of the name, so only drafts follow.
+func (h *Handler) Rename(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	var req RenameItemRequest
+	if !httpx.DecodeJSON(w, r, &req) {
+		return
+	}
+	name := strings.TrimSpace(req.Name)
+	if name == "" {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "Nama produk wajib diisi."}))
+		return
+	}
+	item, err := h.repo.Rename(r.Context(), id, name, deps.CurrentUserID(r.Context()))
+	switch {
+	case errors.Is(err, ErrNotFound):
+		httperr.Render(w, httperr.NotFound("item not found"))
+	case err != nil:
+		httperr.RenderDBErrCtx(r.Context(), w, err)
+	default:
+		httpx.WriteJSON(w, http.StatusOK, item)
+	}
 }
 
 func (h *Handler) AddVendor(w http.ResponseWriter, r *http.Request) {

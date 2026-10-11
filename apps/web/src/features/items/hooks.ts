@@ -144,6 +144,19 @@ export function useUpdateItem() {
   })
 }
 
+// Failures show in the dialog.
+export function useRenameItem() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, name }: { id: number; name: string }) => itemsApi.rename(id, name),
+    // Lists printing the item name, as after an update.
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.items.all })
+      qc.invalidateQueries({ queryKey: queryKeys.vendors.all })
+    },
+  })
+}
+
 export function useAddVendorToItem() {
   const qc = useQueryClient()
   return useMutation({

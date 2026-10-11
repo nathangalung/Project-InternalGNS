@@ -13,10 +13,10 @@ import (
 type pdfWord struct {
 	text       string
 	xMin, xMax float64
-	yMin       float64
+	yMin, yMax float64
 }
 
-var bboxWordRe = regexp.MustCompile(`<word xMin="([\d.]+)" yMin="([\d.]+)" xMax="([\d.]+)" yMax="[\d.]+">([^<]*)</word>`)
+var bboxWordRe = regexp.MustCompile(`<word xMin="([\d.]+)" yMin="([\d.]+)" xMax="([\d.]+)" yMax="([\d.]+)">([^<]*)</word>`)
 
 // firstPageWords reads page one's words.
 // It skips the test when pdftotext is missing.
@@ -36,7 +36,8 @@ func firstPageWords(t *testing.T, pdf string) []pdfWord {
 		xMin, _ := strconv.ParseFloat(m[1], 64)
 		yMin, _ := strconv.ParseFloat(m[2], 64)
 		xMax, _ := strconv.ParseFloat(m[3], 64)
-		words = append(words, pdfWord{text: m[4], xMin: xMin, xMax: xMax, yMin: yMin})
+		yMax, _ := strconv.ParseFloat(m[4], 64)
+		words = append(words, pdfWord{text: m[5], xMin: xMin, xMax: xMax, yMin: yMin, yMax: yMax})
 	}
 	return words
 }
