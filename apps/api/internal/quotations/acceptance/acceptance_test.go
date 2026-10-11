@@ -42,6 +42,9 @@ type scenarioState struct {
 	otherID   int64
 	requestID int64
 	contactID int64
+	// Offer snapshot fixtures.
+	snap  snapshotState
+	clean *testutil.Cleaner
 }
 
 func (s *scenarioState) reset() error {
@@ -356,9 +359,9 @@ func (s *scenarioState) listAtLeast(min int) error {
 	return nil
 }
 
-func initScenario(t *testing.T) func(*godog.ScenarioContext) {
+func initScenario(t *testing.T, clean *testutil.Cleaner) func(*godog.ScenarioContext) {
 	return func(sc *godog.ScenarioContext) {
-		state := &scenarioState{t: t, userID: defaultUserID}
+		state := &scenarioState{t: t, userID: defaultUserID, clean: clean}
 		sc.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 			state.last = nil
 			state.body = nil
@@ -371,6 +374,7 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		registerStatusSteps(sc, state)
 		registerEdgeSteps(sc, state)
 		registerRFQSteps(sc, state)
+		registerOfferSnapshotSteps(sc, state)
 
 		sc.Step(`^an authenticated user with id (\d+)$`, func(id int64) error { return state.authenticatedUser(id) })
 		sc.Step(`^the quotation domain is empty$`, state.emptyDomain)
@@ -410,9 +414,10 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 
 func TestQuotationFeatures(t *testing.T) {
 	testutil.RequireDB(t)
+	clean := testutil.NewCleaner(t)
 	roleTeardown(t)
 	suite := godog.TestSuite{
-		ScenarioInitializer: initScenario(t),
+		ScenarioInitializer: initScenario(t, clean),
 		Options: &godog.Options{
 			Format:   "pretty",
 			Paths:    []string{"features"},

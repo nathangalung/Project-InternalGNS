@@ -1,7 +1,8 @@
--- Canonical current body of fn_change_quotation_status (deployed by migration 00103).
+-- Canonical current body of fn_change_quotation_status (deployed by migration 00112).
 -- Validates the transition under a FOR UPDATE lock, blocks finalizing a
--- quotation with unpriced products (ERRCODE P0100), records history, and
--- creates the purchase order on acceptance.
+-- quotation with unpriced products (ERRCODE P0100), records history,
+-- freezes the offered names when the quotation leaves draft, and creates
+-- the purchase order on acceptance.
 CREATE OR REPLACE FUNCTION public.fn_change_quotation_status(p_quotation_id bigint, p_new_status text, p_user_id bigint, p_note text DEFAULT NULL::text)
  RETURNS void
  LANGUAGE plpgsql
@@ -116,6 +117,8 @@ BEGIN
   END IF;
 
   IF v_old_status = 'draft' THEN
+    -- The client receives the offer as it is now.
+    PERFORM fn_freeze_quotation_offer(p_quotation_id);
     DELETE FROM quotation_edit_locks WHERE quotation_id = p_quotation_id;
   END IF;
   PERFORM fn_quotation_notify(p_quotation_id, 'status', NULL, p_user_id);

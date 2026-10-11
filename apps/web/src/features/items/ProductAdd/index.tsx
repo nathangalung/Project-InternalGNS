@@ -607,6 +607,13 @@ function ProductAddDialog({
           if (data.satuan) handleChange("satuan", data.satuan)
           setShowProductNew(false)
         }}
+        onPickExisting={(item) => {
+          // The product holding the typed code, as a search pick.
+          handleChange("kodeImpaNama", formatKodeNama(item.kode, item.nama))
+          pickProduct(item)
+          setShowProductNew(false)
+        }}
+        renames={storeLinks}
       />
 
       <VendorAddModal

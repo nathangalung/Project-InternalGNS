@@ -1,4 +1,4 @@
--- Canonical current body of fn_create_quotation (deployed by migration 00107).
+-- Canonical current body of fn_create_quotation (deployed by migration 00112).
 CREATE OR REPLACE FUNCTION public.fn_create_quotation(p_company_client_id bigint, p_contact_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_created_by bigint, p_notes text DEFAULT NULL::text, p_status text DEFAULT 'draft'::text, p_ppn_enabled boolean DEFAULT true)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -164,6 +164,11 @@ BEGIN
   END IF;
 
   PERFORM fn_recompute_quotation_totals(v_quotation_id);
+
+  -- Created past draft, it is filed.
+  IF p_status <> 'draft' THEN
+    PERFORM fn_freeze_quotation_offer(v_quotation_id);
+  END IF;
 
   RETURN v_quotation_id;
 END;

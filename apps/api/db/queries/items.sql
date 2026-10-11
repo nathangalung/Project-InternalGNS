@@ -36,6 +36,25 @@ UPDATE items
 RETURNING id, name, impa_code, default_unit_id, description,
           is_active, created_at, updated_at, image_object_key;
 
+-- name: items.impa_holder
+-- The active item holding a code, never $2 itself (0 on create), by the
+-- expression uq_items_impa_code_active indexes.
+SELECT i.id, i.name, i.impa_code, i.default_unit_id
+FROM items i
+WHERE UPPER(i.impa_code) = UPPER(BTRIM($1::text)) AND i.is_active AND i.id <> $2::bigint
+ORDER BY i.id
+LIMIT 1;
+
+-- name: items.rename
+-- Renames an item, keeping every other field. Documents past draft keep
+-- their own copy of the name, so only drafts follow. No row back means
+-- the item is missing.
+UPDATE items i
+   SET name = $2, updated_by = $3, updated_at = NOW()
+ WHERE i.id = $1
+RETURNING id, name, impa_code, default_unit_id, description,
+          is_active, created_at, updated_at, image_object_key;
+
 -- name: items.images
 -- The cover first, then upload order.
 SELECT i.id, i.object_key, COALESCE(i.object_key = it.image_object_key, FALSE) AS is_cover

@@ -4,8 +4,9 @@ import * as itemsApi from "@/features/items/api"
 import * as unitsApi from "@/features/units/api"
 import { ApiError } from "@/lib/api-client"
 import { button, byRole, click, mount, settle, type, unmount } from "@/test/dom"
+import { problem } from "@/test/problem"
 import { throwingQueryClient } from "@/test/query"
-import type { ItemRow, ItemVendorRow } from "@/types/api"
+import type { ItemImpaHolder, ItemImpaTakenProblem, ItemRow, ItemVendorRow } from "@/types/api"
 import ProductAdd from "."
 import type { ProductAddInitialData } from "./helpers"
 
@@ -21,6 +22,14 @@ const RETIRED: ItemRow = { id: 2, name: "Ampelas Lama", isActive: false, ...STAM
 
 function field(label: string): HTMLInputElement {
   const lbl = [...document.querySelectorAll("label")].find((l) => l.textContent?.startsWith(label))
+  const el = document.getElementById(lbl?.htmlFor ?? "")
+  if (!(el instanceof HTMLInputElement)) throw new Error(`no field ${label}`)
+  return el
+}
+
+// Field whose label is exactly this.
+function exactField(label: string): HTMLInputElement {
+  const lbl = [...document.querySelectorAll("label")].find((l) => l.textContent?.trim() === label)
   const el = document.getElementById(lbl?.htmlFor ?? "")
   if (!(el instanceof HTMLInputElement)) throw new Error(`no field ${label}`)
   return el
@@ -157,5 +166,107 @@ describe("ProductAdd store link", () => {
     items.listVendors.mockResolvedValue([])
     await openLine({ ...line, itemId: 2, vendorProductId: undefined }, true)
     expect(hasAction()).toBe(false)
+  })
+})
+
+describe("ProductAdd taken IMPA code", () => {
+  const holder: ItemImpaHolder = {
+    id: 1,
+    name: "BAUT BJ",
+    impaCode: "330212",
+    defaultUnitId: 5,
+  }
+  const RENAMED_TO = "Baut Baja M10"
+
+  function takenBy(h: ItemImpaHolder): ApiError {
+    const fields = { impaCode: "Kode IMPA ini sudah dipakai produk aktif lain." }
+    const body: ItemImpaTakenProblem = {
+      ...problem(422, { fields, code: "impa_taken" }),
+      impaHolder: h,
+    }
+    return new ApiError(422, body, fields.impaCode)
+  }
+
+  // Tambah Produk Baru with the holder's code.
+  async function createTaken(h: ItemImpaHolder, storeLinks: boolean) {
+    items.create.mockRejectedValue(takenBy(h))
+    items.recommend.mockResolvedValue([])
+    items.listVendors.mockResolvedValue([])
+    items.priceHistory.mockResolvedValue([])
+    await mount(
+      <QueryClientProvider client={throwingQueryClient()}>
+        <ProductAdd open onOpenChange={vi.fn()} onSuccess={vi.fn()} storeLinks={storeLinks} />
+      </QueryClientProvider>,
+    )
+    await settle()
+    await focusProduct()
+    await click(button("Tambah Produk Baru"))
+    await type(exactField("Nama Produk *"), RENAMED_TO)
+    await type(exactField("Kode IMPA"), h.impaCode)
+    await click(button("Tambahkan"))
+    await settle()
+  }
+
+  const offer = () => field("Kode IMPA/Nama Produk *").value
+  const hasButton = (name: string) =>
+    [...document.querySelectorAll("button")].some((b) => b.textContent === name)
+  const renameLabel = `Ganti Nama Jadi “${RENAMED_TO}”`
+
+  it("names the holder under the code", async () => {
+    await createTaken(holder, true)
+    expect(document.body.textContent).toContain("Kode IMPA ini sudah dipakai “BAUT BJ”.")
+    expect(hasButton("Pakai Produk Ini")).toBe(true)
+  })
+
+  it("picks the holder as the offer, as a search pick does", async () => {
+    await createTaken(holder, true)
+    await click(button("Pakai Produk Ini"))
+    await settle()
+    expect(byRole("dialog").map((d) => d.querySelector("h2")?.textContent)).not.toContain(
+      "Tambah Produk Baru",
+    )
+    expect(offer()).toBe("330212 - BAUT BJ")
+    expect(items.recommend).toHaveBeenCalledWith([1], undefined)
+    expect(items.rename).not.toHaveBeenCalled()
+  })
+
+  it("renames the holder to the typed name, then picks it", async () => {
+    items.rename.mockResolvedValue({
+      ...ACTIVE,
+      name: RENAMED_TO,
+      impaCode: "330212",
+      defaultUnitId: 5,
+    })
+    await createTaken(holder, true)
+    await click(button(renameLabel))
+    await settle()
+    expect(items.rename).toHaveBeenCalledWith(1, RENAMED_TO)
+    expect(offer()).toBe(`330212 - ${RENAMED_TO}`)
+    expect(items.recommend).toHaveBeenCalledWith([1], undefined)
+  })
+
+  it("keeps the dialog with the reason when the rename fails", async () => {
+    items.rename.mockRejectedValue(new TypeError("Failed to fetch"))
+    await createTaken(holder, true)
+    await click(button(renameLabel))
+    await settle()
+    expect(document.body.textContent).toContain("Gagal mengganti nama produk.")
+    expect(hasButton("Pakai Produk Ini")).toBe(true)
+  })
+
+  // Filed documents keep their own copy of the name.
+  it.each<[string, boolean, boolean]>([
+    ["a catalog writer", true, true],
+    ["a role that may not write the catalog", false, false],
+  ])("offers the rename to %s", async (_name, storeLinks, rename) => {
+    await createTaken(holder, storeLinks)
+    expect(hasButton("Pakai Produk Ini")).toBe(true)
+    expect(hasButton(renameLabel)).toBe(rename)
+  })
+
+  it("drops the holder once the code changes", async () => {
+    await createTaken(holder, true)
+    await type(exactField("Kode IMPA"), "330213")
+    expect(hasButton("Pakai Produk Ini")).toBe(false)
   })
 })

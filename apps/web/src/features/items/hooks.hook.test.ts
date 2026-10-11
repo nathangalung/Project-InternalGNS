@@ -30,6 +30,7 @@ import {
   useItems,
   useItemVendors,
   useLineRecommendation,
+  useRenameItem,
   useSetItemCover,
   useUpdateItem,
 } from "./hooks"
@@ -157,6 +158,27 @@ describe("item writes", () => {
       result.current.mutateAsync({ id: 9, input: { name: "Baut", isActive: true } }),
     )
     expect(invalidated(qc, keys)).toEqual([detail, vendorDetail, vendorQuotations])
+  })
+
+  // A rename shows wherever the name does.
+  it("refreshes items and vendors after a rename", async () => {
+    m.rename.mockResolvedValue({ id: 9 } as never)
+    const { qc, result } = renderQueryHook(() => useRenameItem())
+    const quotations = queryKeys.quotations.list()
+    const keys = [detail, vendorDetail, quotations]
+    seed(qc, keys)
+    await settle(() => result.current.mutateAsync({ id: 9, name: "Baut Baja" }))
+    expect(m.rename).toHaveBeenCalledWith(9, "Baut Baja")
+    expect(invalidated(qc, keys)).toEqual([detail, vendorDetail])
+  })
+
+  // The dialog shows it inline.
+  it("leaves a failed rename to the dialog, without a toast", async () => {
+    m.rename.mockRejectedValue(new Error(""))
+    const { result } = renderQueryHook(() => useRenameItem())
+    await settle(() => result.current.mutateAsync({ id: 9, name: "B" }))
+    await until(() => expect(result.current.isError).toBe(true))
+    expect(toast.error).not.toHaveBeenCalled()
   })
 
   // The form shows it inline.

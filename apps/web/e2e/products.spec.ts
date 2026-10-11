@@ -5,9 +5,6 @@ import { expect, test } from "./support/seed"
 //
 // Create, link a vendor, filters and the read-only finance view.
 
-// Taken IMPA code copy.
-const IMPA_TAKEN = "Kode IMPA ini sudah dipakai produk aktif lain."
-
 type ItemVendor = {
   vendorId: number
   costPrice?: string
@@ -143,8 +140,12 @@ test("a taken IMPA code is reported once, on its field", async ({ page, seed }) 
   await page.getByRole("button", { name: "Simpan Perubahan" }).click()
 
   await expect(impa).toHaveAttribute("aria-invalid", "true")
-  await expect(page.getByText(IMPA_TAKEN, { exact: true })).toHaveCount(1)
+  await expect(page.getByText(`Kode IMPA ini sudah dipakai “${taken.name}”.`)).toHaveCount(1)
   await expect(page.getByRole("main").getByRole("alert")).toHaveCount(0)
+  // The holder is one click away.
+  await page.getByRole("link", { name: `“${taken.name}”` }).click()
+  await expect(page).toHaveURL(`/products/${taken.id}`)
+  await expect(page.getByRole("heading", { name: taken.name, level: 2 })).toBeVisible()
 })
 
 test("Tambah Produk shows a taken IMPA code on its field", async ({ page, seed }) => {
@@ -158,7 +159,13 @@ test("Tambah Produk shows a taken IMPA code on its field", async ({ page, seed }
   await modal.getByRole("button", { name: "Tambahkan" }).click()
 
   await expect(impa).toHaveAttribute("aria-invalid", "true")
-  await expect(page.getByText(IMPA_TAKEN, { exact: true })).toHaveCount(1)
+  await expect(modal.getByText(`Kode IMPA ini sudah dipakai “${taken.name}”.`)).toHaveCount(1)
+  await expect(modal.getByRole("link", { name: `“${taken.name}”` })).toHaveAttribute(
+    "href",
+    `/products/${taken.id}`,
+  )
+  // Picking it belongs to a document line, not the catalog.
+  await expect(modal.getByRole("button", { name: "Pakai Produk Ini" })).toHaveCount(0)
   await expect(modal.getByRole("alert")).toHaveCount(0)
   await modal.getByRole("button", { name: "Batal" }).click()
   await expect(modal).toBeHidden()

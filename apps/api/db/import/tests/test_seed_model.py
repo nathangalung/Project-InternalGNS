@@ -307,6 +307,20 @@ def test_the_seed_writes_the_invoice_status_and_paid_at() -> None:
     assert "'2026-10-04 09:00:00+07'" in sql
 
 
+def test_the_seed_freezes_every_offer_past_draft_without_an_edit() -> None:
+    sql = render(_invoiced("2026-09-04", "2026-10-04"))
+    freeze = "PERFORM fn_freeze_quotation_offer(id) FROM quotations WHERE status <> 'draft'"
+    off = "ALTER TABLE quotation_items DISABLE TRIGGER trg_quotation_items_updated_at;"
+    on = "ALTER TABLE quotation_items ENABLE TRIGGER trg_quotation_items_updated_at;"
+    assert (
+        sql.index("INSERT INTO quotation_items")
+        < sql.index(off)
+        < sql.index(freeze)
+        < sql.index(on)
+    )
+    assert sql.index(freeze) < sql.index("INSERT INTO purchase_order_items")
+
+
 # Lines and totals
 def test_totals_follow_fn_recompute_quotation_totals() -> None:
     lines = [

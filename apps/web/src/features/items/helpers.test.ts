@@ -1,11 +1,20 @@
 import { describe, expect, it } from "vitest"
 import { ApiError } from "@/lib/api-client"
 import { problem } from "@/test/problem"
-import type { AdvancedSearchHit, AdvancedSearchResponse, AdvancedSearchTier } from "@/types/api"
+import type {
+  AdvancedSearchHit,
+  AdvancedSearchResponse,
+  AdvancedSearchTier,
+  ItemImpaHolder,
+  ItemImpaTakenProblem,
+  ProblemDetail,
+} from "@/types/api"
 import {
   addVendorError,
   apiFieldError,
   findVendorByName,
+  IMPA_TAKEN_CODE,
+  impaTakenHolder,
   KATALOG_UNIT_SCAN_LIMIT,
   katalogRowsFromHits,
   katalogSearchPlan,
@@ -293,5 +302,23 @@ describe("wholeRupiah", () => {
     ["0.00", "0"],
   ])("%j", (input, want) => {
     expect(wholeRupiah(input)).toBe(want)
+  })
+})
+
+describe("impaTakenHolder", () => {
+  const holder: ItemImpaHolder = { id: 7, name: "Baut Baja", impaCode: "330212" }
+  const fields = { impaCode: "Kode IMPA ini sudah dipakai produk aktif lain." }
+  const taken = problem(422, { fields, code: IMPA_TAKEN_CODE })
+  const held = (body: ProblemDetail): ItemImpaTakenProblem => ({ ...body, impaHolder: holder })
+
+  it.each<[string, unknown, ItemImpaHolder | null]>([
+    ["the taken code with its holder", new ApiError(422, held(taken), ""), holder],
+    ["the taken code without a holder", new ApiError(422, taken, ""), null],
+    ["another 422", new ApiError(422, held(problem(422, { fields })), ""), null],
+    ["another status", new ApiError(409, held(problem(409, { code: IMPA_TAKEN_CODE })), ""), null],
+    ["no body", new ApiError(422, null, ""), null],
+    ["a network error", new TypeError("Failed to fetch"), null],
+  ])("%s", (_name, err, want) => {
+    expect(impaTakenHolder(err)).toEqual(want)
   })
 })

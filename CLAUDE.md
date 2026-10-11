@@ -326,6 +326,18 @@ shows a missing one as Belum ada No. PO.
   Revisi is not a manual move: Buat Revisi (`POST /quotations/{id}/revise`,
   offered when `canRevise`, i.e. from sent) clones a new draft version with
   `parent_id` and a `Rev.n` number and moves the original to revision.
+  A quotation keeps its offer as it left draft: every move out of draft
+  (and `fn_create_quotation` given a status past draft, and the historical
+  seed) runs `fn_freeze_quotation_offer`, which copies each line's offered
+  product name and IMPA code into `quotation_items.offered_name` and
+  `offered_impa` (00112, which froze every quotation already past draft).
+  The detail and the PDF (`quotations.get_items`), the vendor page's
+  Quotation Terakhir (`vendors.recent_quotations`) and the PO made on
+  acceptance (`fn_create_purchase_order`) read the frozen pair, so a catalog
+  rename or code change never restates a quotation the client received. A
+  draft, its Buat Revisi clone included, keeps both NULL and reads the
+  catalog live. `offered_name` marks a frozen line, so a product that had no
+  code when sent keeps none even after it gains one.
   The quotation PDF is dated at its last send, a draft to sent move, so
   the Validity it prints runs from the day the client received it; a draft
   prints today, and a row with no such move (legacy, or
@@ -400,7 +412,12 @@ shows a missing one as Belum ada No. PO.
   gate and the move run in one transaction (`Repo.GatedTransition`): the PO
   row is locked first, so the gate judges the status the move starts from,
   and the gate's client read holds the client row `FOR SHARE`, so a client
-  edit waits and DELIVERED copies the buyer the gate passed. Each PO
+  edit waits and DELIVERED copies the buyer the gate passed. Each PO line
+  stores its own name and code (`item_name`, `item_code`), copied from the
+  quotation's frozen offer, and the PO detail, delivery note and invoice
+  read only those, never the catalog (00112 filled the blank ones with what
+  they printed). Ubah PO saves the name and code each line sends and
+  refuses a product line without a name (422, `fn_update_po_items`). Each PO
   line stores its own supplier (`vendor_product_id`), copied from the quotation line only when
   that link is for the line's product, and the items list and the gate
   read it from the PO line. The line edit takes `vendorProductId` (a link
@@ -521,6 +538,25 @@ sees it.
 `StoreLink` shows it in a new tab on the product and vendor pages, under
 each offer on the quotation and PO detail, and beside the picked vendor in
 the quotation product dialog.
+
+One IMPA code belongs to one active product (`uq_items_impa_code_active`,
+stored trimmed and upper-cased). The import and Salin ke Offer match the
+code first, so a row whose code an active product holds reuses it whatever
+its name, and only an unknown code is auto-created, under the request text
+as typed. When that text was abbreviated or wrong, Tambah Produk Baru with
+the right name and the same code is refused: the 422 on `impaCode` (create
+and `PUT /items/{id}`) keeps its field message and carries `code:
+"impa_taken"` with `impaHolder` (`items.IMPATakenProblem`: id, name, code,
+default unit), never the item being saved. Inside a document's product
+dialog the refusal names the holder and offers Pakai Produk Ini, which
+picks it as a search hit does, and, for roles that write the catalog, Ganti
+Nama Jadi the typed name. That calls `POST /items/{id}/rename`, which
+changes the name only, wherever the product is used: a quotation past draft
+keeps its frozen offer, and PO and invoice lines their own name, so a
+rename reaches only the catalog and the drafts that read it, exactly as the
+product page Ubah (`PUT /items/{id}`) always has. Items carry no row
+version, so the rename takes no `If-Match`. The product page Ubah and the
+catalog's Tambah Produk link the holder's name to its page instead.
 
 ## Units
 

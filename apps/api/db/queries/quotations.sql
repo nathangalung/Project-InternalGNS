@@ -20,11 +20,14 @@ WHERE id = $1;
 SELECT email, phone FROM company_contacts WHERE id = $1 AND company_id = $2;
 
 -- name: quotations.get_items
+-- A line past draft shows the offer frozen when it left draft, a
+-- draft line the catalog as it is now.
 SELECT qi.id, qi.quotation_id, qi.line_number, qi.item_type,
        qi.requested_item_id, qi.requested_impa, qi.requested_name,
        qi.offered_item_id, qi.vendor_product_id,
-       oi.name       AS offered_name,
-       oi.impa_code  AS offered_impa,
+       COALESCE(qi.offered_name, oi.name) AS offered_name,
+       CASE WHEN qi.offered_name IS NOT NULL THEN qi.offered_impa
+            ELSE oi.impa_code END AS offered_impa,
        v.id          AS vendor_id,
        v.name        AS vendor_name,
        vp.product_url,

@@ -15,6 +15,7 @@ import type {
   ObjectKeyInput,
   PresignDownload,
   PresignUpload,
+  RenameItemInput,
   UpdateItemInput,
 } from "@/types/api"
 
@@ -52,6 +53,16 @@ export async function update(id: number, input: UpdateItemInput): Promise<ItemRo
     path: `/items/${id}`,
     method: "PUT",
     body: input,
+  })
+}
+
+// Rename a product.
+// Every other field stays. Filed documents keep their own name.
+export async function rename(id: number, name: string): Promise<ItemRow> {
+  return apiRequest<ItemRow>({
+    path: `/items/${id}/rename`,
+    method: "POST",
+    body: { name } satisfies RenameItemInput,
   })
 }
 

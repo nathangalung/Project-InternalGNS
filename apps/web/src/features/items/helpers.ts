@@ -4,6 +4,8 @@ import type {
   AdvancedSearchHit,
   AdvancedSearchResponse,
   AdvancedSearchTier,
+  ItemImpaHolder,
+  ItemImpaTakenProblem,
   ItemRow,
 } from "@/types/api"
 
@@ -129,6 +131,21 @@ export function apiFieldError(err: unknown, key: string): string | undefined {
   if (!(err instanceof ApiError)) return undefined
   const v = err.body?.fields?.[key]?.trim()
   return v ? v : undefined
+}
+
+// Taken IMPA code problem.
+export const IMPA_TAKEN_CODE = "impa_taken"
+
+// The active holder of a taken code.
+//
+// Create and update answer a taken IMPA code with a 422 tagged impa_taken
+// that names the product holding it. Null for any other failure, or when the
+// server could not read the holder.
+export function impaTakenHolder(err: unknown): ItemImpaHolder | null {
+  if (!(err instanceof ApiError) || err.status !== 422) return null
+  const body: Partial<ItemImpaTakenProblem> | null = err.body
+  if (body?.code !== IMPA_TAKEN_CODE) return null
+  return body.impaHolder ?? null
 }
 
 export type AddVendorError = { field?: string; form?: string }
