@@ -136,10 +136,6 @@ export function apiFieldError(err: unknown, key: string): string | undefined {
 // Taken IMPA code problem.
 export const IMPA_TAKEN_CODE = "impa_taken"
 
-// Mirrors the server's filed-rename refusal.
-export const RENAME_FILED_MESSAGE =
-  "Nama produk ini tidak bisa diganti karena sudah dipakai di quotation terkirim, PO, atau invoice."
-
 // The active holder of a taken code.
 //
 // Create and update answer a taken IMPA code with a 422 tagged impa_taken

@@ -306,7 +306,7 @@ describe("wholeRupiah", () => {
 })
 
 describe("impaTakenHolder", () => {
-  const holder: ItemImpaHolder = { id: 7, name: "Baut Baja", impaCode: "330212", renamable: true }
+  const holder: ItemImpaHolder = { id: 7, name: "Baut Baja", impaCode: "330212" }
   const fields = { impaCode: "Kode IMPA ini sudah dipakai produk aktif lain." }
   const taken = problem(422, { fields, code: IMPA_TAKEN_CODE })
   const held = (body: ProblemDetail): ItemImpaTakenProblem => ({ ...body, impaHolder: holder })

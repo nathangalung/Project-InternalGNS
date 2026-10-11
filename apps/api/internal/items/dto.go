@@ -108,22 +108,19 @@ type UpdateItemRequest struct {
 	IsActive      bool    `json:"isActive"`
 }
 
-// RenameItemRequest renames an unfiled product.
+// RenameItemRequest renames a product.
 // Every other field stays as stored.
 type RenameItemRequest struct {
 	Name string `json:"name"`
 }
 
 // IMPAHolder owns a taken code.
-// It is the active product the code belongs to. Renamable says whether
-// POST /items/{id}/rename takes it: no quotation past draft offers it and
-// no PO or invoice line carries it.
+// It is the active product the code belongs to.
 type IMPAHolder struct {
 	ID            int64  `db:"id"              json:"id"`
 	Name          string `db:"name"            json:"name"`
 	IMPACode      string `db:"impa_code"       json:"impaCode"`
 	DefaultUnitID *int16 `db:"default_unit_id" json:"defaultUnitId,omitempty"`
-	Renamable     bool   `db:"renamable"       json:"renamable"`
 }
 
 // IMPATakenProblem is the taken-code 422.

@@ -1,11 +1,6 @@
 import { useId, useState } from "react"
 import Modal from "@/components/shared/Modal"
-import {
-  ITEM_FIELDS,
-  type ItemField,
-  impaTakenHolder,
-  RENAME_FILED_MESSAGE,
-} from "@/features/items/helpers"
+import { ITEM_FIELDS, type ItemField, impaTakenHolder } from "@/features/items/helpers"
 import { useCreateItem, useRenameItem } from "@/features/items/hooks"
 import ImpaTakenText from "@/features/items/ImpaTakenText"
 import type { CatalogItem } from "@/features/items/ProductAdd/helpers"
@@ -223,7 +218,7 @@ export default function ProductCreateModal({
                   >
                     Pakai Produk Ini
                   </button>
-                  {renames && holder.renamable && (
+                  {renames && (
                     <button
                       type="button"
                       className={`${ui.btnOutline} max-w-full`}
@@ -234,9 +229,6 @@ export default function ProductCreateModal({
                     </button>
                   )}
                 </div>
-              )}
-              {onPickExisting && renames && !holder.renamable && (
-                <p className="m-0 text-dark-600">{RENAME_FILED_MESSAGE}</p>
               )}
               {renameError && (
                 <p role="alert" className="m-0 text-error">

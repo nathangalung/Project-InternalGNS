@@ -56,8 +56,8 @@ export async function update(id: number, input: UpdateItemInput): Promise<ItemRo
   })
 }
 
-// Rename an unfiled product.
-// Every other field stays; a product a filed document shows is a 409.
+// Rename a product.
+// Every other field stays. Filed documents keep their own name.
 export async function rename(id: number, name: string): Promise<ItemRow> {
   return apiRequest<ItemRow>({
     path: `/items/${id}/rename`,

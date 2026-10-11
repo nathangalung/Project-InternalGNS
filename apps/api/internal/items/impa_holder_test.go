@@ -15,8 +15,6 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-const msgRenameFiled = "Nama produk ini tidak bisa diganti karena sudah dipakai di quotation terkirim, PO, atau invoice."
-
 // decodeIMPATaken reads the taken-code 422.
 func decodeIMPATaken(t *testing.T, res *http.Response) items.IMPATakenProblem {
 	t.Helper()
@@ -55,7 +53,7 @@ func TestHandler_IMPATaken_NamesHolder(t *testing.T) {
 			require.NotNil(t, p.IMPAHolder)
 			assert.Equal(t, items.IMPAHolder{
 				ID: holder.ID, Name: holder.Name, IMPACode: strings.ToUpper(code),
-				DefaultUnitID: &unit, Renamable: true,
+				DefaultUnitID: &unit,
 			}, *p.IMPAHolder)
 		})
 	}
@@ -115,7 +113,6 @@ func TestRepo_IMPAHolder(t *testing.T) {
 			}
 			require.NoError(t, err)
 			assert.Equal(t, c.want, got.ID)
-			assert.True(t, got.Renamable)
 		})
 	}
 }
@@ -124,7 +121,6 @@ func TestRepo_IMPAHolder(t *testing.T) {
 type filedUse func(t *testing.T, ctx context.Context, tx pgx.Tx, d testutil.QuotationHistory)
 
 // onPOLine adds a PO line for the item.
-// The quotation stays a draft, so only the PO line blocks.
 func onPOLine(t *testing.T, ctx context.Context, tx pgx.Tx, d testutil.QuotationHistory) {
 	t.Helper()
 	var po int64
@@ -152,25 +148,38 @@ func onInvoiceLine(t *testing.T, ctx context.Context, tx pgx.Tx, d testutil.Quot
 	require.NoError(t, err)
 }
 
-// Only an unfiled product is renamed.
-// Quotation lines read the product name live, so a rename is refused once
-// a quotation past draft offers it, and on any PO or invoice line.
-func TestHandler_Rename_OnlyUnfiled(t *testing.T) {
+// filedNames reads the PO and invoice lines.
+func filedNames(t *testing.T, ctx context.Context, tx pgx.Tx, item int64) []string {
+	t.Helper()
+	rows, err := tx.Query(ctx, `
+		SELECT item_name FROM purchase_order_items WHERE offered_item_id = $1
+		UNION ALL
+		SELECT item_name FROM invoice_items WHERE offered_item_id = $1`, item)
+	require.NoError(t, err)
+	names, err := pgx.CollectRows(rows, pgx.RowTo[string])
+	require.NoError(t, err)
+	return names
+}
+
+// A product is renamed wherever used.
+// Every document past draft keeps its own copy of the name, so a rename
+// changes only the catalog and the drafts that read it, never a filed
+// PO or invoice line.
+func TestHandler_Rename_WhereverUsed(t *testing.T) {
 	cases := []struct {
 		name     string
 		statuses []string
 		use      filedUse
-		renamed  bool
 	}{
-		{"no quotation", nil, nil, true},
-		{"draft quotations only", []string{"draft", "draft"}, nil, true},
-		{"sent quotation", []string{"draft", "sent"}, nil, false},
-		{"accepted quotation", []string{"accepted"}, nil, false},
-		{"cancelled quotation", []string{"cancelled"}, nil, false},
-		{"rejected quotation", []string{"rejected"}, nil, false},
-		{"revision quotation", []string{"revision"}, nil, false},
-		{"PO line", []string{"draft"}, onPOLine, false},
-		{"invoice line", []string{"draft"}, onInvoiceLine, false},
+		{"no quotation", nil, nil},
+		{"draft quotations only", []string{"draft", "draft"}, nil},
+		{"sent quotation", []string{"draft", "sent"}, nil},
+		{"accepted quotation", []string{"accepted"}, nil},
+		{"cancelled quotation", []string{"cancelled"}, nil},
+		{"rejected quotation", []string{"rejected"}, nil},
+		{"revision quotation", []string{"revision"}, nil},
+		{"PO line", []string{"draft"}, onPOLine},
+		{"invoice line", []string{"draft"}, onInvoiceLine},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -183,27 +192,16 @@ func TestHandler_Rename_OnlyUnfiled(t *testing.T) {
 			if c.use != nil {
 				c.use(t, ctx, tx, d)
 			}
-			repo := items.NewRepo(tx, testutil.Store(t))
-			holder, err := repo.IMPAHolder(ctx, d.ItemImpa, 0)
-			require.NoError(t, err)
-			assert.Equal(t, c.renamed, holder.Renamable, "the 422 says whether the rename is offered")
+			filed := filedNames(t, ctx, tx, d.Item)
 
 			res := doJSON(t, mountedSrv(t, tx), http.MethodPost, "/items/"+itoa(d.Item)+"/rename",
 				items.RenameItemRequest{Name: "  Nama Benar " + d.ItemImpa + "  "})
 			defer res.Body.Close()
-			after, err := repo.GetByID(ctx, d.Item)
-			require.NoError(t, err)
-			if !c.renamed {
-				require.Equal(t, http.StatusConflict, res.StatusCode)
-				var p items.IMPATakenProblem
-				require.NoError(t, json.NewDecoder(res.Body).Decode(&p))
-				assert.Equal(t, msgRenameFiled, p.Detail)
-				assert.Equal(t, d.ItemName, after.Name, "a refused rename keeps the name")
-				return
-			}
 			require.Equal(t, http.StatusOK, res.StatusCode)
 			var got items.Item
 			require.NoError(t, json.NewDecoder(res.Body).Decode(&got))
+			after, err := items.NewRepo(tx, testutil.Store(t)).GetByID(ctx, d.Item)
+			require.NoError(t, err)
 			assert.Equal(t, "Nama Benar "+d.ItemImpa, got.Name)
 			assert.Equal(t, after, got)
 			require.NotNil(t, got.IMPACode)
@@ -213,6 +211,7 @@ func TestHandler_Rename_OnlyUnfiled(t *testing.T) {
 			require.NotNil(t, got.Description)
 			assert.Equal(t, desc, *got.Description)
 			assert.True(t, got.IsActive)
+			assert.Equal(t, filed, filedNames(t, ctx, tx, d.Item), "filed lines keep their names")
 		})
 	}
 }
@@ -244,26 +243,14 @@ func TestHandler_Rename_Refusals(t *testing.T) {
 	}
 }
 
-// Rename failures stay generic.
-// The rename and the follow-up existence read each fail as a 500.
-func TestHandler_Rename_Faults(t *testing.T) {
+// A failed rename stays generic.
+func TestHandler_Rename_Fault(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	d := testutil.SeedQuotationHistory(t, ctx, tx, "sent")
-	cases := []struct {
-		name      string
-		failAfter int
-	}{
-		{"rename", 0},
-		{"existence read", 1},
-	}
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
-			srv := mountedSrv(t, &testutil.CountingExec{Inner: tx, FailAfter: c.failAfter})
-			res := doJSON(t, srv, http.MethodPost, "/items/"+itoa(d.Item)+"/rename", items.RenameItemRequest{Name: "A"})
-			defer res.Body.Close()
-			assertInternalProblem(t, res)
-		})
-	}
+	srv := mountedSrv(t, &testutil.CountingExec{Inner: tx, FailAfter: 0})
+	res := doJSON(t, srv, http.MethodPost, "/items/"+itoa(d.Item)+"/rename", items.RenameItemRequest{Name: "A"})
+	defer res.Body.Close()
+	assertInternalProblem(t, res)
 }
 
 // An import reuses the holder.

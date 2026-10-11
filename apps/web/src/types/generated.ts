@@ -384,7 +384,6 @@ export type ItemImpaHolder = {
     name: string;
     impaCode: string;
     defaultUnitId?: number;
-    renamable: boolean;
 };
 
 // From items/dto.go

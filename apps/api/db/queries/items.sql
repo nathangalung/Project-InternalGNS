@@ -38,34 +38,20 @@ RETURNING id, name, impa_code, default_unit_id, description,
 
 -- name: items.impa_holder
 -- The active item holding a code, never $2 itself (0 on create), by the
--- expression uq_items_impa_code_active indexes. renamable is the guard of
--- items.rename: quotation lines read the item name live, so a quotation
--- past draft that offers it, or any PO or invoice line, keeps the name.
-SELECT i.id, i.name, i.impa_code, i.default_unit_id,
-       NOT (
-           EXISTS (SELECT 1 FROM quotation_items qi
-                   JOIN quotations q ON q.id = qi.quotation_id
-                   WHERE qi.offered_item_id = i.id AND q.status <> 'draft')
-        OR EXISTS (SELECT 1 FROM purchase_order_items poi WHERE poi.offered_item_id = i.id)
-        OR EXISTS (SELECT 1 FROM invoice_items ii WHERE ii.offered_item_id = i.id)
-       ) AS renamable
+-- expression uq_items_impa_code_active indexes.
+SELECT i.id, i.name, i.impa_code, i.default_unit_id
 FROM items i
 WHERE UPPER(i.impa_code) = UPPER(BTRIM($1::text)) AND i.is_active AND i.id <> $2::bigint
 ORDER BY i.id
 LIMIT 1;
 
 -- name: items.rename
--- Renames an item no filed document shows, keeping every other field. The
--- guard is the one items.impa_holder reports as renamable. No row back
--- means the item is missing or filed; items.get_by_id tells which.
+-- Renames an item, keeping every other field. Documents past draft keep
+-- their own copy of the name, so only drafts follow. No row back means
+-- the item is missing.
 UPDATE items i
    SET name = $2, updated_by = $3, updated_at = NOW()
  WHERE i.id = $1
-   AND NOT EXISTS (SELECT 1 FROM quotation_items qi
-                   JOIN quotations q ON q.id = qi.quotation_id
-                   WHERE qi.offered_item_id = i.id AND q.status <> 'draft')
-   AND NOT EXISTS (SELECT 1 FROM purchase_order_items poi WHERE poi.offered_item_id = i.id)
-   AND NOT EXISTS (SELECT 1 FROM invoice_items ii WHERE ii.offered_item_id = i.id)
 RETURNING id, name, impa_code, default_unit_id, description,
           is_active, created_at, updated_at, image_object_key;
 

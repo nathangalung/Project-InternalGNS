@@ -175,7 +175,6 @@ describe("ProductAdd taken IMPA code", () => {
     name: "BAUT BJ",
     impaCode: "330212",
     defaultUnitId: 5,
-    renamable: true,
   }
   const RENAMED_TO = "Baut Baja M10"
 
@@ -246,26 +245,23 @@ describe("ProductAdd taken IMPA code", () => {
     expect(items.recommend).toHaveBeenCalledWith([1], undefined)
   })
 
-  it("keeps the dialog with the reason when the rename is refused", async () => {
-    const detail =
-      "Nama produk ini tidak bisa diganti karena sudah dipakai di quotation terkirim, PO, atau invoice."
-    items.rename.mockRejectedValue(new ApiError(409, problem(409, { detail }), detail))
+  it("keeps the dialog with the reason when the rename fails", async () => {
+    items.rename.mockRejectedValue(new TypeError("Failed to fetch"))
     await createTaken(holder, true)
     await click(button(renameLabel))
     await settle()
-    expect(document.body.textContent).toContain(detail)
+    expect(document.body.textContent).toContain("Gagal mengganti nama produk.")
     expect(hasButton("Pakai Produk Ini")).toBe(true)
   })
 
-  it.each<[string, ItemImpaHolder, boolean, boolean, boolean]>([
-    ["a catalog writer, unfiled holder", holder, true, true, false],
-    ["a catalog writer, filed holder", { ...holder, renamable: false }, true, false, true],
-    ["a role that may not write the catalog", holder, false, false, false],
-  ])("offers the rename to %s", async (_name, h, storeLinks, rename, reason) => {
-    await createTaken(h, storeLinks)
+  // Filed documents keep their own copy of the name.
+  it.each<[string, boolean, boolean]>([
+    ["a catalog writer", true, true],
+    ["a role that may not write the catalog", false, false],
+  ])("offers the rename to %s", async (_name, storeLinks, rename) => {
+    await createTaken(holder, storeLinks)
     expect(hasButton("Pakai Produk Ini")).toBe(true)
     expect(hasButton(renameLabel)).toBe(rename)
-    expect(document.body.textContent?.includes("tidak bisa diganti")).toBe(reason)
   })
 
   it("drops the holder once the code changes", async () => {

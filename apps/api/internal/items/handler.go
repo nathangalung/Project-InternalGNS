@@ -32,9 +32,6 @@ const searchLayerCap = 5000
 // msgIMPATaken sits on impaCode.
 const msgIMPATaken = "Kode IMPA ini sudah dipakai produk aktif lain."
 
-// msgRenameFiled refuses a filed rename.
-const msgRenameFiled = "Nama produk ini tidak bisa diganti karena sudah dipakai di quotation terkirim, PO, atau invoice."
-
 func NewHandler(repo *Repo) *Handler {
 	return &Handler{repo: repo}
 }
@@ -174,9 +171,9 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, item)
 }
 
-// Rename renames an unfiled product.
-// POST /items/{id}/rename. Every other field stays as stored. Quotation
-// lines read the name live, so a product a filed document shows is a 409.
+// Rename renames a product.
+// POST /items/{id}/rename. Every other field stays as stored. Documents
+// past draft keep their own copy of the name, so only drafts follow.
 func (h *Handler) Rename(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
@@ -196,8 +193,6 @@ func (h *Handler) Rename(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case errors.Is(err, ErrNotFound):
 		httperr.Render(w, httperr.NotFound("item not found"))
-	case errors.Is(err, ErrItemFiled):
-		httperr.Render(w, httperr.Conflict(msgRenameFiled))
 	case err != nil:
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 	default:

@@ -305,24 +305,26 @@ test.describe("quotation wizard", () => {
       expect(rows.map((r) => r.id)).toEqual([holder])
     })
 
-    // A sent quotation prints the name live.
-    test("a holder on a sent quotation is only offered", async ({ page, seed }) => {
-      const { create, holder, wrong } = await refusedByHolder(page, seed)
+    // A sent quotation keeps the name it was sent with.
+    test("renaming a holder leaves its sent quotation as sent", async ({ page, seed }) => {
+      const { create, offer, impa, wrong, right, holder } = await refusedByHolder(page, seed)
       const client = await seed.client()
-      const filed = { id: holder, name: wrong, impaCode: "" }
+      const filed = { id: holder, name: wrong, impaCode: impa }
       const sent = await seed.quotation({
         client,
         lines: [{ item: filed, qty: 1, price: 150_000 }],
       })
       await seed.send(sent.id)
-      await create.getByRole("button", { name: "Tambahkan" }).click()
-      await expect(
-        create.getByText(
-          "Nama produk ini tidak bisa diganti karena sudah dipakai di quotation terkirim, PO, atau invoice.",
-        ),
-      ).toBeVisible()
-      await expect(create.getByRole("button", { name: /^Ganti Nama Jadi/ })).toHaveCount(0)
-      await expect(create.getByRole("button", { name: "Pakai Produk Ini" })).toBeVisible()
+      await create.getByRole("button", { name: `Ganti Nama Jadi “${right}”` }).click()
+      await expect(create).toBeHidden()
+      await expect(offer).toHaveValue(`${impa} - ${right}`)
+
+      type Line = { itemType: string; offeredName?: string; offeredImpa?: string }
+      const detail = await api<{ items: Line[] }>("GET", `/quotations/${sent.id}`)
+      const offers = detail.items
+        .filter((l) => l.itemType === "product")
+        .map((l) => [l.offeredName, l.offeredImpa])
+      expect(offers).toEqual([[wrong, impa]])
     })
   })
 
