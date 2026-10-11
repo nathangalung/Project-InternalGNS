@@ -141,6 +141,26 @@ Feature: Invoice lifecycle
     Then the invoice status is "draft"
     And the invoice is the Pengganti of the cancelled invoice
 
+  Scenario Outline: An invoice keeps the payment terms the client agreed
+    Given a delivered purchase order with payment terms "<terms>"
+    When the user reads the invoice by quotation
+    Then the invoice payment terms read "<terms>"
+    And the invoice is due <days> days after its date
+    When the user transitions the invoice through "sent,cancelled"
+    And the user replaces the invoice
+    Then the response status is 201
+    When the user reads the invoice by quotation
+    Then the invoice is the Pengganti of the cancelled invoice
+    And the invoice payment terms read "<terms>"
+    And the invoice is due <days> days after its date
+
+    Examples:
+      | terms                                | days |
+      | 7 days                               | 7    |
+      | Net 45 days                          | 45   |
+      | 14 hari                              | 14   |
+      | Payment in Advance (Before Delivery) | 30   |
+
   Scenario: Only a cancelled invoice can be replaced
     Given a delivered purchase order
     When the user transitions the invoice through "sent"

@@ -150,6 +150,12 @@ func (h *ExportHandler) buildData(det InvoiceDetail, items []InvoiceItem) export
 		dueDate = det.DueDate.Format("2 January 2006")
 	}
 
+	// An invoice made before the snapshot prints the configured terms.
+	terms := h.settings.PaymentTerms
+	if det.PaymentTerms != nil {
+		terms = *det.PaymentTerms
+	}
+
 	return exportData{
 		InvoiceNo:         pdfgen.LatexEscape(det.InvoiceNo),
 		ReplacesInvoiceNo: pdfgen.LatexEscape(pdfgen.StrDeref(det.ReplacesInvoiceNo)),
@@ -170,7 +176,7 @@ func (h *ExportHandler) buildData(det InvoiceDetail, items []InvoiceItem) export
 		DPPNilaiLain:      pdfgen.FormatIDRCents(pdfgen.StrDeref(det.DppNilaiLain)),
 		PPN:               pdfgen.FormatIDRCents(pdfgen.StrDeref(det.PpnAmount)),
 		Total:             pdfgen.FormatIDRCents(pdfgen.StrDeref(det.Total)),
-		PaymentTerms:      pdfgen.LatexEscape(h.settings.PaymentTerms),
+		PaymentTerms:      pdfgen.LatexEscape(terms),
 		BankName:          pdfgen.LatexEscape(h.settings.BankName),
 		BankAccountNo:     pdfgen.LatexEscape(h.settings.BankAccountNo),
 		BankAccountName:   pdfgen.LatexEscape(h.settings.BankAccountNm),

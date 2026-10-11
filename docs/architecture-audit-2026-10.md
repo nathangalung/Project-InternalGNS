@@ -74,7 +74,9 @@ closed with fault-path tests, never by lowering a threshold.
   role, or remember the price?
 - **Invoice payment terms** print `PDF_PAYMENT_TERMS` (Net 30 days) while
   the quotation prints its own terms. Should the invoice follow the
-  quotation?
+  quotation? Answered yes: migration 00110 copies the quotation's terms
+  onto each new invoice and sets its due date from a day count; an
+  invoice without terms still prints the setting.
 - **Quotation export** labels the after-discount figure "Subtotal" and has
   no PPN column now that PPN is optional.
 - **The import tool's unit map** (`db/import/unit_map.py`) disagrees with

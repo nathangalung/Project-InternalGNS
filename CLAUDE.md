@@ -414,6 +414,16 @@ shows a missing one as Belum ada No. PO.
   DELIVERED); only a Pengganti, which copies the client as it is then,
   changes it. Coretax refuses an invoice without a valid NPWP with that
   Pengganti route.
+  The same way it keeps its quotation's payment terms (`payment_terms`,
+  trimmed, NULL when blank, 00110), which the PDF prints as PAYMENT TERMS
+  and the detail shows as Syarat Pembayaran; an invoice without terms (its
+  quotation named none, or it was made before 00110) prints
+  `PDF_PAYMENT_TERMS`, so a reprint never changes. A new invoice
+  or Pengganti falls due on its date plus the day count the terms name
+  (`fn_terms_days`: 1 to 365, an optional Net, then day, days or hari, any
+  case or spacing, so "7 days", "Net 45 days", "14 hari", "30days"), else
+  30 days ("Payment in Advance", "TRANSFER - CASH", "30 hari kerja", none).
+  The web never computes a due date.
   An invoice without PPN (`ppn_enabled` false, see convention 9) has no
   faktur: its Coretax XML is a 422 and the bulk XLSX leaves it out.
   Country, email and TKU stay live. Terlambat is derived, never set: `fn_invoice_effective_status`
@@ -776,7 +786,9 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    change all three together. The quotation addresses To, Attn, Email and
    Contact No.; the delivery note To and Address only, with no vessel or
    attention; the invoice its Client, NPWP and Address, with no vessel.
-   The terms and the signature sit clear of the table. All three keep 1.8 cm
+   The terms and the signature sit clear of the table, and a long terms
+   value wraps whole words inside its block (`tabularx`,
+   `TestLatexExports_LongPaymentTermsWraps`). All three keep 1.8 cm
    side margins and every table spans exactly the text width (`\LTleft`,
    `\LTright` 0pt, the text columns sharing what the fixed ones leave), so
    the letterhead, party block, table rules and signature start and end on
@@ -833,7 +845,8 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    so a fractional quantity still adds up. Do not restate already-filed
    invoices: their amounts are never recomputed, and a wrong invoice is
    cancelled and replaced by a Pengganti. Only the invoice and due dates stay
-   editable, and only until the invoice is paid or cancelled.
+   editable, and only until the invoice is paid or cancelled; the due date
+   the payment terms set is only where it starts.
 
 ## Tooling and style
 

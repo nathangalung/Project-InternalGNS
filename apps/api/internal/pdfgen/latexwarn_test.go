@@ -183,7 +183,7 @@ func invoiceData(items []map[string]any) map[string]any {
 		"CompanyAddress": partyAddress, "InvoiceNo": "INV-26400393/GNS/IV/2026",
 		"PONo": "PO-778/2026", "PODate": "20 April 2026", "InvoiceDate": "30 April 2026", "DueDate": "30 May 2026",
 		"Items": withSen, "TotalProduk": "Rp48.200.002,25", "Diskon": "Rp2.410.000,11", "DiscountPct": "5", "DPP": "Rp45.790.002,14",
-		"DPPNilaiLain": "Rp41.974.168,63", "PPN": "Rp5.036.900,24", "Total": "Rp50.826.902,38", "PaymentTerms": "30 hari",
+		"DPPNilaiLain": "Rp41.974.168,63", "PPN": "Rp5.036.900,24", "Total": "Rp50.826.902,38", "PaymentTerms": "Payment in Advance (Before Delivery)",
 		"BankName": "Bank Mandiri", "BankAccountNo": "123-00-4567890", "BankAccountName": "PT Global Niaga Sakti", "DateLine": "Jakarta, 30 April 2026", "SignerName": "Director",
 	}
 }

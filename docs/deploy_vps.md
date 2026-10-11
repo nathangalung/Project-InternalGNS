@@ -290,6 +290,7 @@ PDF_QUOTATION_SIGNER_NAME=<quotation signer, the scanned Signature.jpg is theirs
 PDF_BANK_NAME=BCA
 PDF_BANK_ACCOUNT_NO=<the account clients transfer into>
 PDF_BANK_ACCOUNT_NM=PT GLOBAL NIAGA SAKTI
+# Printed only on an invoice without its quotation's terms (none given, or made before 00110).
 PDF_PAYMENT_TERMS=Pembayaran 30 hari
 ```
 

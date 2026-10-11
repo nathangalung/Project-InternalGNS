@@ -837,6 +837,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner, roles *roleUsers) fun
 		sc.Step(`^the invoice (offers|withholds) a replacement$`, state.invoiceReplaceable)
 		sc.Step(`^the user acts as (finance|operational|superadmin)$`, state.actAs)
 		state.registerFilingSteps(sc)
+		state.registerTermsSteps(sc)
 	}
 }
 

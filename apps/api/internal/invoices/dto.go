@@ -55,18 +55,21 @@ type Invoice struct {
 // role forbids.
 type InvoiceDetail struct {
 	Invoice
-	VesselName          *string    `db:"vessel_name"          json:"vesselName,omitempty"`
-	PoNumber            *string    `db:"po_number"            json:"poNumber,omitempty"`
-	PoDate              *time.Time `db:"po_date"              json:"poDate,omitempty"`
-	CompanyEmail        *string    `db:"company_email"        json:"companyEmail,omitempty"`
-	CompanyCountryCode  string     `db:"company_country_code" json:"companyCountryCode"`
-	CompanyTkuID        *string    `db:"company_tku_id"       json:"companyTkuId,omitempty"`
-	ContactName         *string    `db:"contact_name"         json:"contactName,omitempty"`
-	ContactEmail        *string    `db:"contact_email"        json:"contactEmail,omitempty"`
-	ContactPhone        *string    `db:"contact_phone"        json:"contactPhone,omitempty"`
-	ReplacesInvoiceID   *int64     `db:"replaces_invoice_id"    json:"replacesInvoiceId,omitempty"`
-	ReplacesInvoiceNo   *string    `db:"replaces_invoice_no"    json:"replacesInvoiceNo,omitempty"`
-	ReplacedByInvoiceID *int64     `db:"replaced_by_invoice_id" json:"replacedByInvoiceId,omitempty"`
+	VesselName         *string    `db:"vessel_name"          json:"vesselName,omitempty"`
+	PoNumber           *string    `db:"po_number"            json:"poNumber,omitempty"`
+	PoDate             *time.Time `db:"po_date"              json:"poDate,omitempty"`
+	CompanyEmail       *string    `db:"company_email"        json:"companyEmail,omitempty"`
+	CompanyCountryCode string     `db:"company_country_code" json:"companyCountryCode"`
+	CompanyTkuID       *string    `db:"company_tku_id"       json:"companyTkuId,omitempty"`
+	ContactName        *string    `db:"contact_name"         json:"contactName,omitempty"`
+	ContactEmail       *string    `db:"contact_email"        json:"contactEmail,omitempty"`
+	ContactPhone       *string    `db:"contact_phone"        json:"contactPhone,omitempty"`
+	// Terms the quotation agreed.
+	// Snapshotted by fn_create_invoice; nil on invoices made before 00110.
+	PaymentTerms        *string `db:"payment_terms"        json:"paymentTerms,omitempty"`
+	ReplacesInvoiceID   *int64  `db:"replaces_invoice_id"    json:"replacesInvoiceId,omitempty"`
+	ReplacesInvoiceNo   *string `db:"replaces_invoice_no"    json:"replacesInvoiceNo,omitempty"`
+	ReplacedByInvoiceID *int64  `db:"replaced_by_invoice_id" json:"replacedByInvoiceId,omitempty"`
 
 	// Moves, Pengganti and timeline.
 	AllowedTransitions []Transition         `db:"-" json:"allowedTransitions"`

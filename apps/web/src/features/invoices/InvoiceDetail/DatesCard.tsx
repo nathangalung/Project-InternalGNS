@@ -89,6 +89,11 @@ export default function DatesCard({ inv, pending, onSave, readOnly = false }: Da
             </button>
           )}
         </div>
+        {inv.paymentTerms && (
+          <p className="text-caption text-dark-700">
+            Syarat Pembayaran: <span className="font-semibold">{inv.paymentTerms}</span>
+          </p>
+        )}
         <p
           id={`${id}-hint`}
           className={`text-caption ${!locked && problem ? "text-[#B91C1C]" : "text-dark-500"}`}

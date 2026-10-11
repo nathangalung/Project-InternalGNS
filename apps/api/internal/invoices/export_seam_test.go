@@ -34,9 +34,9 @@ func (h *ExportHandler) PDFTotalsForTest(det InvoiceDetail, items []InvoiceItem)
 
 // PDFHeaderForTest is the header.
 type PDFHeaderForTest struct {
-	VesselName, PONo, PODate, CompanyNPWP, InvoiceDate, DueDate string
-	CompanyName, CompanyAddress, ReplacesInvoiceNo              string
-	Cancelled                                                   bool
+	VesselName, PONo, PODate, CompanyNPWP, InvoiceDate, DueDate  string
+	CompanyName, CompanyAddress, ReplacesInvoiceNo, PaymentTerms string
+	Cancelled                                                    bool
 }
 
 // Header block as printed.
@@ -47,5 +47,6 @@ func (h *ExportHandler) PDFHeaderForTest(det InvoiceDetail, items []InvoiceItem)
 		CompanyNPWP: d.CompanyNPWP, InvoiceDate: d.InvoiceDate, DueDate: d.DueDate,
 		CompanyName: d.CompanyName, CompanyAddress: d.CompanyAddress,
 		ReplacesInvoiceNo: d.ReplacesInvoiceNo, Cancelled: d.Cancelled,
+		PaymentTerms: d.PaymentTerms,
 	}
 }
