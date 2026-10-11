@@ -3,125 +3,76 @@
 from __future__ import annotations
 
 import re
+from functools import cache
+from pathlib import Path
 
-# Maps lowercased raw → canonical CODE in DB units.code.
-# Codes match seed file 01_master.sql. An explicit "OTH" means the unit
-# was reviewed and has no closer master code.
-UNIT_MAP: dict[str, str] = {
-    # PCS family
-    "pcs": "PCS",
-    "pc": "PCS",
-    "buah": "PCS",
-    "batang": "PCS",
-    # SET family
-    "set": "SET",
-    # BOX family
-    "box": "BOX",
-    "dus": "BOX",
-    "duz": "BOX",
-    "ctn": "BOX",
-    "case": "BOX",
-    # BTL
-    "btl": "BTL",
-    "botol": "BTL",
-    # KG family
-    "kg": "KG",
-    "kgs": "KG",
-    # Meter family
-    "m": "MTR",
-    "mtr": "MTR",
-    "mtrs": "MTR",
-    "meter": "MTR",
-    "meters": "MTR",
-    # Roll family
-    "roll": "RLS",
-    "rls": "RLS",
-    "rol": "RLS",
-    "coil": "RLS",
-    "coils": "RLS",
-    # Spool
-    "spl": "SPL",
-    "spool": "SPL",
-    # Unit / Each
-    "unit": "UNIT",
-    "ea": "UNIT",
-    "each": "UNIT",
-    # Packet
-    "pkt": "PKT",
-    "pck": "PKT",
-    "pack": "PKT",
-    "pac": "PKT",
-    "bungkus": "PKT",
-    # TIN / Can
-    "tin": "TIN",
-    "can": "TIN",
-    "kaleng": "TIN",
-    # Tube
-    "tub": "TUB",
-    # Pair
-    "prs": "PRS",
-    "pair": "PRS",
-    "pairs": "PRS",
-    "pr": "PRS",
-    "pasang": "PRS",
-    # Dozen
-    "doz": "DOZ",
-    "dozen": "DOZ",
-    "dzn": "DOZ",
-    "dosen": "DOZ",
-    "lusin": "DOZ",
-    # Liter
-    "liter": "LTR",
-    "litre": "LTR",
-    "ltr": "LTR",
-    # Sheet / Lembar
-    "sheet": "LBR",
-    "sht": "LBR",
-    "lbr": "LBR",
-    "lembar": "LBR",
-    # Length: one bar or pipe as cut (6 m pipe, 4 m bar), not a metre
-    "lgh": "LGH",
-    "length": "LGH",
-    # Carton
-    "c/t": "BOX",
-    "carton": "BOX",
-    # Coil
-    "c/l": "RLS",
-    # Day
-    "hari": "DAY",
-    # Reviewed, no closer master code
-    "bag": "OTH",
-    "sack": "OTH",
-    "karung": "OTH",
-    "vol": "OTH",
-    "pail": "OTH",
-    "ream": "OTH",
-    "rim": "OTH",
-    "strip": "OTH",
-    "stip": "OTH",
-    "tab": "OTH",
-    "caps": "OTH",
-    "amp": "OTH",  # ampoule, not ampere
-    "cyl": "OTH",
-    "pad": "OTH",
-    "m3": "OTH",
-    "ball": "OTH",
-    "gen": "OTH",
-    "titik": "OTH",
+# The app's vocabulary: units and their aliases (migrations 00109 and
+# 00111), read from the master seed so the import and the app resolve every
+# spelling to the same unit.
+MASTER_SEED = Path(__file__).resolve().parent.parent / "seeds" / "01_master.sql"
+
+# Reviewed spellings with no unit of their own, checked before the seed.
+# Each is OTH on purpose: the old files use "amp" for an ampoule, never the
+# Ampere code, and the rest name containers the catalog has no unit for.
+IMPORT_OVERRIDES: dict[str, str] = {
+    "AMP": "OTH",
+    "BAG": "OTH",
+    "SACK": "OTH",
+    "KARUNG": "OTH",
+    "VOL": "OTH",
+    "REAM": "OTH",
+    "RIM": "OTH",
+    "STRIP": "OTH",
+    "STIP": "OTH",
+    "TAB": "OTH",
+    "CAPS": "OTH",
+    "CYL": "OTH",
+    "PAD": "OTH",
+    "M3": "OTH",
+    "BALL": "OTH",
+    "GEN": "OTH",
+    "TITIK": "OTH",
 }
+
+_CODE_ROW = re.compile(r"\(\s*(?:\d+|NULL)\s*,\s*'([^']+)'\s*,\s*'[^']*'\s*,\s*'UM\.\d{4}'\s*\)")
+_ALIAS_ROW = re.compile(r"\('([^']+)',\s*'([^']+)'\)")
+
+
+def normalize(raw: str) -> str:
+    """Normalise as fn_unit_text does."""
+    text = re.sub(r"\s+", " ", raw.replace("\xa0", " ").upper()).strip()
+    return re.sub(r"\.+$", "", text).strip()
+
+
+@cache
+def seed_vocabulary() -> tuple[frozenset[str], dict[str, str]]:
+    """Unit codes and alias to code, from the master seed."""
+    sql = MASTER_SEED.read_text(encoding="utf-8")
+    units_block = sql.split("CREATE TEMP TABLE seed_units", 1)[1].split(";", 2)[1]
+    codes = frozenset(_CODE_ROW.findall(units_block))
+    alias_block = sql.split("-- Unit aliases", 1)[1].split("ON CONFLICT", 1)[0]
+    aliases = {normalize(alias): code for alias, code in _ALIAS_ROW.findall(alias_block)}
+    if not codes or not aliases:
+        raise RuntimeError(f"no units or aliases read from {MASTER_SEED}")
+    return codes, aliases
 
 
 def map_unit(raw: str | None) -> tuple[str | None, bool]:
     """Return (code, mapped). An unknown unit falls back to OTH, unmapped."""
     if raw is None:
         return None, False
-    key = str(raw).replace("\xa0", " ").strip().lower()
+    key = normalize(str(raw))
     # A count typed with the unit ("1 PCS") names the unit all the same.
     key = re.sub(r"^\d+(?:[.,]\d+)?\s+", "", key)
     if not key:
         return None, False
-    if key in UNIT_MAP:
-        return UNIT_MAP[key], True
+    if key in IMPORT_OVERRIDES:
+        return IMPORT_OVERRIDES[key], True
+    codes, aliases = seed_vocabulary()
+    if key in codes:
+        return key, True
+    if key in aliases:
+        return aliases[key], True
     return "OTH", False
 
 

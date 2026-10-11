@@ -2,8 +2,10 @@ package migrations_test
 
 import (
 	"context"
+	"maps"
 	"os"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"testing"
@@ -17,6 +19,9 @@ import (
 )
 
 const unitAliasesMigration = "00109_unit_aliases.sql"
+
+// The import spellings that 00111 adds.
+const importAliasesMigration = "00111_unit_aliases_import.sql"
 
 // unitID reads one unit by code.
 func unitID(ctx context.Context, t *testing.T, tx pgx.Tx, code string) int16 {
@@ -211,7 +216,8 @@ func aliasPairs(t *testing.T, sql string) []string {
 // The master seed and the test seed carry the migration's aliases, so a
 // fresh database resolves what production resolves.
 func TestMigration00109_SeedsCarryAliases(t *testing.T) {
-	want := aliasPairs(t, upSQL(t, unitAliasesMigration))
+	want := append(aliasPairs(t, upSQL(t, unitAliasesMigration)), aliasPairs(t, upSQL(t, importAliasesMigration))...)
+	sort.Strings(want)
 	require.NotEmpty(t, want)
 
 	seed, err := os.ReadFile("../seeds/01_master.sql")
@@ -226,4 +232,37 @@ func TestMigration00109_SeedsCarryAliases(t *testing.T) {
 	require.NoError(t, err)
 	sort.Strings(got)
 	assert.Equal(t, want, got, "test database")
+}
+
+// Import spellings resolve.
+// Down removes the ten and Up brings each back on its unit, normalised by
+// the guard, so the import and the app agree on C/T, DZN, C/L and M.
+func TestMigration00111_ImportAliases(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	want := map[string]string{
+		"M": "MTR", "DUZ": "BOX", "CTN": "BOX", "CASE": "BOX", "CARTON": "BOX",
+		"C/T": "BOX", "DZN": "DOZ", "DOSEN": "DOZ", "C/L": "COIL", "PAIRS": "PRS",
+	}
+	read := func() map[string]string {
+		rows, err := tx.Query(ctx, `
+			SELECT a.alias, u.code FROM unit_aliases a JOIN units u ON u.id = a.unit_id
+			WHERE a.alias = ANY($1)`, slices.Collect(maps.Keys(want)))
+		require.NoError(t, err)
+		got := map[string]string{}
+		for rows.Next() {
+			var alias, code string
+			require.NoError(t, rows.Scan(&alias, &code))
+			got[alias] = code
+		}
+		require.NoError(t, rows.Err())
+		return got
+	}
+
+	_, err := tx.Exec(ctx, downSQL(t, importAliasesMigration))
+	require.NoError(t, err)
+	assert.Empty(t, read())
+
+	_, err = tx.Exec(ctx, upSQL(t, importAliasesMigration))
+	require.NoError(t, err)
+	assert.Equal(t, want, read())
 }

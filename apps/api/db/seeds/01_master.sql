@@ -82,7 +82,8 @@ ON CONFLICT (code) DO NOTHING;
 
 -- Unit aliases
 -- Other spellings of a unit, stored normalised (fn_unit_text). The same
--- list as migration 00109, which a test keeps in step.
+-- list as migrations 00109 and 00111, which a test keeps in step. The
+-- import (db/import/unit_map.py) reads this list too.
 INSERT INTO unit_aliases (alias, unit_id)
 SELECT v.alias, u.id
 FROM (VALUES
@@ -92,21 +93,22 @@ FROM (VALUES
   ('SETS', 'SET'),
   ('SHEET', 'LBR'), ('SHEETS', 'LBR'), ('SHT', 'LBR'), ('LEMBAR', 'LBR'),
   ('BOXES', 'BOX'), ('BX', 'BOX'), ('KOTAK', 'BOX'), ('DUS', 'BOX'),
-  ('DZ', 'DOZ'), ('DOZEN', 'DOZ'), ('LUSIN', 'DOZ'), ('LSN', 'DOZ'),
+  ('DUZ', 'BOX'), ('CTN', 'BOX'), ('CASE', 'BOX'), ('CARTON', 'BOX'), ('C/T', 'BOX'),
+  ('DZ', 'DOZ'), ('DOZEN', 'DOZ'), ('LUSIN', 'DOZ'), ('LSN', 'DOZ'), ('DZN', 'DOZ'), ('DOSEN', 'DOZ'),
   ('KGS', 'KG'), ('KILO', 'KG'), ('KILOGRAM', 'KG'),
   ('G', 'GR'), ('GRAM', 'GR'),
   ('L', 'LTR'), ('LT', 'LTR'), ('LITER', 'LTR'), ('LITRE', 'LTR'), ('LITERS', 'LTR'),
-  ('METER', 'MTR'), ('METRE', 'MTR'), ('METERS', 'MTR'), ('MTRS', 'MTR'),
+  ('METER', 'MTR'), ('METRE', 'MTR'), ('METERS', 'MTR'), ('MTRS', 'MTR'), ('M', 'MTR'),
   ('CAN', 'TIN'), ('CANS', 'TIN'), ('KALENG', 'TIN'), ('TINS', 'TIN'),
   ('TUBE', 'TUB'), ('TUBES', 'TUB'),
   ('PACK', 'PKT'), ('PACKS', 'PKT'), ('PAX', 'PKT'), ('PAC', 'PKT'), ('PCK', 'PKT'),
   ('PK', 'PKT'), ('PAK', 'PKT'), ('PACKET', 'PKT'), ('PACKETS', 'PKT'), ('BUNGKUS', 'PKT'),
   ('BOTTLE', 'BTL'), ('BOTTLES', 'BTL'), ('BOTOL', 'BTL'),
-  ('PR', 'PRS'), ('PAIR', 'PRS'), ('PASANG', 'PRS'), ('PSG', 'PRS'),
+  ('PR', 'PRS'), ('PAIR', 'PRS'), ('PAIRS', 'PRS'), ('PASANG', 'PRS'), ('PSG', 'PRS'),
   ('ROLL', 'RLS'), ('ROLLS', 'RLS'), ('RL', 'RLS'), ('ROL', 'RLS'), ('GULUNG', 'RLS'),
   ('SPOOL', 'SPL'), ('SPOOLS', 'SPL'),
   ('LENGTH', 'LGH'), ('LENGTHS', 'LGH'), ('BATANG', 'LGH'), ('BTG', 'LGH'),
-  ('COILS', 'COIL'),
+  ('COILS', 'COIL'), ('C/L', 'COIL'),
   ('PAILS', 'PAIL'), ('EMBER', 'PAIL'),
   ('DRUMS', 'DRUM'), ('DRM', 'DRUM'),
   ('DAYS', 'DAY'), ('HARI', 'DAY'),

@@ -37,7 +37,7 @@ func SeedMasterIfMissing(ctx context.Context, pool *pgxpool.Pool) error {
 
 		`SELECT setval('units_id_seq', GREATEST(40, (SELECT COALESCE(MAX(id), 1) FROM units)), true)`,
 
-		// Same list as migration 00109, kept in step by its test.
+		// Same list as migrations 00109 and 00111, kept in step by their test.
 		`INSERT INTO unit_aliases (alias, unit_id)
 		 SELECT v.alias, u.id
 		 FROM (VALUES
@@ -46,20 +46,21 @@ func SeedMasterIfMissing(ctx context.Context, pool *pgxpool.Pool) error {
 		   ('UNITS','UNIT'),('SETS','SET'),
 		   ('SHEET','LBR'),('SHEETS','LBR'),('SHT','LBR'),('LEMBAR','LBR'),
 		   ('BOXES','BOX'),('BX','BOX'),('KOTAK','BOX'),('DUS','BOX'),
-		   ('DZ','DOZ'),('DOZEN','DOZ'),('LUSIN','DOZ'),('LSN','DOZ'),
+		   ('DUZ','BOX'),('CTN','BOX'),('CASE','BOX'),('CARTON','BOX'),('C/T','BOX'),
+		   ('DZ','DOZ'),('DOZEN','DOZ'),('LUSIN','DOZ'),('LSN','DOZ'),('DZN','DOZ'),('DOSEN','DOZ'),
 		   ('KGS','KG'),('KILO','KG'),('KILOGRAM','KG'),('G','GR'),('GRAM','GR'),
 		   ('L','LTR'),('LT','LTR'),('LITER','LTR'),('LITRE','LTR'),('LITERS','LTR'),
-		   ('METER','MTR'),('METRE','MTR'),('METERS','MTR'),('MTRS','MTR'),
+		   ('METER','MTR'),('METRE','MTR'),('METERS','MTR'),('MTRS','MTR'),('M','MTR'),
 		   ('CAN','TIN'),('CANS','TIN'),('KALENG','TIN'),('TINS','TIN'),
 		   ('TUBE','TUB'),('TUBES','TUB'),
 		   ('PACK','PKT'),('PACKS','PKT'),('PAX','PKT'),('PAC','PKT'),('PCK','PKT'),
 		   ('PK','PKT'),('PAK','PKT'),('PACKET','PKT'),('PACKETS','PKT'),('BUNGKUS','PKT'),
 		   ('BOTTLE','BTL'),('BOTTLES','BTL'),('BOTOL','BTL'),
-		   ('PR','PRS'),('PAIR','PRS'),('PASANG','PRS'),('PSG','PRS'),
+		   ('PR','PRS'),('PAIR','PRS'),('PAIRS','PRS'),('PASANG','PRS'),('PSG','PRS'),
 		   ('ROLL','RLS'),('ROLLS','RLS'),('RL','RLS'),('ROL','RLS'),('GULUNG','RLS'),
 		   ('SPOOL','SPL'),('SPOOLS','SPL'),
 		   ('LENGTH','LGH'),('LENGTHS','LGH'),('BATANG','LGH'),('BTG','LGH'),
-		   ('COILS','COIL'),('PAILS','PAIL'),('EMBER','PAIL'),('DRUMS','DRUM'),('DRM','DRUM'),
+		   ('COILS','COIL'),('C/L','COIL'),('PAILS','PAIL'),('EMBER','PAIL'),('DRUMS','DRUM'),('DRM','DRUM'),
 		   ('DAYS','DAY'),('HARI','DAY'),('HOUR','HR'),('HOURS','HR'),('JAM','HR')
 		 ) v(alias, code)
 		 JOIN units u ON u.code = v.code

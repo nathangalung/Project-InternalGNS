@@ -529,7 +529,8 @@ A unit (Satuan) keeps the short code every document prints and exports
 to 33 carry the DJP Coretax names and codes UM.0001 to UM.0033; the
 ship-supply units map to UM.0033 and are named by the long form of their
 code (TIN Tin, PKT Packet, RLS Rolls), one name with no slash. Every other
-way a unit is written is an alias in `unit_aliases` (migration 00109):
+way a unit is written is an alias in `unit_aliases` (migrations 00109 and
+00111):
 PC, PIECES and EA for PCS, CAN for TIN, SHEET and LEMBAR for LBR, PACK for
 PKT. An alias is stored normalised by `fn_unit_text` (upper case, one
 space between words, no trailing dot), and triggers refuse an alias equal
@@ -545,7 +546,10 @@ unit or alias comes in a migration that names units by code in JOIN form
 (a database without master data skips it), and the same rows go into
 `db/seeds/01_master.sql` and `testutil.SeedMasterIfMissing`; a migration
 test keeps the three alias lists equal. The server reads no unit text, so
-nothing there resolves one.
+nothing there resolves one. The historical import (`db/import/unit_map.py`)
+reads the codes and aliases from `01_master.sql`, so it resolves a spelling
+as the app does; only its reviewed `IMPORT_OVERRIDES` come first, each to
+OTH (AMP in the old files is an ampoule, never Ampere).
 
 ## Kas Lain
 
