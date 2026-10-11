@@ -43,19 +43,19 @@ func write(w io.Writer, sheetName string, headers []string, rows [][]string, mon
 
 	// Every cell sits mid-row.
 	middle := &excelize.Alignment{Vertical: "center"}
-	bold, err := f.NewStyle(&excelize.Style{Font: &excelize.Font{Bold: true}, Alignment: middle})
-	if err != nil {
-		return err
-	}
-	text, err := f.NewStyle(&excelize.Style{Alignment: middle})
-	if err != nil {
-		return err
-	}
 	numFmt := "#,##0.00"
-	amount, err := f.NewStyle(&excelize.Style{CustomNumFmt: &numFmt, Alignment: middle})
-	if err != nil {
-		return err
+	styles := []*excelize.Style{
+		{Font: &excelize.Font{Bold: true}, Alignment: middle},
+		{Alignment: middle},
+		{CustomNumFmt: &numFmt, Alignment: middle},
 	}
+	ids := make([]int, len(styles))
+	for i, s := range styles {
+		if ids[i], err = f.NewStyle(s); err != nil {
+			return err
+		}
+	}
+	bold, text, amount := ids[0], ids[1], ids[2]
 	isMoney := make(map[int]bool, len(money))
 	for _, c := range money {
 		isMoney[c] = true
