@@ -4,8 +4,9 @@ import StoreLink from "@/components/shared/StoreLink"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useMe } from "@/features/auth/hooks"
 import AddVendorToItemModal from "@/features/items/AddVendorToItemModal"
-import { ITEM_FIELDS, vendorInitials } from "@/features/items/helpers"
+import { ITEM_FIELDS, impaTakenHolder, vendorInitials } from "@/features/items/helpers"
 import { useItemVendors, useUpdateItem } from "@/features/items/hooks"
+import ImpaTakenText from "@/features/items/ImpaTakenText"
 import ProductGallery from "@/features/items/ProductGallery"
 import ProductPhoto from "@/features/items/ProductPhoto"
 import ProductQuotations from "@/features/items/ProductQuotations"
@@ -15,7 +16,7 @@ import { formErrors } from "@/lib/form-errors"
 import { formatDate, formatRupiah } from "@/lib/format"
 import { canWriteCatalog, seesCost } from "@/lib/rbac"
 import { ui } from "@/lib/ui"
-import type { ItemRow, ItemVendorRow } from "@/types/api"
+import type { ItemImpaHolder, ItemRow, ItemVendorRow } from "@/types/api"
 
 type ProductDetailProps = {
   product: ItemRow
@@ -57,6 +58,8 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
   const [isActive, setIsActive] = useState(product.isActive)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  // Product already holding the typed code
+  const [impaHolder, setImpaHolder] = useState<ItemImpaHolder | null>(null)
   const [showAddVendor, setShowAddVendor] = useState(false)
   const [editingVendor, setEditingVendor] = useState<ItemVendorRow | null>(null)
 
@@ -94,10 +97,12 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
     setIsActive(product.isActive)
     setFieldErrors({})
     setSubmitError(null)
+    setImpaHolder(null)
   }
 
   const handleSubmit = async () => {
     setSubmitError(null)
+    setImpaHolder(null)
     const errs: Record<string, string> = {}
     if (!name.trim()) errs.name = "Nama produk wajib diisi."
     if (Object.keys(errs).length > 0) {
@@ -121,6 +126,7 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
       const split = formErrors(err, ITEM_FIELDS, "Gagal menyimpan perubahan.")
       setFieldErrors((p) => ({ ...p, ...split.fields }))
       setSubmitError(split.banner)
+      setImpaHolder(impaTakenHolder(err))
     }
   }
 
@@ -251,6 +257,7 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                   onChange={(e) => {
                     setImpa(e.target.value.replace(/\D/g, ""))
                     setFieldErrors((p) => ({ ...p, impaCode: "" }))
+                    setImpaHolder(null)
                   }}
                   className={`${inputBase} ${
                     fieldErrors.impaCode ? "border-[#DC2626]" : "border-transparent"
@@ -258,7 +265,11 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                 />
                 {fieldErrors.impaCode && (
                   <div id={impaErrorId} className="mt-1.5 text-[12px] text-[#DC2626]">
-                    {fieldErrors.impaCode}
+                    {impaHolder ? (
+                      <ImpaTakenText holder={impaHolder} linked />
+                    ) : (
+                      fieldErrors.impaCode
+                    )}
                   </div>
                 )}
               </div>

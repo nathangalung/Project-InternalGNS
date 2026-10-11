@@ -1,11 +1,20 @@
 import { useId, useState } from "react"
 import Modal from "@/components/shared/Modal"
-import { ITEM_FIELDS, type ItemField } from "@/features/items/helpers"
-import { useCreateItem } from "@/features/items/hooks"
+import {
+  ITEM_FIELDS,
+  type ItemField,
+  impaTakenHolder,
+  RENAME_FILED_MESSAGE,
+} from "@/features/items/helpers"
+import { useCreateItem, useRenameItem } from "@/features/items/hooks"
+import ImpaTakenText from "@/features/items/ImpaTakenText"
+import type { CatalogItem } from "@/features/items/ProductAdd/helpers"
 import { useUnits } from "@/features/units/hooks"
 import UnitCombobox from "@/features/units/UnitCombobox"
+import { errorMessage } from "@/lib/errors"
 import { formErrors } from "@/lib/form-errors"
 import { ui } from "@/lib/ui"
+import type { ItemImpaHolder } from "@/types/api"
 
 type ProductCreateModalData = {
   id: number
@@ -19,12 +28,18 @@ type ProductCreateModalProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess?: (data: ProductCreateModalData) => void
+  // Takes the product holding a typed IMPA code instead
+  onPickExisting?: (item: CatalogItem) => void
+  // The role writes the catalog, so it may rename that product
+  renames?: boolean
 }
 
 export default function ProductCreateModal({
   open,
   onOpenChange,
   onSuccess,
+  onPickExisting,
+  renames = false,
 }: ProductCreateModalProps) {
   const [nama, setNama] = useState("")
   const [kode, setKode] = useState("")
@@ -33,9 +48,13 @@ export default function ProductCreateModal({
   const [aktif, setAktif] = useState(true)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<ItemField, string>>>({})
+  // Product already holding the typed code
+  const [holder, setHolder] = useState<ItemImpaHolder | null>(null)
+  const [renameError, setRenameError] = useState<string | null>(null)
 
   const { data: units } = useUnits()
   const createItem = useCreateItem()
+  const renameItem = useRenameItem()
   const nameId = useId()
   const nameErrorId = useId()
   const impaId = useId()
@@ -46,11 +65,14 @@ export default function ProductCreateModal({
   if (!open) return null
 
   const isValid = nama.trim().length > 0
+  const busy = createItem.isPending || renameItem.isPending
 
   async function handleSubmit() {
     if (!isValid) return
     setSubmitError(null)
     setFieldErrors({})
+    setHolder(null)
+    setRenameError(null)
     const unit = units?.find((u) => u.code === satuan)
     try {
       const created = await createItem.mutateAsync({
@@ -66,6 +88,34 @@ export default function ProductCreateModal({
       const split = formErrors(err, ITEM_FIELDS, "Gagal menyimpan produk.")
       setFieldErrors(split.fields)
       setSubmitError(split.banner)
+      setHolder(impaTakenHolder(err))
+    }
+  }
+
+  // Offer the existing product instead.
+  function pickExisting(item: CatalogItem) {
+    onPickExisting?.(item)
+    reset()
+    onOpenChange(false)
+  }
+
+  function pickHolder(h: ItemImpaHolder) {
+    pickExisting({ id: h.id, kode: h.impaCode, nama: h.name, defaultUnitId: h.defaultUnitId })
+  }
+
+  // Give the holder the typed name.
+  async function renameHolder(h: ItemImpaHolder) {
+    setRenameError(null)
+    try {
+      const renamed = await renameItem.mutateAsync({ id: h.id, name: nama.trim() })
+      pickExisting({
+        id: renamed.id,
+        kode: renamed.impaCode ?? h.impaCode,
+        nama: renamed.name,
+        defaultUnitId: renamed.defaultUnitId,
+      })
+    } catch (err) {
+      setRenameError(errorMessage(err, "Gagal mengganti nama produk."))
     }
   }
 
@@ -82,6 +132,8 @@ export default function ProductCreateModal({
     setAktif(true)
     setSubmitError(null)
     setFieldErrors({})
+    setHolder(null)
+    setRenameError(null)
   }
 
   return (
@@ -96,19 +148,14 @@ export default function ProductCreateModal({
             </span>
           )}
           <div className="flex gap-4 max-sm:w-full max-sm:*:flex-1 max-sm:*:px-4">
-            <button
-              type="button"
-              className={ui.modalCancel}
-              onClick={handleCancel}
-              disabled={createItem.isPending}
-            >
+            <button type="button" className={ui.modalCancel} onClick={handleCancel} disabled={busy}>
               Batal
             </button>
             <button
               type="button"
               className={ui.modalSubmit}
               onClick={handleSubmit}
-              disabled={!isValid || createItem.isPending}
+              disabled={!isValid || busy}
             >
               {createItem.isPending ? "Menyimpan..." : "Tambahkan"}
             </button>
@@ -157,12 +204,52 @@ export default function ProductCreateModal({
             onChange={(e) => {
               setKode(e.target.value.replace(/\D/g, ""))
               setFieldErrors((p) => ({ ...p, impaCode: undefined }))
+              setHolder(null)
+              setRenameError(null)
             }}
           />
-          {fieldErrors.impaCode && (
-            <p id={impaErrorId} className="text-[12px] text-error">
-              {fieldErrors.impaCode}
-            </p>
+          {holder ? (
+            <div id={impaErrorId} className="flex flex-col gap-2 text-[12px]">
+              <p className="m-0 text-error">
+                <ImpaTakenText holder={holder} linked={!onPickExisting} />
+              </p>
+              {onPickExisting && (
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className={ui.btnOutline}
+                    onClick={() => pickHolder(holder)}
+                    disabled={busy}
+                  >
+                    Pakai Produk Ini
+                  </button>
+                  {renames && holder.renamable && (
+                    <button
+                      type="button"
+                      className={`${ui.btnOutline} max-w-full`}
+                      onClick={() => void renameHolder(holder)}
+                      disabled={busy || !isValid}
+                    >
+                      <span className="truncate">Ganti Nama Jadi “{nama.trim()}”</span>
+                    </button>
+                  )}
+                </div>
+              )}
+              {onPickExisting && renames && !holder.renamable && (
+                <p className="m-0 text-dark-600">{RENAME_FILED_MESSAGE}</p>
+              )}
+              {renameError && (
+                <p role="alert" className="m-0 text-error">
+                  {renameError}
+                </p>
+              )}
+            </div>
+          ) : (
+            fieldErrors.impaCode && (
+              <p id={impaErrorId} className="text-[12px] text-error">
+                {fieldErrors.impaCode}
+              </p>
+            )
           )}
         </div>
 
