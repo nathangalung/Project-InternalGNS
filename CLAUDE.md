@@ -847,7 +847,9 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    the letterhead, party block, table rules and signature start and end on
    the same two lines; `TestLatexExports_TableMeetsTextEdges` renders the
    page and checks the outer rules against the text edges. Text cells do
-   not hyphenate. The quotation prints
+   not hyphenate. Every item table cell is centred vertically in its row
+   (`m` columns, while the party and terms blocks stay top-aligned), and
+   `TestLatexExports_TableCellsCentred` holds it. The quotation prints
    `PDF_QUOTATION_SIGNER_NAME` under the scanned `Signature.jpg`; the
    invoice prints `PDF_SIGNER_NAME` over blank space, signed by hand.
    No printed text carries a dash, a minus or a semicolon (the font's

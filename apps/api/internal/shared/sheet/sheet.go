@@ -15,6 +15,7 @@ import (
 // A bold header row comes first, then one row per record. The money
 // columns, by zero-based index, are written as numbers with a thousands
 // format so Excel can sum and sort them; every other cell stays text.
+// Every cell is centred vertically, so a tall row keeps its cells level.
 func Write(sheetName string, headers []string, rows [][]string, money ...int) ([]byte, error) {
 	var buf bytes.Buffer
 	if err := write(&buf, sheetName, headers, rows, money...); err != nil {
@@ -40,16 +41,21 @@ func write(w io.Writer, sheetName string, headers []string, rows [][]string, mon
 		_ = f.DeleteSheet("Sheet1")
 	}
 
-	bold, err := f.NewStyle(&excelize.Style{Font: &excelize.Font{Bold: true}})
-	if err != nil {
-		return err
-	}
-
+	// Every cell sits mid-row.
+	middle := &excelize.Alignment{Vertical: "center"}
 	numFmt := "#,##0.00"
-	amount, err := f.NewStyle(&excelize.Style{CustomNumFmt: &numFmt})
-	if err != nil {
-		return err
+	styles := []*excelize.Style{
+		{Font: &excelize.Font{Bold: true}, Alignment: middle},
+		{Alignment: middle},
+		{CustomNumFmt: &numFmt, Alignment: middle},
 	}
+	ids := make([]int, len(styles))
+	for i, s := range styles {
+		if ids[i], err = f.NewStyle(s); err != nil {
+			return err
+		}
+	}
+	bold, text, amount := ids[0], ids[1], ids[2]
 	isMoney := make(map[int]bool, len(money))
 	for _, c := range money {
 		isMoney[c] = true
@@ -68,6 +74,7 @@ func write(w io.Writer, sheetName string, headers []string, rows [][]string, mon
 				continue
 			}
 			_ = f.SetCellStr(sheetName, cell, val)
+			_ = f.SetCellStyle(sheetName, cell, cell, text)
 		}
 	}
 
