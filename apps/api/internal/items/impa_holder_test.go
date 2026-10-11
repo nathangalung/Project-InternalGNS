@@ -203,6 +203,9 @@ func TestHandler_Rename_WhereverUsed(t *testing.T) {
 			after, err := items.NewRepo(tx, testutil.Store(t)).GetByID(ctx, d.Item)
 			require.NoError(t, err)
 			assert.Equal(t, "Nama Benar "+d.ItemImpa, got.Name)
+			// JSON and the repo place the same instant in different zones.
+			assert.True(t, after.CreatedAt.Equal(got.CreatedAt) && after.UpdatedAt.Equal(got.UpdatedAt))
+			after.CreatedAt, after.UpdatedAt = got.CreatedAt, got.UpdatedAt
 			assert.Equal(t, after, got)
 			require.NotNil(t, got.IMPACode)
 			assert.True(t, strings.EqualFold(d.ItemImpa, *got.IMPACode), "the code stays")
