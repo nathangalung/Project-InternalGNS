@@ -2,7 +2,8 @@ Feature: Quotation edges and access
   The quotation API refuses bad input with a clear 4xx, keeps what an
   edit sends, prints the delivery terms, scopes nested resources to their
   quotation, is read only for the finance head, and keeps the operational
-  input role off status moves and selling totals.
+  input role off status moves, selling totals and a priced line's
+  Tidak Ditawarkan.
 
   Background:
     Given an authenticated user with id 1
@@ -110,3 +111,27 @@ Feature: Quotation edges and access
       | operational | GET    | /quotations                    | 200  |
       | operational | GET    | /quotations/{id}               | 200  |
       | superadmin  | GET    | /quotations/{id}/requests      | 200  |
+
+  # Tidak Ditawarkan stores harga jual 0, and operational input sets no
+  # selling figure: it marks only a line no head has priced yet.
+  Scenario: Operational input leaves a priced line on offer
+    Given an existing draft quotation
+    When a "operational_input" user marks the first line Tidak Ditawarkan
+    Then the response status is 403
+    And the problem detail mentions "Minta kepala operasional untuk menandai Tidak Ditawarkan"
+    And the first line is offered at harga jual "10000.00"
+
+  Scenario: Operational input marks an unpriced line and puts it back
+    Given the user creates a quotation with an unpriced product line
+    When a "operational_input" user marks the first line Tidak Ditawarkan
+    Then the response status is 204
+    And the first line is not offered at harga jual "0.00"
+    When a "operational_input" user puts the first line back on offer
+    Then the response status is 204
+    And the first line is offered at harga jual "0.00"
+
+  Scenario: The operational head marks a priced line Tidak Ditawarkan
+    Given an existing draft quotation
+    When a "operational" user marks the first line Tidak Ditawarkan
+    Then the response status is 204
+    And the first line is not offered at harga jual "0.00"

@@ -58,6 +58,11 @@ SELECT
     q.grand_total::text       AS grand_total,
     q.subtotal::text          AS subtotal,
     q.total_discount::text    AS total_discount,
+    -- The export's breakdown, as the PDF prints it
+    q.total_produk::text      AS total_produk,
+    (q.total - q.total_produk)::text AS shipping_total,
+    q.ppn_amount::text        AS ppn_amount,
+    q.ppn_enabled,
     COALESCE(c.total_harga_beli, '0') AS total_harga_beli,
     c.product_count,
     q.created_at
@@ -199,9 +204,17 @@ SELECT fn_quotation_update_header(
     $1, $2, $3, $4, $5, $6::numeric(5,2), $7, $8, $9::numeric(15,2), $10, $11, $12::boolean
 );
 
+-- name: quotations.lock_status
+-- Locks the quotation row as fn_quotation_lock_draft does, so a line read
+-- after it sees every committed price.
+SELECT status FROM quotations WHERE id = $1 FOR UPDATE;
+
 -- name: quotations.stored_line_price
--- What a save keeps for a role that sets no price.
-SELECT selling_price::text FROM quotation_items WHERE quotation_id = $1 AND id = $2;
+-- The harga jual a line save keeps for a role that sets no price, and
+-- whether a head priced it. Its own statement after quotations.lock_status,
+-- so it reads past a price committed while the lock waited.
+SELECT selling_price::text, selling_price > 0
+FROM quotation_items WHERE quotation_id = $1 AND id = $2;
 
 -- name: quotations.stored_header_prices
 -- The discount and the shipping charge a header save keeps.

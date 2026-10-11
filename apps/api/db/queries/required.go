@@ -125,6 +125,7 @@ var RequiredKeys = []string{
 	"quotations.list_count_base",
 	"quotations.list_revisions",
 	"quotations.lock",
+	"quotations.lock_status",
 	"quotations.qir_create",
 	"quotations.qir_delete",
 	"quotations.qir_get",

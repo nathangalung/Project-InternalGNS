@@ -90,6 +90,53 @@ test.describe("as operational input", () => {
     await expect(dialog.getByLabel("Harga Jual Satuan *")).toHaveCount(0)
     await expect(dialog.getByRole("button", { name: "Riwayat Harga Jual" })).toHaveCount(0)
   })
+
+  // Tidak Ditawarkan stores harga jual 0, so a line a head priced stays on
+  // offer for this role, and the refusal names who marks it instead.
+  test("a priced line stays on offer and an unpriced one toggles", async ({ page, seed }) => {
+    const client = await seed.client()
+    const vendor = await seed.vendor()
+    const priced = await seed.item({ vendor, cost: 60_000 })
+    const unpriced = await seed.item({ vendor, cost: 40_000 })
+    const q = await seed.quotation({
+      client,
+      lines: [
+        { item: priced, qty: 2, price: 100_000, cost: 60_000 },
+        { item: unpriced, qty: 1, price: 0, cost: 40_000 },
+      ],
+    })
+    const lines = async () =>
+      (await seed.getQuotation(q.id)).items
+        .filter((it) => it.itemType === "product")
+        .map((it) => [it.isAvailable, it.sellingPrice])
+
+    await page.goto(`/quotations/${q.id}/edit`)
+    const next = page.getByRole("button", { name: "Lanjut" })
+    await expect(next).toBeEnabled()
+    await next.click()
+
+    await page.getByRole("button", { name: "Tidak Ditawarkan produk 1" }).click()
+    await expect(
+      page.getByText(
+        "Baris ini sudah diberi harga jual. Minta kepala operasional untuk menandai Tidak Ditawarkan.",
+      ),
+    ).toBeVisible()
+    await expect(page.getByRole("button", { name: "Tidak Ditawarkan produk 1" })).toBeVisible()
+
+    await page.getByRole("button", { name: "Tidak Ditawarkan produk 2" }).click()
+    await expect(page.getByRole("button", { name: "Tawarkan produk 2" })).toBeVisible()
+    await expect.poll(lines).toEqual([
+      [true, "100000.00"],
+      [false, "0.00"],
+    ])
+
+    await page.getByRole("button", { name: "Tawarkan produk 2" }).click()
+    await expect(page.getByRole("button", { name: "Tidak Ditawarkan produk 2" })).toBeVisible()
+    await expect.poll(lines).toEqual([
+      [true, "100000.00"],
+      [true, "0.00"],
+    ])
+  })
 })
 
 test.describe("as finance input", () => {
