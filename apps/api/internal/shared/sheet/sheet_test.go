@@ -133,3 +133,35 @@ func TestWrite_MoneyColumnsAreNumbers(t *testing.T) {
 	assert.NotContains(t, []excelize.CellType{excelize.CellTypeUnset, excelize.CellTypeNumber}, kind,
 		"other columns stay text")
 }
+
+// Cells centre vertically.
+// A wrapped cell grows its row, so every header and record cell sits on
+// the row's middle; the bold header and the money format stay.
+func TestWrite_CellsCentredVertically(t *testing.T) {
+	raw, err := Write("Data", []string{"No", "Total"}, [][]string{{"Q-1", "1234567.89"}, {"Q-2", "n/a"}}, 1)
+	require.NoError(t, err)
+	f, err := excelize.OpenReader(bytes.NewReader(raw))
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = f.Close() })
+	style := func(cell string) *excelize.Style {
+		styleID, err := f.GetCellStyle("Data", cell)
+		require.NoError(t, err)
+		s, err := f.GetStyle(styleID)
+		require.NoError(t, err)
+		return s
+	}
+
+	for _, cell := range []string{"A1", "B1", "A2", "B2", "A3", "B3"} {
+		s := style(cell)
+		require.NotNil(t, s.Alignment, cell)
+		assert.Equal(t, "center", s.Alignment.Vertical, cell)
+		assert.Empty(t, s.Alignment.Horizontal, "%s keeps its horizontal alignment", cell)
+		assert.False(t, s.Alignment.WrapText, "%s keeps its wrap", cell)
+	}
+	require.NotNil(t, style("A1").Font)
+	assert.True(t, style("A1").Font.Bold, "header stays bold")
+	require.NotNil(t, style("B2").CustomNumFmt)
+	assert.Equal(t, "#,##0.00", *style("B2").CustomNumFmt)
+	assert.Nil(t, style("A2").CustomNumFmt, "text carries no number format")
+	assert.False(t, style("A2").Font != nil && style("A2").Font.Bold, "records are not bold")
+}

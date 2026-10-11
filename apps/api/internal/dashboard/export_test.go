@@ -144,6 +144,48 @@ func TestBuildDashboardWorkbook(t *testing.T) {
 	}
 }
 
+// Dashboard cells centre vertically.
+// Every header and value cell on both sheets sits on its row's middle.
+func TestBuildDashboardWorkbook_CellsCentred(t *testing.T) {
+	var buf bytes.Buffer
+	series := map[string]map[string]string{"revenue": {"2026-01": "1000000"}}
+	if err := buildDashboardWorkbook(&buf, Summary{TotalRevenue: "1000000"}, []string{"2026-01", "2026-02"}, series); err != nil {
+		t.Fatalf("build: %v", err)
+	}
+	f, err := excelize.OpenReader(&buf)
+	if err != nil {
+		t.Fatalf("reopen: %v", err)
+	}
+	defer func() { _ = f.Close() }()
+
+	cells := map[string][]string{
+		"Ringkasan": {"A1", "B1", "A2", "B2", "A12", "B12"},
+		"Bulanan":   {"A1", "F1", "A2", "D2", "A3", "F3"},
+	}
+	for sheet, list := range cells {
+		for _, cell := range list {
+			id, err := f.GetCellStyle(sheet, cell)
+			if err != nil {
+				t.Fatalf("%s %s style: %v", sheet, cell, err)
+			}
+			s, err := f.GetStyle(id)
+			if err != nil {
+				t.Fatalf("%s %s style: %v", sheet, cell, err)
+			}
+			if s.Alignment == nil || s.Alignment.Vertical != "center" {
+				t.Errorf("%s %s alignment = %+v, want vertical center", sheet, cell, s.Alignment)
+				continue
+			}
+			if s.Alignment.Horizontal != "" || s.Alignment.WrapText {
+				t.Errorf("%s %s alignment = %+v, want only vertical center", sheet, cell, s.Alignment)
+			}
+		}
+	}
+	if v, _ := f.GetCellValue("Bulanan", "D2"); v != "1000000" {
+		t.Errorf("Bulanan D2 = %q, want 1000000", v)
+	}
+}
+
 var errSink = errors.New("connection reset")
 
 type failingWriter struct{}
