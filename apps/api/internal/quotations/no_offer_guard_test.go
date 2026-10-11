@@ -179,6 +179,7 @@ func TestHandler_InputNewNoOfferLines(t *testing.T) {
 
 	res = doJSONWithHeaders(t, srv, http.MethodPut, base,
 		quotations.UpdateRequest{DiscountPct: "0", Items: []quotations.CreateItem{marked}}, in)
+	defer res.Body.Close()
 	p := problemOf(t, res)
 	assert.Equal(t, http.StatusForbidden, p.Status)
 	assert.Equal(t, rolegate.RefusedDetail, p.Detail)
@@ -200,7 +201,9 @@ func TestHandler_InputNoOfferOnSent(t *testing.T) {
 		}
 	}
 
-	p := problemOf(t, markLine(t, srv, "offer", roles.OperationalInput, id, line, false))
+	res = markLine(t, srv, "offer", roles.OperationalInput, id, line, false)
+	defer res.Body.Close()
+	p := problemOf(t, res)
 	assert.Equal(t, http.StatusConflict, p.Status)
 	assert.Equal(t, "Hanya quotation berstatus Draf yang dapat diubah. Status saat ini Dikirim.", p.Detail)
 }
