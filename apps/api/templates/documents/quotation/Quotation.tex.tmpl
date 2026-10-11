@@ -51,9 +51,10 @@
 \hbadness=2000
 
 % Whole words only; English patterns would split Indonesian names.
-\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash\DocCellSize\hyphenpenalty=10000}p{#1}}
-\newcolumntype{C}[1]{>{\centering\arraybackslash\DocCellSize}p{#1}}
-\newcolumntype{R}[1]{>{\RaggedLeft\arraybackslash\DocCellSize}p{#1}}
+% m columns centre every row.
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash\DocCellSize\hyphenpenalty=10000}m{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash\DocCellSize}m{#1}}
+\newcolumntype{R}[1]{>{\RaggedLeft\arraybackslash\DocCellSize}m{#1}}
 \renewcommand{\arraystretch}{1.2}
 
 \fancypagestyle{firstpage}{%
