@@ -522,6 +522,26 @@ sees it.
 each offer on the quotation and PO detail, and beside the picked vendor in
 the quotation product dialog.
 
+One IMPA code belongs to one active product (`uq_items_impa_code_active`,
+stored trimmed and upper-cased). The import and Salin ke Offer match the
+code first, so a row whose code an active product holds reuses it whatever
+its name, and only an unknown code is auto-created, under the request text
+as typed. When that text was abbreviated or wrong, Tambah Produk Baru with
+the right name and the same code is refused: the 422 on `impaCode` (create
+and `PUT /items/{id}`) keeps its field message and carries `code:
+"impa_taken"` with `impaHolder` (`items.IMPATakenProblem`: id, name, code,
+default unit, `renamable`), never the item being saved. Inside a document's
+product dialog the refusal names the holder and offers Pakai Produk Ini,
+which picks it as a search hit does, and, for roles that write the catalog
+and a `renamable` holder, Ganti Nama Jadi the typed name. That calls `POST
+/items/{id}/rename`, which changes the name only and refuses with a 409
+while a quotation past draft offers the product or a PO or invoice line
+carries it: quotation lines and their PDF read the product name live
+(`quotations.get_items`), a PO line reads it when its own `item_name`
+snapshot is blank, and an invoice line keeps its snapshot. Items carry no row version, so the rename takes no
+`If-Match`. The product page Ubah and the catalog's Tambah Produk link the
+holder's name to its page instead.
+
 ## Units
 
 A unit (Satuan) keeps the short code every document prints and exports
