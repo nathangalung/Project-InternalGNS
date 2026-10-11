@@ -64,7 +64,12 @@ management picks a role from a dropdown with an Indonesian label and hint
   history, no quotation PDF and no quotation or PO export. Its line and
   header saves keep the stored harga jual, discount and shipping charge
   (`quotations/price_guard.go`), and its new lines start at harga jual 0
-  for a head to price. On a PO it only views and keeps the purchase data
+  for a head to price. Since Tidak Ditawarkan stores harga jual 0, it marks
+  only a line no head has priced: on a draft line with a harga jual, the
+  toggle and a line save with `isAvailable` false are a 403
+  (`ErrPricedNoOffer`, the price read after the quotation row lock, in the
+  save's transaction), while its new lines may start unoffered and putting
+  a line back on offer stays open to it. On a PO it only views and keeps the purchase data
   current: in Ubah PO it changes harga beli and vendor of the stored lines,
   everything the client ordered stays as stored (`keepStoredSale`; each line
   carries its PO line `id`, adding or dropping one is a 403), and it neither
@@ -290,6 +295,8 @@ shows a missing one as Belum ada No. PO.
   `fn_prepare_quotation_lines` stores it at harga jual 0 with no vendor, the
   PDF prints No Offer, it never blocks sending, `fn_create_purchase_order`
   leaves it out of the PO, and accepting needs at least one offered line.
+  Putting it back on offer restores no price, so operational input marks
+  only an unpriced line (see Roles), and the web toasts the refusal.
   The same function links a vendor a line names by `vendorId` when the item
   has no link to it yet, and refuses a `vendorProductId` that names another
   product (P0014). A save of a draft, the full `PUT` included, runs it only

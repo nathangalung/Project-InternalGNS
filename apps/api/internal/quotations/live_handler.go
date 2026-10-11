@@ -133,21 +133,31 @@ func (h *Handler) UpdateLine(w http.ResponseWriter, r *http.Request) {
 	if !httpx.DecodeJSON(w, r, &item) {
 		return
 	}
+	save := h.repo.UpdateLine
 	if !roles.SetsPrices(deps.CurrentUserRole(r.Context())) {
-		if err := h.repo.keepLinePrice(r.Context(), id, lineID, &item); err != nil {
-			httperr.RenderDBErrCtx(r.Context(), w, err)
-			return
-		}
+		// The save keeps the stored price; 0 only passes the checks.
+		item.SellingPrice = "0"
+		save = h.repo.UpdateLineKeepingPrice
 	}
 	if fields := validateLines([]CreateItem{item}); fields != nil {
 		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
-	if err := h.repo.UpdateLine(r.Context(), id, lineID, item, deps.CurrentUserID(r.Context())); err != nil {
-		httperr.RenderDBErrCtx(r.Context(), w, err)
+	if err := save(r.Context(), id, lineID, item, deps.CurrentUserID(r.Context())); err != nil {
+		renderLineErr(w, r, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// renderLineErr maps the no-offer guard.
+// The guard is a 403 like every price refusal; anything else is a DB error.
+func renderLineErr(w http.ResponseWriter, r *http.Request, err error) {
+	if errors.Is(err, ErrPricedNoOffer) {
+		httperr.Render(w, httperr.Forbidden(MsgPricedNoOffer))
+		return
+	}
+	httperr.RenderDBErrCtx(r.Context(), w, err)
 }
 
 // SetLineOffer toggles Tidak Ditawarkan.
@@ -160,8 +170,12 @@ func (h *Handler) SetLineOffer(w http.ResponseWriter, r *http.Request) {
 	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
-	if err := h.repo.SetLineOffer(r.Context(), id, lineID, req.IsAvailable, deps.CurrentUserID(r.Context())); err != nil {
-		httperr.RenderDBErrCtx(r.Context(), w, err)
+	set := h.repo.SetLineOffer
+	if !roles.SetsPrices(deps.CurrentUserRole(r.Context())) {
+		set = h.repo.SetLineOfferKeepingPrice
+	}
+	if err := set(r.Context(), id, lineID, req.IsAvailable, deps.CurrentUserID(r.Context())); err != nil {
+		renderLineErr(w, r, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
