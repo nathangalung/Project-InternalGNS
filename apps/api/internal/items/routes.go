@@ -32,6 +32,7 @@ func Routes(d deps.Deps) chi.Router {
 	r.With(rolegate.Deny(roles.FinanceInput)).Get("/recommendations", h.Recommendations)
 	r.Get("/{id}", h.Get)
 	r.Put("/{id}", h.Update)
+	r.Post("/{id}/rename", h.Rename)
 	r.Get("/{id}/vendors", h.ListVendorsForItem)
 	r.Post("/{id}/vendors", h.AddVendor)
 	// The harga jual history is for the price setters and the finance head.

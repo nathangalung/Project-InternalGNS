@@ -3,6 +3,7 @@ package items
 import (
 	"time"
 
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 )
 
@@ -106,6 +107,35 @@ type UpdateItemRequest struct {
 	Description   *string `json:"description"`
 	IsActive      bool    `json:"isActive"`
 }
+
+// RenameItemRequest renames an unfiled product.
+// Every other field stays as stored.
+type RenameItemRequest struct {
+	Name string `json:"name"`
+}
+
+// IMPAHolder owns a taken code.
+// It is the active product the code belongs to. Renamable says whether
+// POST /items/{id}/rename takes it: no quotation past draft offers it and
+// no PO or invoice line carries it.
+type IMPAHolder struct {
+	ID            int64  `db:"id"              json:"id"`
+	Name          string `db:"name"            json:"name"`
+	IMPACode      string `db:"impa_code"       json:"impaCode"`
+	DefaultUnitID *int16 `db:"default_unit_id" json:"defaultUnitId,omitempty"`
+	Renamable     bool   `db:"renamable"       json:"renamable"`
+}
+
+// IMPATakenProblem is the taken-code 422.
+// The RFC 7807 body plus the holder, so the web offers to pick or rename it
+// without parsing prose. The holder is absent when it could not be read.
+type IMPATakenProblem struct {
+	httperr.Error
+	IMPAHolder *IMPAHolder `json:"impaHolder,omitempty"`
+}
+
+// IMPATakenCode tags the refusal.
+const IMPATakenCode = "impa_taken"
 
 // Add vendor link body.
 // Relinking a linked vendor updates its offer in place: an absent vendorSku

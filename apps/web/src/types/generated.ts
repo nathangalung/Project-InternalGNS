@@ -379,6 +379,20 @@ export type ItemImage = {
 };
 
 // From items/dto.go
+export type ItemImpaHolder = {
+    id: number;
+    name: string;
+    impaCode: string;
+    defaultUnitId?: number;
+    renamable: boolean;
+};
+
+// From items/dto.go
+export type ItemImpaTakenProblem = ProblemDetail & {
+    impaHolder?: ItemImpaHolder;
+};
+
+// From items/dto.go
 export type ItemPriceHistoryRow = {
     quotationNo: string;
     quotationDate: string;
@@ -1024,6 +1038,11 @@ export type QuotationUpdateInput = {
     items: QuotationItemInput[];
     notes?: string;
     ppnEnabled?: boolean;
+};
+
+// From items/dto.go
+export type RenameItemInput = {
+    name: string;
 };
 
 // From users/dto.go

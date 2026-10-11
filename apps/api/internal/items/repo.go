@@ -35,6 +35,10 @@ var ErrNotFound = errors.New("not found")
 // Another active item already owns the IMPA code.
 var ErrIMPATaken = errors.New("items: impa code taken")
 
+// ErrItemFiled refuses a rename.
+// A quotation past draft, a PO or an invoice shows the product.
+var ErrItemFiled = errors.New("items: item on a filed document")
+
 // Vendor link failures.
 var (
 	ErrVendorNotFound = errors.New("items: vendor not found")
@@ -129,6 +133,39 @@ func (r *Repo) Update(ctx context.Context, id int64, req UpdateItemRequest, user
 		return Item{}, ErrNotFound
 	}
 	return item, impaErr(err)
+}
+
+// IMPAHolder finds a code's active owner.
+// self is never returned, so an update never names the item being saved;
+// no other active owner is ErrNotFound.
+func (r *Repo) IMPAHolder(ctx context.Context, code string, self int64) (IMPAHolder, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("items.impa_holder"), code, self)
+	if err != nil {
+		return IMPAHolder{}, fmt.Errorf("impa holder: %w", err)
+	}
+	h, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[IMPAHolder])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return IMPAHolder{}, ErrNotFound
+	}
+	return h, err
+}
+
+// Rename changes an unfiled name.
+// A product a filed document shows is ErrItemFiled, a missing one
+// ErrNotFound.
+func (r *Repo) Rename(ctx context.Context, id int64, name string, userID int64) (Item, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("items.rename"), id, name, userID)
+	if err != nil {
+		return Item{}, fmt.Errorf("rename item %d: %w", id, err)
+	}
+	item, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Item])
+	if !errors.Is(err, pgx.ErrNoRows) {
+		return item, err
+	}
+	if _, err := r.GetByID(ctx, id); err != nil {
+		return Item{}, err
+	}
+	return Item{}, ErrItemFiled
 }
 
 // impaErr marks taken codes.

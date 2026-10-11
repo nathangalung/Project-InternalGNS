@@ -52,6 +52,7 @@ func TestRouter_RoutePolicy(t *testing.T) {
 		{"GET", "/items", all},
 		{"POST", "/items", []string{s, o, oi}},
 		{"POST", "/items/999999999/vendors", []string{s, o, oi}},
+		{"POST", "/items/999999999/rename", []string{s, o, oi}},
 		{"GET", "/items/999999999/price-history", []string{s, o, f}},
 		{"GET", "/items/recommendations?itemId=999999999", []string{s, o, oi, f}},
 		{"GET", "/vendors", all},
