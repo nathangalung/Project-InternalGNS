@@ -331,8 +331,9 @@ shows a missing one as Belum ada No. PO.
   seed) runs `fn_freeze_quotation_offer`, which copies each line's offered
   product name and IMPA code into `quotation_items.offered_name` and
   `offered_impa` (00112, which froze every quotation already past draft).
-  The detail, the PDF, the vendor page's Quotation Terakhir and the PO made
-  on acceptance read the frozen pair (`quotations.get_items`), so a catalog
+  The detail and the PDF (`quotations.get_items`), the vendor page's
+  Quotation Terakhir (`vendors.recent_quotations`) and the PO made on
+  acceptance (`fn_create_purchase_order`) read the frozen pair, so a catalog
   rename or code change never restates a quotation the client received. A
   draft, its Buat Revisi clone included, keeps both NULL and reads the
   catalog live. `offered_name` marks a frozen line, so a product that had no

@@ -205,6 +205,26 @@ func TestOfferSnapshot_RenameKeepsSentQuotation(t *testing.T) {
 	assert.Equal(t, f.impa, *lines[0].ItemCode)
 }
 
+// A revision draft follows the catalog.
+// Buat Revisi clones a new draft, which reads the catalog live, while the
+// original moves to revision and keeps what it was sent with.
+func TestOfferSnapshot_RevisionDraftIsLive(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	f := newOfferFixture(t, ctx, tx)
+	id := quoteOffering(t, ctx, tx, f.item)
+	repo := quotations.NewRepo(tx, testutil.Store(t))
+	require.NoError(t, repo.ChangeStatus(ctx, id, quotations.StatusSent, nil, seedUserID))
+	rev, err := repo.Revise(ctx, id, nil, seedUserID)
+	require.NoError(t, err)
+
+	name, impa := storedOffer(t, ctx, tx, rev)
+	assert.Nil(t, name, "the revision draft reads the catalog")
+	assert.Nil(t, impa)
+	name, _ = storedOffer(t, ctx, tx, id)
+	require.NotNil(t, name)
+	assert.Equal(t, f.name, *name)
+}
+
 // Created past draft, it is frozen.
 // The app only ever creates drafts, but fn_create_quotation takes a status,
 // and a quotation it creates already filed keeps its offer from the start.
