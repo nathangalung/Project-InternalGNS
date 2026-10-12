@@ -145,8 +145,8 @@ func TestRealTemplate_Quotation(t *testing.T) {
 
 func TestRealTemplate_DeliveryNote(t *testing.T) {
 	type item struct {
-		No                               int
-		Qty, Unit, Name, ShipDestination string
+		No                    int
+		Qty, Unit, Name, Note string
 	}
 	data := struct {
 		DeliveryNoteNo, PONo, PODate, CompanyName, CompanyAddress, AttnName, VesselName string
@@ -161,7 +161,7 @@ func TestRealTemplate_DeliveryNote(t *testing.T) {
 		AttnName:       "Budi",
 		VesselName:     "MV Test",
 		DateLine:       "Jakarta, 1 January 2026",
-		Items:          []item{{No: 1, Qty: "1", Unit: "PCS", Name: "Spare", ShipDestination: "Tg. Priok"}},
+		Items:          []item{{No: 1, Qty: "1", Unit: "PCS", Name: "Spare", Note: "Tg. Priok"}},
 	}
 	out := execTemplate(t, "delivery_note/DeliveryNote.tex.tmpl", data)
 	if !strings.Contains(out, `\documentclass`) {

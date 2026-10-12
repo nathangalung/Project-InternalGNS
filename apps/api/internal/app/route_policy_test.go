@@ -79,6 +79,7 @@ func TestRouter_RoutePolicy(t *testing.T) {
 		{"PATCH", "/purchase-orders/999999999/status", []string{s, o}},
 		{"PUT", "/purchase-orders/999999999/items", []string{s, o, oi}},
 		{"PATCH", "/purchase-orders/999999999/details", []string{s, o}},
+		{"PATCH", "/purchase-orders/999999999/delivery-note", []string{s, o}},
 		{"GET", "/purchase-orders/999999999/upload-url", []string{s, o}},
 
 		{"GET", "/invoices", []string{s, f, fi}},

@@ -106,6 +106,9 @@ test.describe("quotation wizard", () => {
     // 4 x 150.000 less 10%, minus 4 x 100.000 cost.
     expect(figure(summary, "Total Estimasi Profit")).toBe(140_000)
     const wizardTotal = figure(summary, "Grand Total")
+    // The wizard prints the PDF rows too: Sub Total holds the shipping.
+    expect(summary).toContain("Diskon Produk 10%")
+    expect(figure(summary, "Sub Total")).toBe(790_000)
     await create.click()
 
     await expect(page).toHaveURL(/\/quotations$/)

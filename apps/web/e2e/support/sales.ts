@@ -36,6 +36,8 @@ export type SeedLine = ({ item: SeedItem; requested?: string } | { freeText: str
   cost?: number
   // Tidak Ditawarkan: sent unpriced, left out of the PO
   noOffer?: boolean
+  // Where the line goes, the shipping address when absent
+  dest?: string
 }
 export type SeedQuotation = Pick<QuotationDetail, "id" | "quotationNo" | "version" | "status">
 
@@ -158,7 +160,7 @@ async function quotationBody(
       costPrice: String(
         l.cost ?? ("item" in l ? (l.item.cost ?? Math.max(1, Math.round(l.price / 2))) : 0),
       ),
-      shipDestination: "Jl. Pelabuhan Raya No. 12, Tanjung Priok, Jakarta Utara",
+      shipDestination: l.dest ?? "Jl. Pelabuhan Raya No. 12, Tanjung Priok, Jakarta Utara",
       isAvailable: l.noOffer ? false : undefined,
     })),
   }

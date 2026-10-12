@@ -96,9 +96,10 @@ describe("wizardSummary", () => {
 
   it("totals the net without PPN", () => {
     const s = wizardSummary([product(1)], 0, "50", false)
-    expect(s).toMatchObject({ dpp: 0, ppn: 0, grandTotal: s.subTotal + 50 })
+    expect(s).toMatchObject({ dpp: 0, ppn: 0, grandTotal: s.subTotal })
   })
 
+  // The PDF rows: Total holds shipping, Sub Total is Total less the discount.
   it("adds up products, discount, shipping and tax", () => {
     const s = wizardSummary(
       [product(1), product(2, { jumlah: 1, hargaBeli: 30, hargaJual: 50 })],
@@ -108,10 +109,9 @@ describe("wizardSummary", () => {
     expect(s).toEqual({
       totalProdukQty: 3,
       totalHargaBeli: 150,
-      totalHargaJual: 250,
+      total: 12250,
       nominalDiskon: 25,
-      subTotal: 225,
-      shippingCost: 12000,
+      subTotal: 12225,
       dpp: 11206.25,
       ppn: 1344.75,
       grandTotal: 13569.75,
@@ -130,8 +130,9 @@ describe("wizardSummary", () => {
       "100.01",
     )
     expect(s).toMatchObject({
+      total: 9078.24,
       nominalDiskon: 224.45,
-      subTotal: 8753.78,
+      subTotal: 8853.79,
       dpp: 8115.98,
       ppn: 973.91,
       grandTotal: 9827.7,
@@ -141,7 +142,7 @@ describe("wizardSummary", () => {
   it("has no profit without products and reads a blank cost as 0", () => {
     const s = wizardSummary([], 0, "")
     expect(s.profit).toBe(0)
-    expect(s.shippingCost).toBe(0)
+    expect(s.total).toBe(0)
     expect(s.grandTotal).toBe(0)
   })
 })

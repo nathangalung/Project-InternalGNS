@@ -541,6 +541,17 @@ export type PoCompletenessIssue = {
 };
 
 // From purchaseorders/dto.go
+export type PoDeliveryNoteInput = {
+    notes: PoDeliveryNoteLineInput[];
+};
+
+// From purchaseorders/dto.go
+export type PoDeliveryNoteLineInput = {
+    lineId: number;
+    note: string;
+};
+
+// From purchaseorders/dto.go
 export type PoDetailsInput = {
     poNumber: string;
     poDate: string;
@@ -679,6 +690,8 @@ export type PurchaseOrderItemRow = {
     vendorId?: number;
     vendorName?: string;
     productUrl?: string;
+    dnNote?: string;
+    dnNoteDefault?: string;
 };
 
 // From purchaseorders/dto.go

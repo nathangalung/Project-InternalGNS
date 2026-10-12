@@ -11,6 +11,7 @@ import { parseRfq } from "./api"
 import { importedLines, importSummary } from "./import"
 import { lineGaps, qtyIssue, requestDiffers, requestedCode } from "./lines"
 import PpnSwitch from "./PpnSwitch"
+import { discountLabel } from "./QuotationDetail/helpers"
 import QuotationReviewCard from "./QuotationReviewCard"
 import RequestOffer from "./RequestOffer"
 import { countUnknownUnits, type ProductItem, unitIssue } from "./wizard"
@@ -44,11 +45,13 @@ type Step2ProductProps = {
   discountPct: number
   formatRp: (n: number) => string
   summaryTotalHargaBeli: number
-  summaryTotalHargaJual: number
+  // Every line, shipping included, before the discount
+  summaryTotal: number
   nominalDiskon: number
   summarySubTotal: number
   summaryDpp: number
   summaryPpn: number
+  summaryGrandTotal: number
   // Taxed at 12%, or sold without PPN
   withPPN?: boolean
   // Absent where the choice is not this page's to make
@@ -90,11 +93,12 @@ export default function Step2Product({
   discountPct,
   formatRp,
   summaryTotalHargaBeli,
-  summaryTotalHargaJual,
+  summaryTotal,
   nominalDiskon,
   summarySubTotal,
   summaryDpp,
   summaryPpn,
+  summaryGrandTotal,
   withPPN = true,
   setWithPPN,
   onImportProducts,
@@ -520,7 +524,7 @@ export default function Step2Product({
 
         <div className="mb-5 flex flex-col gap-3">
           <div className={costRow}>
-            <span>Total Produk</span>
+            <span>Jumlah Produk</span>
             <span className={costValue}>{totalProds} Produk</span>
           </div>
           <div className={costRow}>
@@ -530,12 +534,12 @@ export default function Step2Product({
           {pricing && (
             <>
               <div className={costRow}>
-                <span>Total Harga Jual</span>
-                <span className={costValue}>Rp {formatRp(summaryTotalHargaJual)}</span>
+                <span>Total</span>
+                <span className={costValue}>Rp {formatRp(summaryTotal)}</span>
               </div>
               {discountPct > 0 && (
                 <div className={costRow}>
-                  <span>Diskon ({discountPct}%)</span>
+                  <span>{discountLabel(discountPct)}</span>
                   <span className="font-semibold text-[#10B981]">
                     - Rp {formatRp(nominalDiskon)}
                   </span>
@@ -543,14 +547,7 @@ export default function Step2Product({
               )}
               <div className={costRow}>
                 <span>Sub Total</span>
-                <div className="flex items-center gap-2">
-                  {discountPct > 0 && (
-                    <span className="text-[#9CA3AF] line-through">
-                      Rp {formatRp(summaryTotalHargaJual)}
-                    </span>
-                  )}
-                  <span className={costValue}>Rp {formatRp(summarySubTotal)}</span>
-                </div>
+                <span className={costValue}>Rp {formatRp(summarySubTotal)}</span>
               </div>
               <div className={costRow}>
                 <span>{withPPN ? "Dengan PPN 12%" : "Tanpa PPN"}</span>
@@ -586,7 +583,7 @@ export default function Step2Product({
                 Grand Total
               </span>
               <span className="text-[28px] font-extrabold tracking-[-0.5px] text-primary-700">
-                Rp {formatRp(summarySubTotal + summaryPpn)}
+                Rp {formatRp(summaryGrandTotal)}
               </span>
             </div>
           </>

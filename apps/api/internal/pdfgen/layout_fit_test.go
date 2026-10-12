@@ -139,8 +139,8 @@ func TestLatexExports_LongPartNumberWraps(t *testing.T) {
 }
 
 // Destinations wrap in cells.
-// The invoice Description and delivery-note Tujuan cells print the ship
-// destination, which can be one long unbroken token; the escaped control
+// The invoice Description and a delivery-note Notes cell can print a ship
+// destination, which can be one long unbroken token. The escaped control
 // proves the check bites.
 func TestLatexExports_LongDestinationWraps(t *testing.T) {
 	dest := "GUDANG" + strings.Repeat("TANJUNGPRIOK", 4) + "BLOKC7"
@@ -154,7 +154,7 @@ func TestLatexExports_LongDestinationWraps(t *testing.T) {
 			d["UseA4"] = true
 			return d
 		}},
-		{"delivery note", "delivery_note/DeliveryNote.tex.tmpl", "ShipDestination", deliveryNoteData},
+		{"delivery note", "delivery_note/DeliveryNote.tex.tmpl", "Note", deliveryNoteData},
 	}
 	for _, d := range docs {
 		t.Run(d.name, func(t *testing.T) {

@@ -59,8 +59,8 @@ func MovesQuotations(role string) bool {
 }
 
 // ManagesPOs reports PO header writes.
-// The PO file, number, notes and status; operational input keeps to the
-// purchase price and vendor of each line.
+// The PO file, number, notes, status and the delivery note's row notes;
+// operational input keeps to the purchase price and vendor of each line.
 func ManagesPOs(role string) bool {
 	return role == Superadmin || role == Operational
 }

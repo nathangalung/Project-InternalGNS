@@ -10,7 +10,7 @@ import (
 type smokeItem struct {
 	No              int
 	Qty, Unit, Name string
-	ShipDestination string
+	Note            string
 }
 
 // xelatex render proves logo staging.

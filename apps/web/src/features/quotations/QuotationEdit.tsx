@@ -212,10 +212,9 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
   const {
     totalProdukQty: summaryTotalProdukQty,
     totalHargaBeli: summaryTotalHargaBeli,
-    totalHargaJual: summaryTotalHargaJual,
+    total: summaryTotal,
     nominalDiskon,
     subTotal: summarySubTotal,
-    shippingCost: summaryShippingCost,
     dpp: summaryDpp,
     ppn: summaryPpn,
     grandTotal: summaryGrandTotal,
@@ -552,11 +551,12 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
             discountPct={discountPct}
             formatRp={formatRp}
             summaryTotalHargaBeli={summaryTotalHargaBeli}
-            summaryTotalHargaJual={summaryTotalHargaJual}
+            summaryTotal={summaryTotal}
             nominalDiskon={nominalDiskon}
             summarySubTotal={summarySubTotal}
             summaryDpp={summaryDpp}
             summaryPpn={summaryPpn}
+            summaryGrandTotal={summaryGrandTotal}
             withPPN={ppnEnabled}
             setWithPPN={pricing ? (on) => void savePpn(on) : undefined}
             onImportProducts={importLines}
@@ -598,13 +598,12 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
             formatRp={formatRp}
             summaryTotalProdukQty={summaryTotalProdukQty}
             summaryTotalHargaBeli={summaryTotalHargaBeli}
-            summaryTotalHargaJual={summaryTotalHargaJual}
+            summaryTotal={summaryTotal}
             nominalDiskon={nominalDiskon}
             summarySubTotal={summarySubTotal}
             summaryDpp={summaryDpp}
             summaryPpn={summaryPpn}
             withPPN={ppnEnabled}
-            summaryShippingCost={summaryShippingCost}
             summaryProfit={summaryProfit}
             summaryGrandTotal={summaryGrandTotal}
             invalidQtyCount={invalidQty}

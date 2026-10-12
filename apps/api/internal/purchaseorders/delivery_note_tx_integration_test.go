@@ -65,9 +65,8 @@ func TestDeliveryNote_PrintsGoodsNotTheShippingCharge(t *testing.T) {
 	assert.NotContains(t, text, vessel)
 	assert.NotContains(t, text, "Attn")
 	assert.NotContains(t, text, charge.ItemName, "the shipping charge is not a delivered line")
-	// The goods line has no address of its own, so it prints the shipping
-	// line's as its Tujuan, once, and no charge row repeats it.
-	assert.Equal(t, 1, strings.Count(text, addr), "the goods line prints the shipping address")
+	// The shipping address is the Address, printed once; no row repeats it.
+	assert.Equal(t, 1, strings.Count(text, addr), "the shipping address prints once")
 }
 
 // pdfText extracts the text layer.

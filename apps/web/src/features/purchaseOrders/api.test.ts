@@ -92,6 +92,16 @@ describe("purchase orders api", () => {
       },
     ],
     [
+      "delivery note notes guard the row version",
+      () => api.updateDeliveryNote(3, { notes: [{ lineId: 9, note: "Serahkan ke mualim" }] }, 8),
+      {
+        path: "/purchase-orders/3/delivery-note",
+        method: "PATCH",
+        body: { notes: [{ lineId: 9, note: "Serahkan ke mualim" }] },
+        headers: { "If-Match": "8" },
+      },
+    ],
+    [
       "items guard the row version",
       () => api.updateItems(3, { items: [] } as never, 7),
       {

@@ -6,6 +6,7 @@ import { clampPage, pageCount } from "@/lib/pagination"
 import { ui } from "@/lib/ui"
 import { isValidAddress, optionalAddressError } from "@/lib/validation"
 import { requestDiffers, requestedCode } from "./lines"
+import { discountLabel } from "./QuotationDetail/helpers"
 import RequestOffer from "./RequestOffer"
 import type { Client } from "./Step1Client"
 import type { ProductItem } from "./wizard"
@@ -34,14 +35,14 @@ type Step4SummaryProps = {
   formatRp: (n: number) => string
   summaryTotalProdukQty: number
   summaryTotalHargaBeli: number
-  summaryTotalHargaJual: number
+  // Every line, shipping included, before the discount
+  summaryTotal: number
   nominalDiskon: number
   summarySubTotal: number
   summaryDpp: number
   summaryPpn: number
   // Taxed at 12%, or sold without PPN
   withPPN?: boolean
-  summaryShippingCost: number
   summaryProfit: number
   summaryGrandTotal: number
   // Lines with qty not above zero
@@ -171,13 +172,12 @@ export default function Step4Summary({
   formatRp,
   summaryTotalProdukQty,
   summaryTotalHargaBeli,
-  summaryTotalHargaJual,
+  summaryTotal,
   nominalDiskon,
   summarySubTotal,
   summaryDpp,
   summaryPpn,
   withPPN = true,
-  summaryShippingCost,
   summaryProfit,
   summaryGrandTotal,
   invalidQtyCount = 0,
@@ -481,7 +481,7 @@ export default function Step4Summary({
 
           <div className="mb-5 flex flex-col gap-3">
             <div className={costRow}>
-              <span>Total Produk</span>
+              <span>Jumlah Produk</span>
               <span className={costValue}>{summaryTotalProdukQty} Produk</span>
             </div>
             <div className={costRow}>
@@ -491,12 +491,12 @@ export default function Step4Summary({
             {pricing && (
               <>
                 <div className={costRow}>
-                  <span>Total Harga Jual</span>
-                  <span className={costValue}>Rp {formatRp(summaryTotalHargaJual)}</span>
+                  <span>Total</span>
+                  <span className={costValue}>Rp {formatRp(summaryTotal)}</span>
                 </div>
                 {discountPct > 0 && (
                   <div className={costRow}>
-                    <span>Diskon ({discountPct}%)</span>
+                    <span>{discountLabel(discountPct)}</span>
                     <span className="font-semibold text-[#10B981]">
                       - Rp {formatRp(nominalDiskon)}
                     </span>
@@ -504,14 +504,7 @@ export default function Step4Summary({
                 )}
                 <div className={costRow}>
                   <span>Sub Total</span>
-                  <div className="flex items-center gap-2">
-                    {discountPct > 0 && (
-                      <span className="text-[#9CA3AF] line-through">
-                        Rp {formatRp(summaryTotalHargaJual)}
-                      </span>
-                    )}
-                    <span className={costValue}>Rp {formatRp(summarySubTotal)}</span>
-                  </div>
+                  <span className={costValue}>Rp {formatRp(summarySubTotal)}</span>
                 </div>
                 {withPPN ? (
                   <>
@@ -530,10 +523,6 @@ export default function Step4Summary({
                     <span className={costValue}>Tanpa PPN</span>
                   </div>
                 )}
-                <div className={costRow}>
-                  <span>Biaya Pengiriman</span>
-                  <span className={costValue}>Rp {formatRp(summaryShippingCost)}</span>
-                </div>
               </>
             )}
           </div>
