@@ -58,6 +58,13 @@ describe("deliveryNoteChanges", () => {
     ])
   })
 
+  it("reads a row with no input as cleared", () => {
+    expect(deliveryNoteChanges(rows, ["Kirim ke: Gudang"])).toEqual([
+      { lineId: 1, note: "Kirim ke: Gudang" },
+      { lineId: 2, note: "" },
+    ])
+  })
+
   it("sends a cleared note as empty", () => {
     expect(deliveryNoteChanges(rows, ["  ", "Hati hati"])).toEqual([
       { lineId: 1, note: "" },
