@@ -151,6 +151,83 @@ def impa_codes_in_text(text: str | None) -> list[str]:
     return [c for c in _IMPA_IN_TEXT.findall(text) if c[:2] in IMPA_SECTIONS]
 
 
+# Own code out of a name.
+# Mirrors fn_impa_code and fn_impa_split (migration 00113), which every
+# write runs; the shared tables in db/migrations/testdata and
+# internal/shared/validate/testdata pin both copies.
+
+_DASHES = frozenset(("-", chr(0x2013), chr(0x2014)))
+_MARK = r"IMPA\s*[:.#]?\s*"
+_AFTER = r"(?![0-9A-Za-z])(?![-/.][0-9A-Za-z])"
+_MOVE = re.compile(r"\b" + _MARK + r"([0-9]{6})" + _AFTER, re.IGNORECASE)
+_SPOT = "\x01"
+
+
+def impa_code(raw: str | None) -> str | None:
+    """Return the stored code: six digits, None for none, else as typed."""
+    if raw is None:
+        return None
+    t = raw.strip()
+    if all(c in _DASHES for c in t):
+        return None
+    u = t.upper()
+    if u.startswith("(") and u.endswith(")"):
+        u = u[1:-1].strip()
+    u = re.sub(r"^" + _MARK, "", u)
+    digits = re.sub(r"[^0-9]", "", u)
+    if re.fullmatch(r"[0-9][0-9 .-]*[0-9]", u) and len(digits) == 6:
+        return digits
+    return t
+
+
+def _tidy(line: str) -> str:
+    """Close the gap a removed code left."""
+    s = re.escape(_SPOT)
+    line = re.sub(r"[ \t]*-[ \t]*" + s + r"[ \t]*-[ \t]*", " - ", line)
+    line = re.sub(r"[ \t]*,[ \t]*" + s + r"[ \t]*,[ \t]*", ", ", line)
+    line = re.sub(r"[ \t]+-[ \t]+" + s, _SPOT, line)
+    line = re.sub(s + r"[ \t]+-[ \t]+", _SPOT, line)
+    line = re.sub(r"[ \t]*" + s + r"[ \t]*([.,:])", r"\1", line)
+    line = re.sub(r"[ \t]*" + s + r"[ \t]*", " ", line)
+    line = re.sub(r"[ \t]{2,}", " ", line)
+    return re.sub(r"^[ \t\r,:]+|[ \t\r,:]+$", "", line)
+
+
+def split_impa(
+    name: str | None, code: str | None, move: bool = True
+) -> tuple[str | None, str | None]:
+    """Return (name, code) with the row's own code out of the name.
+
+    The code, marked IMPA, bracketed or bare, leaves the name with its
+    separator, never inside a longer token. With move, an empty code takes
+    the one code the name marks IMPA. A name that was only the code keeps
+    it.
+    """
+    out = impa_code(code)
+    if name is None:
+        return None, out
+    if out is None and move:
+        found = set(_MOVE.findall(name))
+        if len(found) == 1:
+            out = found.pop()
+    if out is None or not re.fullmatch(r"[0-9]{6}", out):
+        return name, out
+    text = re.sub(r"\(\s*(?:" + _MARK + r")?" + out + r"\s*\)", _SPOT, name, flags=re.IGNORECASE)
+    text = re.sub(r"\b" + _MARK + out + _AFTER, _SPOT, text, flags=re.IGNORECASE)
+    text = re.sub(r"(?<![0-9A-Za-z])(?<![0-9A-Za-z][-/.])" + out + _AFTER, _SPOT, text)
+    if _SPOT not in text:
+        return name, out
+    lines: list[str] = []
+    for line in text.split("\n"):
+        if _SPOT in line:
+            line = _tidy(line)
+            if not line:
+                continue
+        lines.append(line)
+    cleaned = "\n".join(lines)
+    return (cleaned if cleaned.strip(" \t\r\n") else name), out
+
+
 # No Offer lines
 
 _NO_OFFER = re.compile(r"^\s*no\s*(offer|stock)\b", re.IGNORECASE)
