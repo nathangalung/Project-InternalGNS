@@ -78,7 +78,7 @@ describe("toQuotationData link ids", () => {
     expect(rows.map((r) => r.lineId)).toEqual([11, 12, 13])
   })
 
-  it("carries the vendor and its store link", () => {
+  it("carries the vendor, its store and the product link", () => {
     const [row] = toQuotationData(
       detail([
         item({
@@ -86,14 +86,16 @@ describe("toQuotationData link ids", () => {
           vendorId: 7,
           vendorName: "PT Laut",
           productUrl: "https://toko.example/rope",
+          vendorStoreUrl: "https://toko.example",
         }),
       ]),
       () => "PCS",
     ).products
-    expect([row.vendorId, row.vendor, row.storeUrl]).toEqual([
+    expect([row.vendorId, row.vendor, row.productUrl, row.vendorStoreUrl]).toEqual([
       7,
       "PT Laut",
       "https://toko.example/rope",
+      "https://toko.example",
     ])
   })
 

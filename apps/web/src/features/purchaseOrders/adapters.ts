@@ -28,7 +28,8 @@ export function poItemsToProducts(items: PurchaseOrderItemRow[] | undefined): Po
         itemId: it.offeredItemId,
         vendorId: it.vendorId,
         vendor: it.vendorName,
-        storeUrl: it.productUrl,
+        productUrl: it.productUrl,
+        vendorStoreUrl: it.vendorStoreUrl,
         kode: it.itemCode ?? "",
         nama: it.itemName,
         qty,
@@ -265,4 +266,12 @@ export function loadFailureMessage(unitsFailed: boolean, itemsFailed: boolean): 
         ? "Daftar satuan gagal dimuat, sehingga satuan tiap item belum dapat dicocokkan."
         : "Item PO gagal dimuat."
   return `${what} Coba lagi dalam beberapa saat.`
+}
+
+// Trail name of a PO.
+//
+// The client's PO number, or the quotation it came from until one is entered.
+export function poCrumbLabel(poNumber: string | undefined, quotationNo: string): string {
+  const no = poNumber?.trim()
+  return no ? `PO ${no}` : `PO dari ${quotationNo}`
 }

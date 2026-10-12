@@ -15,6 +15,36 @@ func trimContactEmail(ci *ContactInfo) {
 	}
 }
 
+// requestFields checks a vendor body.
+// It runs contactInfoFields and storeURLField and joins their messages. It
+// returns nil when every field passes.
+func requestFields(ci *ContactInfo, storeURL **string) map[string]string {
+	errs := contactInfoFields(ci)
+	if msg := storeURLField(storeURL); msg != "" {
+		if errs == nil {
+			errs = map[string]string{}
+		}
+		errs["storeUrl"] = msg
+	}
+	return errs
+}
+
+// storeURLField checks the store link.
+// It trims the link in place and drops a blank one, so the link checked is
+// the link stored. It returns "" when the link passes.
+func storeURLField(u **string) string {
+	if *u == nil {
+		return ""
+	}
+	trimmed := strings.TrimSpace(**u)
+	if trimmed == "" {
+		*u = nil
+		return ""
+	}
+	*u = &trimmed
+	return validate.StoreURL(trimmed)
+}
+
 // contactInfoFields checks email and phone.
 // Keys are the request paths, so the web can mark the input. A blank field
 // is absent and passes. It returns nil when both pass.

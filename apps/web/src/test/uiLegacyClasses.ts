@@ -2,8 +2,9 @@
 //
 // Dumped from the string-based ui.ts at 8846416, the last commit before the
 // tv() recipes. The recipes must produce exactly these class sets. Since
-// then only pill(false) changed, from text-dark-500 (4.34:1 on dark-100)
-// to text-dark-600 for 4.5:1 contrast.
+// then pill(false) changed, from text-dark-500 (4.34:1 on dark-100) to
+// text-dark-600 for 4.5:1 contrast, and the breadcrumb became a wrapping
+// list whose long labels truncate, for the navigation trail.
 export const legacyClasses: Record<string, string> = {
   focusRing:
     "focus-visible:outline-none focus-visible:transition-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
@@ -61,11 +62,14 @@ export const legacyClasses: Record<string, string> = {
     "inline-flex items-center justify-center gap-2 rounded-md px-8 py-3 text-sm font-bold transition focus-visible:outline-none focus-visible:transition-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white text-dark-600 hover:bg-dark-100",
   modalSubmit:
     "inline-flex items-center justify-center gap-2 rounded-md px-8 py-3 text-sm font-bold transition focus-visible:outline-none focus-visible:transition-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white bg-[linear-gradient(135deg,var(--color-primary-700)_0%,var(--color-primary-600)_100%)] text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50",
-  breadcrumb: "flex items-center gap-2",
+  breadcrumb: "min-w-0 max-w-full",
+  breadcrumbList: "m-0 flex min-w-0 list-none flex-wrap items-center gap-x-2 gap-y-1 p-0",
+  breadcrumbItem: "flex min-w-0 max-w-full items-center gap-2",
   breadcrumbLink:
-    "cursor-pointer rounded-sm text-overline font-bold uppercase tracking-[0.12em] text-[#4A4455] transition hover:text-primary-700 focus-visible:outline-none focus-visible:transition-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
-  breadcrumbSep: "text-overline font-bold uppercase text-dark-300",
-  breadcrumbCurrent: "text-overline font-bold uppercase tracking-[0.12em] text-primary-700",
+    "inline-block min-w-0 max-w-[16rem] cursor-pointer truncate rounded-sm text-overline font-bold uppercase tracking-[0.12em] text-[#4A4455] no-underline transition hover:text-primary-700 max-sm:max-w-[10rem] focus-visible:outline-none focus-visible:transition-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
+  breadcrumbSep: "shrink-0 text-overline font-bold uppercase text-dark-300",
+  breadcrumbCurrent:
+    "inline-block min-w-0 max-w-full truncate text-overline font-bold uppercase tracking-[0.12em] text-primary-700",
   detailHeader: "flex items-start justify-between gap-4 max-sm:flex-col max-sm:gap-3",
   detailHeaderLeft: "flex min-w-0 items-start gap-3",
   detailActions: "flex flex-shrink-0 items-center gap-3 pt-8 max-sm:flex-wrap max-sm:pt-0",

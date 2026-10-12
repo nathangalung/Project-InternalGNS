@@ -1,7 +1,7 @@
-import { Link, useNavigate } from "@tanstack/react-router"
 import { useEffect, useId, useRef, useState } from "react"
 import FieldError from "@/components/shared/FieldError"
 import Modal from "@/components/shared/Modal"
+import NavTrail from "@/components/shared/NavTrail"
 import PermanentDelete from "@/components/shared/PermanentDelete"
 import { useMe } from "@/features/auth/hooks"
 import * as clientsApi from "@/features/clients/api"
@@ -22,10 +22,12 @@ import {
 } from "@/features/clients/hooks"
 import CountryCombobox from "@/features/countries/CountryCombobox"
 import { useCountries } from "@/features/countries/hooks"
+import { useNavTrail } from "@/hooks/useNavTrail"
 import { useObjectUrl } from "@/hooks/useObjectUrl"
 import { logoBackground } from "@/lib/avatar"
 import { errorMessage } from "@/lib/errors"
 import { formErrors } from "@/lib/form-errors"
+import { listCrumb } from "@/lib/nav-trail"
 import { editsClients } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
@@ -44,6 +46,9 @@ import ClientQuotations from "./ClientQuotations"
 type ClientDetailProps = {
   client: ClientRow
 }
+
+// Opened without a trail.
+const fallback = [listCrumb("/clients")]
 
 const labelCls =
   "mb-2 block text-[10px] font-bold uppercase leading-[15px] tracking-[1px] text-[#4A4455]"
@@ -85,7 +90,7 @@ type ClientField = (typeof CLIENT_FIELDS)[number]
 export default function ClientDetail({ client }: ClientDetailProps) {
   // Finance input only reads a client
   const canEdit = editsClients(useMe().data?.role)
-  const navigate = useNavigate()
+  const nav = useNavTrail(fallback)
   const removeClient = useDeleteClient()
   const [name, setName] = useState(client.name)
   const [tkuId, setTkuId] = useState(client.tkuId ?? "")
@@ -316,26 +321,13 @@ export default function ClientDetail({ client }: ClientDetailProps) {
   return (
     <div className={ui.pageContent}>
       <div className="flex flex-col gap-3">
-        <nav aria-label="Breadcrumb" className={ui.breadcrumb}>
-          <Link
-            activeOptions={{ exact: true }}
-            to="/clients"
-            className={`${ui.breadcrumbLink} no-underline`}
-          >
-            Daftar Klien
-          </Link>
-          <span aria-hidden="true" className={ui.breadcrumbSep}>
-            &rsaquo;
-          </span>
-          <span aria-current="page" className={ui.breadcrumbCurrent}>
-            Detail Klien
-          </span>
-        </nav>
+        <NavTrail current={`Klien ${client.name}`} fallback={fallback} />
 
         <div className="flex flex-wrap items-center gap-5">
-          <Link
-            to="/clients"
-            aria-label="Kembali ke Daftar Klien"
+          <button
+            type="button"
+            onClick={nav.back}
+            aria-label={`Kembali ke ${nav.previous.label}`}
             className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white shadow-[0px_1px_2px_rgba(0,0,0,0.05)] ${ui.focusRing}`}
           >
             <svg
@@ -352,7 +344,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
               <line x1="19" y1="12" x2="5" y2="12" />
               <polyline points="12 19 5 12 12 5" />
             </svg>
-          </Link>
+          </button>
           <h1 className={ui.pageTitle}>Detail Klien</h1>
           {canEdit && (
             <div className="ml-auto">
@@ -362,7 +354,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                 along="narahubungnya"
                 onDelete={async () => {
                   await removeClient.mutateAsync(client.id)
-                  await navigate({ to: "/clients" })
+                  nav.back()
                 }}
               />
             </div>

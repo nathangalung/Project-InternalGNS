@@ -25,18 +25,18 @@ const stored = row({
   nama: "Baut",
   vendor: "PT Tali Jaya",
   vendorId: 4,
-  storeUrl: "https://toko.example/baut",
+  productUrl: "https://toko.example/baut",
 })
 const noVendor = row({ itemId: 9, lineId: 3, nama: "Jangkar" })
 
 const actions = () =>
   [...document.querySelectorAll("button")]
     .map((b) => b.textContent ?? "")
-    .filter((t) => t.endsWith("Link Toko"))
+    .filter((t) => t.endsWith("Link Produk"))
 
 afterEach(unmount)
 
-describe("ProductTable store link action", () => {
+describe("ProductTable product link action", () => {
   it("adds or changes the link of each line with a vendor", async () => {
     const onEditStoreLink = vi.fn()
     await mount(
@@ -47,9 +47,9 @@ describe("ProductTable store link action", () => {
         onEditStoreLink={onEditStoreLink}
       />,
     )
-    expect(actions()).toEqual(["Tambah Link Toko", "Ubah Link Toko"])
+    expect(actions()).toEqual(["Tambah Link Produk", "Ubah Link Produk"])
     const add = [...document.querySelectorAll("button")].find(
-      (b) => b.textContent === "Tambah Link Toko",
+      (b) => b.textContent === "Tambah Link Produk",
     )
     if (!add) throw new Error("no action")
     await click(add)
@@ -60,6 +60,23 @@ describe("ProductTable store link action", () => {
     await mount(<ProductTable products={[linked, stored]} showVendor showRequest={false} />)
     expect(actions()).toEqual([])
     expect(document.querySelector('a[href="https://toko.example/baut"]')).not.toBeNull()
+  })
+
+  it("shows the vendor's store apart from the product link", async () => {
+    await mount(
+      <ProductTable
+        products={[{ ...stored, vendorStoreUrl: "https://shop.example" }]}
+        showVendor
+        showRequest={false}
+      />,
+    )
+    const labels = [...document.querySelectorAll("a")].map((a) => a.getAttribute("aria-label"))
+    expect(labels).toEqual([
+      "Buka toko shop.example di tab baru",
+      "Buka produk di toko.example di tab baru",
+    ])
+    expect(document.body.textContent).toContain("Link Toko")
+    expect(document.body.textContent).toContain("Link Produk")
   })
 
   it("offers nothing on a line whose product left the catalog", async () => {

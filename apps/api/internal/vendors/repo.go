@@ -128,7 +128,7 @@ func (r *Repo) GetByID(ctx context.Context, id int64) (Vendor, error) {
 
 func (r *Repo) Create(ctx context.Context, req CreateVendorRequest, userID int64) (Vendor, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("vendors.create"),
-		req.Name, req.Location, req.ContactInfo, req.IsActive, userID,
+		req.Name, req.Location, req.ContactInfo, req.IsActive, userID, req.StoreURL,
 	)
 	if err != nil {
 		return Vendor{}, err
@@ -139,7 +139,7 @@ func (r *Repo) Create(ctx context.Context, req CreateVendorRequest, userID int64
 // Update edits a vendor row.
 func (r *Repo) Update(ctx context.Context, id int64, req UpdateVendorRequest, userID int64) (Vendor, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("vendors.update"),
-		id, req.Name, req.Location, req.ContactInfo, req.IsActive, userID,
+		id, req.Name, req.Location, req.ContactInfo, req.IsActive, userID, req.StoreURL,
 	)
 	if err != nil {
 		return Vendor{}, err

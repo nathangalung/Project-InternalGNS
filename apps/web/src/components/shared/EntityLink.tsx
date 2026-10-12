@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router"
 import type { KeyboardEvent, MouseEvent, ReactNode } from "react"
 import { useMe } from "@/features/auth/hooks"
+import { useTrailState } from "@/hooks/useNavTrail"
 import { type EntityKind, entityTarget } from "@/lib/entity-link"
 import { ui } from "@/lib/ui"
 
@@ -32,6 +33,7 @@ function stopEnter(e: KeyboardEvent) {
 // Detail link, or plain text.
 //
 // Renders a real anchor, so ctrl-click, middle-click and hover preload work.
+// The link carries the navigation trail, so the target can lead back here.
 // Falls back to a span with the same typography when the id is missing or the
 // viewer's role cannot open the target route.
 export default function EntityLink(props: EntityLinkProps) {
@@ -39,6 +41,7 @@ export default function EntityLink(props: EntityLinkProps) {
   const { data: me } = useMe()
   const id = "quotationId" in props ? props.quotationId : props.id
   const target = entityTarget(props.kind, id, me?.role)
+  const trail = useTrailState()
 
   if (!target) {
     return (
@@ -52,6 +55,7 @@ export default function EntityLink(props: EntityLinkProps) {
     <Link
       to={target.to}
       params={target.params}
+      state={trail}
       title={title}
       className={`${tone === "doc" ? ui.entityLink : ui.entityLinkMuted} ${className}`}
       onClick={stopClick}

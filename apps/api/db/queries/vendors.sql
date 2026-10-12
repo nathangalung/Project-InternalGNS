@@ -19,7 +19,7 @@ SELECT v.id, v.name, v.location, v.contact_info, v.is_active, v.created_at, v.up
                     AND q.status = 'accepted'
                     AND NOT EXISTS (SELECT 1 FROM purchase_orders po
                                     WHERE po.quotation_id = q.id)) c), '0') AS total_purchase,
-       v.logo_object_key
+       v.logo_object_key, v.store_url
 FROM vendors v
 WHERE 1=1;
 
@@ -48,23 +48,26 @@ SELECT v.id, v.name, v.location, v.contact_info, v.is_active, v.created_at, v.up
                     AND q.status = 'accepted'
                     AND NOT EXISTS (SELECT 1 FROM purchase_orders po
                                     WHERE po.quotation_id = q.id)) c), '0') AS total_purchase,
-       v.logo_object_key
+       v.logo_object_key, v.store_url
 FROM vendors v
 WHERE v.id = $1;
 
 -- name: vendors.create
-INSERT INTO vendors (name, location, contact_info, is_active, created_by, updated_by)
-VALUES ($1, $2, $3, COALESCE($4, TRUE), $5, $5)
+-- $6 is the store link; blank stores NULL.
+INSERT INTO vendors (name, location, contact_info, is_active, created_by, updated_by, store_url)
+VALUES ($1, $2, $3, COALESCE($4, TRUE), $5, $5, NULLIF(BTRIM($6::text), ''))
 RETURNING id, name, location, contact_info, is_active, created_at, updated_at,
           0::BIGINT AS product_count, '0'::TEXT AS total_purchase,
-          logo_object_key;
+          logo_object_key, store_url;
 
 -- name: vendors.update
+-- $7 is the store link; NULL or blank clears it, as PUT replaces the row.
 UPDATE vendors
    SET name         = $2,
        location     = $3,
        contact_info = $4,
        is_active    = $5,
+       store_url    = NULLIF(BTRIM($7::text), ''),
        updated_by   = $6,
        updated_at   = NOW()
  WHERE id = $1
@@ -88,7 +91,7 @@ RETURNING id, name, location, contact_info, is_active, created_at, updated_at,
                       AND q.status = 'accepted'
                       AND NOT EXISTS (SELECT 1 FROM purchase_orders po
                                       WHERE po.quotation_id = q.id)) c), '0') AS total_purchase,
-          logo_object_key;
+          logo_object_key, store_url;
 
 -- name: vendors.update_logo
 UPDATE vendors

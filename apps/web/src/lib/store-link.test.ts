@@ -1,23 +1,41 @@
 import { describe, expect, it } from "vitest"
-import { STORE_URL_ERROR, storeLink, storeUrlError } from "./store-link"
+import {
+  PRODUCT_URL_ERROR,
+  productUrlError,
+  STORE_URL_ERROR,
+  storeLink,
+  storeUrlError,
+} from "./store-link"
 
-describe("storeUrlError", () => {
-  it.each([
-    ["", null],
-    ["   ", null],
-    ["https://www.tokopedia.com/toko/produk", null],
-    ["http://vendor.co.id/p?id=1", null],
-    ["HTTPS://Shop.Example.com", null],
-    ["  https://shop.example.com  ", null],
-    ["javascript:alert(1)", STORE_URL_ERROR],
-    ["data:text/html,hi", STORE_URL_ERROR],
-    ["ftp://files.example.com", STORE_URL_ERROR],
-    ["www.tokopedia.com", STORE_URL_ERROR],
-    ["https://", STORE_URL_ERROR],
-    ["https://shop example.com", STORE_URL_ERROR],
-    [`https://e.com/${"a".repeat(2048)}`, STORE_URL_ERROR],
-  ])("%j", (input, want) => {
-    expect(storeUrlError(input)).toBe(want)
+const cases: [string, boolean][] = [
+  ["", true],
+  ["   ", true],
+  ["https://www.tokopedia.com/toko/produk", true],
+  ["http://vendor.co.id/p?id=1", true],
+  ["HTTPS://Shop.Example.com", true],
+  ["  https://shop.example.com  ", true],
+  ["javascript:alert(1)", false],
+  ["data:text/html,hi", false],
+  ["ftp://files.example.com", false],
+  ["www.tokopedia.com", false],
+  ["https://", false],
+  ["https://shop example.com", false],
+  [`https://e.com/${"a".repeat(2048)}`, false],
+]
+
+describe.each([
+  ["productUrlError", productUrlError, PRODUCT_URL_ERROR],
+  ["storeUrlError", storeUrlError, STORE_URL_ERROR],
+])("%s", (_name, check, message) => {
+  it.each(cases)("%j", (input, ok) => {
+    expect(check(input)).toBe(ok ? null : message)
+  })
+})
+
+describe("messages", () => {
+  it("name the link they sit on", () => {
+    expect(PRODUCT_URL_ERROR).toBe("Link produk harus diawali http:// atau https://.")
+    expect(STORE_URL_ERROR).toBe("Link toko harus diawali http:// atau https://.")
   })
 })
 

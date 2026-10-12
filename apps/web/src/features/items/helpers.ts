@@ -174,7 +174,7 @@ export function storeLinkError(err: unknown): AddVendorError {
   if (vendor) return { form: vendor }
   if (err instanceof ApiError && err.status === 404) return { form: "Vendor tidak ditemukan." }
   const msg = err instanceof Error ? err.message.trim() : ""
-  return { form: msg || "Gagal menyimpan link toko." }
+  return { form: msg || "Gagal menyimpan link produk." }
 }
 
 // Store link to send, if changed.

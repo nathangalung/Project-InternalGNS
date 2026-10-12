@@ -5,7 +5,8 @@ import { expect, test } from "./support/seed"
 // Document links between pages.
 //
 // Every client name opens the client, an accepted quotation opens its PO,
-// and an edit page names its document and links back to its detail.
+// and an edit page names its document and links back to its detail. The
+// breadcrumb names each page by its record.
 
 // The client summary card.
 function clientCard(page: Page) {
@@ -61,9 +62,9 @@ test("detail breadcrumbs mark the current page", async ({ page, seed }) => {
   const q = await seed.quotation({ client, lines })
   const inv = await seed.deliver(await seed.accept(q.id))
   const pages = [
-    { url: `/quotations/${q.id}`, current: `Detail ${q.quotationNo}` },
-    { url: `/invoices/${q.id}`, current: `Detail ${inv.invoiceNo}` },
-    { url: `/products/${lines[0].item.id}`, current: "Detail Produk" },
+    { url: `/quotations/${q.id}`, current: `Quotation ${q.quotationNo}` },
+    { url: `/invoices/${q.id}`, current: `Invoice ${inv.invoiceNo}` },
+    { url: `/products/${lines[0].item.id}`, current: `Produk ${lines[0].item.name}` },
   ]
 
   for (const { url, current } of pages) {
@@ -82,7 +83,7 @@ test("edit pages name the document and link back to it", async ({ page, seed }) 
   await expect(
     page.getByRole("heading", { name: `Ubah Quotation ${draft.quotationNo}` }),
   ).toBeVisible()
-  await page.getByRole("link", { name: `Detail ${draft.quotationNo}` }).click()
+  await page.getByRole("link", { name: `Quotation ${draft.quotationNo}` }).click()
   await expect(page).toHaveURL(new RegExp(`/quotations/${draft.id}$`))
 
   const q = await seed.quotation({ client, lines })
@@ -91,6 +92,6 @@ test("edit pages name the document and link back to it", async ({ page, seed }) 
   await expect(
     page.getByRole("heading", { name: `Ubah Purchase Order ${po.poNumber}` }),
   ).toBeVisible()
-  await page.getByRole("link", { name: `Detail ${po.poNumber}` }).click()
+  await page.getByRole("link", { name: `PO ${po.poNumber}` }).click()
   await expect(page).toHaveURL(new RegExp(`/purchase-orders/${q.id}$`))
 })

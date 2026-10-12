@@ -156,7 +156,8 @@ SELECT poi.id,
        v.id   AS vendor_id,
        v.name AS vendor_name,
        vp.product_url,
-       poi.dn_note
+       poi.dn_note,
+       v.store_url AS vendor_store_url
 FROM purchase_order_items poi
 LEFT JOIN units u ON u.id = poi.unit_id
 LEFT JOIN vendor_products vp ON vp.id = poi.vendor_product_id

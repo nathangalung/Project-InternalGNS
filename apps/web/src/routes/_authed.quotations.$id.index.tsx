@@ -10,6 +10,7 @@ import { useQuotation } from "@/features/quotations/hooks"
 import { incompleteLines } from "@/features/quotations/lines"
 import QuotationDetail from "@/features/quotations/QuotationDetail"
 import { useUnits } from "@/features/units/hooks"
+import { useTrailState } from "@/hooks/useNavTrail"
 import { isMissing } from "@/lib/errors"
 
 type QuotationSearch = {
@@ -30,6 +31,7 @@ function QuotationDetailRoute() {
   const { id } = Route.useParams()
   const { narahubung } = Route.useSearch()
   const navigate = useNavigate()
+  const state = useTrailState()
 
   const numericId = Number(id)
   const hasNumericId = Number.isInteger(numericId) && numericId > 0
@@ -81,7 +83,7 @@ function QuotationDetailRoute() {
       contactId={detail.contactId}
       openContactPicker={narahubung === true}
       incomplete={incompleteLines(detail.items)}
-      onEdit={() => void navigate({ to: "/quotations/$id/edit", params: { id } })}
+      onEdit={() => void navigate({ to: "/quotations/$id/edit", params: { id }, state })}
     />
   )
 }

@@ -110,7 +110,8 @@ SELECT ins.id              AS vendor_product_id,
        ins.vendor_sku,
        ins.cost_price::text,
        ins.product_url,
-       ins.last_quoted_at::text
+       ins.last_quoted_at::text,
+       v.store_url         AS vendor_store_url
 FROM ins
 JOIN vendors v ON v.id = ins.vendor_id;
 
@@ -156,7 +157,8 @@ SELECT
     vp.vendor_sku,
     vp.cost_price::text,
     vp.product_url,
-    vp.last_quoted_at::text
+    vp.last_quoted_at::text,
+    v.store_url        AS vendor_store_url
 FROM vendor_products vp
 JOIN vendors v ON v.id = vp.vendor_id
 WHERE vp.item_id = $1 AND v.is_active = TRUE

@@ -27,8 +27,10 @@ export type ProductRow = {
   profitSatuan: number
   vendor?: string
   vendorId?: number
-  // Where the vendor sells it
-  storeUrl?: string
+  // Link Produk, where the vendor sells it
+  productUrl?: string
+  // Link Toko, the vendor's own shop
+  vendorStoreUrl?: string
   // Requested but not offered
   noOffer?: boolean
 }

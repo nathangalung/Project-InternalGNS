@@ -262,7 +262,7 @@ func (h *Handler) AddVendor(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// A store link renders as a link, so only http or https is stored.
+	// A product link renders as a link, so only http or https is stored.
 	if req.ProductURL.Value != nil {
 		trimmed := strings.TrimSpace(*req.ProductURL.Value)
 		req.ProductURL.Value = &trimmed

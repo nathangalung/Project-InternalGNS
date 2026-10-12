@@ -172,7 +172,7 @@ export default function QuotationDetail({
           itemId={linkRow.itemId}
           vendorId={linkRow.vendorId}
           vendorName={linkRow.vendor ?? ""}
-          current={linkRow.storeUrl}
+          current={linkRow.productUrl}
           onClose={() => setLinkRow(null)}
         />
       )}

@@ -11,6 +11,7 @@ import PurchaseOrderDetail from "@/features/purchaseOrders/PurchaseOrderDetail"
 import { toQuotationData } from "@/features/quotations/adapters"
 import { useQuotation } from "@/features/quotations/hooks"
 import { useUnits } from "@/features/units/hooks"
+import { useTrailState } from "@/hooks/useNavTrail"
 import { isMissing } from "@/lib/errors"
 import { roleCanAccess } from "@/lib/rbac"
 
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/_authed/purchase-orders/$id/")({
 function PurchaseOrderDetailRoute() {
   const { id } = Route.useParams()
   const navigate = useNavigate()
+  const state = useTrailState()
 
   const numericId = Number(id)
   const quotationId = Number.isInteger(numericId) && numericId > 0 ? numericId : undefined
@@ -69,7 +71,7 @@ function PurchaseOrderDetailRoute() {
     <PurchaseOrderDetail
       po={po}
       quotation={quotation}
-      onEdit={() => void navigate({ to: "/purchase-orders/$id/edit", params: { id } })}
+      onEdit={() => void navigate({ to: "/purchase-orders/$id/edit", params: { id }, state })}
     />
   )
 }

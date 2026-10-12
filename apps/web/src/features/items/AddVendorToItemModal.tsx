@@ -6,7 +6,7 @@ import { addVendorError, wholeRupiah } from "@/features/items/helpers"
 import { useActiveVendorOptions, useAddVendorToItem } from "@/features/items/hooks"
 import VendorAddModal from "@/features/vendors/VendorAddModal"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
-import { storeUrlError } from "@/lib/store-link"
+import { productUrlError } from "@/lib/store-link"
 import { ui } from "@/lib/ui"
 import type { ItemVendorRow, VendorRow } from "@/types/api"
 
@@ -51,7 +51,7 @@ export default function AddVendorToItemModal({
   if (!open) return null
 
   const vendorId = edit ? edit.vendorId : (vendor?.id ?? null)
-  const urlError = storeUrlError(productUrl)
+  const urlError = productUrlError(productUrl)
 
   const sendsCost = !edit || costTouched
   const isValid = vendorId !== null && urlError === null && (!sendsCost || Number(costPrice) > 0)
@@ -270,7 +270,7 @@ export default function AddVendorToItemModal({
         <div className={ui.modalSection}>
           <div className={ui.field}>
             <label htmlFor={urlInputId} className={ui.fieldLabel}>
-              Link Toko{" "}
+              Link Produk{" "}
               <span className="font-normal normal-case tracking-normal text-[#9CA3AF]">
                 (opsional)
               </span>

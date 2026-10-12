@@ -1,5 +1,6 @@
 import { useId, useRef, useState } from "react"
 import EntityLink from "@/components/shared/EntityLink"
+import NavTrail from "@/components/shared/NavTrail"
 import Pagination from "@/components/shared/Pagination"
 import PermanentDelete from "@/components/shared/PermanentDelete"
 import StoreLink from "@/components/shared/StoreLink"
@@ -12,12 +13,15 @@ import {
   useVendorItems,
   useVendorLogoDownloadUrl,
 } from "@/features/vendors/hooks"
+import { useNavTrail } from "@/hooks/useNavTrail"
 import { useObjectUrl } from "@/hooks/useObjectUrl"
 import { logoBackground } from "@/lib/avatar"
 import { errorMessage } from "@/lib/errors"
 import { formatRupiah } from "@/lib/format"
 import { impaLabel } from "@/lib/impa"
+import { listCrumb } from "@/lib/nav-trail"
 import { canWriteCatalog, seesCost } from "@/lib/rbac"
+import { storeUrlError as typedStoreUrlError } from "@/lib/store-link"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import { validateAsset } from "@/lib/upload-validation"
@@ -29,8 +33,10 @@ import VendorQuotations from "./VendorQuotations"
 
 type VendorDetailProps = {
   vendor: VendorRow
-  onBack: () => void
 }
+
+// Opened without a trail.
+const fallback = [listCrumb("/vendors")]
 
 function vendorInitials(name: string): string {
   const parts = name
@@ -63,7 +69,8 @@ const inputCls = `${inputBase} h-11 rounded-md border-transparent`
 const logoBoxCls =
   "flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg p-0 text-[20px] font-extrabold tracking-[0.5px] text-white"
 
-export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
+export default function VendorDetail({ vendor }: VendorDetailProps) {
+  const nav = useNavTrail(fallback)
   const initialEmail = getContactField(vendor.contactInfo, "email")
   const initialPhone = getContactField(vendor.contactInfo, "phone")
 
@@ -71,6 +78,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
   const [phone, setPhone] = useState(initialPhone)
   const [email, setEmail] = useState(initialEmail)
   const [address, setAddress] = useState(vendor.location ?? "")
+  const [storeUrl, setStoreUrl] = useState(vendor.storeUrl ?? "")
   const [isActive, setIsActive] = useState(vendor.isActive)
   // Picked logo preview
   const [logoPreview, setLogoPreview] = useState("")
@@ -85,6 +93,8 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
   const emailId = useId()
   const emailErrorId = useId()
   const addressId = useId()
+  const storeUrlId = useId()
+  const storeUrlErrorId = useId()
   const statusLabelId = useId()
   const statusHintId = useId()
 
@@ -121,11 +131,13 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
     phone !== initialPhone ||
     email !== initialEmail ||
     address !== (vendor.location ?? "") ||
+    storeUrl !== (vendor.storeUrl ?? "") ||
     isActive !== vendor.isActive
 
   // A server message wins until the input changes.
   const phoneError = fieldErrors.phone || (canWrite ? optionalPhoneError(phone) : null)
   const emailError = fieldErrors.email || (canWrite ? optionalEmailError(email) : null)
+  const storeUrlError = fieldErrors.storeUrl || (canWrite ? typedStoreUrlError(storeUrl) : null)
 
   const logoBg = logoBackground(vendor.name)
 
@@ -161,6 +173,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
     setPhone(initialPhone)
     setEmail(initialEmail)
     setAddress(vendor.location ?? "")
+    setStoreUrl(vendor.storeUrl ?? "")
     setIsActive(vendor.isActive)
     setFieldErrors({})
     setSubmitError(null)
@@ -172,6 +185,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
     if (!name.trim()) errs.name = "Wajib diisi"
     if (phoneError) errs.phone = phoneError
     if (emailError) errs.email = emailError
+    if (storeUrlError) errs.storeUrl = storeUrlError
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs)
       return
@@ -183,6 +197,8 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
           name: name.trim(),
           location: address.trim() || undefined,
           contactInfo: buildContactInfo(vendor.contactInfo, email, phone),
+          // Absent clears it, as PUT replaces the vendor
+          storeUrl: storeUrl.trim() || undefined,
           isActive,
         },
       })
@@ -203,23 +219,13 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
   return (
     <div className={ui.pageContent}>
       <div className="flex flex-col gap-3">
-        <nav aria-label="Breadcrumb" className={ui.breadcrumb}>
-          <button type="button" className={ui.breadcrumbLink} onClick={onBack}>
-            Daftar Vendor
-          </button>
-          <span className={ui.breadcrumbSep} aria-hidden="true">
-            &rsaquo;
-          </span>
-          <span className={ui.breadcrumbCurrent} aria-current="page">
-            Detail Vendor
-          </span>
-        </nav>
+        <NavTrail current={`Vendor ${vendor.name}`} fallback={fallback} />
 
         <div className="flex flex-wrap items-center gap-5">
           <button
             type="button"
-            onClick={onBack}
-            aria-label="Kembali ke Daftar Vendor"
+            onClick={nav.back}
+            aria-label={`Kembali ke ${nav.previous.label}`}
             className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white shadow-[0px_1px_2px_rgba(0,0,0,0.05)] ${ui.focusRing}`}
           >
             <svg
@@ -246,7 +252,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
                 along="tautan produknya"
                 onDelete={async () => {
                   await removeVendor.mutateAsync(vendor.id)
-                  onBack()
+                  nav.back()
                 }}
               />
             </div>
@@ -327,7 +333,12 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
               >
                 {vendor.name}
               </h2>
-              <span className="text-[13px] font-medium leading-[18px] text-[#4A4455]">Vendor</span>
+              <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="text-[13px] font-medium leading-[18px] text-[#4A4455]">
+                  Vendor
+                </span>
+                <StoreLink kind="store" labeled url={vendor.storeUrl} />
+              </span>
             </div>
           </div>
           <div
@@ -462,6 +473,33 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
                 className={`${inputBase} h-auto min-h-24 resize-y rounded-md border-transparent font-sans`}
               />
             </div>
+
+            <div>
+              <label htmlFor={storeUrlId} className={labelCls}>
+                Link Toko
+              </label>
+              <input
+                id={storeUrlId}
+                type="url"
+                value={storeUrl}
+                placeholder={canWrite ? "https://toko.com/nama-vendor" : "-"}
+                readOnly={!canWrite}
+                aria-invalid={storeUrlError ? true : undefined}
+                aria-describedby={storeUrlError ? storeUrlErrorId : undefined}
+                onChange={(e) => {
+                  setStoreUrl(e.target.value)
+                  setFieldErrors((p) => ({ ...p, storeUrl: "" }))
+                }}
+                className={`${inputBase} h-11 rounded-md font-sans ${
+                  storeUrlError ? "border-[#DC2626]" : "border-transparent"
+                }`}
+              />
+              {storeUrlError && (
+                <div id={storeUrlErrorId} className="mt-1.5 text-xs text-[#DC2626]">
+                  {storeUrlError}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="border-t border-[#ECEEF0] pt-6">
@@ -556,7 +594,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
                 <th className={`${ui.thCenter} w-[160px]`}>Kode IMPA</th>
                 <th className={`${ui.thCenter} w-[160px]`}>SKU Vendor</th>
                 {showCost && <th className={`${ui.thCenter} w-[180px]`}>Harga Beli</th>}
-                <th className={`${ui.thCenter} w-[180px]`}>Link Toko</th>
+                <th className={`${ui.thCenter} w-[180px]`}>Link Produk</th>
               </tr>
             </thead>
             <tbody>

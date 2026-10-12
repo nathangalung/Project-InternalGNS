@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react"
 import EntityLink from "@/components/shared/EntityLink"
+import NavTrail from "@/components/shared/NavTrail"
 import StoreLink from "@/components/shared/StoreLink"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useMe } from "@/features/auth/hooks"
@@ -12,17 +13,21 @@ import ProductPhoto from "@/features/items/ProductPhoto"
 import ProductQuotations from "@/features/items/ProductQuotations"
 import { useUnits } from "@/features/units/hooks"
 import UnitCombobox from "@/features/units/UnitCombobox"
+import { useNavTrail } from "@/hooks/useNavTrail"
 import { formErrors } from "@/lib/form-errors"
 import { formatDate, formatRupiah } from "@/lib/format"
 import { impaCodeError, normalizeImpa } from "@/lib/impa"
+import { listCrumb } from "@/lib/nav-trail"
 import { canWriteCatalog, seesCost } from "@/lib/rbac"
 import { ui } from "@/lib/ui"
 import type { ItemImpaHolder, ItemRow, ItemVendorRow } from "@/types/api"
 
 type ProductDetailProps = {
   product: ItemRow
-  onBack: () => void
 }
+
+// Opened without a trail.
+const fallback = [listCrumb("/products")]
 
 const labelCls =
   "mb-2 block text-[10px] font-bold uppercase leading-[15px] tracking-[1px] text-[#4A4455]"
@@ -31,7 +36,8 @@ const inputBase = `h-11 w-full rounded-md border-[1.5px] bg-[#F2F4F6] px-4 py-3 
 
 const textareaCls = `min-h-24 w-full resize-y rounded-md border-[1.5px] border-transparent bg-[#F2F4F6] px-4 py-3 font-sans text-sm font-medium text-[#191C1E] outline-none transition-[border-color] duration-150 read-only:resize-none read-only:cursor-default ${ui.fieldFocus}`
 
-export default function ProductDetail({ product, onBack }: ProductDetailProps) {
+export default function ProductDetail({ product }: ProductDetailProps) {
+  const nav = useNavTrail(fallback)
   const { data: units } = useUnits()
   const { data: me } = useMe()
   const canWrite = canWriteCatalog(me?.role)
@@ -140,23 +146,13 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
     <>
       <div className={ui.pageContent}>
         <div className="flex flex-col gap-3">
-          <nav className={ui.breadcrumb} aria-label="Breadcrumb">
-            <button type="button" className={ui.breadcrumbLink} onClick={onBack}>
-              Katalog Produk
-            </button>
-            <span className={ui.breadcrumbSep} aria-hidden="true">
-              &rsaquo;
-            </span>
-            <span className={ui.breadcrumbCurrent} aria-current="page">
-              Detail Produk
-            </span>
-          </nav>
+          <NavTrail current={`Produk ${product.name}`} fallback={fallback} />
 
           <div className="flex items-center gap-5">
             <button
               type="button"
-              onClick={onBack}
-              aria-label="Kembali ke Katalog Produk"
+              onClick={nav.back}
+              aria-label={`Kembali ke ${nav.previous.label}`}
               className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-white shadow-sm ${ui.focusRing}`}
             >
               <svg
@@ -430,7 +426,7 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                   <th className={`${ui.thCenter} w-[200px]`}>SKU Vendor</th>
                   {showCost && <th className={`${ui.thCenter} w-[180px]`}>Harga Beli</th>}
                   <th className={`${ui.thCenter} w-[200px]`}>Penawaran Terakhir</th>
-                  <th className={`${ui.thCenter} w-[180px]`}>Link Toko</th>
+                  <th className={`${ui.thCenter} w-[180px]`}>Link Produk</th>
                   {canWrite && <th className={`${ui.thCenter} w-[100px]`}>Aksi</th>}
                 </tr>
               </thead>
@@ -461,14 +457,17 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                             >
                               {initials}
                             </div>
-                            <EntityLink
-                              kind="vendor"
-                              id={v.vendorId}
-                              tone="name"
-                              className="text-sm font-medium"
-                            >
-                              {v.vendorName}
-                            </EntityLink>
+                            <span className="flex min-w-0 flex-col items-start gap-0.5">
+                              <EntityLink
+                                kind="vendor"
+                                id={v.vendorId}
+                                tone="name"
+                                className="text-sm font-medium"
+                              >
+                                {v.vendorName}
+                              </EntityLink>
+                              <StoreLink kind="store" labeled url={v.vendorStoreUrl} />
+                            </span>
                           </div>
                         </td>
                         <td className={`${ui.tdCenter} font-medium`}>{v.vendorSku ?? "-"}</td>
