@@ -139,6 +139,15 @@ SELECT b.ord AS idx, m.item_id, m.confidence, m.source
 FROM unnest($1::text[]) WITH ORDINALITY AS b(req_text, ord)
 CROSS JOIN LATERAL fn_match_request(b.req_text, 1) m;
 
+-- name: items.split_rows
+-- Each import row's code and text as fn_impa_split stores them: the text
+-- loses its own code, and a code it marks IMPA fills an empty code. idx is
+-- the 1-based position in $1.
+SELECT r.ord AS idx, COALESCE(s.name, '') AS name, COALESCE(s.code, '') AS code
+FROM unnest($1::text[], $2::text[]) WITH ORDINALITY AS r(name, code, ord)
+CROSS JOIN LATERAL fn_impa_split(r.name, r.code) s
+ORDER BY r.ord;
+
 -- name: items.list_vendors_for_item
 SELECT
     vp.id              AS vendor_product_id,

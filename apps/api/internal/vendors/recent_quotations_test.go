@@ -94,7 +94,7 @@ func TestRepo_RecentQuotations_KeepsSentOffer(t *testing.T) {
 	d := testutil.SeedQuotationHistory(t, ctx, tx, "sent")
 	_, err := tx.Exec(ctx, `SELECT fn_freeze_quotation_offer($1)`, d.Quotations[0])
 	require.NoError(t, err)
-	_, err = tx.Exec(ctx, `UPDATE items SET name = name || ' Baru', impa_code = 'X' || impa_code WHERE id = $1`, d.Item)
+	_, err = tx.Exec(ctx, `UPDATE items SET name = name || ' Baru', impa_code = $2 WHERE id = $1`, d.Item, testutil.UniqueIMPA(t))
 	require.NoError(t, err)
 
 	got, err := vendors.NewRepo(tx, testutil.Store(t)).RecentQuotations(ctx, d.Vendor)

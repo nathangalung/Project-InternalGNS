@@ -35,7 +35,7 @@ func SeedQuotationHistory(t testing.TB, ctx context.Context, exec db.Executor, s
 	d := QuotationHistory{
 		Contact:    "Narahubung " + tag,
 		ItemName:   "Barang Riwayat " + tag,
-		ItemImpa:   tag[len(tag)-6:],
+		ItemImpa:   UniqueIMPA(t),
 		VendorName: "CV Riwayat " + tag,
 	}
 	require.NoError(t, exec.QueryRow(ctx, `

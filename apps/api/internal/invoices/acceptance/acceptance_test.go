@@ -33,9 +33,9 @@ const (
 	defaultUnit    int16 = 19
 
 	offeredName = "ACCEPTANCE VALVE SNAPSHOT"
-	offeredCode = "A58001"
+	offeredCode = "890011"
 	renamedName = "ACCEPTANCE VALVE RENAMED"
-	renamedCode = "A58002"
+	renamedCode = "890012"
 )
 
 type scenarioState struct {

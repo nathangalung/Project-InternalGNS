@@ -1,8 +1,8 @@
 package migrations_test
 
 import (
+	"fmt"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
@@ -28,11 +28,14 @@ type offerLine struct {
 // what it printed before, the product's.
 func TestMigration00112_FreezesFiledOffers(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
-	_, err := tx.Exec(ctx, downSQL(t, offerSnapshotMigration))
+	// 00113 checks the code columns 00112 adds.
+	_, err := tx.Exec(ctx, downSQL(t, impaMigration))
+	require.NoError(t, err)
+	_, err = tx.Exec(ctx, downSQL(t, offerSnapshotMigration))
 	require.NoError(t, err)
 
 	tag := strconv.FormatInt(time.Now().UnixNano(), 36)
-	name, code := "Produk Migrasi "+tag, strings.ToUpper("m"+tag[len(tag)-7:])
+	name, code := "Produk Migrasi "+tag, fmt.Sprintf("98%04d", time.Now().UnixNano()%10_000)
 	var item int64
 	require.NoError(t, tx.QueryRow(ctx, `
 		INSERT INTO items (name, impa_code, default_unit_id, created_by, updated_by)

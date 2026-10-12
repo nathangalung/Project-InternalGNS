@@ -21,9 +21,9 @@ import (
 const (
 	requestText   = "valve 2 inch pls check"
 	offeredName   = "BALL VALVE 2IN SS316 SNAPSHOT"
-	offeredCode   = "T58001"
+	offeredCode   = "890001"
 	renamedName   = "BALL VALVE 2IN SS316 RENAMED"
-	renamedCode   = "T58002"
+	renamedCode   = "890002"
 	offeredUnitID = seedUnitID
 )
 
