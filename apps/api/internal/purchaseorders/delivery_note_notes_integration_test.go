@@ -207,18 +207,48 @@ func TestHandler_UpdateDeliveryNote_Unknown(t *testing.T) {
 	body := purchaseorders.UpdateDeliveryNoteRequest{Notes: []purchaseorders.DeliveryNoteLineNote{{LineID: 1, Note: "x"}}}
 	tests := []struct {
 		name, path string
+		body       any
 		want       int
 	}{
-		{"a missing PO", notesPath(999999999), http.StatusNotFound},
-		{"a malformed id", "/purchase-orders/abc/delivery-note", http.StatusBadRequest},
+		{"a missing PO", notesPath(999999999), body, http.StatusNotFound},
+		{"a malformed id", "/purchase-orders/abc/delivery-note", body, http.StatusBadRequest},
+		{"a body that is not the notes", notesPath(1), []int{1}, http.StatusBadRequest},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			res := doJSONWithHeaders(t, srv, http.MethodPatch, tc.path, body, map[string]string{"If-Match": "1"})
+			res := doJSONWithHeaders(t, srv, http.MethodPatch, tc.path, tc.body, map[string]string{"If-Match": "1"})
 			defer res.Body.Close()
 			assert.Equal(t, tc.want, res.StatusCode)
 		})
 	}
+}
+
+// A failed save is a generic 500.
+func TestHandler_UpdateDeliveryNote_DatabaseFault(t *testing.T) {
+	srv := execServer(t, testutil.FakeExec{}, "")
+	body := purchaseorders.UpdateDeliveryNoteRequest{Notes: []purchaseorders.DeliveryNoteLineNote{{LineID: 1, Note: "x"}}}
+	res := doJSONWithHeaders(t, srv, http.MethodPatch, notesPath(1), body, map[string]string{"If-Match": "1"})
+	defer res.Body.Close()
+	require.Equal(t, http.StatusInternalServerError, res.StatusCode)
+	assert.Equal(t, "internal server error", readProblem(t, res).Detail)
+}
+
+// A client with no address.
+// The lines name two places, so the Address falls back to an empty one and
+// each line says where it goes.
+func TestHandler_ListItems_ClientWithoutAddress(t *testing.T) {
+	ctx, tx, srv := txServer(t)
+	_, err := tx.Exec(ctx, `UPDATE company_client SET address = NULL WHERE id = $1`, seedCompanyID)
+	require.NoError(t, err)
+	poID := poWithDestinations(t, tx, nil, []string{"Gudang Cakung", "Pelabuhan Tanjung Priok"})
+
+	res := doJSON(t, srv, http.MethodGet, fmt.Sprintf("/purchase-orders/%d/items", poID), nil)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	var items []purchaseorders.PurchaseOrderItem
+	readJSON(t, res, &items)
+	require.Len(t, items, 2)
+	assert.Equal(t, "Kirim ke: Gudang Cakung", items[0].DnNoteDefault)
 }
 
 // Ubah PO keeps the notes.
