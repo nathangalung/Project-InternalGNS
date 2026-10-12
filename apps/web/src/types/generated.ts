@@ -219,6 +219,7 @@ export type CreateVendorInput = {
     location?: string | null;
     contactInfo?: VendorContactInfo | null;
     isActive?: boolean | null;
+    storeUrl?: string;
 };
 
 // From dashboard/dto.go
@@ -441,6 +442,7 @@ export type ItemVendorRow = {
     costPrice?: string;
     productUrl?: string;
     lastQuotedAt?: string;
+    vendorStoreUrl?: string;
 };
 
 // From items/dto.go
@@ -678,6 +680,7 @@ export type PurchaseOrderItemRow = {
     vendorId?: number;
     vendorName?: string;
     productUrl?: string;
+    vendorStoreUrl?: string;
 };
 
 // From purchaseorders/dto.go
@@ -898,6 +901,7 @@ export type QuotationItemRow = {
     vendorId?: number;
     vendorName?: string;
     productUrl?: string;
+    vendorStoreUrl?: string;
     qty: string;
     unitId?: number;
     sellingPrice?: string;
@@ -1106,6 +1110,7 @@ export type UpdateVendorInput = {
     location?: string | null;
     contactInfo?: VendorContactInfo | null;
     isActive: boolean;
+    storeUrl?: string;
 };
 
 // From users/dto.go
@@ -1164,4 +1169,5 @@ export type VendorRow = {
     productCount: number;
     totalPurchase?: string;
     logoObjectKey?: string;
+    storeUrl?: string;
 };

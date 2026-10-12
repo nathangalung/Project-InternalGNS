@@ -79,6 +79,8 @@ type VendorForItem struct {
 	CostPrice       *string `db:"cost_price"         json:"costPrice,omitempty"`
 	ProductURL      *string `db:"product_url"        json:"productUrl,omitempty"`
 	LastQuotedAt    *string `db:"last_quoted_at"     json:"lastQuotedAt,omitempty"`
+	// The vendor's own shop (Link Toko)
+	VendorStoreURL *string `db:"vendor_store_url" json:"vendorStoreUrl,omitempty"`
 }
 
 // Mirrors fn_suggest_selling_prices return.

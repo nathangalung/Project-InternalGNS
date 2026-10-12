@@ -32,6 +32,8 @@ type Vendor struct {
 	ProductCount  int64        `db:"product_count"  json:"productCount"`
 	TotalPurchase string       `db:"total_purchase" json:"totalPurchase,omitempty"`
 	LogoObjectKey *string      `db:"logo_object_key" json:"logoObjectKey,omitempty"`
+	// The vendor's own shop (Link Toko)
+	StoreURL *string `db:"store_url" json:"storeUrl,omitempty"`
 }
 
 // ContactInfo is vendors.contact_info.
@@ -71,8 +73,9 @@ type ItemListResult struct {
 type CreateVendorRequest struct {
 	Name        string       `json:"name"`
 	Location    *string      `json:"location"`
-	ContactInfo *ContactInfo `json:"contactInfo"` // nil stores NULL
-	IsActive    *bool        `json:"isActive"`    // nil defaults to true
+	ContactInfo *ContactInfo `json:"contactInfo"`        // nil stores NULL
+	IsActive    *bool        `json:"isActive"`           // nil defaults to true
+	StoreURL    *string      `json:"storeUrl,omitempty"` // blank stores NULL
 }
 
 type UpdateVendorRequest struct {
@@ -80,6 +83,7 @@ type UpdateVendorRequest struct {
 	Location    *string      `json:"location"`
 	ContactInfo *ContactInfo `json:"contactInfo"`
 	IsActive    bool         `json:"isActive"`
+	StoreURL    *string      `json:"storeUrl,omitempty"` // absent or blank clears it
 }
 
 // RecentQuotationCount caps the vendor's quotation list.
