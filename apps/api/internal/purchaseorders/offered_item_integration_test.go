@@ -171,7 +171,7 @@ func TestPurchaseOrder_LineIgnoresCatalogEdits(t *testing.T) {
 	offered := insertUncodedItem(t, tx)
 	poID := acceptedQuotationWithOffer(t, tx, "tolong carikan punching tool", offered)
 	name := catalogName(t, tx, offered)
-	_, err := tx.Exec(ctx, `UPDATE items SET name = 'Nama katalog baru', impa_code = 'BARU' || id WHERE id = $1`, *offered)
+	_, err := tx.Exec(ctx, `UPDATE items SET name = 'Nama katalog baru', impa_code = $2 WHERE id = $1`, *offered, testutil.UniqueIMPA(t))
 	require.NoError(t, err)
 
 	lines, err := purchaseorders.NewRepo(tx, testutil.Store(t)).ListItems(ctx, poID)

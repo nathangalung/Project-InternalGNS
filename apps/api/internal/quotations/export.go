@@ -53,11 +53,10 @@ type exportData struct {
 	AttnPhone     string
 	DateLine      string
 	Items         []exportItem
-	TotalProduk   string
+	Total         string
+	HasDiscount   bool
 	DiscountPct   string
 	TotalDiscount string
-	Shipping      string
-	HasShipping   bool
 	Subtotal      string
 	WithPPN       bool
 	DPP           string
@@ -151,7 +150,6 @@ func buildExportData(
 	// No Offer and adds nothing to total_produk; an unpriced offered line
 	// cannot be sent (fn_change_quotation_status).
 	items := make([]exportItem, 0, len(d.Items))
-	hasShipping := false
 	// fn_create_quotation writes at most one shipping line.
 	deliveryTime := ""
 	shipTo := ""
@@ -173,7 +171,6 @@ func buildExportData(
 			if !isPriced(it.SellingPrice) {
 				continue
 			}
-			hasShipping = true
 		}
 
 		items = append(items, exportItem{
@@ -216,11 +213,10 @@ func buildExportData(
 		AttnPhone:     pdfgen.LatexEscape(contactPhone),
 		DateLine:      pdfgen.JakartaDateLine(documentDate(d, now).In(tz.Jakarta())),
 		Items:         items,
-		TotalProduk:   pdfgen.FormatIDRCents(d.TotalProduk),
-		DiscountPct:   d.DiscountPct,
+		Total:         pdfgen.FormatIDRCents(d.Total),
+		HasDiscount:   !pdfgen.IsZero(d.TotalDiscount),
+		DiscountPct:   pdfgen.FormatPct(d.DiscountPct),
 		TotalDiscount: pdfgen.FormatIDRCents(d.TotalDiscount),
-		Shipping:      pdfgen.FormatIDRCents(pdfgen.BigSub(d.Total, d.TotalProduk)),
-		HasShipping:   hasShipping,
 		Subtotal:      pdfgen.FormatIDRCents(d.Subtotal),
 		WithPPN:       d.PPNEnabled,
 		DPP:           pdfgen.FormatIDRCents(d.DppNilaiLain),

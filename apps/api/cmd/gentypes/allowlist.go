@@ -129,6 +129,8 @@ var allowlist = []pkg{
 		{Go: "UpdateFileRequest", TS: "PoFileInput", Input: true},
 		{Go: "UpdateNotesRequest", TS: "PoNotesInput", Input: true},
 		{Go: "UpdateDetailsRequest", TS: "PoDetailsInput", Input: true},
+		{Go: "UpdateDeliveryNoteRequest", TS: "PoDeliveryNoteInput", Input: true},
+		{Go: "DeliveryNoteLineNote", TS: "PoDeliveryNoteLineInput", Input: true},
 		{Go: "UpdateItemsRequest", TS: "PoUpdateItemsInput", Input: true},
 		{Go: "UpdateItemsLine", TS: "PoItemInput", Input: true},
 		{Go: "UpdatedResponse", TS: "PoSaved"},

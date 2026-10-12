@@ -135,6 +135,9 @@ export const field = tv({
       disabledField,
     ],
     row2: "grid grid-cols-1 gap-6 sm:grid-cols-2",
+    // A code beside its name: the code takes six digits.
+    codeName: "grid grid-cols-1 gap-4 sm:grid-cols-[9rem_minmax(0,1fr)]",
+    error: "m-0 text-[12px] text-error",
   },
 })
 
@@ -187,15 +190,19 @@ export const modalForm = tv({
 // Detail breadcrumb parts.
 //
 // Faithful to qd-*.
+// Long labels truncate, and the trail wraps on a phone.
 export const breadcrumb = tv({
   slots: {
-    root: "flex items-center gap-2",
+    root: "min-w-0 max-w-full",
+    list: "m-0 flex min-w-0 list-none flex-wrap items-center gap-x-2 gap-y-1 p-0",
+    item: "flex min-w-0 max-w-full items-center gap-2",
     link: [
-      "cursor-pointer rounded-sm text-overline font-bold uppercase tracking-[0.12em] text-[#4A4455] transition hover:text-primary-700",
+      "inline-block min-w-0 max-w-[16rem] cursor-pointer truncate rounded-sm text-overline font-bold uppercase tracking-[0.12em] text-[#4A4455] no-underline transition hover:text-primary-700 max-sm:max-w-[10rem]",
       ring,
     ],
-    sep: "text-overline font-bold uppercase text-dark-300",
-    current: "text-overline font-bold uppercase tracking-[0.12em] text-primary-700",
+    sep: "shrink-0 text-overline font-bold uppercase text-dark-300",
+    current:
+      "inline-block min-w-0 max-w-full truncate text-overline font-bold uppercase tracking-[0.12em] text-primary-700",
   },
 })
 
@@ -368,11 +375,15 @@ export const ui = {
   fieldLabel: fld.label(),
   fieldInput: fld.input(),
   row2: fld.row2(),
+  codeNameRow: fld.codeName(),
+  fieldError: fld.error(),
   modalCancel: modalButton({ variant: "cancel" }),
   modalSubmit: modalButton({ variant: "submit" }),
 
   // Detail header and breadcrumb
   breadcrumb: bc.root(),
+  breadcrumbList: bc.list(),
+  breadcrumbItem: bc.item(),
   breadcrumbLink: bc.link(),
   breadcrumbSep: bc.sep(),
   breadcrumbCurrent: bc.current(),
@@ -401,7 +412,7 @@ export const ui = {
 export const btnRemove = `inline-flex items-center justify-center gap-2 rounded-md border border-transparent px-3 py-2 text-sm font-medium text-[#B91C1C] transition hover:bg-[#FEE2E2] disabled:cursor-not-allowed disabled:opacity-50 ${ui.focusRing}`
 
 // Small inline text action.
-// Beside a link it adds or changes, such as Tambah Link Toko.
+// Beside a link it adds or changes, such as Tambah Link Produk.
 export const linkAction = entityLink({ class: "text-xs font-semibold" })
 
 // Pill toggle classes.

@@ -10,6 +10,7 @@ import {
   lineToInput,
   loadFailureMessage,
   type PoEditLine,
+  poCrumbLabel,
   poHistoryEntry,
   poItemsToProducts,
   poItemsToShipping,
@@ -46,12 +47,15 @@ describe("poItemsToProducts", () => {
         vendorId: 7,
         vendorName: "PT Laut",
         productUrl: "https://toko.example/rope",
+        vendorStoreUrl: "https://toko.example",
       }),
       line({ id: 2 }),
     ])
-    expect(rows.map((r) => [r.itemId, r.vendorId, r.vendor, r.storeUrl])).toEqual([
-      [42, 7, "PT Laut", "https://toko.example/rope"],
-      [undefined, undefined, undefined, undefined],
+    expect(
+      rows.map((r) => [r.itemId, r.vendorId, r.vendor, r.productUrl, r.vendorStoreUrl]),
+    ).toEqual([
+      [42, 7, "PT Laut", "https://toko.example/rope", "https://toko.example"],
+      [undefined, undefined, undefined, undefined, undefined],
     ])
   })
 
@@ -273,8 +277,10 @@ describe("upsertPoLine", () => {
     () => "",
   )
   const form: ProductAddFormData = {
-    requestedKodeImpaNama: "",
-    kodeImpaNama: "123456 - Rope",
+    requestedKodeImpa: "",
+    requestedNama: "",
+    kodeImpa: "123456",
+    nama: "Rope",
     jumlahProduk: "0",
     satuan: "MTR",
     namaVendor: "PT Laut",
@@ -472,5 +478,16 @@ describe("poHistoryEntry without a reason", () => {
       changedAt: "2026-09-01T03:00:00Z",
     } as const
     expect(poHistoryEntry(ev).action).toBe("Pending → PO Diunggah")
+  })
+})
+
+describe("poCrumbLabel", () => {
+  it("names a PO by its number", () => {
+    expect(poCrumbLabel("PO-77", "Q-00001/GNS/IX/2026")).toBe("PO PO-77")
+  })
+
+  it("names a numberless PO by its quotation", () => {
+    expect(poCrumbLabel(undefined, "Q-00001/GNS/IX/2026")).toBe("PO dari Q-00001/GNS/IX/2026")
+    expect(poCrumbLabel("  ", "Q-00001/GNS/IX/2026")).toBe("PO dari Q-00001/GNS/IX/2026")
   })
 })

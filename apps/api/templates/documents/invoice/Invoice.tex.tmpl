@@ -2,7 +2,7 @@
 % Compile: xelatex Invoice.tex
 % Requires Plus Jakarta Sans installed system-wide.
 
-% Mirrors the quotation layout; totals run DPP, then DPP Nilai Lain and PPN when taxed, then Total.
+% Same layout and summary rows as the quotation.
 
 % Portrait like the delivery note, so all three print alike.
 \documentclass[a4paper]{article}
@@ -17,7 +17,7 @@
 ]
 
 % A4 at every length; the content starts high.
-\usepackage[a4paper, includehead, headheight=12pt, headsep=6pt, top=0.8cm, bottom=1.5cm, left=1.8cm, right=1.8cm]{geometry}
+\usepackage[a4paper, includehead, includefoot, headheight=12pt, headsep=6pt, footskip=16pt, top=0.4cm, bottom=0.75cm, left=0.9cm, right=0.9cm]{geometry}
 \usepackage{graphicx}
 \usepackage{longtable}
 \usepackage{array}
@@ -36,7 +36,7 @@
 \hypersetup{colorlinks=true, urlcolor=blue, linkcolor=black}
 
 % Shared sizes, same in all three documents.
-\newcommand{\DocLogoWidth}{6.6cm}
+\newcommand{\DocLogoWidth}{5.2cm}
 \newcommand{\DocHeadSize}{\fontsize{7}{9}\selectfont}
 \newcommand{\DocPartySize}{\footnotesize}
 \newcommand{\DocCellSize}{\footnotesize}
@@ -44,7 +44,7 @@
 \newcommand{\DocTitle}[2]{%
   \begin{center}
     {\Large\bfseries #1}\\[3pt]
-    {\large\bfseries #2}
+    {\fontsize{11}{13}\selectfont\bfseries #2}
   \end{center}}
 
 \setlength{\parindent}{0pt}
@@ -195,19 +195,20 @@
 \hline
 [[end]]
 
-\multicolumn{5}{|r|}{\DocCellSize HARGA TOTAL} &
-  \multicolumn{2}{r|}{\DocCellSize [[.TotalProduk]]} \\
-[[if .Diskon]]\multicolumn{5}{|r|}{\DocCellSize Diskon} &
+% Same rows as the quotation. Shipping is a line, so Total has it.
+\multicolumn{5}{|r|}{\DocCellSize Total} &
+  \multicolumn{2}{r|}{\DocCellSize [[.Total]]} \\
+[[if .HasDiscount]]\multicolumn{5}{|r|}{\DocCellSize Diskon Produk[[if .DiscountPct]] [[.DiscountPct]]\%[[end]]} &
   \multicolumn{2}{r|}{\DocCellSize -[[.Diskon]]} \\
-[[end]]\multicolumn{5}{|r|}{\DocCellSize DPP} &
-  \multicolumn{2}{r|}{\DocCellSize [[.DPP]]} \\
+[[end]]\multicolumn{5}{|r|}{\DocCellSize Sub Total} &
+  \multicolumn{2}{r|}{\DocCellSize [[.Subtotal]]} \\
 [[if .WithPPN]]\multicolumn{5}{|r|}{\DocCellSize DPP Nilai Lain} &
   \multicolumn{2}{r|}{\DocCellSize [[.DPPNilaiLain]]} \\
 \multicolumn{5}{|r|}{\DocCellSize PPN 12\%} &
   \multicolumn{2}{r|}{\DocCellSize [[.PPN]]} \\
 [[end]]\hline
-\multicolumn{5}{|r|}{\DocCellSize\bfseries Total} &
-  \multicolumn{2}{r|}{\DocCellSize\bfseries [[.Total]]} \\
+\multicolumn{5}{|r|}{\DocCellSize\bfseries Grand Total} &
+  \multicolumn{2}{r|}{\DocCellSize\bfseries [[.GrandTotal]]} \\
 \hline
 
 \end{longtable}

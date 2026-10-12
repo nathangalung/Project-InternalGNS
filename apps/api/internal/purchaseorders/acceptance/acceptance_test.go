@@ -668,6 +668,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		registerStatusSteps(sc, state)
 		registerListDetailsSteps(sc, state)
 		registerReadinessSteps(sc, state)
+		registerDeliveryNoteSteps(sc, state)
 
 		sc.Step(`^an authenticated user with id (\d+)$`, func(id int64) error { return state.authenticatedUser(id) })
 		sc.Step(`^the commercial domain is empty$`, state.emptyDomain)

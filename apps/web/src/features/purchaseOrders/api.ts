@@ -8,6 +8,7 @@ import {
 } from "@/lib/api-client"
 import type {
   PoBackendStatus,
+  PoDeliveryNoteInput,
   PoDetailsInput,
   PoFileInput,
   PoSaved,
@@ -120,6 +121,22 @@ export async function updateDetails(
     path: `/purchase-orders/${id}/details`,
     method: "PATCH",
     body: payload,
+    headers: { "If-Match": String(rowVersion) },
+  })
+}
+
+// Delivery note row notes.
+//
+// Only the rows sent change.
+export async function updateDeliveryNote(
+  id: number,
+  input: PoDeliveryNoteInput,
+  rowVersion: number,
+): Promise<PoSaved> {
+  return apiRequest<PoSaved>({
+    path: `/purchase-orders/${id}/delivery-note`,
+    method: "PATCH",
+    body: input,
     headers: { "If-Match": String(rowVersion) },
   })
 }

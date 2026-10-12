@@ -21,19 +21,21 @@ export function buildContactInfo(
   return next
 }
 
-export type VendorFormField = "name" | "phone" | "email"
+export type VendorFormField = "name" | "phone" | "email" | "storeUrl"
 
 // API field keys by input.
 const SERVER_KEYS = {
   name: "name",
   phone: "contactInfo.phone",
   email: "contactInfo.email",
+  storeUrl: "storeUrl",
 } as const
 
 // Split a vendor save error.
 //
 // The API names contact fields by their request path, so they are moved
-// onto the phone and email inputs; anything else goes to the banner.
+// onto the phone and email inputs, the store link onto its own, and
+// anything else goes to the banner.
 export function vendorFormErrors(err: unknown, fallback: string): FormErrors<VendorFormField> {
   const split = formErrors(err, Object.values(SERVER_KEYS), fallback)
   const fields: Partial<Record<VendorFormField, string>> = {}

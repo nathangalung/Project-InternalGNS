@@ -4,6 +4,7 @@ import RouteErrorFallback from "@/components/shared/RouteErrorFallback"
 import Sidebar from "@/components/shared/Sidebar"
 import * as authApi from "@/features/auth/api"
 import { clearAuthState, useAuth } from "@/features/auth/hooks"
+import { PageNameProvider } from "@/hooks/useNavTrail"
 import { ApiError } from "@/lib/api-client"
 import { queryKeys } from "@/lib/query-keys"
 import { roleCanOpen } from "@/lib/rbac"
@@ -41,12 +42,14 @@ export const Route = createFileRoute("/_authed")({
 })
 
 // Sidebar plus scrolling main.
+//
+// The page name provider lets links label the crumb they leave behind.
 function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex h-dvh overflow-hidden bg-dark-50">
       <Sidebar />
       <main className="ml-[220px] flex h-dvh min-w-0 flex-1 flex-col overflow-y-auto max-lg:ml-0 max-lg:pt-14">
-        {children}
+        <PageNameProvider>{children}</PageNameProvider>
       </main>
     </div>
   )

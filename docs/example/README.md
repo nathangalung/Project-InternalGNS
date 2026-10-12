@@ -9,7 +9,8 @@ The sale: PT Samudra Contoh Nusantara asks for five products (COIL, PKT,
 TIN, PCS and MTR lines from two vendors), with a 5% discount, a shipping
 charge and 12% PPN. Quotation Q-00001/GNS/X/2026 is sent and accepted, the PO
 gets its file and the client's PO number, goes to ON_PROGRESS and
-DELIVERED, and invoice INV-00001/GNS/X/2026 is sent. Kas Lain holds one Masuk and
+DELIVERED, one Surat Jalan row gets a note and the line going elsewhere
+says where, and invoice INV-00001/GNS/X/2026 is sent. Kas Lain holds one Masuk and
 one Keluar entry.
 
 | File | Route | What it is |

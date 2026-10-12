@@ -86,16 +86,17 @@ func TestRepo_MatchRows_FailureNamesStage(t *testing.T) {
 		budget int
 		want   string
 	}{
-		{0, "match rows 0-1 by IMPA"},
-		{1, "match rows 0-1 by name"},
-		{2, "create row 1"},
-		{3, "price rows 0-1"},
+		{0, "split rows 0-1"},
+		{1, "match rows 0-1 by IMPA"},
+		{2, "match rows 0-1 by name"},
+		{3, "create row 1"},
+		{4, "price rows 0-1"},
 	}
 	for _, c := range cases {
 		t.Run(c.want, func(t *testing.T) {
 			ctx, tx := testutil.BeginTx(t)
 			store := testutil.Store(t)
-			impa := uniqueIMPA()
+			impa := uniqueIMPA(t)
 			_, err := items.NewRepo(tx, store).Create(ctx,
 				items.CreateItemRequest{Name: uniqueItemName("STAGE"), IMPACode: &impa}, seedUserID)
 			require.NoError(t, err)

@@ -43,7 +43,7 @@ func (s *scenarioState) seedRFQItem() error {
 		return err
 	}
 	s.rfq = rfqState{
-		impa:    fmt.Sprintf("9%06d", n),
+		impa:    testutil.UniqueIMPA(s.t),
 		name:    fmt.Sprintf("RFQ Kabel %06d", n),
 		unknown: fmt.Sprintf("Qzvx %06d wkjh", n),
 	}
@@ -69,15 +69,22 @@ func (s *scenarioState) seedRFQItem() error {
 // rfqWorkbook lists the rows.
 // A merged DECK STORES row sits above them, as ship RFQs group stores.
 func (s *scenarioState) rfqWorkbook() ([]byte, error) {
+	return workbookOf([][]any{
+		{s.rfq.impa, s.rfq.name, 3, "PCS"},
+		{nil, s.rfq.unknown, 2, "PCS"},
+	})
+}
+
+// workbookOf writes product rows.
+// They sit under a header and a merged DECK STORES row.
+func workbookOf(products [][]any) ([]byte, error) {
 	f := excelize.NewFile()
 	defer func() { _ = f.Close() }()
 	const sh = "Sheet1"
-	rows := [][]any{
+	rows := append([][]any{
 		{"Kode IMPA", "Nama Produk", "Jumlah", "Satuan"},
 		{"DECK STORES"},
-		{s.rfq.impa, s.rfq.name, 3, "PCS"},
-		{nil, s.rfq.unknown, 2, "PCS"},
-	}
+	}, products...)
 	for i, r := range rows {
 		cell, err := excelize.CoordinatesToCellName(1, i+1)
 		if err != nil {
@@ -183,7 +190,52 @@ func (s *scenarioState) uploadMatched() error {
 	return nil
 }
 
+// uploadCodedRows names the item twice.
+// Once by its exact name under a code no product holds, once by its code
+// inside the request text with the code cell empty.
+func (s *scenarioState) uploadCodedRows() error {
+	data, err := workbookOf([][]any{
+		{testutil.UniqueIMPA(s.t), s.rfq.name, 1, "PCS"},
+		{nil, "Permintaan kabel IMPA " + s.rfq.impa, 2, "PCS"},
+	})
+	if err != nil {
+		return err
+	}
+	if err := s.uploadRFQ("permintaan.xlsx", data); err != nil {
+		return err
+	}
+	var got quotations.RFQRows
+	if err := json.Unmarshal(s.body, &got); err != nil {
+		return err
+	}
+	s.rfq.rows = got.Rows
+	return nil
+}
+
+func (s *scenarioState) codedRowsMatched() error {
+	var got items.MatchRowsResponse
+	if err := json.Unmarshal(s.body, &got); err != nil {
+		return err
+	}
+	if len(got.Rows) != 2 {
+		return fmt.Errorf("want 2 match rows, got %d", len(got.Rows))
+	}
+	coded, text := got.Rows[0], got.Rows[1]
+	if coded.Source != "NONE" || coded.Matched != nil {
+		return fmt.Errorf("coded row = %s %+v, want NONE, never the name match", coded.Source, coded.Matched)
+	}
+	if text.Source != "IMPA_EXACT" || text.Matched == nil || text.Matched.ItemID != s.rfq.itemID {
+		return fmt.Errorf("text row = %s %+v, want IMPA_EXACT item %d", text.Source, text.Matched, s.rfq.itemID)
+	}
+	if text.Requested.Name != "Permintaan kabel" || text.Requested.IMPACode != s.rfq.impa {
+		return fmt.Errorf("text row requested %+v, want the code in its own field", text.Requested)
+	}
+	return nil
+}
+
 func registerRFQSteps(sc *godog.ScenarioContext, s *scenarioState) {
+	sc.Step(`^the user uploads an RFQ naming the item under a code no product holds and its code inside a request text$`, s.uploadCodedRows)
+	sc.Step(`^the coded row matches nothing and the request text's code matches the item$`, s.codedRowsMatched)
 	sc.Step(`^a catalog item with a fresh IMPA code$`, s.seedRFQItem)
 	sc.Step(`^the user uploads an RFQ listing that item and an unknown product under a category row$`, s.uploadRFQWorkbook)
 	sc.Step(`^the user uploads a text file named "([^"]+)"$`, s.uploadTextAs)

@@ -1,4 +1,4 @@
--- Canonical current body of fn_update_po_items (deployed by migration 00112).
+-- Canonical current body of fn_update_po_items (deployed by migration 00114).
 CREATE OR REPLACE FUNCTION public.fn_update_po_items(p_po_id bigint, p_user_id bigint, p_discount_pct numeric, p_notes text, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb)
  RETURNS void
  LANGUAGE plpgsql
@@ -13,6 +13,7 @@ DECLARE
   v_link_vendor BIGINT;
   v_stored      BIGINT[];
   v_old_costs   JSONB;
+  v_old_notes   JSONB;
   v_cost        NUMERIC;
   it            JSONB;
 BEGIN
@@ -100,6 +101,11 @@ BEGIN
   FROM purchase_order_items
   WHERE po_id = p_po_id AND vendor_product_id IS NOT NULL AND cost_price IS NOT NULL;
 
+  -- Delivery note notes, kept by line id.
+  SELECT COALESCE(jsonb_object_agg(id::TEXT, dn_note), '{}') INTO v_old_notes
+  FROM purchase_order_items
+  WHERE po_id = p_po_id AND dn_note IS NOT NULL;
+
   DELETE FROM purchase_order_items WHERE po_id = p_po_id;
 
   FOR it IN SELECT * FROM jsonb_array_elements(p_items)
@@ -135,7 +141,7 @@ BEGIN
       po_id, quotation_item_id, line_number, item_type,
       offered_item_id, vendor_product_id, item_name, item_code,
       qty, unit_id, selling_price, cost_price,
-      discount_pct, is_available, ship_destination,
+      discount_pct, is_available, ship_destination, dn_note,
       created_by, updated_by
     ) VALUES (
       p_po_id,
@@ -153,6 +159,7 @@ BEGIN
       p_discount_pct,
       COALESCE((it->>'isAvailable')::BOOLEAN, TRUE),
       NULLIF(it->>'shipDestination',''),
+      v_old_notes->>(it->>'id'),
       p_user_id,
       p_user_id
     );

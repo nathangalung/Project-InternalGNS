@@ -16,6 +16,7 @@ import ClientFilter, { type ClientFilterValues } from "@/features/clients/Client
 import { clientKpis } from "@/features/clients/helpers"
 import { useClientSummary, useClients } from "@/features/clients/hooks"
 import { useCountries } from "@/features/countries/hooks"
+import { useTrailState } from "@/hooks/useNavTrail"
 import { filterChips } from "@/lib/filter-chips"
 import { statusFilterLabel } from "@/lib/filter-options"
 import { formatNumber, formatRupiah, PENDING_FIGURE } from "@/lib/format"
@@ -30,6 +31,7 @@ import type { ClientRow } from "@/types/api"
 const CLIENT_FILTERS: ClientFilterValues = { status: "all", countryCode: "", minTotal: "" }
 
 export default function ClientList() {
+  const trail = useTrailState()
   const role = useMe().data?.role
   // Total purchase is a selling figure; finance input adds no client
   const showTotal = seesSelling(role)
@@ -201,6 +203,7 @@ export default function ClientList() {
                         <Link
                           to="/clients/$id"
                           params={{ id: String(c.id) }}
+                          state={trail}
                           className={ui.iconAction}
                           title="Lihat detail"
                           aria-label={`Lihat detail ${c.name}`}

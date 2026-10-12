@@ -226,7 +226,7 @@ describe("addVendorError", () => {
 
 describe("storeLinkError", () => {
   it("puts a refused link under its input", () => {
-    const msg = "Link toko harus diawali http:// atau https://."
+    const msg = "Link produk harus diawali http:// atau https://."
     expect(
       storeLinkError(new ApiError(422, problem(422, { fields: { productUrl: msg } }), msg)),
     ).toEqual({ field: msg })
@@ -252,8 +252,8 @@ describe("storeLinkError", () => {
       new ApiError(403, problem(403, { detail: "Akses ditolak." }), "Akses ditolak."),
       "Akses ditolak.",
     ],
-    ["empty message", new ApiError(500, null, ""), "Gagal menyimpan link toko."],
-    ["unknown value", "nope", "Gagal menyimpan link toko."],
+    ["empty message", new ApiError(500, null, ""), "Gagal menyimpan link produk."],
+    ["unknown value", "nope", "Gagal menyimpan link produk."],
   ])("form error: %s", (_name, err, want) => {
     expect(storeLinkError(err)).toEqual({ form: want })
   })

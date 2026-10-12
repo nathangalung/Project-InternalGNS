@@ -108,8 +108,7 @@ func (s *scenarioState) pdfPrintsStoredTotals() error {
 	}
 	text := strings.Join(strings.Fields(string(out)), " ")
 	wants := []string{
-		"Total Produk " + printed(d.TotalProduk),
-		"Pengiriman Rp150,25",
+		"Total " + printed(d.Total),
 		"Sub Total " + printed(d.Subtotal),
 		"DPP Nilai Lain " + printed(d.DppNilaiLain),
 		"PPN 12% " + printed(d.PpnAmount),
@@ -119,6 +118,12 @@ func (s *scenarioState) pdfPrintsStoredTotals() error {
 	for _, w := range wants {
 		if !strings.Contains(text, w) {
 			return fmt.Errorf("PDF misses %q in: %s", w, text)
+		}
+	}
+	// Shipping is a table line, so no summary row adds it again.
+	for _, never := range []string{"Total Produk", "Pengiriman"} {
+		if strings.Contains(text, never) {
+			return fmt.Errorf("PDF prints %q in: %s", never, text)
 		}
 	}
 	var name string

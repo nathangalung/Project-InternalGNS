@@ -24,6 +24,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/items"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/validate"
 )
 
 // RFQRows is a parsed RFQ upload.
@@ -720,7 +721,7 @@ func (s rfqSheet) products() ([]items.MatchRowInput, bool, error) {
 			continue
 		}
 		r := items.MatchRowInput{
-			IMPACode: strings.TrimSpace(cellAt(row, cols.impa)),
+			IMPACode: rfqCode(cellAt(row, cols.impa)),
 			Name:     name,
 			Qty:      s.qty(i, cols.qty),
 			Unit:     strings.TrimSpace(cellAt(row, cols.unit)),
@@ -733,6 +734,16 @@ func (s rfqSheet) products() ([]items.MatchRowInput, bool, error) {
 		out = append(out, r)
 	}
 	return out, true, nil
+}
+
+// rfqCode reads the code cell.
+// A cell that is an IMPA code gives its six digits. Anything else (a row
+// number, a client's own code, a name merged across) is no IMPA code and
+// is dropped, so the row is matched by its name. match-rows moves an
+// IMPA marked code out of the request text.
+func rfqCode(cell string) string {
+	code, _ := validate.IMPA(cell)
+	return code
 }
 
 // continues spots a product's next row.

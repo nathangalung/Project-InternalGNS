@@ -123,8 +123,8 @@ func TestPageCount(t *testing.T) {
 
 func sampleItems(n int) []map[string]any {
 	base := []map[string]any{
-		{"Qty": "5", "Unit": "PCS", "Request": "Marine radio handheld VHF intrinsically safe", "HasOffer": true, "Offer": "Entel HT840 VHF portable, USTC certified", "UnitPrice": "Rp9.040.000", "Amount": "Rp45.200.000", "Name": "Marine Radio Handheld", "Description": "Entel HT840 VHF portable", "ShipDestination": "MV Global Star, Tanjung Priok"},
-		{"Qty": "2", "Unit": "SET", "Request": "Fire hose coupling", "HasOffer": false, "Offer": "", "UnitPrice": "Rp1.500.000", "Amount": "Rp3.000.000", "Name": "Fire Hose Coupling", "Description": "Aluminum, 2.5 inch", "ShipDestination": "MV Global Star"},
+		{"Qty": "5", "Unit": "PCS", "Request": "Marine radio handheld VHF intrinsically safe", "HasOffer": true, "Offer": "Entel HT840 VHF portable, USTC certified", "UnitPrice": "Rp9.040.000", "Amount": "Rp45.200.000", "Name": "Marine Radio Handheld", "Description": "Entel HT840 VHF portable", "Note": "MV Global Star, Tanjung Priok"},
+		{"Qty": "2", "Unit": "SET", "Request": "Fire hose coupling", "HasOffer": false, "Offer": "", "UnitPrice": "Rp1.500.000", "Amount": "Rp3.000.000", "Name": "Fire Hose Coupling", "Description": "Aluminum, 2.5 inch", "Note": "MV Global Star"},
 	}
 	out := make([]map[string]any, 0, n)
 	for i := 0; i < n; i++ {
@@ -161,8 +161,8 @@ func quotationData(items []map[string]any) map[string]any {
 		"CompanyName": partyName, "AttnName": "Bapak Riza Chair",
 		"AttnEmail": "riza.chair@example.com", "AttnPhone": "0811-000-000",
 		"QuotationNo": "Q-26400393/GNS/IV/2026", "ClientRefNo": "V-26-2401-035-D", "DateLine": "Jakarta, 30 April 2026",
-		"Items": withSen, "TotalProduk": "Rp45.200.000", "DiscountPct": "5", "TotalDiscount": "Rp2.260.000",
-		"Subtotal": "Rp42.940.000", "DPP": "Rp42.940.000", "PPN": "Rp5.152.800", "GrandTotal": "Rp48.092.800",
+		"Items": withSen, "Total": "Rp45.200.000", "HasDiscount": true, "DiscountPct": "5", "TotalDiscount": "Rp2.260.000",
+		"Subtotal": "Rp42.940.000", "WithPPN": true, "DPP": "Rp39.361.667", "PPN": "Rp4.723.400", "GrandTotal": "Rp47.663.400",
 		"DeliveryPlace": "Jakarta Selatan", "DeliveryTime": "5 hari kerja", "Payment": "30 hari", "Validity": "14 hari", "SignerName": "Director",
 	}
 }
@@ -182,8 +182,8 @@ func invoiceData(items []map[string]any) map[string]any {
 		"CompanyName": partyName, "CompanyNPWP": "01.234.567.8-901.000",
 		"CompanyAddress": partyAddress, "InvoiceNo": "INV-26400393/GNS/IV/2026",
 		"PONo": "PO-778/2026", "PODate": "20 April 2026", "InvoiceDate": "30 April 2026", "DueDate": "30 May 2026",
-		"Items": withSen, "TotalProduk": "Rp48.200.002,25", "Diskon": "Rp2.410.000,11", "DiscountPct": "5", "DPP": "Rp45.790.002,14",
-		"DPPNilaiLain": "Rp41.974.168,63", "PPN": "Rp5.036.900,24", "Total": "Rp50.826.902,38", "PaymentTerms": "Payment in Advance (Before Delivery)",
+		"Items": withSen, "Total": "Rp48.200.002,25", "HasDiscount": true, "Diskon": "Rp2.410.000,11", "DiscountPct": "5", "Subtotal": "Rp45.790.002,14", "WithPPN": true,
+		"DPPNilaiLain": "Rp41.974.168,63", "PPN": "Rp5.036.900,24", "GrandTotal": "Rp50.826.902,38", "PaymentTerms": "Payment in Advance (Before Delivery)",
 		"BankName": "Bank Mandiri", "BankAccountNo": "123-00-4567890", "BankAccountName": "PT Global Niaga Sakti", "DateLine": "Jakarta, 30 April 2026", "SignerName": "Director",
 	}
 }

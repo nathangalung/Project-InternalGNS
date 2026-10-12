@@ -33,7 +33,7 @@ type offerFixture struct {
 func newOfferFixture(t *testing.T, ctx context.Context, tx pgx.Tx) offerFixture {
 	t.Helper()
 	tag := strconv.FormatInt(time.Now().UnixNano(), 36)
-	f := offerFixture{name: "Baut Kapal " + tag, impa: strings.ToUpper("s" + tag[len(tag)-7:])}
+	f := offerFixture{name: "Baut Kapal " + tag, impa: testutil.UniqueIMPA(t)}
 	require.NoError(t, tx.QueryRow(ctx, `
 		INSERT INTO items (name, impa_code, default_unit_id, created_by, updated_by)
 		VALUES ($1, $2, 19, 1, 1) RETURNING id`, f.name, f.impa).Scan(&f.item))
@@ -166,7 +166,7 @@ func TestOfferSnapshot_RenameKeepsSentQuotation(t *testing.T) {
 	repo := quotations.NewRepo(tx, testutil.Store(t))
 	require.NoError(t, repo.ChangeStatus(ctx, sent, quotations.StatusSent, nil, seedUserID))
 
-	newName, newImpa := "Baut Baja Galvanis "+f.impa, "N"+f.impa[1:]
+	newName, newImpa := "Baut Baja Galvanis "+f.name, testutil.UniqueIMPA(t)
 	catalog := items.NewRepo(tx, testutil.Store(t))
 	unit := int16(19)
 	_, err := catalog.Update(ctx, f.item, items.UpdateItemRequest{

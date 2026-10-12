@@ -18,10 +18,9 @@ import (
 )
 
 // uniqueIMPA returns a fresh code.
-// The code is lowercase.
 // The active-code index is unique, so a literal would collide across runs.
-func uniqueIMPA() string {
-	return fmt.Sprintf("zt%d", time.Now().UnixNano()%1_000_000_000_000)
+func uniqueIMPA(t testing.TB) string {
+	return testutil.UniqueIMPA(t)
 }
 
 // createItem posts a tracked item.
@@ -75,12 +74,12 @@ func matchRows(t *testing.T, req items.MatchRowsRequest) items.MatchRowsResponse
 // IMPA codes are normalized.
 // They are upper-cased and trimmed (MD-03).
 func TestHandler_IMPA_NormalisedOnWrite(t *testing.T) {
-	code := uniqueIMPA()
+	code := uniqueIMPA(t)
 	it := createItem(t, items.CreateItemRequest{Name: uniqueItemName("IMPA"), IMPACode: ptrS("  " + code + " ")})
 	require.NotNil(t, it.IMPACode)
 	assert.Equal(t, strings.ToUpper(code), *it.IMPACode)
 
-	other := uniqueIMPA()
+	other := uniqueIMPA(t)
 	res := doJSON(t, newSrv(t), http.MethodPut, "/items/"+itoa(it.ID), items.UpdateItemRequest{
 		Name: it.Name, IMPACode: ptrS(other), IsActive: true,
 	})
@@ -98,11 +97,11 @@ func TestHandler_IMPA_NormalisedOnWrite(t *testing.T) {
 // Import matches IMPA case-insensitively.
 // It covers MD-03.
 func TestHandler_MatchRows_IMPAIgnoresCase(t *testing.T) {
-	code := uniqueIMPA()
+	code := uniqueIMPA(t)
 	it := createItem(t, items.CreateItemRequest{Name: uniqueItemName("IMPA"), IMPACode: ptrS(code)})
 
 	// A row stored before normalisation must still match.
-	legacyCode := uniqueIMPA()
+	legacyCode := uniqueIMPA(t)
 	legacy := createItem(t, items.CreateItemRequest{Name: uniqueItemName("LEGACY")})
 	_, err := testutil.Pool(t).Exec(context.Background(),
 		`UPDATE items SET impa_code = $2 WHERE id = $1`, legacy.ID, legacyCode)
@@ -144,7 +143,7 @@ func requireIMPATaken(t *testing.T, res *http.Response, msg string) {
 // One active item per IMPA.
 // It covers MD-04.
 func TestHandler_IMPA_DuplicateActiveIsConflict(t *testing.T) {
-	code := uniqueIMPA()
+	code := uniqueIMPA(t)
 	createItem(t, items.CreateItemRequest{Name: uniqueItemName("OWNER"), IMPACode: ptrS(code)})
 	other := createItem(t, items.CreateItemRequest{Name: uniqueItemName("OTHER")})
 
@@ -173,7 +172,7 @@ func TestHandler_IMPA_DuplicateActiveIsConflict(t *testing.T) {
 // Deactivated vendor prices never attach.
 // It covers MD-01.
 func TestHandler_MatchRows_SkipsDeactivatedVendorPrice(t *testing.T) {
-	code := uniqueIMPA()
+	code := uniqueIMPA(t)
 	it := createItem(t, items.CreateItemRequest{Name: uniqueItemName("PRICED"), IMPACode: ptrS(code)})
 	cheap := createVendor(t, true)
 	dear := createVendor(t, true)

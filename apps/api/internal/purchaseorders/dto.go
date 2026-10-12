@@ -96,8 +96,17 @@ type PurchaseOrderItem struct {
 	VendorProductID *int64  `db:"vendor_product_id" json:"vendorProductId,omitempty"`
 	VendorID        *int64  `db:"vendor_id"         json:"vendorId,omitempty"`
 	VendorName      *string `db:"vendor_name"       json:"vendorName,omitempty"`
-	// The vendor's store link for this product
+	// Where the vendor sells this product (Link Produk)
 	ProductURL *string `db:"product_url"       json:"productUrl,omitempty"`
+	// Notes cell on the delivery note.
+	// Nil until a save. An empty note prints nothing.
+	DnNote *string `db:"dn_note" json:"dnNote,omitempty"`
+	// The note before any save.
+	// "Kirim ke:" and the line's own destination when it is not the
+	// delivery note's Address. Worked out on read, never stored.
+	DnNoteDefault string `db:"-" json:"dnNoteDefault,omitempty"`
+	// The vendor's own shop (Link Toko)
+	VendorStoreURL *string `db:"vendor_store_url" json:"vendorStoreUrl,omitempty"`
 }
 
 type ChangeStatusRequest struct {
@@ -125,6 +134,18 @@ type UpdateFileRequest struct {
 
 type UpdateNotesRequest struct {
 	Notes string `json:"notes"`
+}
+
+// Delivery note row notes.
+// Only the rows sent change. An empty note prints nothing.
+type UpdateDeliveryNoteRequest struct {
+	Notes []DeliveryNoteLineNote `json:"notes"`
+}
+
+type DeliveryNoteLineNote struct {
+	// A product line of this PO.
+	LineID int64  `json:"lineId"`
+	Note   string `json:"note"`
 }
 
 type UpdateDetailsRequest struct {

@@ -103,7 +103,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	trimContactEmail(req.ContactInfo)
-	if fields := contactInfoFields(req.ContactInfo); fields != nil {
+	if fields := requestFields(req.ContactInfo, &req.StoreURL); fields != nil {
 		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
@@ -134,7 +134,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	trimContactEmail(req.ContactInfo)
-	if fields := contactInfoFields(req.ContactInfo); fields != nil {
+	if fields := requestFields(req.ContactInfo, &req.StoreURL); fields != nil {
 		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}

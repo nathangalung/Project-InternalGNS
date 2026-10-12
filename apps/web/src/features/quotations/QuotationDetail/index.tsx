@@ -64,7 +64,6 @@ export default function QuotationDetail({
     status === "accepted" && q.clientId !== undefined && writesQuotation(me?.role)
   const [changingContact, setChangingContact] = useState(openContactPicker && canChangeContact)
 
-  const totalProduk = q.products.reduce((s, p) => s + p.qty * p.hargaSatuan, 0)
   const totalShip = q.shipping.hargaSatuan
   const hasProducts = q.products.length > 0
 
@@ -135,14 +134,13 @@ export default function QuotationDetail({
       {q.seesSelling && (
         <CostBreakdown
           hasProducts={hasProducts}
-          totalProduk={totalProduk}
+          total={q.subtotal + q.totalDiscount}
           discountPct={q.discountPct ?? 0}
           nominalDiskon={q.totalDiscount}
           subTotal={q.subtotal}
           dppNilaiLain={q.dppNilaiLain}
           ppn12={q.ppnAmount}
           withPPN={q.ppnEnabled}
-          totalShip={totalShip}
           totalProfit={profitAfterDiscount(q.products, q.totalDiscount)}
           grandTotal={q.totalBayar}
         />
@@ -174,7 +172,7 @@ export default function QuotationDetail({
           itemId={linkRow.itemId}
           vendorId={linkRow.vendorId}
           vendorName={linkRow.vendor ?? ""}
-          current={linkRow.storeUrl}
+          current={linkRow.productUrl}
           onClose={() => setLinkRow(null)}
         />
       )}

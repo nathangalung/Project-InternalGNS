@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process"
-import { randomBytes } from "node:crypto"
+import { randomBytes, randomInt } from "node:crypto"
 import { readFileSync } from "node:fs"
 import type { InvoiceDetail, PurchaseOrderRow, QuotationDetail } from "../../src/types/generated"
 import type { Tokens } from "./api"
@@ -36,6 +36,8 @@ export type SeedLine = ({ item: SeedItem; requested?: string } | { freeText: str
   cost?: number
   // Tidak Ditawarkan: sent unpriced, left out of the PO
   noOffer?: boolean
+  // Where the line goes, the shipping address when absent
+  dest?: string
 }
 export type SeedQuotation = Pick<QuotationDetail, "id" | "quotationNo" | "version" | "status">
 
@@ -55,13 +57,21 @@ export function uniquePrefix(): string {
   return `E2E${randomBytes(4).toString("hex").toUpperCase()}`
 }
 
-// IMPA code no real item holds.
+// Free IMPA code for tests.
 //
-// Active codes are unique and the master data holds real six-digit ones, so
-// a random six-digit code collides now and then. Twelve digits cannot hit
-// a real one and stay numeric, as the product forms require.
-export function uniqueImpa(): string {
-  return String(10 ** 11 + Math.floor(Math.random() * 9 * 10 ** 11))
+// A code is six digits and an active one is unique. Real IMPA sections end
+// below 90, so the 9xxxxx block never meets the master data; a code an
+// earlier run left active is skipped.
+export async function uniqueImpa(): Promise<string> {
+  for (let i = 0; i < 20; i++) {
+    const code = String(900000 + randomInt(100000))
+    const rows = await api<{ impaCode?: string }[]>(
+      "GET",
+      `/items?q=${code}&isActive=true&limit=10`,
+    )
+    if (!rows.some((r) => r.impaCode === code)) return code
+  }
+  throw new Error("no free IMPA code in the test block")
 }
 
 export async function api<T>(
@@ -150,7 +160,7 @@ async function quotationBody(
       costPrice: String(
         l.cost ?? ("item" in l ? (l.item.cost ?? Math.max(1, Math.round(l.price / 2))) : 0),
       ),
-      shipDestination: "Jl. Pelabuhan Raya No. 12, Tanjung Priok, Jakarta Utara",
+      shipDestination: l.dest ?? "Jl. Pelabuhan Raya No. 12, Tanjung Priok, Jakarta Utara",
       isAvailable: l.noOffer ? false : undefined,
     })),
   }
@@ -221,7 +231,7 @@ export class SalesSeed {
   // Catalog item, optionally vendor-linked.
   async item(opts: { vendor?: SeedVendor; cost?: number; label?: string } = {}): Promise<SeedItem> {
     const name = this.name(opts.label ?? "Produk")
-    const impaCode = uniqueImpa()
+    const impaCode = await uniqueImpa()
     const created = await api<{ id: number }>("POST", "/items", {
       name,
       impaCode,

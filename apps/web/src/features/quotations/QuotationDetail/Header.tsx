@@ -1,10 +1,14 @@
-import { Link } from "@tanstack/react-router"
 import { useState } from "react"
 import LegacyNo from "@/components/shared/LegacyNo"
+import NavTrail from "@/components/shared/NavTrail"
 import StatusBadge from "@/components/shared/StatusBadge"
 import type { Status } from "@/features/quotations/types"
+import { listCrumb } from "@/lib/nav-trail"
 import { ui } from "@/lib/ui"
 import { quotationBadge } from "../status"
+
+// Opened without a trail.
+const fallback = [listCrumb("/quotations")]
 
 type HeaderProps = {
   quotationId: string
@@ -42,21 +46,7 @@ export default function Header({
   }
   return (
     <>
-      <nav className={ui.breadcrumb} aria-label="Breadcrumb">
-        <Link
-          activeOptions={{ exact: true }}
-          to="/quotations"
-          className={`${ui.breadcrumbLink} no-underline`}
-        >
-          Daftar Quotation
-        </Link>
-        <span className={ui.breadcrumbSep} aria-hidden="true">
-          &rsaquo;
-        </span>
-        <span className={ui.breadcrumbCurrent} aria-current="page">
-          Detail {quotationId}
-        </span>
-      </nav>
+      <NavTrail current={`Quotation ${quotationId}`} fallback={fallback} />
 
       <div className={ui.detailHeader}>
         <div className={ui.detailHeaderLeft}>

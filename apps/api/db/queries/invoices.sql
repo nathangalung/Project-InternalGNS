@@ -137,6 +137,7 @@ SELECT inv.id,
        inv.due_date,
        inv.subtotal,
        inv.total_discount,
+       dp.pct::text AS discount_pct,
        inv.dpp,
        inv.dpp_nilai_lain,
        inv.ppn_amount,
@@ -169,6 +170,16 @@ LEFT JOIN LATERAL (
     ORDER BY COALESCE(co.id = q.contact_id, FALSE) DESC, co.id ASC
     LIMIT 1
 ) ct ON TRUE
+-- The product discount as a percent of the product gross, read from the
+-- snapshot only. NULL without a discount, or when a product line predates
+-- the gross snapshot.
+LEFT JOIN LATERAL (
+    SELECT ROUND(inv.total_discount * 100
+                 / NULLIF(SUM(ROUND(ii.qty * ii.gross_unit_price, 2)), 0), 2) AS pct
+    FROM invoice_items ii
+    WHERE ii.invoice_id = inv.id AND ii.line_type = 'product'
+    HAVING COUNT(*) = COUNT(ii.gross_unit_price) AND COALESCE(inv.total_discount, 0) <> 0
+) dp ON TRUE
 WHERE inv.id = $1;
 
 -- name: invoices.get_detail_by_quotation
@@ -195,6 +206,7 @@ SELECT inv.id,
        inv.due_date,
        inv.subtotal,
        inv.total_discount,
+       dp.pct::text AS discount_pct,
        inv.dpp,
        inv.dpp_nilai_lain,
        inv.ppn_amount,
@@ -227,6 +239,16 @@ LEFT JOIN LATERAL (
     ORDER BY COALESCE(co.id = q.contact_id, FALSE) DESC, co.id ASC
     LIMIT 1
 ) ct ON TRUE
+-- The product discount as a percent of the product gross, read from the
+-- snapshot only. NULL without a discount, or when a product line predates
+-- the gross snapshot.
+LEFT JOIN LATERAL (
+    SELECT ROUND(inv.total_discount * 100
+                 / NULLIF(SUM(ROUND(ii.qty * ii.gross_unit_price, 2)), 0), 2) AS pct
+    FROM invoice_items ii
+    WHERE ii.invoice_id = inv.id AND ii.line_type = 'product'
+    HAVING COUNT(*) = COUNT(ii.gross_unit_price) AND COALESCE(inv.total_discount, 0) <> 0
+) dp ON TRUE
 WHERE inv.quotation_id = $1
 ORDER BY inv.id DESC
 LIMIT 1;

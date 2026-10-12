@@ -251,6 +251,17 @@ func TestParseRFQ_CSV(t *testing.T) {
 			in:   "Kode,Nama,Jumlah\n370115,Marine Radio\n,,\n",
 			want: []rfqRow{{IMPACode: "370115", Name: "Marine Radio"}},
 		},
+		{
+			name: "code cells as clients write them",
+			in:   "Kode IMPA,Nama\nIMPA 370115,Radio\n(370116),Lampu\n37 01 17,Kabel\nN/A,Baut\nA-001,Mur\n",
+			want: []rfqRow{
+				{IMPACode: "370115", Name: "Radio"},
+				{IMPACode: "370116", Name: "Lampu"},
+				{IMPACode: "370117", Name: "Kabel"},
+				{Name: "Baut"},
+				{Name: "Mur"},
+			},
+		},
 		{name: "empty file", in: "", err: errRFQEmpty},
 		{name: "blank lines only", in: ",,\n\n", err: errRFQEmpty},
 		{name: "no header", in: "a,b\n1,2\n", err: errRFQNoHeader},
@@ -502,7 +513,7 @@ func TestParseRFQ_CategoryRows(t *testing.T) {
 			row:    []any{"Marine Radio tanpa kode", nil, 2, "PCS"},
 			merges: [][2]string{{"A2", "B2"}},
 			want: []rfqRow{
-				{IMPACode: "Marine Radio tanpa kode", Name: "Marine Radio tanpa kode", Qty: 2, Unit: "PCS"},
+				{IMPACode: "", Name: "Marine Radio tanpa kode", Qty: 2, Unit: "PCS"},
 				rfqRadio,
 			},
 		},
@@ -791,7 +802,8 @@ func TestProducts_TextLimits(t *testing.T) {
 	}{
 		{name: "fields at the limit", rows: [][]string{header, {long, long, long}}},
 		{name: "a name past the limit", rows: [][]string{header, {"", long + "x", ""}}, err: errRFQTooBig},
-		{name: "a code past the limit", rows: [][]string{header, {long + "x", "Baut", ""}}, err: errRFQTooBig},
+		// A long code cell is no IMPA code, so it is dropped, not kept.
+		{name: "a code past the limit", rows: [][]string{header, {long + "x", "Baut", ""}}},
 		{name: "a unit past the limit", rows: [][]string{header, {"", "Baut", long + "x"}}, err: errRFQTooBig},
 		{name: "kept text past the budget", rows: append([][]string{header}, slices.Repeat([][]string{{"", wide, ""}}, rfqMaxUnzip/len(wide)+1)...), err: errRFQTooBig},
 	}
@@ -914,8 +926,8 @@ func TestParseRFQ_ProductMergedDown(t *testing.T) {
 				{"A4", "A5"}, {"B4", "B5"}, {"C4", "C5"}, {"D4", "D5"},
 			},
 			want: []rfqRow{
-				{IMPACode: "1", Name: "Baut M10", Qty: 20, Unit: "PCS"},
-				{IMPACode: "2", Name: "Mur M10", Qty: 30, Unit: "PCS"},
+				{IMPACode: "", Name: "Baut M10", Qty: 20, Unit: "PCS"},
+				{IMPACode: "", Name: "Mur M10", Qty: 30, Unit: "PCS"},
 			},
 		},
 		{
@@ -926,8 +938,8 @@ func TestParseRFQ_ProductMergedDown(t *testing.T) {
 			},
 			merges: [][2]string{{"C2", "C3"}, {"D2", "D3"}},
 			want: []rfqRow{
-				{IMPACode: "1", Name: "Baut M10", Qty: 20, Unit: "PCS"},
-				{IMPACode: "2", Name: "Mur M10", Qty: 20, Unit: "PCS"},
+				{IMPACode: "", Name: "Baut M10", Qty: 20, Unit: "PCS"},
+				{IMPACode: "", Name: "Mur M10", Qty: 20, Unit: "PCS"},
 			},
 		},
 		{
@@ -938,7 +950,7 @@ func TestParseRFQ_ProductMergedDown(t *testing.T) {
 				{},
 			},
 			merges: [][2]string{{"A2", "A4"}, {"B2", "B4"}, {"C2", "C4"}, {"D2", "D4"}},
-			want:   []rfqRow{{IMPACode: "1", Name: "Kabel NYM 3x2.5", Qty: 100, Unit: "MTR"}},
+			want:   []rfqRow{{IMPACode: "", Name: "Kabel NYM 3x2.5", Qty: 100, Unit: "MTR"}},
 		},
 	}
 	for _, c := range cases {

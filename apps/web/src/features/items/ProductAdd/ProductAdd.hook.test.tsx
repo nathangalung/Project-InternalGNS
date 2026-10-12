@@ -45,7 +45,7 @@ async function open() {
 }
 
 async function focusProduct() {
-  const input = field("Kode IMPA/Nama Produk *")
+  const input = field("Nama Produk Offer")
   input.focus()
   input.dispatchEvent(new FocusEvent("focusin", { bubbles: true }))
   await settle()
@@ -85,8 +85,8 @@ describe("ProductAdd catalog", () => {
     await open()
     await focusProduct()
     const offered = byRole("option").map((o) => o.textContent)
-    expect(offered).toContain("330212 - Baut Baja")
-    expect(offered).not.toContain("Ampelas Lama")
+    expect(offered).toContain("330212Baut Baja")
+    expect(offered.some((o) => o?.includes("Ampelas Lama"))).toBe(false)
   })
 
   it("shows a failed catalog beside the field and keeps the dialog", async () => {
@@ -134,15 +134,15 @@ describe("ProductAdd store link", () => {
   }
 
   const hasAction = () =>
-    [...document.querySelectorAll("button")].some((b) => b.textContent === "Tambah Link Toko")
+    [...document.querySelectorAll("button")].some((b) => b.textContent === "Tambah Link Produk")
 
   it("adds the store link of the line's linked vendor from the dialog", async () => {
     items.listVendors.mockResolvedValue([link])
     items.addVendor.mockResolvedValue({ ...link, productUrl: "https://toko.example/baut" })
     await openLine(line, true)
-    await click(button("Tambah Link Toko"))
+    await click(button("Tambah Link Produk"))
     expect(byRole("dialog").map((d) => d.querySelector("h2")?.textContent)).toContain(
-      "Tambah Link Toko",
+      "Tambah Link Produk",
     )
     const input = document.querySelector<HTMLInputElement>('input[type="url"]')
     if (!input) throw new Error("no url input")
@@ -207,7 +207,8 @@ describe("ProductAdd taken IMPA code", () => {
     await settle()
   }
 
-  const offer = () => field("Kode IMPA/Nama Produk *").value
+  const offer = () => field("Nama Produk Offer").value
+  const offerCode = () => field("Kode IMPA Offer").value
   const hasButton = (name: string) =>
     [...document.querySelectorAll("button")].some((b) => b.textContent === name)
   const renameLabel = `Ganti Nama Jadi “${RENAMED_TO}”`
@@ -225,7 +226,7 @@ describe("ProductAdd taken IMPA code", () => {
     expect(byRole("dialog").map((d) => d.querySelector("h2")?.textContent)).not.toContain(
       "Tambah Produk Baru",
     )
-    expect(offer()).toBe("330212 - BAUT BJ")
+    expect([offerCode(), offer()]).toEqual(["330212", "BAUT BJ"])
     expect(items.recommend).toHaveBeenCalledWith([1], undefined)
     expect(items.rename).not.toHaveBeenCalled()
   })
@@ -241,7 +242,7 @@ describe("ProductAdd taken IMPA code", () => {
     await click(button(renameLabel))
     await settle()
     expect(items.rename).toHaveBeenCalledWith(1, RENAMED_TO)
-    expect(offer()).toBe(`330212 - ${RENAMED_TO}`)
+    expect([offerCode(), offer()]).toEqual(["330212", RENAMED_TO])
     expect(items.recommend).toHaveBeenCalledWith([1], undefined)
   })
 

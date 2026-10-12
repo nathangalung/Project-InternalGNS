@@ -110,7 +110,8 @@ SELECT ins.id              AS vendor_product_id,
        ins.vendor_sku,
        ins.cost_price::text,
        ins.product_url,
-       ins.last_quoted_at::text
+       ins.last_quoted_at::text,
+       v.store_url         AS vendor_store_url
 FROM ins
 JOIN vendors v ON v.id = ins.vendor_id;
 
@@ -139,6 +140,15 @@ SELECT b.ord AS idx, m.item_id, m.confidence, m.source
 FROM unnest($1::text[]) WITH ORDINALITY AS b(req_text, ord)
 CROSS JOIN LATERAL fn_match_request(b.req_text, 1) m;
 
+-- name: items.split_rows
+-- Each import row's code and text as fn_impa_split stores them: the text
+-- loses its own code, and a code it marks IMPA fills an empty code. idx is
+-- the 1-based position in $1.
+SELECT r.ord AS idx, COALESCE(s.name, '') AS name, COALESCE(s.code, '') AS code
+FROM unnest($1::text[], $2::text[]) WITH ORDINALITY AS r(name, code, ord)
+CROSS JOIN LATERAL fn_impa_split(r.name, r.code) s
+ORDER BY r.ord;
+
 -- name: items.list_vendors_for_item
 SELECT
     vp.id              AS vendor_product_id,
@@ -147,7 +157,8 @@ SELECT
     vp.vendor_sku,
     vp.cost_price::text,
     vp.product_url,
-    vp.last_quoted_at::text
+    vp.last_quoted_at::text,
+    v.store_url        AS vendor_store_url
 FROM vendor_products vp
 JOIN vendors v ON v.id = vp.vendor_id
 WHERE vp.item_id = $1 AND v.is_active = TRUE

@@ -36,6 +36,8 @@ func TestHandler_ErrorPaths(t *testing.T) {
 		{"vendors", http.MethodGet, "/items/1/vendors", nil},
 		{"price_history", http.MethodGet, "/items/1/price-history", nil},
 		{"create", http.MethodPost, "/items/", items.CreateItemRequest{Name: "X"}},
+		{"create_marked_code", http.MethodPost, "/items/", items.CreateItemRequest{Name: "X IMPA 191234"}},
+		{"update_marked_code", http.MethodPut, "/items/1", items.UpdateItemRequest{Name: "X IMPA 191234"}},
 		{"search_advanced", http.MethodGet, "/items/search-advanced?q=x", nil},
 		{"match_rows", http.MethodPost, "/items/match-rows", items.MatchRowsRequest{
 			Rows: []items.MatchRowInput{{Name: "X"}},

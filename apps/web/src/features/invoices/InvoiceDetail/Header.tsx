@@ -1,12 +1,16 @@
-import { Link } from "@tanstack/react-router"
 import EntityLink from "@/components/shared/EntityLink"
 import LegacyNo from "@/components/shared/LegacyNo"
+import NavTrail from "@/components/shared/NavTrail"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { formatDate } from "@/lib/format"
+import { listCrumb } from "@/lib/nav-trail"
 import { ui } from "@/lib/ui"
 import type { InvoiceDetail } from "@/types/api"
 import type { InvoiceDisplayStatus } from "../types"
 import { INVOICE_LABEL, INVOICE_STATUS_STYLE } from "../types"
+
+// Opened without a trail.
+const fallback = [listCrumb("/invoices")]
 
 type HeaderProps = {
   inv: InvoiceDetail
@@ -43,24 +47,7 @@ export default function Header({ inv, status, onDownloadPdf }: HeaderProps) {
   const badge = INVOICE_STATUS_STYLE[status]
   return (
     <>
-      <nav className={ui.breadcrumb} aria-label="Breadcrumb">
-        <Link
-          activeOptions={{ exact: true }}
-          to="/invoices"
-          className={`${ui.breadcrumbLink} no-underline`}
-        >
-          Daftar Invoice
-        </Link>
-        <span className={ui.breadcrumbSep} aria-hidden="true">
-          &rsaquo;
-        </span>
-        <span
-          className={`${ui.breadcrumbCurrent} min-w-0 [overflow-wrap:anywhere]`}
-          aria-current="page"
-        >
-          Detail {inv.invoiceNo}
-        </span>
-      </nav>
+      <NavTrail current={`Invoice ${inv.invoiceNo}`} fallback={fallback} />
 
       <div className={ui.detailHeader}>
         <div className={ui.detailHeaderLeft}>

@@ -14,7 +14,7 @@ func wrappedItem(long string) map[string]any {
 	return map[string]any{
 		"No": 1, "Qty": "37", "Unit": "DRUM", "HasOffer": true,
 		"Request": long, "Name": long, "Offer": "Viking", "Description": "Viking",
-		"ShipDestination": "Priok", "UnitPrice": "Rp1.234.500", "Amount": "Rp45.676.500",
+		"Note": "Priok", "UnitPrice": "Rp1.234.500", "Amount": "Rp45.676.500",
 	}
 }
 

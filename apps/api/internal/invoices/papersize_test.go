@@ -93,15 +93,17 @@ func TestInvoiceTemplateDiscountRow(t *testing.T) {
 	var buf bytes.Buffer
 	data := exportData{
 		Items:       []exportItem{makeInvItem(1)},
-		TotalProduk: "Rp 350.000,00",
+		Total:       "Rp 350.000,00",
+		HasDiscount: true,
+		DiscountPct: "10",
 		Diskon:      "Rp 30.000,00",
-		DPP:         "Rp 320.000,00",
+		Subtotal:    "Rp 320.000,00",
 	}
 	if err := tmpl.ExecuteTemplate(&buf, "Invoice.tex.tmpl", data); err != nil {
 		t.Fatalf("execute with discount: %v", err)
 	}
-	if !strings.Contains(buf.String(), "Diskon") {
-		t.Error("discount row missing")
+	if !strings.Contains(buf.String(), `Diskon Produk 10\%`) {
+		t.Error("discount row missing its percent")
 	}
 	if strings.Contains(buf.String(), `Diskon [[`) {
 		t.Error("unrendered field left in the discount row")
@@ -150,13 +152,12 @@ func TestInvoicePaperSize(t *testing.T) {
 				InvoiceDate:     "8 July 2026",
 				DueDate:         "8 August 2026",
 				Items:           items,
-				TotalProduk:     "Rp 100.000,00",
-				Diskon:          "",
-				DPP:             "Rp 90.909,09",
+				Total:           "Rp 100.000,00",
+				Subtotal:        "Rp 90.909,09",
 				WithPPN:         true,
 				DPPNilaiLain:    "Rp 9.090,91",
 				PPN:             "Rp 10.909,09",
-				Total:           "Rp 111.818,18",
+				GrandTotal:      "Rp 111.818,18",
 				PaymentTerms:    "30 days",
 				BankName:        "Bank BCA",
 				BankAccountNo:   "123-456-789",

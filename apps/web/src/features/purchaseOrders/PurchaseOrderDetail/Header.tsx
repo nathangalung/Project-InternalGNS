@@ -1,11 +1,16 @@
-import { Link } from "@tanstack/react-router"
 import EntityLink from "@/components/shared/EntityLink"
 import LegacyNo from "@/components/shared/LegacyNo"
+import NavTrail from "@/components/shared/NavTrail"
 import StatusBadge from "@/components/shared/StatusBadge"
+import { listCrumb } from "@/lib/nav-trail"
 import { ui } from "@/lib/ui"
+import { poCrumbLabel } from "../adapters"
 import PoNumber from "../PoNumber"
 import type { PoStatus } from "../types"
 import { PO_LABEL, PO_STATUS_CONFIG } from "./helpers"
+
+// Opened without a trail.
+const fallback = [listCrumb("/purchase-orders")]
 
 type HeaderProps = {
   // None until entered
@@ -43,21 +48,7 @@ export default function Header({
   const badge = PO_STATUS_CONFIG[status]
   return (
     <>
-      <nav className={ui.breadcrumb} aria-label="Breadcrumb">
-        <Link
-          activeOptions={{ exact: true }}
-          to="/purchase-orders"
-          className={`${ui.breadcrumbLink} no-underline`}
-        >
-          Daftar Purchase Order
-        </Link>
-        <span className={ui.breadcrumbSep} aria-hidden="true">
-          &rsaquo;
-        </span>
-        <span className={ui.breadcrumbCurrent} aria-current="page">
-          Detail <PoNumber value={poNumber} />
-        </span>
-      </nav>
+      <NavTrail current={poCrumbLabel(poNumber, quotationNo)} fallback={fallback} />
 
       <div className={ui.detailHeader}>
         <div className={ui.detailHeaderLeft}>

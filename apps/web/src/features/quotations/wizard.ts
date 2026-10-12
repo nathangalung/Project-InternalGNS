@@ -1,6 +1,7 @@
 import type { ProductAddFormData } from "@/features/items/ProductAdd/helpers"
 import { resolveUnit, type UnitIndex } from "@/features/units/match"
 import { computeTaxBreakdown, lineNet, sumRupiah } from "@/lib/format"
+import { normalizeImpa } from "@/lib/impa"
 import { isValidAddress, optionalAddressError } from "@/lib/validation"
 import type { QuotationDetail } from "@/types/api"
 import { toWizardProduct } from "./adapters"
@@ -75,13 +76,16 @@ export function validityInput(typed: string): number | undefined {
   return t ? Number(t) : undefined
 }
 
+// The PDF summary rows.
+//
+// total holds every line, shipping included, and subTotal is total less
+// the product discount.
 export type WizardSummary = {
   totalProdukQty: number
   totalHargaBeli: number
-  totalHargaJual: number
+  total: number
   nominalDiskon: number
   subTotal: number
-  shippingCost: number
   dpp: number
   ppn: number
   grandTotal: number
@@ -100,38 +104,23 @@ export function wizardSummary(
   // A Tidak Ditawarkan line is not sold, so it adds nothing.
   const offered = products.filter((p) => !p.noOffer)
   const totalHargaBeli = offered.reduce((sum, p) => sum + p.hargaBeli * p.jumlah, 0)
-  const totalHargaJual = offered.reduce((sum, p) => sum + p.hargaJual * p.jumlah, 0)
   // Discounted and taxed per line, as the server stores the totals.
   const nets = offered.map((p) => lineNet(p.jumlah, p.hargaJual, discountPct))
-  const subTotal = sumRupiah(nets)
+  const productNet = sumRupiah(nets)
   const nominalDiskon = sumRupiah(offered.map((p, i) => lineNet(p.jumlah, p.hargaJual) - nets[i]))
   const shipping = Number(shippingCost) || 0
   const tax = computeTaxBreakdown([...nets, shipping], withPPN)
   return {
     totalProdukQty: offered.reduce((sum, p) => sum + p.jumlah, 0),
     totalHargaBeli,
-    totalHargaJual,
+    total: sumRupiah([tax.subtotal, nominalDiskon]),
     nominalDiskon,
-    subTotal,
-    shippingCost: shipping,
+    subTotal: tax.subtotal,
     dpp: tax.dppNilaiLain,
     ppn: tax.ppnAmount,
     grandTotal: tax.grandTotal,
-    profit: offered.length > 0 ? subTotal - totalHargaBeli : 0,
+    profit: offered.length > 0 ? productNet - totalHargaBeli : 0,
   }
-}
-
-// "IMPA - name" into parts.
-//
-// A leading all-digit segment is the IMPA code; anything else is a name.
-export function splitOffer(s: string): { kode: string; nama: string } {
-  const trimmed = s.trim()
-  if (!trimmed) return { kode: "", nama: "" }
-  const [first, ...rest] = trimmed.split(/\s*-\s*/)
-  if (rest.length > 0 && /^\d+$/.test(first)) {
-    return { kode: first, nama: rest.join(" - ") }
-  }
-  return { kode: "", nama: trimmed }
 }
 
 // Product form into the lines.
@@ -159,17 +148,16 @@ export function nextLineId(products: { id: number }[]): number {
 // The qty is kept as typed, 0 and negatives included, so each editor flags
 // what its own server rule refuses.
 export function productFields(data: ProductAddFormData): Omit<ProductItem, "id" | "noOffer"> {
-  const offer = splitOffer(data.kodeImpaNama)
-  const requested = splitOffer(data.requestedKodeImpaNama)
+  const nama = data.nama.trim()
   return {
     itemId: data.itemId,
     requestedItemId: data.requestedItemId,
     vendorId: data.vendorId,
     vendorProductId: data.vendorProductId,
-    nama: offer.nama,
-    kodeImpa: offer.kode,
-    requestedNama: requested.nama || offer.nama,
-    requestedKodeImpa: requested.kode,
+    nama,
+    kodeImpa: normalizeImpa(data.kodeImpa),
+    requestedNama: data.requestedNama.trim() || nama,
+    requestedKodeImpa: normalizeImpa(data.requestedKodeImpa),
     vendor: data.namaVendor,
     jumlah: parseQty(data.jumlahProduk),
     satuan: data.satuan,

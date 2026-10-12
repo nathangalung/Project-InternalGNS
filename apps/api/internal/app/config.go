@@ -49,7 +49,7 @@ type Config struct {
 
 	TemplatesRoot string `env:"TEMPLATES_ROOT" envDefault:"templates/documents"`
 
-	PdfSignerName string `env:"PDF_SIGNER_NAME"     envDefault:"Director"`
+	PdfSignerName string `env:"PDF_SIGNER_NAME"     envDefault:"Diah Arimurti"`
 	// The scanned Signature.jpg is his.
 	PdfQuotationSignerName string `env:"PDF_QUOTATION_SIGNER_NAME" envDefault:"Seno Dwi Sasongko"`
 	PdfBankName            string `env:"PDF_BANK_NAME"       envDefault:"BCA"`

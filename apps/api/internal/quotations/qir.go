@@ -15,6 +15,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/validate"
 )
 
 // One pre-quotation request line.
@@ -177,7 +178,7 @@ func (h *Handler) CreateItemRequest(w http.ResponseWriter, r *http.Request) {
 	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
-	if errs := validateCreateQIR(req); len(errs) > 0 {
+	if errs := validateCreateQIR(&req); len(errs) > 0 {
 		httperr.Render(w, httperr.Unprocessable(errs))
 		return
 	}
@@ -214,7 +215,7 @@ func (h *Handler) UpdateItemRequest(w http.ResponseWriter, r *http.Request) {
 	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
-	if errs := validateUpdateQIR(req); len(errs) > 0 {
+	if errs := validateUpdateQIR(&req); len(errs) > 0 {
 		httperr.Render(w, httperr.Unprocessable(errs))
 		return
 	}
@@ -258,8 +259,13 @@ func (h *Handler) DeleteItemRequest(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func validateCreateQIR(req ItemRequestCreate) map[string]string {
+// validateCreateQIR checks a new request.
+// Its IMPA code is rewritten in place to six digits, or nil for none.
+func validateCreateQIR(req *ItemRequestCreate) map[string]string {
 	errs := map[string]string{}
+	if msg := validate.OptionalIMPA(&req.RequestImpa); msg != "" {
+		errs["requestImpa"] = msg
+	}
 	if req.LineNo <= 0 {
 		errs["lineNo"] = "must be > 0"
 	}
@@ -269,8 +275,13 @@ func validateCreateQIR(req ItemRequestCreate) map[string]string {
 	return errs
 }
 
-func validateUpdateQIR(req ItemRequestUpdate) map[string]string {
+// validateUpdateQIR checks a request edit.
+// Its IMPA code is rewritten in place to six digits, or nil for none.
+func validateUpdateQIR(req *ItemRequestUpdate) map[string]string {
 	errs := map[string]string{}
+	if msg := validate.OptionalIMPA(&req.RequestImpa); msg != "" {
+		errs["requestImpa"] = msg
+	}
 	if req.LineNo <= 0 {
 		errs["lineNo"] = "must be > 0"
 	}

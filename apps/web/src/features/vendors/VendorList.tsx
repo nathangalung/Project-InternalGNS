@@ -7,6 +7,7 @@ import FilterButton from "@/components/shared/FilterButton"
 import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
 import StatusBadge from "@/components/shared/StatusBadge"
+import StoreLink from "@/components/shared/StoreLink"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useMe } from "@/features/auth/hooks"
 import { useVendors } from "@/features/vendors/hooks"
@@ -187,10 +188,13 @@ export default function VendorList({ onViewDetail }: VendorListProps) {
                       <td className={ui.td}>
                         <div className="flex items-center gap-4 pl-3">
                           <EntityLogo name={v.name} />
-                          <span className="min-w-0 flex-1 break-words text-sm font-bold leading-[1.35] text-[#191C1E]">
-                            <EntityLink kind="vendor" id={v.id} tone="name">
-                              {v.name}
-                            </EntityLink>
+                          <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+                            <span className="break-words text-sm font-bold leading-[1.35] text-[#191C1E]">
+                              <EntityLink kind="vendor" id={v.id} tone="name">
+                                {v.name}
+                              </EntityLink>
+                            </span>
+                            <StoreLink kind="store" labeled url={v.storeUrl} />
                           </span>
                         </div>
                       </td>

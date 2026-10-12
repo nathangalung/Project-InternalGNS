@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/validate"
 )
 
 // matchChunk caps one lookup batch.
@@ -74,12 +75,15 @@ func (m *rowMatcher) run(ctx context.Context) ([]MatchRowResult, error) {
 }
 
 // chunk matches a row slice.
-// IMPA wins, then the batched fuzzy match, then auto-create, then one price
-// lookup for every picked item. Each lookup is one statement per chunk and
-// only auto-create writes row by row. Within one chunk a later row cannot
-// match an item an earlier row of the same chunk created, by IMPA or by
-// name; the dedup key still catches an identical code or name, and a later
-// chunk sees the item.
+// Each row first takes its code and text as the database stores them
+// (fn_impa_split). A row with an IMPA code resolves only by that exact
+// code: a miss is auto-created under it or stays unmatched, never matched
+// by name. A row without one takes the batched name match. Auto-create
+// follows, then one price lookup for every picked item. Each lookup is one
+// statement per chunk and only auto-create writes row by row. Within one
+// chunk a later row cannot match an item an earlier row of the same chunk
+// created, by IMPA or by name; the dedup key still catches an identical
+// code or name, and a later chunk sees the item.
 func (m *rowMatcher) chunk(ctx context.Context, start int, rows []MatchRowInput) ([]MatchRowResult, error) {
 	type pick struct {
 		itemID     int64
@@ -89,11 +93,16 @@ func (m *rowMatcher) chunk(ctx context.Context, start int, rows []MatchRowInput)
 	picks := make([]pick, len(rows))
 	last := start + len(rows) - 1
 
+	rows, err := m.repo.splitRows(ctx, rows)
+	if err != nil {
+		return nil, fmt.Errorf("split rows %d-%d: %w", start, last, err)
+	}
+
 	var codes []string
 	var codeRow []int
 	for i, row := range rows {
-		if impa := normIMPA(row.IMPACode); impa != "" {
-			codes = append(codes, impa)
+		if row.IMPACode != "" {
+			codes = append(codes, row.IMPACode)
 			codeRow = append(codeRow, i)
 		}
 	}
@@ -108,7 +117,8 @@ func (m *rowMatcher) chunk(ctx context.Context, start int, rows []MatchRowInput)
 	var texts []string
 	var textRow []int
 	for i, row := range rows {
-		if picks[i].itemID == 0 && strings.TrimSpace(row.Name) != "" {
+		// A coded row never falls back to its name.
+		if row.IMPACode == "" && strings.TrimSpace(row.Name) != "" {
 			texts = append(texts, row.Name)
 			textRow = append(textRow, i)
 		}
@@ -172,7 +182,7 @@ func (m *rowMatcher) autoCreate(ctx context.Context, row MatchRowInput) (int64, 
 	if name == "" {
 		return 0, nil
 	}
-	impa := normIMPA(row.IMPACode)
+	impa := row.IMPACode
 	key := autoCreateKey(impa, name)
 	if id, ok := m.created[key]; ok {
 		return id, nil
@@ -242,7 +252,35 @@ func (r *Repo) matchRequestBatch(ctx context.Context, texts []string) ([]batchMa
 	return pgx.CollectRows(rows, pgx.RowToStructByName[batchMatch])
 }
 
-// normIMPA mirrors the SQL normalisation.
-func normIMPA(code string) string {
-	return strings.ToUpper(strings.TrimSpace(code))
+// splitRow is one stored form.
+type splitRow struct {
+	Idx  int64  `db:"idx"`
+	Name string `db:"name"`
+	Code string `db:"code"`
+}
+
+// splitRows cleans rows like fn_impa_split.
+// A code that is no IMPA code is dropped first, so the row is matched by
+// its name; the handler refuses one before it gets here.
+func (r *Repo) splitRows(ctx context.Context, in []MatchRowInput) ([]MatchRowInput, error) {
+	names := make([]string, len(in))
+	codes := make([]string, len(in))
+	for i, row := range in {
+		names[i] = row.Name
+		codes[i], _ = validate.IMPA(row.IMPACode)
+	}
+	rows, err := r.db.Query(ctx, r.store.Get("items.split_rows"), names, codes)
+	if err != nil {
+		return nil, err
+	}
+	split, err := pgx.CollectRows(rows, pgx.RowToStructByName[splitRow])
+	if err != nil {
+		return nil, err
+	}
+	out := make([]MatchRowInput, len(in))
+	for i, s := range split {
+		out[i] = in[i]
+		out[i].Name, out[i].IMPACode = s.Name, s.Code
+	}
+	return out, nil
 }

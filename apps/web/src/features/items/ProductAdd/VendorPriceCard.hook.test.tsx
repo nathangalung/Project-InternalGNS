@@ -99,11 +99,11 @@ describe("VendorPriceCard store link", () => {
   }
   const storeLink = () => document.querySelector('a[target="_blank"]')
 
-  it("offers Tambah Link Toko beside a linked vendor without one", async () => {
+  it("offers Tambah Link Produk beside a linked vendor without one", async () => {
     const onEditStoreLink = vi.fn()
     await mount(<Harness exactVendor={linked} onEditStoreLink={onEditStoreLink} />)
     expect(storeLink()).toBeNull()
-    await click(button("Tambah Link Toko"))
+    await click(button("Tambah Link Produk"))
     expect(onEditStoreLink).toHaveBeenCalledTimes(1)
   })
 
@@ -112,13 +112,13 @@ describe("VendorPriceCard store link", () => {
     const withLink = { ...linked, storeUrl: "https://toko.example/tali" }
     await mount(<Harness exactVendor={withLink} onEditStoreLink={onEditStoreLink} />)
     expect(storeLink()?.getAttribute("href")).toBe("https://toko.example/tali")
-    await click(button("Ubah Link Toko"))
+    await click(button("Ubah Link Produk"))
     expect(onEditStoreLink).toHaveBeenCalledTimes(1)
   })
 
   it("only shows the link when the role may not change it", async () => {
     await mount(<Harness exactVendor={{ ...linked, storeUrl: "https://toko.example/tali" }} />)
     expect(storeLink()).not.toBeNull()
-    expect(document.body.textContent).not.toContain("Link Toko")
+    expect(document.body.textContent).not.toContain("Link Produk")
   })
 })

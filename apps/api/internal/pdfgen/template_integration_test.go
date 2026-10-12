@@ -44,9 +44,9 @@ func TestRealTemplate_Invoice(t *testing.T) {
 		InvoiceNo, PONo, PODate, CompanyName, CompanyNPWP, CompanyAddress, VesselName string
 		InvoiceDate, DueDate                                                          string
 		Items                                                                         []item
-		TotalProduk, Diskon, DiscountPct                                              string
-		DPP, DPPNilaiLain, PPN, Total                                                 string
-		WithPPN                                                                       bool
+		Total, Diskon, DiscountPct                                                    string
+		Subtotal, DPPNilaiLain, PPN, GrandTotal                                       string
+		WithPPN, HasDiscount                                                          bool
 		PaymentTerms, BankName, BankAccountNo, BankAccountName                        string
 		DateLine, SignerName                                                          string
 		UseA4                                                                         bool
@@ -63,14 +63,14 @@ func TestRealTemplate_Invoice(t *testing.T) {
 		InvoiceDate:       "1 January 2026",
 		DueDate:           "31 January 2026",
 		Items:             []item{{No: 1, Qty: "1", Unit: "PCS", Name: "X", Description: "Y", UnitPrice: "Rp100", Amount: "Rp100"}},
-		TotalProduk:       "Rp100",
-		Diskon:            "",
+		Total:             "Rp100",
+		Diskon:            "Rp0",
 		DiscountPct:       "0",
-		DPP:               "Rp100",
+		Subtotal:          "Rp100",
 		WithPPN:           true,
 		DPPNilaiLain:      "Rp91",
 		PPN:               "Rp12",
-		Total:             "Rp112",
+		GrandTotal:        "Rp112",
 		PaymentTerms:      "NET 30",
 		BankName:          "BCA",
 		BankAccountNo:     "1234567890",
@@ -104,9 +104,9 @@ func TestRealTemplate_Quotation(t *testing.T) {
 		QuotationNo, ClientRefNo, CompanyName                      string
 		AttnName, AttnEmail, AttnPhone, DateLine                   string
 		Items                                                      []item
-		TotalProduk, DiscountPct, TotalDiscount, Subtotal          string
-		DPP, PPN, GrandTotal, Shipping                             string
-		HasShipping                                                bool
+		Total, DiscountPct, TotalDiscount, Subtotal                string
+		DPP, PPN, GrandTotal                                       string
+		HasDiscount                                                bool
 		WithPPN                                                    bool
 		DeliveryPlace, DeliveryTime, Payment, Validity, SignerName string
 		UseA4                                                      bool
@@ -119,7 +119,7 @@ func TestRealTemplate_Quotation(t *testing.T) {
 		AttnPhone:     "0811",
 		DateLine:      "Jakarta, 1 January 2026",
 		Items:         []item{{No: 1, Qty: "1", Unit: "PCS", Request: "Foo", Offer: "Bar", HasOffer: true, UnitPrice: "Rp100", Amount: "Rp100"}},
-		TotalProduk:   "Rp100",
+		Total:         "Rp100",
 		DiscountPct:   "0",
 		TotalDiscount: "Rp0",
 		Subtotal:      "Rp100",
@@ -145,8 +145,8 @@ func TestRealTemplate_Quotation(t *testing.T) {
 
 func TestRealTemplate_DeliveryNote(t *testing.T) {
 	type item struct {
-		No                               int
-		Qty, Unit, Name, ShipDestination string
+		No                    int
+		Qty, Unit, Name, Note string
 	}
 	data := struct {
 		DeliveryNoteNo, PONo, PODate, CompanyName, CompanyAddress, AttnName, VesselName string
@@ -161,7 +161,7 @@ func TestRealTemplate_DeliveryNote(t *testing.T) {
 		AttnName:       "Budi",
 		VesselName:     "MV Test",
 		DateLine:       "Jakarta, 1 January 2026",
-		Items:          []item{{No: 1, Qty: "1", Unit: "PCS", Name: "Spare", ShipDestination: "Tg. Priok"}},
+		Items:          []item{{No: 1, Qty: "1", Unit: "PCS", Name: "Spare", Note: "Tg. Priok"}},
 	}
 	out := execTemplate(t, "delivery_note/DeliveryNote.tex.tmpl", data)
 	if !strings.Contains(out, `\documentclass`) {

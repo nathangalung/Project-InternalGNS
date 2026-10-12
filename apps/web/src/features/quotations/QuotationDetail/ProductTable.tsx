@@ -15,11 +15,11 @@ type ProductTableProps = {
   showProfit?: boolean
   // The quotation shows the request; a PO or invoice bills the offer only
   showRequest?: boolean
-  // Vendor and store link under the offer, for buying
+  // Vendor and its links under the offer, for buying
   showVendor?: boolean
   // Harga jual and totals, absent for a role that sees none
   showPrices?: boolean
-  // Adds or changes a line's store link; absent for a role that only reads
+  // Adds or changes a line's product link; absent for a role that only reads
   onEditStoreLink?: (row: ProductRow) => void
   products: ProductRow[]
 }
@@ -33,7 +33,7 @@ const thProfit =
 const tdProfit =
   "truncate p-5 text-center align-middle text-sm font-bold text-primary-700 bg-[rgba(99,14,212,0.05)]"
 
-// Vendor, then its store.
+// Vendor, its store, the product link.
 function VendorNote({
   row,
   onEditStoreLink,
@@ -41,7 +41,7 @@ function VendorNote({
   row: ProductRow
   onEditStoreLink?: (row: ProductRow) => void
 }) {
-  if (!row.vendor && !row.storeUrl) return null
+  if (!row.vendor && !row.productUrl) return null
   // The link belongs to the product and vendor pair
   const editable = onEditStoreLink && row.itemId !== undefined && row.vendorId !== undefined
   return (
@@ -51,10 +51,11 @@ function VendorNote({
           {row.vendor}
         </EntityLink>
       )}
-      <StoreLink url={row.storeUrl} />
+      <StoreLink kind="store" labeled url={row.vendorStoreUrl} />
+      <StoreLink labeled url={row.productUrl} />
       {editable && (
         <button type="button" className={linkAction} onClick={() => onEditStoreLink(row)}>
-          {row.storeUrl ? "Ubah Link Toko" : "Tambah Link Toko"}
+          {row.productUrl ? "Ubah Link Produk" : "Tambah Link Produk"}
         </button>
       )}
     </div>
@@ -155,8 +156,10 @@ export default function ProductTable({
               </thead>
               <tbody>
                 {slice.map((p, i) => {
-                  const reqKode = p.requestedKode || p.kode
-                  const reqNama = p.requestedNama || p.nama
+                  // A line with no request of its own shows the offer as asked.
+                  const own = Boolean(p.requestedNama)
+                  const reqKode = own ? (p.requestedKode ?? "") : p.kode
+                  const reqNama = own ? p.requestedNama : p.nama
                   return (
                     <tr key={p.lineId ?? start + i} className={ui.tr}>
                       <RequestOffer

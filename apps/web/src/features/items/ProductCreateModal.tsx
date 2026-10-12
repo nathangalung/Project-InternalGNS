@@ -8,6 +8,7 @@ import { useUnits } from "@/features/units/hooks"
 import UnitCombobox from "@/features/units/UnitCombobox"
 import { errorMessage } from "@/lib/errors"
 import { formErrors } from "@/lib/form-errors"
+import { impaCodeError, normalizeImpa } from "@/lib/impa"
 import { ui } from "@/lib/ui"
 import type { ItemImpaHolder } from "@/types/api"
 
@@ -68,15 +69,27 @@ export default function ProductCreateModal({
     setFieldErrors({})
     setHolder(null)
     setRenameError(null)
+    const impaError = impaCodeError(kode)
+    if (impaError) {
+      setFieldErrors({ impaCode: impaError })
+      return
+    }
     const unit = units?.find((u) => u.code === satuan)
     try {
       const created = await createItem.mutateAsync({
         name: nama.trim(),
-        impaCode: kode.trim() || undefined,
+        impaCode: normalizeImpa(kode) || undefined,
         defaultUnitId: unit?.id,
         isActive: aktif,
       })
-      onSuccess?.({ id: created.id, nama: nama.trim(), kode: kode.trim(), satuan, aktif })
+      // The stored form: the server keeps the code out of the name.
+      onSuccess?.({
+        id: created.id,
+        nama: created.name,
+        kode: created.impaCode ?? "",
+        satuan,
+        aktif,
+      })
       reset()
       onOpenChange(false)
     } catch (err) {
@@ -192,7 +205,8 @@ export default function ProductCreateModal({
             className={`${ui.fieldInput} font-sans ${fieldErrors.impaCode ? "border-error" : ""}`}
             type="text"
             inputMode="numeric"
-            placeholder="Contoh: 330212"
+            maxLength={6}
+            placeholder="Contoh: 330212. Kosongkan bila tidak ada"
             aria-invalid={fieldErrors.impaCode ? true : undefined}
             aria-describedby={fieldErrors.impaCode ? impaErrorId : undefined}
             value={kode}

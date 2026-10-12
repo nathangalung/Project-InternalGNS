@@ -9,8 +9,10 @@ import { useQuotationWizard } from "./useQuotationWizard"
 const UNITS = [{ id: 1, code: "PCS", aliases: ["PIECES"] }]
 
 const FORM: ProductAddFormData = {
-  requestedKodeImpaNama: "",
-  kodeImpaNama: "LAMP LED",
+  requestedKodeImpa: "",
+  requestedNama: "",
+  kodeImpa: "",
+  nama: "LAMP LED",
   jumlahProduk: "2",
   satuan: "PCS",
   namaVendor: "CV Laut",
@@ -50,7 +52,7 @@ describe("useQuotationWizard", () => {
     const { result } = wizard()
     act(() => result.current.saveProduct(FORM))
     expect(result.current.products).toHaveLength(1)
-    expect(result.current.summary.totalHargaJual).toBe(200)
+    expect(result.current.summary.total).toBe(200)
     expect(result.current.unitsOk).toBe(true)
     expect(result.current.unknownUnits).toBe(0)
 
@@ -282,11 +284,11 @@ describe("no-offer lines", () => {
 
     act(() => result.current.toggleNoOffer(id))
     expect(result.current.products[0].noOffer).toBe(true)
-    expect(result.current.summary.totalHargaJual).toBe(0)
+    expect(result.current.summary.total).toBe(0)
     expect(result.current.incompleteLines).toBe(0)
 
     act(() => result.current.toggleNoOffer(id))
     expect(result.current.products[0].noOffer).toBe(false)
-    expect(result.current.summary.totalHargaJual).toBe(200)
+    expect(result.current.summary.total).toBe(200)
   })
 })

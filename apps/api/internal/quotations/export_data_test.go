@@ -87,9 +87,9 @@ func TestBuildExportData_TotalsFromStoredHeader(t *testing.T) {
 	checks := []struct {
 		field, got, want string
 	}{
-		{"TotalProduk", got.TotalProduk, "Rp2.001"},
+		{"Total", got.Total, "Rp2.151,25"},
+		{"DiscountPct", got.DiscountPct, "10"},
 		{"TotalDiscount", got.TotalDiscount, "Rp200,10"},
-		{"Shipping", got.Shipping, "Rp150,25"},
 		{"Subtotal", got.Subtotal, "Rp1.951,15"},
 		{"DPP", got.DPP, "Rp1.788,55"},
 		{"PPN", got.PPN, "Rp214,63"},
@@ -100,8 +100,8 @@ func TestBuildExportData_TotalsFromStoredHeader(t *testing.T) {
 			t.Errorf("%s = %q, want %q", c.field, c.got, c.want)
 		}
 	}
-	if !got.HasShipping {
-		t.Error("HasShipping = false, want true")
+	if !got.HasDiscount {
+		t.Error("HasDiscount = false, want true")
 	}
 	if len(got.Items) != 2 {
 		t.Fatalf("items = %d, want 2", len(got.Items))
@@ -130,8 +130,8 @@ func TestBuildExportData_ZeroCostShipping(t *testing.T) {
 
 			got := buildExportData(d, qUnits, "", "", "Director", exportNow)
 
-			if got.HasShipping {
-				t.Error("HasShipping = true for a Rp0 shipping line")
+			if got.Total != "Rp1.000" {
+				t.Errorf("Total = %q, want Rp1.000 with no shipping charge", got.Total)
 			}
 			if len(got.Items) != 1 {
 				t.Fatalf("items = %d, want 1 (the Rp0 shipping line is not printed)", len(got.Items))
@@ -176,11 +176,11 @@ func TestBuildExportData_NoOfferIsUnpriced(t *testing.T) {
 			t.Errorf("line %d: HasOffer = %v, want %v", c.line+1, got.Items[c.line].HasOffer, c.hasOffer)
 		}
 	}
-	if got.TotalProduk != "Rp1.500" {
-		t.Errorf("TotalProduk = %q, want Rp1.500", got.TotalProduk)
+	if got.Total != "Rp1.500" {
+		t.Errorf("Total = %q, want Rp1.500", got.Total)
 	}
-	if got.HasShipping {
-		t.Error("HasShipping = true with no shipping line")
+	if got.HasDiscount {
+		t.Error("HasDiscount = true with no discount")
 	}
 }
 

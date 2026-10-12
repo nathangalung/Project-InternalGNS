@@ -24,6 +24,7 @@ import { useUnits } from "@/features/units/hooks"
 import { resolveUnit, unitIndex } from "@/features/units/match"
 import { filterChips } from "@/lib/filter-chips"
 import { statusFilterLabel } from "@/lib/filter-options"
+import { impaLabel } from "@/lib/impa"
 import { emptyListText } from "@/lib/list-empty"
 import { canWriteCatalog } from "@/lib/rbac"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
@@ -237,7 +238,7 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
                   return (
                     <tr key={it.id} className={ui.tr}>
                       <td className={`${ui.tdCenter} font-bold text-primary-700`}>
-                        {it.impaCode ?? "-"}
+                        {impaLabel(it.impaCode)}
                       </td>
                       <td className={ui.td}>
                         <div className="flex items-center gap-4 pl-3">

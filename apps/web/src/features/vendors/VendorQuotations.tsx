@@ -2,6 +2,7 @@ import EntityLink from "@/components/shared/EntityLink"
 import RecentQuotations, { QuotationStatusBadge } from "@/components/shared/RecentQuotations"
 import { useVendorRecentQuotations } from "@/features/vendors/hooks"
 import { formatDate } from "@/lib/format"
+import { impaLabel } from "@/lib/impa"
 import { ui } from "@/lib/ui"
 
 const columns = [
@@ -42,7 +43,7 @@ export default function VendorQuotations({ vendorId }: { vendorId: number }) {
             <EntityLink kind="product" id={r.itemId} tone="name">
               {r.itemName}
             </EntityLink>
-            {r.impaCode && <span className="block text-xs text-dark-500">IMPA {r.impaCode}</span>}
+            <span className="block text-xs text-dark-500">IMPA {impaLabel(r.impaCode)}</span>
           </td>
           <td className={ui.tdCenter}>
             <QuotationStatusBadge status={r.status} />

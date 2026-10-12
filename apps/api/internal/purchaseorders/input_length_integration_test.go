@@ -11,8 +11,46 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/validate"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
+
+// PO line code is IMPA.
+// A marked one is stored as six digits; anything else is refused on its
+// field before the line is touched.
+func TestHandler_UpdateItems_ItemCode(t *testing.T) {
+	cases := []struct {
+		name, code, want string
+		refused          bool
+	}{
+		{"marked code", "IMPA 611234", "611234", false},
+		{"not six digits", strings.Repeat("C", 21), "", true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, tx, srv := txServer(t)
+			_, poID := acceptedQuotationWithPO(t, tx)
+			repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+			before, err := repo.GetByID(ctx, poID)
+			require.NoError(t, err)
+			res := doJSONWithHeaders(t, srv, http.MethodPut, fmt.Sprintf("/purchase-orders/%d/items", poID),
+				itemsWith(purchaseorders.UpdateItemsLine{ItemCode: strPtr(tc.code)}),
+				map[string]string{"If-Match": strconv.Itoa(int(before.RowVersion))})
+			defer res.Body.Close()
+			if tc.refused {
+				require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+				assert.Equal(t, map[string]string{"items[0].itemCode": validate.IMPAMessage}, readProblem(t, res).Fields)
+				return
+			}
+			require.Less(t, res.StatusCode, 300)
+			lines, err := repo.ListItems(ctx, poID)
+			require.NoError(t, err)
+			require.NotEmpty(t, lines)
+			require.NotNil(t, lines[0].ItemCode)
+			assert.Equal(t, tc.want, *lines[0].ItemCode)
+		})
+	}
+}
 
 // Over-length text is refused (PO-08).
 // Each value is one character over its varchar limit. The PO audit saw
@@ -36,12 +74,6 @@ func TestHandler_OverLengthInputIsUnprocessable(t *testing.T) {
 				f := ownedPOFile(poID)
 				f.FileName = strings.Repeat("a", 252) + ".pdf"
 				return f
-			},
-		},
-		{
-			name: "item code over 20", method: http.MethodPut, suffix: "/items",
-			body: func(int64) any {
-				return itemsWith(purchaseorders.UpdateItemsLine{ItemCode: strPtr(strings.Repeat("C", 21))})
 			},
 		},
 		{

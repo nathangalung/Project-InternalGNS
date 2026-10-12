@@ -1,4 +1,3 @@
-import { useNavigate } from "@tanstack/react-router"
 import { useMemo, useState } from "react"
 import Modal from "@/components/shared/Modal"
 import { useMe } from "@/features/auth/hooks"
@@ -9,8 +8,10 @@ import CostBreakdown from "@/features/quotations/QuotationDetail/CostBreakdown"
 import ProductTable from "@/features/quotations/QuotationDetail/ProductTable"
 import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
 import type { ProductRow, QuotationData } from "@/features/quotations/types"
+import { useNavTrail } from "@/hooks/useNavTrail"
 import { downloadFile, downloadPdf } from "@/lib/api-client"
 import { formatDate, toNum } from "@/lib/format"
+import { listCrumb } from "@/lib/nav-trail"
 import { canWriteCatalog, managesPOs } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
@@ -28,6 +29,7 @@ import {
 import type { PoStatus } from "../types"
 import UploadPoModal from "../UploadPoModal"
 import CompletenessModal from "./CompletenessModal"
+import DeliveryNoteModal from "./DeliveryNoteModal"
 import FileCard from "./FileCard"
 import FilePreviewModal from "./FilePreviewModal"
 import Header from "./Header"
@@ -44,6 +46,9 @@ import {
 import ReasonModal from "./ReasonModal"
 import StatusBar from "./StatusBar"
 
+// Opened without a trail.
+const fallback = [listCrumb("/purchase-orders")]
+
 type PurchaseOrderDetailProps = {
   po: PurchaseOrderRow
   // Client card data; the PO has its own figures
@@ -52,7 +57,7 @@ type PurchaseOrderDetailProps = {
 }
 
 export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseOrderDetailProps) {
-  const navigate = useNavigate()
+  const nav = useNavTrail(fallback)
   const { data: me } = useMe()
   const { data: poItems } = usePoItems(po.id)
   const { data: events, isLoading: historyLoading } = usePoHistory(po.id)
@@ -71,6 +76,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
   const [showReason, setShowReason] = useState(false)
   const [confirmRemove, setConfirmRemove] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
+  const [showDnNotes, setShowDnNotes] = useState(false)
   // Line whose store link is being set
   const [linkRow, setLinkRow] = useState<ProductRow | null>(null)
   // The gate refusal and the move it stopped
@@ -108,7 +114,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
       await changeStatus.mutateAsync({ id: po.id, status: t.to, note })
       setShowReason(false)
       toast.success(`Status PO diubah menjadi ${t.label}.`)
-      void navigate({ to: "/purchase-orders" })
+      nav.back()
     } catch (err) {
       // The hook toasts everything but the completeness gate.
       const found = completenessIssues(err)
@@ -121,7 +127,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
 
   function handleSave() {
     if (!selected) {
-      void navigate({ to: "/purchase-orders" })
+      nav.back()
       return
     }
     if (selected.requiresNote) {
@@ -165,16 +171,26 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
     }
   }
 
+  // dnReady guarantees the number.
+  function downloadDeliveryNote() {
+    return downloadPdf(
+      `/purchase-orders/${po.id}/delivery-note.pdf`,
+      deliveryNoteFileName(po.deliveryNoteNumber ?? ""),
+    )
+  }
+
   async function handleDownloadDeliveryNote() {
-    if (!po.deliveryNoteNumber) return
     try {
-      await downloadPdf(
-        `/purchase-orders/${po.id}/delivery-note.pdf`,
-        deliveryNoteFileName(po.deliveryNoteNumber),
-      )
+      await downloadDeliveryNote()
     } catch {
       toast.error("Gagal mengunduh Surat Jalan.")
     }
+  }
+
+  // The heads add row notes first; everyone else downloads directly.
+  function startDeliveryNote() {
+    if (writes && poItems) setShowDnNotes(true)
+    else void handleDownloadDeliveryNote()
   }
 
   return (
@@ -191,7 +207,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
           invoiceNo={po.invoiceNo}
           onEdit={!editsLines || editLockReason ? undefined : onEdit}
           editLockReason={editsLines ? (editLockReason ?? undefined) : undefined}
-          onDownloadDeliveryNote={dnReady ? () => void handleDownloadDeliveryNote() : undefined}
+          onDownloadDeliveryNote={dnReady ? startDeliveryNote : undefined}
         />
         <StatusBar
           status={po.status}
@@ -236,14 +252,13 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
         {sellingShown && (
           <CostBreakdown
             hasProducts={products.length > 0}
-            totalProduk={figures.totalProduk}
+            total={figures.total}
             discountPct={figures.discountPct}
             nominalDiskon={figures.nominalDiskon}
             subTotal={figures.subTotal}
             dppNilaiLain={figures.dppNilaiLain}
             ppn12={figures.ppn12}
             withPPN={po.ppnEnabled}
-            totalShip={totalShip}
             totalProfit={figures.totalProfit}
             showProfit={profitShown}
             grandTotal={figures.grandTotal}
@@ -279,7 +294,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
           itemId={linkRow.itemId}
           vendorId={linkRow.vendorId}
           vendorName={linkRow.vendor ?? ""}
-          current={linkRow.storeUrl}
+          current={linkRow.productUrl}
           onClose={() => setLinkRow(null)}
         />
       )}
@@ -321,6 +336,16 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
             Berkas {po.fileName} akan dilepas dari PO ini dan status kembali menjadi Pending.
           </p>
         </Modal>
+      )}
+
+      {showDnNotes && poItems && (
+        <DeliveryNoteModal
+          poId={po.id}
+          rowVersion={po.rowVersion}
+          items={poItems}
+          onDownload={downloadDeliveryNote}
+          onClose={() => setShowDnNotes(false)}
+        />
       )}
 
       {gate && (

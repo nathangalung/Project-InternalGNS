@@ -37,11 +37,12 @@ const base = {
   discountPct: 0,
   formatRp: String,
   summaryTotalHargaBeli: 0,
-  summaryTotalHargaJual: 0,
+  summaryTotal: 0,
   nominalDiskon: 0,
   summarySubTotal: 0,
   summaryDpp: 0,
   summaryPpn: 0,
+  summaryGrandTotal: 0,
   onImportProducts: vi.fn(),
   unitByText: unitIndex([{ id: 1, code: "PCS", aliases: [] }]),
 }
@@ -67,5 +68,53 @@ describe("Step2Product qty", () => {
   it("still flags a negative PO line", async () => {
     await mount(<Step2Product {...base} products={[line(-1)]} allowZeroQty />)
     expect(alerts()).toEqual([`${PO_QTY_ERROR} Ubah produk ini sebelum menyimpan.`])
+  })
+})
+
+// Rincian Biaya row labels.
+function costLabels(): string[] {
+  const title = [...document.querySelectorAll("div")].find((d) => d.textContent === "Rincian Biaya")
+  const rows = title?.parentElement?.querySelectorAll(
+    ":scope > div:nth-child(2) > div > span:first-child",
+  )
+  return [...(rows ?? [])].map((s) => s.textContent ?? "")
+}
+
+describe("Step2Product cost rows", () => {
+  // The rows the quotation PDF prints.
+  it("shows the PDF summary rows", async () => {
+    await mount(
+      <Step2Product
+        {...base}
+        products={[line(2)]}
+        discountPct={5}
+        nominalDiskon={10}
+        summaryTotal={200}
+        summarySubTotal={190}
+        summaryGrandTotal={212.8}
+      />,
+    )
+    expect(costLabels()).toEqual([
+      "Jumlah Produk",
+      "Total Harga Beli",
+      "Total",
+      "Diskon Produk 5%",
+      "Sub Total",
+      "Dengan PPN 12%",
+      "DPP Nilai Lain",
+      "PPN 12%",
+    ])
+    expect(document.body.textContent).toContain("Rp 212.8")
+  })
+
+  it("drops the discount row at 0 and the tax rows without PPN", async () => {
+    await mount(<Step2Product {...base} products={[line(2)]} withPPN={false} />)
+    expect(costLabels()).toEqual([
+      "Jumlah Produk",
+      "Total Harga Beli",
+      "Total",
+      "Sub Total",
+      "Tanpa PPN",
+    ])
   })
 })

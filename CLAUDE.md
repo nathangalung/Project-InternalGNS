@@ -54,11 +54,11 @@ management picks a role from a dropdown with an Indonesian label and hint
 - operational (Kepala Operasional): quotations, purchase orders, the catalog
   and vendors, harga beli and harga jual. It edits drafts, sets selling
   prices and discounts, and downloads the quotation PDF, which is its last
-  step; it runs a PO (file, number, notes, status, cancelling) with
-  superadmin (`roles.ManagesPOs`). It deletes an unused client or vendor
+  step; it runs a PO (file, number, notes, status, cancelling, the
+  delivery note's row notes) with superadmin (`roles.ManagesPOs`). It deletes an unused client or vendor
   for good (Hapus Permanen).
 - operational_input (Input Data Operasional): client data, client requests,
-  harga beli and the catalog (products, photos, vendors, store links). It
+  harga beli and the catalog (products, photos, vendors, product links). It
   writes quotation drafts but never sees or sets a selling figure: no harga
   jual, discount, shipping charge, totals, tax or profit, no harga jual
   history, no quotation PDF and no quotation or PO export. Its line and
@@ -73,7 +73,8 @@ management picks a role from a dropdown with an Indonesian label and hint
   current: in Ubah PO it changes harga beli and vendor of the stored lines,
   everything the client ordered stays as stored (`keepStoredSale`; each line
   carries its PO line `id`, adding or dropping one is a 403), and it neither
-  moves the PO nor touches its file, number or notes. The storage proxy
+  moves the PO nor touches its file, number, notes or delivery note
+  notes. The storage proxy
   refuses it a PO document upload too. It deletes an unused client or
   vendor for good, as the heads do.
 - finance (Kepala Keuangan): invoices, Kas Lain and the financial dashboard,
@@ -311,9 +312,10 @@ shows a missing one as Belum ada No. PO.
   Salin ke Offer makes the request the offer as a real catalog item: a
   picked catalog request is that item, and typed text goes through
   `POST /items/match-rows` with `autoCreate`, the Excel import's own
-  matcher and threshold: the IMPA code, then the closest name, reuses an
-  item (a look-alike asks the user to check it), anything else is added to
-  the catalog, and the pick then applies the line recommendation as an
+  matcher and threshold (see IMPA codes below): a request with a code
+  reuses only the product holding that exact code, one without a code the
+  closest name (a look-alike asks the user to check it), and anything else
+  is added to the catalog, and the pick then applies the line recommendation as an
   import does. Its `minScore` defaults to 0.5, and one outside (0, 1] is a
   422 on the field, since above 1 nothing matches and `autoCreate` would
   add every row again. Every product line shows the
@@ -346,9 +348,9 @@ shows a missing one as Belum ada No. PO.
   chosen contact's own email and phone, read by id even once that contact
   is deactivated, and none when the quotation has no contact. Its DELIVERY
   PLACE prints the shipping line's address, else the vessel.
-  The list export (`GET /quotations/export.xlsx`) carries the same stored
-  breakdown in the PDF's order: Total Produk, Diskon, Pengiriman (total
-  minus total_produk, as the PDF computes it), Sub Total, then PPN as text
+  The list export (`GET /quotations/export.xlsx`) carries the stored
+  breakdown with shipping in its own column: Total Produk, Diskon,
+  Pengiriman (total minus total_produk), Sub Total, then PPN as text
   (12% or Tanpa PPN) beside Nilai PPN (0 without PPN), and Grand Total.
   These figures ride on the list row as `json:"-"` fields, so the list
   JSON stays as it was.
@@ -429,6 +431,29 @@ shows a missing one as Belum ada No. PO.
   becomes that vendor link's current catalog price and quote date
   (00106), so the next quotation starts from what was paid; a price the
   edit leaves as it was never touches the catalog.
+  The delivery note's Address is where the goods go
+  (`deliveryNoteAddress`): the shipping line's address, else the one place
+  every addressed product line names (compared without case or spacing),
+  else the client's own address, which stays live like the To. No row
+  repeats it. Its last column is Notes, one note per product line in
+  `purchase_order_items.dn_note` (00114, up to 500 characters), so a
+  reprint prints the same notes. NULL means never saved: the row prints a
+  default worked out at render and on the items read (`dnNoteDefault`),
+  "Kirim ke:" and the line's own destination when that is not the
+  Address, else nothing. A saved note replaces it for good, and an empty
+  one prints nothing. `PATCH /purchase-orders/{id}/delivery-note` saves
+  `{notes: [{lineId, note}]}` (`fn_update_po_dn_notes`): If-Match is
+  required, only the rows sent change, each `lineId` must be a product
+  line of this PO (else a 422), and outside ON_PROGRESS and DELIVERED it
+  is a 409 `po_locked`. It is for the roles that run the PO (`header`
+  gate: superadmin and operational, `managesPOs` on the web). Ubah PO
+  carries each kept line's note over by its `id`, since it replaces every
+  line; a new line starts with none. On the PO detail, Unduh Surat Jalan
+  opens `DeliveryNoteModal` for those roles: each product row with its
+  saved note or default, Simpan dan Unduh saves every row once any changed
+  and then downloads, Unduh with no change only downloads, and a refusal
+  shows in the dialog. Every other role, and the list's download button,
+  downloads directly.
 - Invoice: draft, sent, paid, cancelled; overdue is stored only on legacy
   rows. Draft goes to sent; sent or overdue to paid, which stamps `paid_at`
   and takes an optional proof stored under `invoices/<id>/payment/`; marking
@@ -518,14 +543,25 @@ never borrows the company email or the client's first contact. The wizard's
 client rows name the client only, and its picker pages every active client
 by name ten at a time (`pickerWindow`), a search paging its hits the same way.
 
-A vendor link's `product_url` is where the vendor sells the item (Link
-Toko). `validate.ProductURL` keeps only an http or https address with a host
-(a 422 on `productUrl`), mirrored by `lib/store-link`, so the anchor never
-runs script. Only `POST /items/{id}/vendors` writes it, and a cleared link
+Two web links follow one rule. A vendor link's `product_url` is where the
+vendor sells that product (Link Produk), and a vendor's own `store_url`
+(00115) is its shop (Link Toko). `validate.ProductURL` and
+`validate.StoreURL` keep only an http or https address with a host (a 422 on
+`productUrl` or `storeUrl`, each with its own message), mirrored by
+`productUrlError` and `storeUrlError` in `lib/store-link`, so the anchor
+never runs script. The vendor create and edit forms (`VendorAddModal`,
+`VendorDetail`) write Link Toko, with the vendor writes' roles; a blank one
+stores NULL and, since PUT replaces the vendor, an absent one clears it.
+The vendor, product vendor, quotation line and PO line reads carry it
+(`storeUrl`, `vendorStoreUrl`), and `StoreLink kind="store"` shows it beside
+the vendor's name on the vendor list and page, the product page and under
+each quotation and PO line. Internal names keep the older store wording
+for the product link (`StoreLinkModal`, `onEditStoreLink`, `storeLinks`).
+Only `POST /items/{id}/vendors` writes Link Produk, and a cleared link
 is sent as null. An unsent `costPrice` keeps the stored harga beli and its
 quote date, so Ubah sends the price only when it was changed. Three places
 write it: the Tambah Vendor and Ubah dialogs on the product page, and
-`features/items/StoreLinkModal` (Tambah Link Toko, Ubah Link Toko), which
+`features/items/StoreLinkModal` (Tambah Link Produk, Ubah Link Produk), which
 sends only `vendorId` and `productUrl` and is opened beside the picked
 vendor in the quotation and PO product dialog and under each line on
 the quotation and PO detail. It is offered only to the roles that write the catalog
@@ -535,15 +571,14 @@ the product already links (`vendorProductId`), since a link alone would
 create one at harga beli 0. A save refreshes the item's vendors and the
 quotation and PO queries, which read the link live. Every other role only
 sees it.
-`StoreLink` shows it in a new tab on the product and vendor pages, under
+`StoreLink` shows Link Produk in a new tab on the product and vendor pages, under
 each offer on the quotation and PO detail, and beside the picked vendor in
 the quotation product dialog.
 
-One IMPA code belongs to one active product (`uq_items_impa_code_active`,
-stored trimmed and upper-cased). The import and Salin ke Offer match the
-code first, so a row whose code an active product holds reuses it whatever
-its name, and only an unknown code is auto-created, under the request text
-as typed. When that text was abbreviated or wrong, Tambah Produk Baru with
+One IMPA code belongs to one active product (`uq_items_impa_code_active`).
+The import and Salin ke Offer match the code first, so a row whose code an
+active product holds reuses it whatever its name, and only an unknown code
+is auto-created, under the request text as typed. When that text was abbreviated or wrong, Tambah Produk Baru with
 the right name and the same code is refused: the 422 on `impaCode` (create
 and `PUT /items/{id}`) keeps its field message and carries `code:
 "impa_taken"` with `impaHolder` (`items.IMPATakenProblem`: id, name, code,
@@ -557,6 +592,55 @@ rename reaches only the catalog and the drafts that read it, exactly as the
 product page Ubah (`PUT /items/{id}`) always has. Items carry no row
 version, so the rename takes no `If-Match`. The product page Ubah and the
 catalog's Tambah Produk link the holder's name to its page instead.
+
+## IMPA codes
+
+An IMPA code is six digits. `validate.IMPA` (mirrored by `lib/impa` in the
+web, `fn_impa_code` in the database and `values.impa_code` in the import,
+all pinned by `validate/testdata/impa_rules.json`) reduces the forms people
+type (`IMPA 190105`, `(190105)`, `19 01 05`) to the digits and reads a blank
+or "-" as no code. Anything else is a 422 on its field with
+`validate.IMPAMessage`: `impaCode` on item create and update,
+`items[i].requestedImpa` on quotation lines, `requestImpa` on client
+requests, `items[i].itemCode` in Ubah PO and `rows[i].impaCode` in
+match-rows. A CHECK on `items.impa_code`, `quotation_items.requested_impa`
+and `offered_impa`, `quotation_item_requests.request_impa` and
+`purchase_order_items.item_code` (00113) keeps every other value out; 00113
+validates each one only when no stored row breaks it and otherwise names
+the count in a notice and leaves the row as it was. An RFQ code cell that
+is not an IMPA code (a row number, the client's own code) is dropped.
+
+Matching (`items/matchrows.go`, the RFQ import and Salin ke Offer): a row
+with a code resolves only by that exact code among active products. When
+no product holds it, `autoCreate` adds one under that code, else the row
+stays unmatched; it is never matched by name. Only a row without a code
+goes through `fn_match_request` with today's name tiers and threshold. A
+search whose query is a code (`fn_search_items`, search-advanced) returns
+only its holder, and no search compares codes by trigram similarity; a
+partly typed code still finds codes containing it.
+
+A name never repeats its own row's code. `fn_impa_split(name, code, move)`
+takes the code out of the text, bare, marked `IMPA` (with or without a
+space) or in brackets, with its ` - ` separator, and tidies the line it
+was on; a code inside a longer token (`XJ-190105-B`, `A190105`), another
+row's code and words like IMPACT stay, and a text that was only the code
+keeps it. With `move`, an empty code takes the one code the text marks
+`IMPA`. Triggers run it on every write: requests (`requested_name`,
+`request_text`) move, offers and PO lines (copies of the catalog) and
+products only strip. A product's marked code moves into its empty field
+only in the item create and update handlers and in the import, after
+checking no other active product holds it, since a trigger could hand it
+to the wrong row in a bulk load. 00113 cleaned every stored product,
+quotation line, request and PO line the same way. Invoice lines are never
+touched: they are what went to DJP through Coretax.
+
+The web keeps Kode IMPA and Nama Produk as two fields: the product dialog
+has a typed Kode IMPA Request beside Nama Produk Request, and a read-only
+Kode IMPA Offer (the picked product's) beside the Nama Produk Offer search,
+which still takes a code or a name. Lists, the request and offer cells
+(`RequestOffer`) and the pickers show the code apart from the name, a
+missing one as "-" (`impaLabel`, display only). The PDFs print the name,
+then the code in brackets.
 
 ## Units
 
@@ -612,7 +696,7 @@ src/
   components/shared/ Sidebar, Modal, tables, pagination, states, links
   hooks/             Cross-feature hooks
   lib/               api-client, session (in-memory token), rbac, format,
-                     status, entity-link, chart helpers, ui (tailwind class
+                     status, entity-link, nav-trail, chart helpers, ui (tailwind class
                      primitives), useListScreen, validation (form field
                      rules), form-errors (422 to inputs), event-stream
                      (server-sent events over fetch)
@@ -637,13 +721,39 @@ covers detail and edit routes) and calls `logout` itself. Navigate with
 `useNavigate` or `Link` against the generated route tree; never reintroduce a
 hand-kept page union.
 
+Every detail and edit page knows the way it was reached. A link or
+navigate into another page passes `state` from `useTrailState()`
+(`hooks/useNavTrail`): the crumbs behind the current page plus the page
+itself, each with its href, an Indonesian label (Quotation Q-00012/GNS/X/2026,
+Produk Tali Tambat, Daftar Quotation) and the history index it was left at.
+The trail lives in router history state, so a reload of the same entry keeps
+it and a new tab, a bookmark or the menu starts without one. `lib/nav-trail`
+reads it defensively (well formed crumbs on this origin only), cuts it where
+the page already appears, so going back and forth adds nothing, and keeps
+the newest five. `EntityLink`, the list Lihat actions, Ubah and the invoice
+self links pass it. `NavTrail` (below) shows it, and `useNavTrail(fallback)`
+gives each page `back` and `goTo`: a crumb left one history entry after
+another is reached with a real history back, anything else is opened with
+the crumbs before it. Without a trail a page shows and follows its fallback,
+the list (and, on an edit page, the detail). The editors save with
+`leaveTo(detail)`, so the save returns along the trail, and a PO status move
+returns along it too. List filters live in component state, so a history back
+to a list still starts it unfiltered.
+
 Shared pieces in `components/shared`, reuse them instead of copying markup:
 
 - `EntityLink` links a document number or name to its detail page through
   `lib/entity-link.ts`. It renders a real anchor, and falls back to plain text
   when the id is missing or the viewer's role cannot open the target. PO and
   invoice routes are keyed by the quotation id, so those kinds take
-  `quotationId`.
+  `quotationId`. It carries the navigation trail.
+- `NavTrail` is the breadcrumb on every detail and edit page: a
+  `nav aria-label="Breadcrumb"` with an ordered list of real anchors, the
+  current page marked `aria-current="page"`, long labels truncated and the
+  list wrapping at 320px. It takes the page's own label (`current`), which
+  also names the crumb a link from the page leaves behind, and the
+  `fallback` crumbs, a module constant or memoised, for a page opened
+  without a trail.
 - `Modal` is the dialog shell: focus trap, Escape to close, scroll lock,
   focus returned to the opener, and a stack so only the top modal reacts.
 - `FilterFooter` is the Hapus Filter, Batal, Terapkan footer of every filter
@@ -837,11 +947,13 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    party block and the table with no lead-in sentence. Each `.tex.tmpl`
    carries its own copy of the shared sizes (`\Doc*`, `_base/` is empty), so
    change all three together. The quotation addresses To, Attn, Email and
-   Contact No.; the delivery note To and Address only, with no vessel or
-   attention; the invoice its Client, NPWP and Address, with no vessel.
+   Contact No.; the delivery note To and Address only (the Address is where
+   the goods go, and its table ends in a Notes column, see the PO status
+   model), with no vessel or attention; the invoice its Client, NPWP and
+   Address, with no vessel.
    The terms and the signature sit clear of the table, and a long terms
    value wraps whole words inside its block (`tabularx`,
-   `TestLatexExports_LongPaymentTermsWraps`). All three keep 1.8 cm
+   `TestLatexExports_LongPaymentTermsWraps`). All three keep 0.9 cm
    side margins and every table spans exactly the text width (`\LTleft`,
    `\LTright` 0pt, the text columns sharing what the fixed ones leave), so
    the letterhead, party block, table rules and signature start and end on
@@ -856,13 +968,17 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    contextual alternates are off, `RawFeature = -calt`, since they swap a
    hyphen between digits for a minus sign), and `TestLatexExports_
    DocumentHead` checks all of it with `pdfinfo` and `pdftotext`.
-   Geometry uses `includehead` so the running header prints on the sheet
-   instead of off its top edge. The party block is a top-aligned `tabularx`
+   Geometry uses `includehead` and `includefoot` so the running header and
+   the page count print on the sheet: the header 0.4 cm from the top, the
+   count 0.75 cm from the bottom (`footskip` 16pt above it). The logo is
+   5.2 cm wide (`\DocLogoWidth`), the title `\Large` and the number under
+   it 11pt; `TestLatexExports_Margins` pins the margins, the logo width and
+   the number set smaller than the title. The party block is a top-aligned `tabularx`
    whose value column is plain `\raggedright` `X` with hyphenation off
    (English patterns would split Indonesian names), and the client name goes
    through `pdfgen.LatexBreakable`, so a long name wraps instead of printing
    over the right-hand block. Every printed address (the party Address, the
-   quotation's Delivery Place, the note's Tujuan, the invoice's Description)
+   quotation's Delivery Place, the note's Notes, the invoice's Description)
    goes through `pdfgen.LatexAddress`: `NormalizeAddress` folds typed line
    breaks, stray spaces and doubled commas into one ", " between parts and
    keeps a house-number list such as "2,6,8", and a part up to `PartyKeep`
@@ -891,9 +1007,21 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    the invoice, and a document without it stores DPP Nilai Lain and PPN as
    0 with the grand total equal to the net. Its PDFs leave those two rows
    out, and the web breakdown shows Tanpa PPN in their place.
-   Invoices snapshot `gross_unit_price` and `total_discount`, so the PDF
-   prints a gross line plus a real discount row (`TotalProduk − Diskon = DPP`)
-   without reading the quotation. Every PDF prints rupiah as the web's
+   The quotation and invoice PDFs close their table with the same rows in
+   the same order (`TestLatexExports_SummaryRows`): Total (every line,
+   shipping included, since shipping is a table line and has no row of its
+   own), Diskon Produk N% (only when there is a discount, N by
+   `pdfgen.FormatPct`: "5", "2,5"), Sub Total (Total minus the discount, the
+   invoice DPP), DPP Nilai Lain and PPN 12% when taxed, then Grand Total in
+   bold. The label says Produk because shipping is never discounted. Rincian
+   Biaya on the quotation, PO and invoice pages shows the same rows
+   (`CostBreakdown`, `discountLabel`), and so does the quotation wizard's
+   summary (`wizardSummary`, whose Sub Total includes shipping). Invoices snapshot `gross_unit_price`
+   and `total_discount`, so the PDF prints a gross line plus a real discount
+   row (Total − Diskon Produk = Sub Total) without reading the quotation;
+   the invoice stores no percent, so its detail read derives `discountPct`
+   from that snapshot (`total_discount` over the product gross, NULL when a
+   product line predates the gross snapshot). Every PDF prints rupiah as the web's
    `formatRupiah` does (`pdfgen.FormatIDRCents`): "Rp2.000.000", no space
    and no ",00", and a figure with real sen keeps both digits, and the Go line
    math (`pdfgen.BigMul`) rounds half away from zero like Postgres `ROUND`,

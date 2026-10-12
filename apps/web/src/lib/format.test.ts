@@ -6,6 +6,7 @@ import {
   formatDateShort,
   formatDateTime,
   formatNumber,
+  formatPercent,
   formatRupiah,
   formatRupiahAxis,
   lineNet,
@@ -144,6 +145,22 @@ describe("formatRupiah fallbacks", () => {
 
   it("keeps the minus sign on a negative amount", () => {
     expect(formatRupiah(-2500)).toBe("Rp-2.500")
+  })
+})
+
+describe("formatPercent", () => {
+  it.each<[string, string | number | null | undefined, string]>([
+    ["whole", 5, "5%"],
+    ["stored two decimals", "5.00", "5%"],
+    ["one decimal", "2.50", "2,5%"],
+    ["two decimals", 12.25, "12,25%"],
+    ["rounds to two", 33.333, "33,33%"],
+    ["full discount", "100.00", "100%"],
+    ["null", null, ""],
+    ["empty", "", ""],
+    ["junk", "abc", ""],
+  ])("%s", (_name, v, want) => {
+    expect(formatPercent(v)).toBe(want)
   })
 })
 

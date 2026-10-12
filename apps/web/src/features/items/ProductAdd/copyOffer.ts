@@ -1,13 +1,17 @@
-import { splitOffer } from "@/features/quotations/wizard"
+import { normalizeImpa } from "@/lib/impa"
 import type { MatchedItemWithVendor, MatchRowInput } from "@/types/generated"
 import type { CatalogItem } from "./helpers"
 
-// Request label as a match row.
-// The label is "code - name" or free text, as formatKodeNama writes it.
-export function copyRow(label: string, qty: string, unit: string): MatchRowInput {
-  const { kode, nama } = splitOffer(label)
+// Request fields as match row.
+// A request with a code is matched by that code only; one without by name.
+export function copyRow(kode: string, nama: string, qty: string, unit: string): MatchRowInput {
   const n = Number(qty)
-  return { impaCode: kode, name: nama, qty: Number.isFinite(n) ? n : 0, unit }
+  return {
+    impaCode: normalizeImpa(kode),
+    name: nama.trim(),
+    qty: Number.isFinite(n) ? n : 0,
+    unit,
+  }
 }
 
 // Matched item as a catalog pick.

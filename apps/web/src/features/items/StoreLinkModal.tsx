@@ -2,7 +2,7 @@ import { useId, useState } from "react"
 import Modal from "@/components/shared/Modal"
 import { storeLinkBody, storeLinkError } from "@/features/items/helpers"
 import { useAddVendorToItem } from "@/features/items/hooks"
-import { storeUrlError } from "@/lib/store-link"
+import { productUrlError } from "@/lib/store-link"
 import { ui } from "@/lib/ui"
 
 type StoreLinkModalProps = {
@@ -14,7 +14,7 @@ type StoreLinkModalProps = {
   onClose: () => void
 }
 
-// Store link of one vendor link.
+// Product link of one vendor link.
 //
 // Sends only the vendor and the link, so the stored harga beli, its quote
 // date and the SKU stay as they are.
@@ -32,7 +32,7 @@ export default function StoreLinkModal({
   const inputId = useId()
   const errorId = useId()
 
-  const typedError = storeUrlError(url)
+  const typedError = productUrlError(url)
   const shownError = typedError ?? fieldError
   const body = storeLinkBody(url, current)
   const canSave = typedError === null && body !== undefined && !save.isPending
@@ -57,7 +57,7 @@ export default function StoreLinkModal({
 
   return (
     <Modal
-      title={current ? "Ubah Link Toko" : "Tambah Link Toko"}
+      title={current ? "Ubah Link Produk" : "Tambah Link Produk"}
       onClose={close}
       className="max-w-[min(520px,92vw)]!"
       footer={
@@ -95,7 +95,7 @@ export default function StoreLinkModal({
         </p>
         <div className={ui.field}>
           <label htmlFor={inputId} className={ui.fieldLabel}>
-            Link Toko
+            Link Produk
           </label>
           <input
             id={inputId}

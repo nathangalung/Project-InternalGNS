@@ -114,20 +114,20 @@ describe("AddVendorToItemModal edit", () => {
     expect(input("Nama Vendor").value).toBe("PT Laut")
     expect(input("Nama Vendor").readOnly).toBe(true)
     expect(input("Harga Beli").value).toBe("150.000")
-    expect(input("Link Toko").value).toBe("https://toko.example/rope")
+    expect(input("Link Produk").value).toBe("https://toko.example/rope")
   })
 
   it("refuses a link that is not http or https", async () => {
     await mount(<Harness edit={stored} />)
-    await type(input("Link Toko"), "javascript:alert(1)")
-    expect(document.body.textContent).toContain("Link toko harus diawali http:// atau https://.")
+    await type(input("Link Produk"), "javascript:alert(1)")
+    expect(document.body.textContent).toContain("Link produk harus diawali http:// atau https://.")
     expect(button("Simpan").disabled).toBe(true)
   })
 
   it("leaves the stored price out and clears the link with null", async () => {
     vi.mocked(itemsApi.addVendor).mockResolvedValue(stored)
     await mount(<Harness edit={stored} />)
-    await type(input("Link Toko"), "  ")
+    await type(input("Link Produk"), "  ")
     await click(button("Simpan"))
     expect(itemsApi.addVendor).toHaveBeenCalledWith(1, {
       vendorId: 7,

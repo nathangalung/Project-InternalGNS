@@ -6,7 +6,6 @@ import {
   countUnknownUnits,
   type ProductItem,
   seedFromDetail,
-  splitOffer,
   unitIssue,
   upsertProduct,
   validityInput,
@@ -97,9 +96,10 @@ describe("wizardSummary", () => {
 
   it("totals the net without PPN", () => {
     const s = wizardSummary([product(1)], 0, "50", false)
-    expect(s).toMatchObject({ dpp: 0, ppn: 0, grandTotal: s.subTotal + 50 })
+    expect(s).toMatchObject({ dpp: 0, ppn: 0, grandTotal: s.subTotal })
   })
 
+  // The PDF rows: Total holds shipping, Sub Total is Total less the discount.
   it("adds up products, discount, shipping and tax", () => {
     const s = wizardSummary(
       [product(1), product(2, { jumlah: 1, hargaBeli: 30, hargaJual: 50 })],
@@ -109,10 +109,9 @@ describe("wizardSummary", () => {
     expect(s).toEqual({
       totalProdukQty: 3,
       totalHargaBeli: 150,
-      totalHargaJual: 250,
+      total: 12250,
       nominalDiskon: 25,
-      subTotal: 225,
-      shippingCost: 12000,
+      subTotal: 12225,
       dpp: 11206.25,
       ppn: 1344.75,
       grandTotal: 13569.75,
@@ -131,8 +130,9 @@ describe("wizardSummary", () => {
       "100.01",
     )
     expect(s).toMatchObject({
+      total: 9078.24,
       nominalDiskon: 224.45,
-      subTotal: 8753.78,
+      subTotal: 8853.79,
       dpp: 8115.98,
       ppn: 973.91,
       grandTotal: 9827.7,
@@ -142,27 +142,17 @@ describe("wizardSummary", () => {
   it("has no profit without products and reads a blank cost as 0", () => {
     const s = wizardSummary([], 0, "")
     expect(s.profit).toBe(0)
-    expect(s.shippingCost).toBe(0)
+    expect(s.total).toBe(0)
     expect(s.grandTotal).toBe(0)
-  })
-})
-
-describe("splitOffer", () => {
-  it.each<[string, { kode: string; nama: string }]>([
-    ["", { kode: "", nama: "" }],
-    ["   ", { kode: "", nama: "" }],
-    ["232001 - LAMP LED - 12W", { kode: "232001", nama: "LAMP LED - 12W" }],
-    ["LAMP - LED", { kode: "", nama: "LAMP - LED" }],
-    ["  Tali Tambat ", { kode: "", nama: "Tali Tambat" }],
-  ])("%j", (input, want) => {
-    expect(splitOffer(input)).toEqual(want)
   })
 })
 
 describe("upsertProduct", () => {
   const form: ProductAddFormData = {
-    requestedKodeImpaNama: "",
-    kodeImpaNama: "232001 - LAMP LED",
+    requestedKodeImpa: "",
+    requestedNama: "",
+    kodeImpa: "232001",
+    nama: "LAMP LED",
     jumlahProduk: "3",
     satuan: "PCS",
     namaVendor: "CV Laut",
@@ -199,9 +189,13 @@ describe("upsertProduct", () => {
     expect(out[0]).toMatchObject({ id: 1, hargaBeli: 0, hargaJual: 0 })
   })
 
-  it("keeps the requested name when one was given", () => {
-    const out = upsertProduct([], null, { ...form, requestedKodeImpaNama: "111 - BOLT" })
-    expect(out[0]).toMatchObject({ requestedNama: "BOLT", requestedKodeImpa: "111" })
+  it("keeps the requested name and code when given", () => {
+    const out = upsertProduct([], null, {
+      ...form,
+      requestedKodeImpa: "IMPA 111111",
+      requestedNama: " BOLT ",
+    })
+    expect(out[0]).toMatchObject({ requestedNama: "BOLT", requestedKodeImpa: "111111" })
   })
 
   it("replaces the edited line in place", () => {

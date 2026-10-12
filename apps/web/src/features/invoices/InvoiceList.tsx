@@ -9,6 +9,7 @@ import SearchInput from "@/components/shared/SearchInput"
 import StatCard from "@/components/shared/StatCard"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
+import { useTrailState } from "@/hooks/useNavTrail"
 import { downloadPdf, downloadXml } from "@/lib/api-client"
 import { formatDate, formatNumber, PENDING_FIGURE } from "@/lib/format"
 import { emptyListText } from "@/lib/list-empty"
@@ -28,6 +29,7 @@ type InvoiceListProps = {
 }
 
 export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
+  const trail = useTrailState()
   const [showFilter, setShowFilter] = useState(false)
 
   const list = useListScreen<InvoiceFilterValues | null>(null)
@@ -232,6 +234,7 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
                             to="/invoices/$id"
                             params={{ id: String(row.quotationId) }}
                             search={detailSearch(row)}
+                            state={trail}
                             className={ui.entityLink}
                           >
                             {row.invoiceNo}

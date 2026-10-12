@@ -3,6 +3,7 @@ package pdfgen
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/shopspring/decimal"
 )
@@ -94,6 +95,23 @@ func BigMulDiv(a, num, den string) string {
 		return "0"
 	}
 	return decToStr(decFromStr(a).Mul(decFromStr(num)).Div(d))
+}
+
+// FormatPct prints a percent figure.
+// At most two decimals, a decimal comma and no trailing zeros: "5.00" is
+// "5", "2.50" is "2,5". Malformed input is "". The caller adds the % sign.
+func FormatPct(numericStr string) string {
+	d, err := decimal.NewFromString(strings.TrimSpace(numericStr))
+	if err != nil {
+		return ""
+	}
+	return strings.Replace(d.Round(2).String(), ".", ",", 1)
+}
+
+// IsZero reads an amount as zero.
+// Empty or malformed input counts as zero.
+func IsZero(numericStr string) bool {
+	return decFromStr(numericStr).IsZero()
 }
 
 // BigAdd adds numeric strings.

@@ -15,6 +15,7 @@ import * as vendorsApi from "@/features/vendors/api"
 import { useCreateVendor } from "@/features/vendors/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { errorMessage } from "@/lib/errors"
+import { impaCodeError, normalizeImpa } from "@/lib/impa"
 import { lookupFailure } from "@/lib/lookup"
 import { INLINE_LOOKUP } from "@/lib/query-client"
 import { ui } from "@/lib/ui"
@@ -31,7 +32,6 @@ import { copyNote, copyRow, matchedCatalog } from "./copyOffer"
 import {
   type CatalogItem,
   type DropdownKey,
-  formatKodeNama,
   type HistorisOption,
   INITIAL_FORM,
   type NewVendorForm,
@@ -83,11 +83,11 @@ export default function ProductAdd({ open, ...props }: ProductAddProps) {
 
 // Form from the saved line.
 function formFrom(initialData: ProductAddInitialData): ProductAddFormData {
-  const reqKode = initialData.requestedKodeImpa ?? initialData.kodeImpa ?? ""
-  const reqNama = initialData.requestedNama ?? initialData.nama ?? ""
   return {
-    requestedKodeImpaNama: formatKodeNama(reqKode, reqNama),
-    kodeImpaNama: formatKodeNama(initialData.kodeImpa, initialData.nama),
+    requestedKodeImpa: initialData.requestedKodeImpa ?? initialData.kodeImpa ?? "",
+    requestedNama: initialData.requestedNama ?? initialData.nama ?? "",
+    kodeImpa: initialData.kodeImpa,
+    nama: initialData.nama,
     jumlahProduk: String(initialData.jumlah),
     satuan: initialData.satuan,
     namaVendor: initialData.vendor,
@@ -158,8 +158,9 @@ function ProductAddDialog({
   const { data: units } = useUnits()
   const satuanOptions = useMemo(() => (units ?? []).map((u) => u.code), [units])
 
-  const productQueryRaw = form.kodeImpaNama.trim()
-  const requestQueryRaw = form.requestedKodeImpaNama.trim()
+  // One box searches by name or code; the request may be a code alone.
+  const productQueryRaw = form.nama.trim()
+  const requestQueryRaw = form.requestedNama.trim() || normalizeImpa(form.requestedKodeImpa)
   const productQueryDebounced = useDebouncedValue(productQueryRaw, 250)
   const requestQueryDebounced = useDebouncedValue(requestQueryRaw, 250)
   // A deactivated product must not be offered for a new line.
@@ -270,8 +271,9 @@ function ProductAddDialog({
   const profit = parseRp(form.hargaJual) - hargaBeliVal
   const profitPct = hargaBeliVal > 0 ? ((profit / hargaBeliVal) * 100).toFixed(2) : "0.00"
 
-  const isRequestFilled = form.requestedKodeImpaNama.trim().length > 0
-  const isProductFilled = form.kodeImpaNama.trim().length > 0
+  const isRequestFilled = form.requestedNama.trim().length > 0
+  const requestImpaError = impaCodeError(form.requestedKodeImpa)
+  const isProductFilled = form.nama.trim().length > 0
   const isSatuanFilled = isProductFilled && form.satuan.trim().length > 0
   const isJumlahFilled = isSatuanFilled && form.jumlahProduk.trim().length > 0
   const exactVendor = vendorOptions.find((v) => v.nama === form.namaVendor)
@@ -281,9 +283,11 @@ function ProductAddDialog({
   // one of the options.
   const vendorTyped = form.namaVendor.trim().length > 0
   const isLineIncomplete = !exactVendor || !isHargaJualValid
-  const canSubmit = allowIncomplete
-    ? isRequestFilled && isJumlahFilled && (!vendorTyped || exactVendor !== undefined)
-    : isRequestFilled && isVendorFilled && isHargaJualValid
+  const canSubmit =
+    requestImpaError === null &&
+    (allowIncomplete
+      ? isRequestFilled && isJumlahFilled && (!vendorTyped || exactVendor !== undefined)
+      : isRequestFilled && isVendorFilled && isHargaJualValid)
   const pricesUnlocked = allowIncomplete ? isJumlahFilled : isVendorFilled
   // Only a vendor the product already links: a link alone would create one
   // at harga beli 0.
@@ -296,9 +300,15 @@ function ProductAddDialog({
       : null
 
   function handleChange(field: keyof ProductAddFormData, value: string) {
-    if (field === "requestedKodeImpaNama") {
-      setForm((prev) => ({ ...prev, requestedKodeImpaNama: value, requestedItemId: undefined }))
+    // A typed request is no longer the catalog pick.
+    if (field === "requestedNama" || field === "requestedKodeImpa") {
+      setForm((prev) => ({ ...prev, [field]: value, requestedItemId: undefined }))
       setCopyMessage(null)
+      return
+    }
+    // A typed offer is no longer the picked product's code.
+    if (field === "nama") {
+      setForm((prev) => ({ ...prev, nama: value, kodeImpa: "" }))
       return
     }
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -343,13 +353,6 @@ function ProductAddDialog({
 
   const productMatches = productCatalog.slice(0, 3)
   const requestMatches = requestCatalog.slice(0, 5)
-
-  const activeProductLabel =
-    form.kodeImpaNama.trim().length > 0
-      ? productCatalog
-          .map((p) => formatKodeNama(p.kode, p.nama))
-          .find((label) => label === form.kodeImpaNama)
-      : undefined
 
   const vendorQuery = form.namaVendor.trim().toLowerCase()
   const vendorMatches = vendorQuery
@@ -421,6 +424,7 @@ function ProductAddDialog({
     }
   }
 
+  // A pick fills the offer's code and name.
   function pickProduct(item: CatalogItem) {
     setPickedItemId(item.id ?? null)
     setAutofillFor(item.id ?? null)
@@ -432,6 +436,8 @@ function ProductAddDialog({
     setForm((prev) => ({
       ...prev,
       itemId: item.id,
+      kodeImpa: item.kode,
+      nama: item.nama,
       namaVendor: "",
       vendorId: undefined,
       vendorProductId: undefined,
@@ -441,20 +447,19 @@ function ProductAddDialog({
 
   // Request as the offer, from the catalog.
   // A catalog request copies as that item; typed text is matched like an
-  // Excel row (IMPA code, then the closest name) or added to the catalog.
+  // Excel row (only its exact IMPA code when it has one, else the closest
+  // name) or added to the catalog.
   // Picking it then applies the line recommendation, vendor and prices.
   async function copyRequestToOffer() {
     setCopyMessage(null)
     if (requestedItem && requestedItem.id === form.requestedItemId) {
-      const label = formatKodeNama(requestedItem.kode, requestedItem.nama)
-      setForm((prev) => ({ ...prev, kodeImpaNama: label }))
       pickProduct(requestedItem)
       return
     }
     setCopying(true)
     try {
       const res = await itemsApi.matchRows(
-        [copyRow(form.requestedKodeImpaNama, form.jumlahProduk, form.satuan)],
+        [copyRow(form.requestedKodeImpa, form.requestedNama, form.jumlahProduk, form.satuan)],
         // Same matcher and threshold as the Excel import.
         { autoCreate: true },
       )
@@ -466,9 +471,7 @@ function ProductAddDialog({
         })
         return
       }
-      const item = matchedCatalog(row.matched)
-      setForm((prev) => ({ ...prev, kodeImpaNama: formatKodeNama(item.kode, item.nama) }))
-      pickProduct(item)
+      pickProduct(matchedCatalog(row.matched))
       setCopyMessage({ text: copyNote(row.source), ok: true })
     } catch (err) {
       setCopyMessage({ text: errorMessage(err, "Gagal menyalin produk request."), ok: false })
@@ -526,7 +529,6 @@ function ProductAddDialog({
               productCatalog={productCatalog}
               productMatches={productMatches}
               requestMatches={requestMatches}
-              activeProductLabel={activeProductLabel}
               productOpen={productOpen}
               productRequestOpen={productRequestOpen}
               satuanOptions={satuanOptions}
@@ -544,16 +546,17 @@ function ProductAddDialog({
               productFailure={productFailure}
               onPickRequestSuggestion={(item) => {
                 setRequestedItem(item)
-                const label = formatKodeNama(item.kode, item.nama)
                 setForm((prev) => ({
                   ...prev,
-                  requestedKodeImpaNama: label,
+                  requestedKodeImpa: item.kode,
+                  requestedNama: item.nama,
                   requestedItemId: item.id,
                 }))
               }}
               onCopyRequestToOffer={() => void copyRequestToOffer()}
               copying={copying}
               copyMessage={copyMessage}
+              requestImpaError={requestImpaError}
             />
           </fieldset>
 
@@ -602,14 +605,12 @@ function ProductAddDialog({
         onOpenChange={setShowProductNew}
         onSuccess={(data) => {
           // Offer the created item itself.
-          handleChange("kodeImpaNama", formatKodeNama(data.kode, data.nama))
           pickProduct({ id: data.id, kode: data.kode, nama: data.nama })
           if (data.satuan) handleChange("satuan", data.satuan)
           setShowProductNew(false)
         }}
         onPickExisting={(item) => {
           // The product holding the typed code, as a search pick.
-          handleChange("kodeImpaNama", formatKodeNama(item.kode, item.nama))
           pickProduct(item)
           setShowProductNew(false)
         }}

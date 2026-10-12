@@ -138,7 +138,7 @@ func SeedMasterIfMissing(ctx context.Context, pool *pgxpool.Pool) error {
 		 ON CONFLICT (id) DO NOTHING`,
 
 		`INSERT INTO items (id, name, impa_code, default_unit_id, created_by, updated_by)
-		 VALUES (9000001, 'Test Fixture Item', 'TF9000001', 19, 1, 1)
+		 VALUES (9000001, 'Test Fixture Item', '990001', 19, 1, 1)
 		 ON CONFLICT (id) DO NOTHING`,
 
 		`INSERT INTO vendor_products (id, vendor_id, item_id, vendor_sku, cost_price, created_by, updated_by)

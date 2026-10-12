@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router"
+import { createFileRoute, useParams } from "@tanstack/react-router"
 import LoadingState from "@/components/shared/LoadingState"
 import NotFoundState from "@/components/shared/NotFoundState"
 import RouteErrorFallback from "@/components/shared/RouteErrorFallback"
@@ -11,7 +11,6 @@ export const Route = createFileRoute("/_authed/users/$id/")({
 })
 
 function UserDetailRoute() {
-  const navigate = useNavigate()
   const { id } = useParams({ from: "/_authed/users/$id/" })
   const numericId = Number(id)
   const { data, isLoading, error, refetch } = useUser(numericId)
@@ -31,5 +30,5 @@ function UserDetailRoute() {
   }
 
   // Keyed so another user remounts fresh.
-  return <UserDetail key={data.id} user={data} onBack={() => void navigate({ to: "/users" })} />
+  return <UserDetail key={data.id} user={data} />
 }

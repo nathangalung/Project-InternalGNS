@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router"
 import { useId } from "react"
+import { useTrailState } from "@/hooks/useNavTrail"
 import { formatDateTime } from "@/lib/format"
 import { ui } from "@/lib/ui"
 import type { InvoiceDetail } from "@/types/api"
@@ -39,6 +40,7 @@ function describe(inv: InvoiceDetail, status: InvoiceDisplayStatus): string {
 // The buttons come from the server's allowedTransitions, so only moves the
 // database accepts are offered and Terlambat is never one of them.
 export default function StatusBar({ inv, status, actions, busy, onAction }: StatusBarProps) {
+  const trail = useTrailState()
   const titleId = useId()
   const badge = INVOICE_STATUS_STYLE[status]
   const quotationId = String(inv.quotationId)
@@ -58,6 +60,7 @@ export default function StatusBar({ inv, status, actions, busy, onAction }: Stat
               to="/invoices/$id"
               params={{ id: quotationId }}
               search={{ invoiceId: inv.replacesInvoiceId }}
+              state={trail}
               className={ui.entityLink}
             >
               {inv.replacesInvoiceNo ?? "invoice sebelumnya"}
@@ -71,6 +74,7 @@ export default function StatusBar({ inv, status, actions, busy, onAction }: Stat
               to="/invoices/$id"
               params={{ id: quotationId }}
               search={{ invoiceId: inv.replacedByInvoiceId }}
+              state={trail}
               className={ui.entityLink}
             >
               invoice pengganti

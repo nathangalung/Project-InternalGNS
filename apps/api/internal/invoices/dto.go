@@ -66,7 +66,11 @@ type InvoiceDetail struct {
 	ContactPhone       *string    `db:"contact_phone"        json:"contactPhone,omitempty"`
 	// Terms the quotation agreed.
 	// Snapshotted by fn_create_invoice; nil on invoices made before 00110.
-	PaymentTerms        *string `db:"payment_terms"        json:"paymentTerms,omitempty"`
+	PaymentTerms *string `db:"payment_terms"        json:"paymentTerms,omitempty"`
+	// Product discount percent.
+	// Derived from total_discount over the product gross; nil without a
+	// discount or on lines older than the gross snapshot.
+	DiscountPct         *string `db:"discount_pct"           json:"discountPct,omitempty"`
 	ReplacesInvoiceID   *int64  `db:"replaces_invoice_id"    json:"replacesInvoiceId,omitempty"`
 	ReplacesInvoiceNo   *string `db:"replaces_invoice_no"    json:"replacesInvoiceNo,omitempty"`
 	ReplacedByInvoiceID *int64  `db:"replaced_by_invoice_id" json:"replacedByInvoiceId,omitempty"`

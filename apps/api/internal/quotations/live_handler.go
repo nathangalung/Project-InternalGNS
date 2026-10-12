@@ -139,11 +139,12 @@ func (h *Handler) UpdateLine(w http.ResponseWriter, r *http.Request) {
 		item.SellingPrice = "0"
 		save = h.repo.UpdateLineKeepingPrice
 	}
-	if fields := validateLines([]CreateItem{item}); fields != nil {
+	line := []CreateItem{item}
+	if fields := validateLines(line); fields != nil {
 		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
-	if err := save(r.Context(), id, lineID, item, deps.CurrentUserID(r.Context())); err != nil {
+	if err := save(r.Context(), id, lineID, line[0], deps.CurrentUserID(r.Context())); err != nil {
 		renderLineErr(w, r, err)
 		return
 	}

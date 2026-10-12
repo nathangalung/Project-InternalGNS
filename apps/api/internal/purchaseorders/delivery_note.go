@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -34,11 +35,11 @@ func NewDeliveryNoteHandler(
 }
 
 type dnItem struct {
-	No              int
-	Qty             string
-	Unit            string
-	Name            string
-	ShipDestination string
+	No   int
+	Qty  string
+	Unit string
+	Name string
+	Note string
 }
 
 type dnData struct {
@@ -112,22 +113,24 @@ func issuedDeliveryNote(po PurchaseOrder) (string, bool) {
 }
 
 // buildData maps the note.
-// A failed client read is an error, never a note with a blank address;
-// only a missing row prints blank.
+// The Address is where the goods go, which falls back to the client's own
+// address. A failed client read is an error, never a note with a blank
+// address; only a missing row prints blank.
 func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, dnNo string, items []PurchaseOrderItem) (dnData, error) {
 	client, err := h.clients.GetByID(ctx, po.CompanyClientID)
 	if err != nil && !errors.Is(err, clients.ErrNotFound) {
 		return dnData{}, fmt.Errorf("delivery note client: %w", err)
 	}
+	address := deliveryNoteAddress(items, pdfgen.StrDeref(client.Address))
 
 	return dnData{
 		DeliveryNoteNo: pdfgen.LatexEscape(dnNo),
 		PONo:           pdfgen.LatexEscape(pdfgen.StrDeref(po.PoNumber)),
 		PODate:         po.PoDate.In(tz.Jakarta()).Format("2 January 2006"),
 		CompanyName:    pdfgen.LatexBreakable(po.CompanyName),
-		CompanyAddress: pdfgen.LatexAddress(pdfgen.StrDeref(client.Address), pdfgen.PartyKeep),
+		CompanyAddress: pdfgen.LatexAddress(address, pdfgen.PartyKeep),
 		DateLine:       pdfgen.JakartaDateLine(deliveryNoteDate(po).In(tz.Jakarta())),
-		Items:          deliveryNoteItems(items),
+		Items:          deliveryNoteItems(items, address),
 	}, nil
 }
 
@@ -142,16 +145,9 @@ func deliveryNoteDate(po PurchaseOrder) time.Time {
 }
 
 // deliveryNoteItems lists the delivered lines.
-// The shipping charge is billed, not delivered, so it is left out. Its
-// address is where the goods go, so a line without its own prints it; the
-// stored lines are not touched.
-func deliveryNoteItems(items []PurchaseOrderItem) []dnItem {
-	fallback := ""
-	for _, it := range items {
-		if it.ItemType == "shipping" && filled(it.ShipDestination) {
-			fallback = *it.ShipDestination
-		}
-	}
+// The shipping charge is billed, not delivered, so it is left out. Each
+// row prints its saved note, or its default until a note is saved.
+func deliveryNoteItems(items []PurchaseOrderItem, address string) []dnItem {
 	out := make([]dnItem, 0, len(items))
 	for _, it := range items {
 		if it.ItemType == "shipping" {
@@ -161,17 +157,72 @@ func deliveryNoteItems(items []PurchaseOrderItem) []dnItem {
 		if it.UnitCode != nil {
 			unit = *it.UnitCode
 		}
-		ship := fallback
-		if filled(it.ShipDestination) {
-			ship = *it.ShipDestination
+		note := defaultNote(it, address)
+		if it.DnNote != nil {
+			note = *it.DnNote
 		}
 		out = append(out, dnItem{
-			No:              len(out) + 1,
-			Qty:             pdfgen.FormatQty(it.Qty),
-			Unit:            pdfgen.LatexEscape(unit),
-			Name:            pdfgen.LatexBreakable(it.ItemName),
-			ShipDestination: pdfgen.LatexAddress(ship, pdfgen.CellKeep),
+			No:   len(out) + 1,
+			Qty:  pdfgen.FormatQty(it.Qty),
+			Unit: pdfgen.LatexEscape(unit),
+			Name: pdfgen.LatexBreakable(it.ItemName),
+			Note: pdfgen.LatexAddress(note, pdfgen.CellKeep),
 		})
 	}
 	return out
+}
+
+// deliveryNoteAddress picks the Address.
+// It is where the goods go: the shipping line's address, else the one place
+// every addressed product line names, else the client's own address.
+func deliveryNoteAddress(items []PurchaseOrderItem, clientAddress string) string {
+	if addr, ok := linesAddress(items); ok {
+		return addr
+	}
+	return clientAddress
+}
+
+// linesAddress reads the PO's destination.
+// It reports false when the lines name no place, or more than one, so the
+// caller falls back to the client.
+func linesAddress(items []PurchaseOrderItem) (string, bool) {
+	for _, it := range items {
+		if it.ItemType == "shipping" && filled(it.ShipDestination) {
+			return *it.ShipDestination, true
+		}
+	}
+	shared := ""
+	for _, it := range items {
+		if it.ItemType != "product" || !filled(it.ShipDestination) {
+			continue
+		}
+		if shared == "" {
+			shared = *it.ShipDestination
+		} else if !sameAddress(shared, *it.ShipDestination) {
+			return "", false
+		}
+	}
+	return shared, shared != ""
+}
+
+// defaultNote is a row's starting note.
+// A product line whose own destination is not the Address says where it
+// goes. Every other row starts blank.
+func defaultNote(it PurchaseOrderItem, address string) string {
+	if it.ItemType != "product" || !filled(it.ShipDestination) || sameAddress(*it.ShipDestination, address) {
+		return ""
+	}
+	return "Kirim ke: " + pdfgen.NormalizeAddress(*it.ShipDestination)
+}
+
+// withNoteDefaults fills each starting note.
+func withNoteDefaults(items []PurchaseOrderItem, address string) {
+	for i := range items {
+		items[i].DnNoteDefault = defaultNote(items[i], address)
+	}
+}
+
+// sameAddress ignores spacing and case.
+func sameAddress(a, b string) bool {
+	return strings.EqualFold(pdfgen.NormalizeAddress(a), pdfgen.NormalizeAddress(b))
 }

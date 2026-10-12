@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { ApiError } from "@/lib/api-client"
+import { STORE_URL_ERROR } from "@/lib/store-link"
 import { EMAIL_ERROR, PHONE_ERROR } from "@/lib/validation"
 import { problem } from "@/test/problem"
 import { buildContactInfo, vendorFormErrors } from "./contact-info"
@@ -61,6 +62,18 @@ describe("vendorFormErrors", () => {
     )
     expect(vendorFormErrors(err, "gagal")).toEqual({
       fields: { phone: PHONE_ERROR, email: EMAIL_ERROR },
+      banner: null,
+    })
+  })
+
+  it("puts a refused store link under its input", () => {
+    const err = new ApiError(
+      422,
+      problem(422, { fields: { storeUrl: STORE_URL_ERROR } }),
+      STORE_URL_ERROR,
+    )
+    expect(vendorFormErrors(err, "gagal")).toEqual({
+      fields: { storeUrl: STORE_URL_ERROR },
       banner: null,
     })
   })

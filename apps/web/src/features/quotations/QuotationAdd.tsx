@@ -1,5 +1,5 @@
-import { useNavigate } from "@tanstack/react-router"
 import { useEffect, useMemo, useState } from "react"
+import NavTrail from "@/components/shared/NavTrail"
 import { useMe } from "@/features/auth/hooks"
 import ClientAdd from "@/features/clients/ClientAdd"
 import { pickedContact } from "@/features/clients/clientCard"
@@ -10,8 +10,10 @@ import { useCreateQuotation } from "@/features/quotations/hooks"
 import { useUnits } from "@/features/units/hooks"
 import { resolveUnit } from "@/features/units/match"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
+import { useNavTrail } from "@/hooks/useNavTrail"
 import { formatNumber as formatRp } from "@/lib/format"
 import { lookupFailure } from "@/lib/lookup"
+import { listCrumb } from "@/lib/nav-trail"
 import { INLINE_LOOKUP } from "@/lib/query-client"
 import { canWriteCatalog, setsPrices } from "@/lib/rbac"
 import { ui } from "@/lib/ui"
@@ -35,8 +37,11 @@ import {
   withContact,
 } from "./wizardClient"
 
+// Opened without a trail.
+const fallback = [listCrumb("/quotations")]
+
 export default function QuotationAdd() {
-  const navigate = useNavigate()
+  const nav = useNavTrail(fallback)
   const { data: unitsData } = useUnits()
   // A role that sets no harga jual sees and sends none
   const role = useMe().data?.role
@@ -211,7 +216,7 @@ export default function QuotationAdd() {
       items: buildItems(),
     }
     createQuotation.mutate(input, {
-      onSuccess: () => void navigate({ to: "/quotations" }),
+      onSuccess: () => nav.back(),
       onError: recordQtyFailure,
     })
   }
@@ -219,10 +224,9 @@ export default function QuotationAdd() {
   const {
     totalProdukQty: summaryTotalProdukQty,
     totalHargaBeli: summaryTotalHargaBeli,
-    totalHargaJual: summaryTotalHargaJual,
+    total: summaryTotal,
     nominalDiskon,
     subTotal: summarySubTotal,
-    shippingCost: summaryShippingCost,
     dpp: summaryDpp,
     ppn: summaryPpn,
     grandTotal: summaryGrandTotal,
@@ -235,21 +239,7 @@ export default function QuotationAdd() {
         {/* Header & Stepper */}
         <div className={qe.headerSection}>
           <div className={qe.headerLeft}>
-            <nav className={`${ui.breadcrumb} flex-wrap`} aria-label="Breadcrumb">
-              <button
-                type="button"
-                className={ui.breadcrumbLink}
-                onClick={() => void navigate({ to: "/quotations" })}
-              >
-                Daftar Quotation
-              </button>
-              <span className={ui.breadcrumbSep} aria-hidden="true">
-                &rsaquo;
-              </span>
-              <span className={ui.breadcrumbCurrent} aria-current="page">
-                Tambah Quotation
-              </span>
-            </nav>
+            <NavTrail current="Tambah Quotation" fallback={fallback} />
             <div className={qe.titleRow}>
               <h1 className={qe.title}>Tambah Quotation Baru</h1>
             </div>
@@ -365,11 +355,12 @@ export default function QuotationAdd() {
             discountPct={discountPct}
             formatRp={formatRp}
             summaryTotalHargaBeli={summaryTotalHargaBeli}
-            summaryTotalHargaJual={summaryTotalHargaJual}
+            summaryTotal={summaryTotal}
             nominalDiskon={nominalDiskon}
             summarySubTotal={summarySubTotal}
             summaryDpp={summaryDpp}
             summaryPpn={summaryPpn}
+            summaryGrandTotal={summaryGrandTotal}
             withPPN={ppnEnabled}
             setWithPPN={pricing ? setPpnEnabled : undefined}
             onImportProducts={(newProds) => setProducts((prev) => [...prev, ...newProds])}
@@ -410,13 +401,12 @@ export default function QuotationAdd() {
             formatRp={formatRp}
             summaryTotalProdukQty={summaryTotalProdukQty}
             summaryTotalHargaBeli={summaryTotalHargaBeli}
-            summaryTotalHargaJual={summaryTotalHargaJual}
+            summaryTotal={summaryTotal}
             nominalDiskon={nominalDiskon}
             summarySubTotal={summarySubTotal}
             summaryDpp={summaryDpp}
             summaryPpn={summaryPpn}
             withPPN={ppnEnabled}
-            summaryShippingCost={summaryShippingCost}
             summaryProfit={summaryProfit}
             summaryGrandTotal={summaryGrandTotal}
             invalidQtyCount={invalidQty}
