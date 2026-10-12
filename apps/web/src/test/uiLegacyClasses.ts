@@ -55,6 +55,8 @@ export const legacyClasses: Record<string, string> = {
   fieldInput:
     "w-full rounded-md border-[1.5px] border-transparent bg-dark-200 px-4 py-3 text-sm text-dark-900 outline-none transition focus:border-primary-600 focus:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]",
   row2: "grid grid-cols-1 gap-6 sm:grid-cols-2",
+  codeNameRow: "grid grid-cols-1 gap-4 sm:grid-cols-[9rem_minmax(0,1fr)]",
+  fieldError: "m-0 text-[12px] text-error",
   modalCancel:
     "inline-flex items-center justify-center gap-2 rounded-md px-8 py-3 text-sm font-bold transition focus-visible:outline-none focus-visible:transition-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white text-dark-600 hover:bg-dark-100",
   modalSubmit:

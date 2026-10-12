@@ -273,8 +273,10 @@ describe("upsertPoLine", () => {
     () => "",
   )
   const form: ProductAddFormData = {
-    requestedKodeImpaNama: "",
-    kodeImpaNama: "123456 - Rope",
+    requestedKodeImpa: "",
+    requestedNama: "",
+    kodeImpa: "123456",
+    nama: "Rope",
     jumlahProduk: "0",
     satuan: "MTR",
     namaVendor: "PT Laut",

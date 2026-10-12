@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { impaLabel } from "@/lib/impa"
 
 type Side = { kode: string; nama: ReactNode }
 
@@ -19,6 +20,7 @@ type RequestOfferProps = {
 
 const label = "mb-1 text-[10px] font-bold uppercase tracking-[0.6px] text-[#6B7280]"
 const value = "text-sm font-semibold text-[#111827]"
+const code = "block text-xs font-bold tabular-nums text-dark-500"
 const differsCell = "bg-[rgba(245,158,11,0.10)]"
 const differsText = "text-[#B45309]"
 const chip =
@@ -26,12 +28,13 @@ const chip =
 const noOfferChip =
   "mt-1 inline-block rounded-[4px] bg-[#F3F4F6] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.4px] text-[#374151]"
 
-// Code, then the name.
+// The code, then the name.
+// Each is its own field, shown once: a missing code reads "-".
 function Line({ side, tone }: { side: Side; tone: string }) {
   return (
     <div className={`${value} ${tone} break-words`}>
-      {side.kode && <span className="mr-1.5 font-bold">{side.kode}</span>}
-      <span>{side.nama || "-"}</span>
+      <span className={code}>IMPA {impaLabel(side.kode)}</span>
+      <span className="block">{side.nama || "-"}</span>
     </div>
   )
 }

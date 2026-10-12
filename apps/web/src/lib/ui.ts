@@ -135,6 +135,9 @@ export const field = tv({
       disabledField,
     ],
     row2: "grid grid-cols-1 gap-6 sm:grid-cols-2",
+    // A code beside its name: the code takes six digits.
+    codeName: "grid grid-cols-1 gap-4 sm:grid-cols-[9rem_minmax(0,1fr)]",
+    error: "m-0 text-[12px] text-error",
   },
 })
 
@@ -368,6 +371,8 @@ export const ui = {
   fieldLabel: fld.label(),
   fieldInput: fld.input(),
   row2: fld.row2(),
+  codeNameRow: fld.codeName(),
+  fieldError: fld.error(),
   modalCancel: modalButton({ variant: "cancel" }),
   modalSubmit: modalButton({ variant: "submit" }),
 

@@ -2,9 +2,13 @@ import { ui } from "@/lib/ui"
 
 export { CheckIcon as CheckmarkIcon } from "@/components/document/icons"
 
+// Request and offer, each a code and a name.
+// The code is its own field; the offer's is the picked product's.
 export type ProductAddFormData = {
-  requestedKodeImpaNama: string
-  kodeImpaNama: string
+  requestedKodeImpa: string
+  requestedNama: string
+  kodeImpa: string
+  nama: string
   jumlahProduk: string
   satuan: string
   namaVendor: string
@@ -61,14 +65,11 @@ export type NewVendorForm = {
 
 export type DropdownKey = "product" | "productRequest" | "vendor"
 
-// IMPA-name label, drops missing kode.
-export function formatKodeNama(kode: string | undefined | null, nama: string): string {
-  return kode && kode.trim().length > 0 ? `${kode} - ${nama}` : nama
-}
-
 export const INITIAL_FORM: ProductAddFormData = {
-  requestedKodeImpaNama: "",
-  kodeImpaNama: "",
+  requestedKodeImpa: "",
+  requestedNama: "",
+  kodeImpa: "",
+  nama: "",
   jumlahProduk: "",
   satuan: "",
   namaVendor: "",

@@ -4,21 +4,29 @@ import { copyNote, copyRow, matchedCatalog } from "./copyOffer"
 describe("copyRow", () => {
   it.each([
     {
-      name: "a coded label splits into code and name",
-      label: "790268 - LAMPU LED 12W",
+      name: "the code and the name stay apart",
+      kode: "790268",
+      nama: "LAMPU LED 12W",
       want: { impaCode: "790268", name: "LAMPU LED 12W", qty: 4, unit: "PCS" },
     },
     {
-      name: "free text is the name",
-      label: "  Oil seal 115-130-12 ",
+      name: "a marked code is sent as its six digits",
+      kode: " IMPA 790268 ",
+      nama: "LAMPU LED 12W",
+      want: { impaCode: "790268", name: "LAMPU LED 12W", qty: 4, unit: "PCS" },
+    },
+    {
+      name: "no code is matched by name",
+      kode: "-",
+      nama: "  Oil seal 115-130-12 ",
       want: { impaCode: "", name: "Oil seal 115-130-12", qty: 4, unit: "PCS" },
     },
-  ])("$name", ({ label, want }) => {
-    expect(copyRow(label, "4", "PCS")).toEqual(want)
+  ])("$name", ({ kode, nama, want }) => {
+    expect(copyRow(kode, nama, "4", "PCS")).toEqual(want)
   })
 
   it("an unreadable quantity is zero", () => {
-    expect(copyRow("Tali", "", "").qty).toBe(0)
+    expect(copyRow("", "Tali", "x", "").qty).toBe(0)
   })
 })
 

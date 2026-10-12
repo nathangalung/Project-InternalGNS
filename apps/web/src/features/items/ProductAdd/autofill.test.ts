@@ -112,8 +112,10 @@ describe("recommendationFields with unreadable prices", () => {
 describe("applyUntouched", () => {
   const base = { namaVendor: "", hargaBeli: "", hargaJual: "" }
   const form = {
-    requestedKodeImpaNama: "A",
-    kodeImpaNama: "A",
+    requestedKodeImpa: "",
+    requestedNama: "A",
+    kodeImpa: "",
+    nama: "A",
     jumlahProduk: "1",
     satuan: "PCS",
     namaVendor: "",
