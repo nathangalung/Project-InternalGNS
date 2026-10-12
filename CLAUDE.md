@@ -346,9 +346,9 @@ shows a missing one as Belum ada No. PO.
   chosen contact's own email and phone, read by id even once that contact
   is deactivated, and none when the quotation has no contact. Its DELIVERY
   PLACE prints the shipping line's address, else the vessel.
-  The list export (`GET /quotations/export.xlsx`) carries the same stored
-  breakdown in the PDF's order: Total Produk, Diskon, Pengiriman (total
-  minus total_produk, as the PDF computes it), Sub Total, then PPN as text
+  The list export (`GET /quotations/export.xlsx`) carries the stored
+  breakdown with shipping in its own column: Total Produk, Diskon,
+  Pengiriman (total minus total_produk), Sub Total, then PPN as text
   (12% or Tanpa PPN) beside Nilai PPN (0 without PPN), and Grand Total.
   These figures ride on the list row as `json:"-"` fields, so the list
   JSON stays as it was.
@@ -895,9 +895,20 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    the invoice, and a document without it stores DPP Nilai Lain and PPN as
    0 with the grand total equal to the net. Its PDFs leave those two rows
    out, and the web breakdown shows Tanpa PPN in their place.
-   Invoices snapshot `gross_unit_price` and `total_discount`, so the PDF
-   prints a gross line plus a real discount row (`TotalProduk − Diskon = DPP`)
-   without reading the quotation. Every PDF prints rupiah as the web's
+   The quotation and invoice PDFs close their table with the same rows in
+   the same order (`TestLatexExports_SummaryRows`): Total (every line,
+   shipping included, since shipping is a table line and has no row of its
+   own), Diskon Produk N% (only when there is a discount, N by
+   `pdfgen.FormatPct`: "5", "2,5"), Sub Total (Total minus the discount, the
+   invoice DPP), DPP Nilai Lain and PPN 12% when taxed, then Grand Total in
+   bold. The label says Produk because shipping is never discounted. Rincian
+   Biaya on the quotation, PO and invoice pages shows the same rows
+   (`CostBreakdown`, `discountLabel`). Invoices snapshot `gross_unit_price`
+   and `total_discount`, so the PDF prints a gross line plus a real discount
+   row (Total − Diskon Produk = Sub Total) without reading the quotation;
+   the invoice stores no percent, so its detail read derives `discountPct`
+   from that snapshot (`total_discount` over the product gross, NULL when a
+   product line predates the gross snapshot). Every PDF prints rupiah as the web's
    `formatRupiah` does (`pdfgen.FormatIDRCents`): "Rp2.000.000", no space
    and no ",00", and a figure with real sen keeps both digits, and the Go line
    math (`pdfgen.BigMul`) rounds half away from zero like Postgres `ROUND`,
