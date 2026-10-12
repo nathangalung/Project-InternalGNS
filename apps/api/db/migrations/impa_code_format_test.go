@@ -129,8 +129,18 @@ type legacyRows struct {
 	request                            int64
 }
 
+// freeCodes mints five unused codes.
+// Taken before the Down, whose locks would block the lookup.
+func freeCodes(t *testing.T) []string {
+	codes := make([]string, 5)
+	for i := range codes {
+		codes[i] = testutil.UniqueIMPA(t)
+	}
+	return codes
+}
+
 // seedLegacy writes pre-00113 rows.
-func seedLegacy(ctx context.Context, t *testing.T, tx pgx.Tx, tag string, withJunk bool) legacyRows {
+func seedLegacy(ctx context.Context, t *testing.T, tx pgx.Tx, tag string, codes []string, withJunk bool) legacyRows {
 	t.Helper()
 	var r legacyRows
 	insert := func(name string, code *string) int64 {
@@ -140,13 +150,8 @@ func seedLegacy(ctx context.Context, t *testing.T, tx pgx.Tx, tag string, withJu
 			VALUES ($1, $2, 19, 1, 1) RETURNING id`, name, code).Scan(&id))
 		return id
 	}
-	code := func(n int) *string {
-		s := fmt.Sprintf("9%05d", n)
-		return &s
-	}
-	base, err := strconv.Atoi(tag[len(tag)-4:])
-	require.NoError(t, err)
-	base *= 10
+	code := func(n int) *string { return &codes[n] }
+	base := 0
 	r.item = insert("PALU GODAM "+tag+" (IMPA "+*code(base)+")", code(base))
 	r.moved = insert("SARUNG TANGAN "+tag+" IMPA "+*code(base + 1), nil)
 	r.holder = insert("PEMEGANG "+tag, code(base+2))
@@ -180,13 +185,14 @@ func seedLegacy(ctx context.Context, t *testing.T, tx pgx.Tx, tag string, withJu
 // code moves into an empty code field unless another active product holds
 // it, line versions stay and the learning cache learns nothing.
 func TestMigration00113_CleansStoredRows(t *testing.T) {
+	codes := freeCodes(t)
 	ctx, tx := testutil.BeginTx(t)
 	_, err := tx.Exec(ctx, downSQL(t, impaMigration))
 	require.NoError(t, err)
 
 	tag := strconv.FormatInt(time.Now().UnixNano()%1_000_000, 10)
 	tag = fmt.Sprintf("%06s", tag)
-	r := seedLegacy(ctx, t, tx, tag, false)
+	r := seedLegacy(ctx, t, tx, tag, codes, false)
 
 	// The request is filed: a sent quotation keeps its offer.
 	_, err = tx.Exec(ctx, `UPDATE quotations SET status = 'sent' WHERE id = $1`, r.quotation)
@@ -247,11 +253,12 @@ func TestMigration00113_CleansStoredRows(t *testing.T) {
 // The Up keeps it, leaves the check unvalidated and still refuses a new
 // bad code.
 func TestMigration00113_KeepsBadCodes(t *testing.T) {
+	codes := freeCodes(t)
 	ctx, tx := testutil.BeginTx(t)
 	_, err := tx.Exec(ctx, downSQL(t, impaMigration))
 	require.NoError(t, err)
 	tag := fmt.Sprintf("%06d", time.Now().UnixNano()%1_000_000)
-	r := seedLegacy(ctx, t, tx, tag, true)
+	r := seedLegacy(ctx, t, tx, tag, codes, true)
 
 	_, err = tx.Exec(ctx, upSQL(t, impaMigration))
 	require.NoError(t, err)
