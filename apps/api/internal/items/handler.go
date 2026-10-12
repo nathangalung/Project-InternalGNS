@@ -56,6 +56,29 @@ func (h *Handler) renderSaveErr(w http.ResponseWriter, r *http.Request, err erro
 	httperr.RenderAs(w, p.Status, p)
 }
 
+// moveMarkedCode takes a code from the name.
+// Only into an empty code field and only a code no other active product
+// holds, as 00113 did for stored names; the database then drops it from
+// the name. A held code stays where it was typed.
+func (h *Handler) moveMarkedCode(ctx context.Context, name string, code **string, self int64) error {
+	if *code != nil {
+		return nil
+	}
+	found := validate.IMPAInText(name)
+	if found == "" {
+		return nil
+	}
+	_, err := h.repo.IMPAHolder(ctx, found, self)
+	switch {
+	case errors.Is(err, ErrNotFound):
+		*code = &found
+		return nil
+	case err != nil:
+		return err
+	}
+	return nil
+}
+
 // deref reads an optional text.
 func deref(s *string) string {
 	if s == nil {
@@ -135,6 +158,10 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"impaCode": msg}))
 		return
 	}
+	if err := h.moveMarkedCode(r.Context(), req.Name, &req.IMPACode, 0); err != nil {
+		httperr.RenderDBErrCtx(r.Context(), w, err)
+		return
+	}
 
 	userID := deps.CurrentUserID(r.Context())
 	item, err := h.repo.Create(r.Context(), req, userID)
@@ -163,6 +190,10 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	if msg := validate.OptionalIMPA(&req.IMPACode); msg != "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"impaCode": msg}))
+		return
+	}
+	if err := h.moveMarkedCode(r.Context(), req.Name, &req.IMPACode, id); err != nil {
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 

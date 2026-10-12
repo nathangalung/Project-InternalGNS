@@ -46,6 +46,25 @@ func IMPA(raw string) (code, msg string) {
 	return "", IMPAMessage
 }
 
+// impaInText is a code marked IMPA.
+// Not glued to a following letter, digit or a separator before one.
+var impaInText = regexp.MustCompile(`(?i)\bIMPA\s*[:.#]?\s*([0-9]{6})(?:$|[^0-9A-Za-z./-]|[./-](?:$|[^0-9A-Za-z]))`)
+
+// IMPAInText finds the one marked code.
+// Only a code written after IMPA counts, since bare digits may be a model
+// number; text naming two different codes gives none. fn_impa_split moves
+// the same code out of a request text.
+func IMPAInText(s string) string {
+	code := ""
+	for _, m := range impaInText.FindAllStringSubmatch(s, -1) {
+		if code != "" && code != m[1] {
+			return ""
+		}
+		code = m[1]
+	}
+	return code
+}
+
 // OptionalIMPA normalises a field.
 // A valid code is rewritten to its six digits and no code to nil. A bad
 // one is left as typed and its message returned.

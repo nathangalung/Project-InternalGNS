@@ -4,18 +4,12 @@ CREATE OR REPLACE FUNCTION public.trg_fn_items_impa()
  LANGUAGE plpgsql
 AS $function$
 DECLARE
-  v_code text := fn_impa_code(NEW.impa_code);
-  s      record;
+  s record;
 BEGIN
-  s := fn_impa_split(NEW.name, v_code);
-  -- A code named in the text moves only to a code no other active
-  -- product holds.
-  IF v_code IS NULL AND s.code IS NOT NULL AND EXISTS (
-       SELECT 1 FROM items i
-        WHERE i.impa_code = s.code AND i.is_active AND i.id IS DISTINCT FROM NEW.id) THEN
-    NEW.impa_code := NULL;
-    RETURN NEW;
-  END IF;
+  -- A code is unique among active products, so a trigger never moves one
+  -- out of a name: a bulk load could give it to the wrong row first. The
+  -- API and the import move it after checking who holds it.
+  s := fn_impa_split(NEW.name, NEW.impa_code, false);
   NEW.name := s.name;
   NEW.impa_code := s.code;
   RETURN NEW;

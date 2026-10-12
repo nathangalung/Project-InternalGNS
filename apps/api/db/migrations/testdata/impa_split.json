@@ -19,6 +19,7 @@
     { "note": "code given in its marked form", "name": "SARUNG TANGAN 191234", "code": "IMPA 191234", "move": true, "want_name": "SARUNG TANGAN", "want_code": "191234" },
     { "note": "lower case marker", "name": "impa 191234 sarung tangan", "code": "191234", "move": true, "want_name": "sarung tangan", "want_code": "191234" },
     { "note": "marker with a colon", "name": "SARUNG TANGAN (IMPA: 191234)", "code": "191234", "move": true, "want_name": "SARUNG TANGAN", "want_code": "191234" },
+    { "note": "a full stop after the code", "name": "Palu Godam IMPA 611234. Siap kirim", "code": null, "move": true, "want_name": "Palu Godam. Siap kirim", "want_code": "611234" },
     { "note": "code alone on the first line", "name": "IMPA 191234\nSARUNG TANGAN", "code": "191234", "move": true, "want_name": "SARUNG TANGAN", "want_code": "191234" },
     { "note": "moved from the name", "name": "SARUNG TANGAN KATUN IMPA 191234", "code": null, "move": true, "want_name": "SARUNG TANGAN KATUN", "want_code": "191234" },
     { "note": "moved from its own line", "name": "Teropong Malam\nIMPA 371234", "code": null, "move": true, "want_name": "Teropong Malam", "want_code": "371234" },

@@ -52,6 +52,30 @@ func TestIMPA_Table(t *testing.T) {
 	}
 }
 
+// IMPAInText finds one marked code.
+// Only a code marked IMPA counts: bare digits may be a model number.
+func TestIMPAInText(t *testing.T) {
+	cases := []struct{ name, in, want string }{
+		{"trailing", "SARUNG TANGAN KATUN IMPA 191234", "191234"},
+		{"glued", "IMPA191234 BALOK KAYU", "191234"},
+		{"bracketed", "Kunci Ring (IMPA 611234)", "611234"},
+		{"before a full stop", "Palu IMPA 611234. Siap", "611234"},
+		{"line break before", "TALI\nIMPA 211234", "211234"},
+		{"bare digits", "EMBER 591234 GUDANG", ""},
+		{"impact", "IMPACT WRENCH 191234", ""},
+		{"two codes", "IMPA 191234 ATAU IMPA 191235", ""},
+		{"same code twice", "IMPA 191234 (IMPA 191234)", "191234"},
+		{"seven digits", "IMPA 1912345", ""},
+		{"in a model number", "IMPA 191234-B", ""},
+		{"empty", "", ""},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			assert.Equal(t, c.want, validate.IMPAInText(c.in))
+		})
+	}
+}
+
 // OptionalIMPA normalises in place.
 // A valid code is rewritten to its six digits and no code to nil; a bad one
 // keeps the input and reports the message.

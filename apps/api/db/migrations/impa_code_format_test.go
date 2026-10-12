@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/validate"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -51,6 +52,40 @@ func TestFnImpaSplit_Table(t *testing.T) {
 			assert.Equal(t, c.WantCode, code)
 		})
 	}
+}
+
+// validate.IMPAInText moves what SQL moves.
+// The API moves a product's marked code before it saves, so every row the
+// database would move from a text with no code must give the same code.
+func TestIMPAInText_MatchesSplit(t *testing.T) {
+	raw, err := os.ReadFile("testdata/impa_split.json")
+	require.NoError(t, err)
+	var tb struct {
+		Cases []splitCase `json:"cases"`
+	}
+	require.NoError(t, json.Unmarshal(raw, &tb))
+	n := 0
+	for _, c := range tb.Cases {
+		if c.Name == nil || !c.Move {
+			continue
+		}
+		if code, msg := validate.IMPA(deref(c.Code)); msg != "" || code != "" {
+			continue
+		}
+		n++
+		t.Run(c.Note, func(t *testing.T) {
+			assert.Equal(t, deref(c.WantCode), validate.IMPAInText(*c.Name))
+		})
+	}
+	require.Positive(t, n)
+}
+
+// deref reads an optional text.
+func deref(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }
 
 // fn_impa_code matches validate.IMPA.

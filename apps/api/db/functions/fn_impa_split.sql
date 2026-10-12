@@ -45,6 +45,7 @@ BEGIN
       v_line := regexp_replace(v_line, '[ \t]*,[ \t]*' || v_mark || '[ \t]*,[ \t]*', ', ', 'g');
       v_line := regexp_replace(v_line, '[ \t]+-[ \t]+' || v_mark, v_mark, 'g');
       v_line := regexp_replace(v_line, v_mark || '[ \t]+-[ \t]+', v_mark, 'g');
+      v_line := regexp_replace(v_line, '[ \t]*' || v_mark || '[ \t]*([.,:])', '\1', 'g');
       v_line := regexp_replace(v_line, '[ \t]*' || v_mark || '[ \t]*', ' ', 'g');
       v_line := regexp_replace(v_line, '[ \t]{2,}', ' ', 'g');
       v_line := regexp_replace(v_line, '^[ \t\r,:]+|[ \t\r,:]+$', '', 'g');

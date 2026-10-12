@@ -7,8 +7,10 @@
 -- mark, brackets and separator out of the text, and moves an IMPA marked
 -- code from a request's text into its empty code field. Triggers run it on
 -- every write to the catalog, quotation lines, client requests and PO
--- lines, and the rows stored before are cleaned once here. Invoice lines
--- are left as they were filed with DJP.
+-- lines, and the rows stored before are cleaned once here. A product's
+-- name gives its marked code to the empty code field only here and through
+-- the API, after checking no other active product holds it, never in a
+-- trigger. Invoice lines are left as they were filed with DJP.
 -- A query that is an IMPA code now finds only the product holding it, and
 -- no search matches a code by trigram similarity any more.
 
@@ -88,6 +90,7 @@ BEGIN
       v_line := regexp_replace(v_line, '[ \t]*,[ \t]*' || v_mark || '[ \t]*,[ \t]*', ', ', 'g');
       v_line := regexp_replace(v_line, '[ \t]+-[ \t]+' || v_mark, v_mark, 'g');
       v_line := regexp_replace(v_line, v_mark || '[ \t]+-[ \t]+', v_mark, 'g');
+      v_line := regexp_replace(v_line, '[ \t]*' || v_mark || '[ \t]*([.,:])', '\1', 'g');
       v_line := regexp_replace(v_line, '[ \t]*' || v_mark || '[ \t]*', ' ', 'g');
       v_line := regexp_replace(v_line, '[ \t]{2,}', ' ', 'g');
       v_line := regexp_replace(v_line, '^[ \t\r,:]+|[ \t\r,:]+$', '', 'g');
@@ -263,18 +266,12 @@ CREATE OR REPLACE FUNCTION public.trg_fn_items_impa()
  LANGUAGE plpgsql
 AS $function$
 DECLARE
-  v_code text := fn_impa_code(NEW.impa_code);
-  s      record;
+  s record;
 BEGIN
-  s := fn_impa_split(NEW.name, v_code);
-  -- A code named in the text moves only to a code no other active
-  -- product holds.
-  IF v_code IS NULL AND s.code IS NOT NULL AND EXISTS (
-       SELECT 1 FROM items i
-        WHERE i.impa_code = s.code AND i.is_active AND i.id IS DISTINCT FROM NEW.id) THEN
-    NEW.impa_code := NULL;
-    RETURN NEW;
-  END IF;
+  -- A code is unique among active products, so a trigger never moves one
+  -- out of a name: a bulk load could give it to the wrong row first. The
+  -- API and the import move it after checking who holds it.
+  s := fn_impa_split(NEW.name, NEW.impa_code, false);
   NEW.name := s.name;
   NEW.impa_code := s.code;
   RETURN NEW;
