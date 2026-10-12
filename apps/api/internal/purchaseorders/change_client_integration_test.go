@@ -37,6 +37,9 @@ func sisterClient(t *testing.T, tx pgx.Tx, name string) (int64, int64) {
 	return client, contact
 }
 
+// deliveredClientLockedMsg refuses a delivered move.
+const deliveredClientLockedMsg = "Klien PO yang sudah Dikirim hanya dapat diganti setelah invoicenya dibatalkan dan sebelum invoice pengganti terbit."
+
 // clientBody is a change request.
 func clientBody(clientID int64, contactID *int64) purchaseorders.ChangeClientRequest {
 	return purchaseorders.ChangeClientRequest{ClientID: clientID, ContactID: contactID}
@@ -335,6 +338,86 @@ func TestRepo_ChangeClient_DeliveredInvoiceBuyer(t *testing.T) {
 	require.NoError(t, err)
 	_, err = repo.ChangeClient(ctx, poID, seedCompanyID, nil, seedUserID, &po.RowVersion)
 	assert.ErrorIs(t, err, purchaseorders.ErrLocked, "delivered keeps the buyer")
+}
+
+// A cancelled invoice reopens the client.
+// A delivered PO moves only while its invoice is cancelled and no live
+// invoice replaces it, the window Ubah PO opens too, so the Pengganti
+// bills the right company.
+func TestRepo_ChangeClient_DeliveredOpensWhileInvoiceCancelled(t *testing.T) {
+	cases := []struct {
+		name    string
+		arrange func(t *testing.T, tx pgx.Tx, qID int64)
+		locked  bool
+	}{
+		{name: "draft invoice locks", arrange: func(*testing.T, pgx.Tx, int64) {}, locked: true},
+		{name: "sent invoice locks", arrange: func(t *testing.T, tx pgx.Tx, qID int64) {
+			setInvoiceStatus(t, tx, qID, "sent")
+		}, locked: true},
+		{name: "paid invoice locks", arrange: func(t *testing.T, tx pgx.Tx, qID int64) {
+			setInvoiceStatus(t, tx, qID, "paid")
+		}, locked: true},
+		{name: "cancelled invoice opens", arrange: cancelInvoice},
+		{name: "pengganti locks again", arrange: replaceInvoice, locked: true},
+		{name: "no invoice stays locked", arrange: dropInvoices, locked: true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, tx := testutil.BeginTx(t)
+			qID, poID := deliveredPO(t, tx)
+			tc.arrange(t, tx, qID)
+			sister, own := sisterClient(t, tx, "PT Saudara Holding")
+			repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+			po, err := repo.GetByID(ctx, poID)
+			require.NoError(t, err)
+			_, err = repo.ChangeClient(ctx, poID, sister, &own, seedUserID, &po.RowVersion)
+			if !tc.locked {
+				require.NoError(t, err)
+				return
+			}
+			require.ErrorIs(t, err, purchaseorders.ErrLocked)
+			assert.Equal(t, deliveredClientLockedMsg, err.Error())
+		})
+	}
+}
+
+// The Pengganti bills the new client.
+// Batalkan Invoice, Ganti Klien, then Terbitkan Pengganti: the new invoice
+// copies the client as it is at issue, while the cancelled one keeps the
+// buyer it was filed with.
+func TestRepo_ChangeClient_PenggantiBillsNewClient(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	qID, poID := deliveredPO(t, tx)
+	cancelInvoice(t, tx, qID)
+	sister, own := sisterClient(t, tx, "PT Saudara Holding")
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+	po, err := repo.GetByID(ctx, poID)
+	require.NoError(t, err)
+	_, err = repo.ChangeClient(ctx, poID, sister, &own, seedUserID, &po.RowVersion)
+	require.NoError(t, err)
+	h := lastHistory(t, ctx, repo, poID)
+	assert.Equal(t, purchaseorders.StatusDelivered, h.ToStatus)
+
+	var newID int64
+	require.NoError(t, tx.QueryRow(ctx, `
+		SELECT fn_replace_invoice(id, $2) FROM invoices WHERE quotation_id = $1`, qID, seedUserID).Scan(&newID))
+	var buyerClient int64
+	var name, faktur string
+	require.NoError(t, tx.QueryRow(ctx, `SELECT company_client_id, buyer_name, faktur_type FROM invoices WHERE id = $1`,
+		newID).Scan(&buyerClient, &name, &faktur))
+	assert.Equal(t, sister, buyerClient)
+	assert.Equal(t, "PT Saudara Holding", name)
+	assert.Equal(t, "Pengganti", faktur)
+
+	var oldName string
+	require.NoError(t, tx.QueryRow(ctx, `SELECT buyer_name FROM invoices WHERE quotation_id = $1 AND status = 'cancelled'`,
+		qID).Scan(&oldName))
+	assert.Equal(t, "PT. IMC Ship Management", oldName, "the cancelled invoice keeps its buyer")
+
+	po, err = repo.GetByID(ctx, poID)
+	require.NoError(t, err)
+	_, err = repo.ChangeClient(ctx, poID, seedCompanyID, nil, seedUserID, &po.RowVersion)
+	assert.ErrorIs(t, err, purchaseorders.ErrLocked, "the Pengganti locks the client again")
 }
 
 // A live invoice locks the client.

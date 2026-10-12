@@ -73,14 +73,17 @@ describe("isPoFileLocked", () => {
 })
 
 describe("poClientEditable", () => {
+  // The server's linesLocked: delivered with its invoice cancelled and no
+  // Pengganti yet reopens the client too.
   it.each([
-    ["PENDING", true],
-    ["UPLOADED", true],
-    ["ON_PROGRESS", true],
-    ["DELIVERED", false],
-    ["CANCELLED", false],
-  ] as const)("%s -> %s", (status, editable) => {
-    expect(poClientEditable(status)).toBe(editable)
+    ["PENDING", false, true],
+    ["UPLOADED", false, true],
+    ["ON_PROGRESS", false, true],
+    ["DELIVERED", true, false],
+    ["DELIVERED", false, true],
+    ["CANCELLED", true, false],
+  ] as const)("%s, lines locked %s -> %s", (status, linesLocked, editable) => {
+    expect(poClientEditable({ status, linesLocked })).toBe(editable)
   })
 })
 

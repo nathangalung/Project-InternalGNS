@@ -1026,6 +1026,44 @@ test.describe("purchase order client", () => {
     await expect(card.getByRole("button", { name: "Ganti Klien" })).toHaveCount(0)
   })
 
+  test("a cancelled invoice reopens the change and the Pengganti bills the sister", async ({
+    page,
+    seed,
+  }) => {
+    const { client, q, po } = await acceptedPo(seed)
+    const invoice = await seed.deliver(po)
+    const sister = await seed.client({ label: "Klien Saudara" })
+    const sari = `${seed.prefix} Ibu Sari`
+    await seed.contact(sister, sari)
+    await page.goto(`/purchase-orders/${q.id}`)
+    const card = page.getByRole("heading", { name: "Ringkasan Klien" }).locator("xpath=..")
+    await expect(card.getByRole("link", { name: client.name })).toBeVisible()
+    await expect(card.getByRole("button", { name: "Ganti Klien" })).toHaveCount(0)
+
+    await api("PATCH", `/invoices/${invoice.id}/status`, {
+      status: "cancelled",
+      note: "Klien salah",
+    })
+    await page.reload()
+    await card.getByRole("button", { name: "Ganti Klien" }).click()
+    await pickClient(page, sister, sari)
+    await expect(page.getByRole("dialog", { name: "Ganti Klien" })).toBeHidden()
+    await expect(card.getByRole("link", { name: sister.name })).toBeVisible()
+
+    const pengganti = await api<{
+      companyClientId: number
+      companyName: string
+      contactName?: string
+    }>("POST", `/invoices/${invoice.id}/replacement`)
+    expect(pengganti).toMatchObject({
+      companyClientId: sister.id,
+      companyName: sister.name,
+      contactName: sari,
+    })
+    await page.reload()
+    await expect(card.getByRole("button", { name: "Ganti Klien" })).toHaveCount(0)
+  })
+
   test("a PO number the sister already uses keeps the dialog open", async ({ page, seed }) => {
     const { q, po } = await acceptedPo(seed)
     const sister = await seed.client({ label: "Klien Saudara" })

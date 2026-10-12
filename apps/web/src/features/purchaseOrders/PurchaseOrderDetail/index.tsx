@@ -108,7 +108,7 @@ export default function PurchaseOrderDetail({ po, clientInfo, onEdit }: Purchase
   const totalShip = shipping.hargaSatuan
   const clientName = po.companyName
   // Heads move an open PO to another client of the holding.
-  const clientEditable = writes && poClientEditable(po.status)
+  const clientEditable = writes && poClientEditable(po)
   const [changingClient, setChangingClient] = useState(false)
   const changeClient = useChangePoClient()
 
@@ -394,7 +394,7 @@ export default function PurchaseOrderDetail({ po, clientInfo, onEdit }: Purchase
           clientId={po.companyClientId}
           contactId={po.contactId}
           allowSame
-          note="Pilih perusahaan lain, misalnya dari grup usaha yang sama, atau narahubung lain. Quotation tetap atas nama klien semula. Setelah PO Dikirim, klien tidak dapat diganti."
+          note="Pilih perusahaan lain, misalnya dari grup usaha yang sama, atau narahubung lain. Quotation tetap atas nama klien semula, dan invoice berikutnya ditagihkan ke klien yang dipilih."
           onSave={saveClient}
           onClose={() => setChangingClient(false)}
         />

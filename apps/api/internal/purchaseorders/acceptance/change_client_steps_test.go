@@ -117,7 +117,44 @@ func (s *scenarioState) invoiceBillsSister() error {
 	return nil
 }
 
+// invoiceID reads the PO's newest invoice.
+func (s *scenarioState) invoiceID() (int64, error) {
+	if err := s.readInvoiceByQuotation(); err != nil {
+		return 0, err
+	}
+	var inv invoices.InvoiceDetail
+	if err := json.Unmarshal(s.body, &inv); err != nil {
+		return 0, err
+	}
+	return inv.ID, nil
+}
+
+// Batalkan Invoice.
+func (s *scenarioState) cancelPOInvoice() error {
+	id, err := s.invoiceID()
+	if err != nil {
+		return err
+	}
+	note := "Klien salah"
+	if err := s.sendRequest(http.MethodPatch, fmt.Sprintf("/invoices/%d/status", id),
+		invoices.ChangeStatusRequest{Status: "cancelled", Note: &note}); err != nil {
+		return err
+	}
+	return s.statusEquals(http.StatusNoContent)
+}
+
+// Terbitkan Pengganti.
+func (s *scenarioState) issuePengganti() error {
+	id, err := s.invoiceID()
+	if err != nil {
+		return err
+	}
+	return s.sendRequest(http.MethodPost, fmt.Sprintf("/invoices/%d/replacement", id), nil)
+}
+
 func registerChangeClientSteps(sc *godog.ScenarioContext, s *scenarioState) {
+	sc.Step(`^the user cancels the PO's invoice$`, s.cancelPOInvoice)
+	sc.Step(`^the user issues the Pengganti invoice$`, s.issuePengganti)
 	sc.Step(`^a sister company of the same holding$`, s.sisterOfHolding)
 	sc.Step(`^the sister company already has a PO numbered like this one$`, s.sisterHoldsSameNumber)
 	sc.Step(`^the user moves the PO to the sister company with its narahubung$`, s.moveToSister)

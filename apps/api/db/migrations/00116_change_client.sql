@@ -13,6 +13,8 @@
 -- copies the quotation's contact onto every PO still on the quotation's
 -- client where the two drifted. What the pages and the gate show stays as
 -- it was. The backfill keeps row_version, so no open PO edit goes stale.
+-- A delivered PO also moves while its invoice is cancelled and no
+-- Pengganti is issued, so the Pengganti bills the right company.
 ALTER TABLE purchase_orders DISABLE TRIGGER trg_purchase_orders_updated_at;
 
 UPDATE purchase_orders po
@@ -90,8 +92,9 @@ $function$;
 -- +goose StatementEnd
 
 -- A PO's client and contact.
--- Refused once the PO is delivered or cancelled, or while it has a live
--- invoice. The PO number must be free under the new client, which the
+-- Refused once the PO is cancelled, delivered (unless its invoice is
+-- cancelled and nothing replaces it yet, as fn_po_lines_locked says), or
+-- while it has a live invoice. The PO number must be free under the new client, which the
 -- unique index enforces. Each change is a row in the PO's history. Returns
 -- the new row_version, or the current one when nothing changed.
 -- +goose StatementBegin
@@ -126,9 +129,14 @@ BEGIN
       USING ERRCODE = 'P0010';
   END IF;
 
-  -- The invoice copied the buyer at delivery.
-  IF v_status IN ('DELIVERED', 'CANCELLED') THEN
-    RAISE EXCEPTION 'Klien PO yang sudah Dikirim atau Dibatalkan tidak dapat diganti.'
+  IF v_status = 'CANCELLED' THEN
+    RAISE EXCEPTION 'Klien PO yang dibatalkan tidak dapat diganti.'
+      USING ERRCODE = 'P0013';
+  END IF;
+  -- The invoice copied the buyer at delivery; the window Ubah PO reopens
+  -- (invoice cancelled, no Pengganti yet) lets the Pengganti bill another.
+  IF fn_po_lines_locked(p_po_id, v_status) THEN
+    RAISE EXCEPTION 'Klien PO yang sudah Dikirim hanya dapat diganti setelah invoicenya dibatalkan dan sebelum invoice pengganti terbit.'
       USING ERRCODE = 'P0013';
   END IF;
   IF EXISTS (SELECT 1 FROM invoices WHERE po_id = p_po_id AND status <> 'cancelled') THEN

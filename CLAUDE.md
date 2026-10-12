@@ -55,7 +55,8 @@ management picks a role from a dropdown with an Indonesian label and hint
   and vendors, harga beli and harga jual. It edits drafts, sets selling
   prices and discounts, and downloads the quotation PDF, which is its last
   step; it runs a PO (file, number, notes, status, cancelling, the
-  delivery note's row notes, its client and narahubung until delivery)
+  delivery note's row notes, its client and narahubung while Ubah PO is
+  open)
   with superadmin (`roles.ManagesPOs`). It deletes an unused client or vendor
   for good (Hapus Permanen).
 - operational_input (Input Data Operasional): client data, client requests,
@@ -489,10 +490,15 @@ shows a missing one as Belum ada No. PO.
   roles that run the PO move it to another client, typically a company of
   the same holding, with `PATCH /purchase-orders/{id}/client`
   (`{clientId, contactId?}`, If-Match required, `fn_po_update_client`)
-  while it is PENDING, UPLOADED or ON_PROGRESS; DELIVERED and CANCELLED
-  (and any PO with a live invoice) are a 409 `po_locked`, since delivery
-  copies the buyer into the invoice, and a Pengganti after a cancelled
-  invoice copies the client as it is then. It locks the PO row, then the
+  exactly while Ubah PO is open (`fn_po_lines_locked`): PENDING, UPLOADED
+  or ON_PROGRESS, and a DELIVERED PO while its invoice is cancelled and no
+  live invoice replaces it, so the Pengganti issued afterwards copies the
+  new client as it is at issue (cancelling the invoice and issuing a
+  Pengganti is how a bill to the wrong company of a holding is corrected).
+  A CANCELLED PO, a DELIVERED one with a live invoice or none at all, and
+  any PO with a live invoice are a 409 `po_locked`, since the invoice
+  copied the buyer, and the cancelled invoice keeps the buyer it was filed
+  with. It locks the PO row, then the
   client row `FOR SHARE`, the gate's order; a missing or inactive client
   and a contact of another client or inactive are a 422 on `clientId` or
   `contactId`, and a PO number the new client already uses
@@ -510,8 +516,9 @@ shows a missing one as Belum ada No. PO.
   `contactPhone`, read by id even once deactivated, and the PO detail's
   client card shows the PO's client and narahubung (only the client's
   reference comes from the quotation). Its Ganti Klien opens the same
-  `ClientChangeModal` for `managesPOs` roles while the PO is open, and the
-  gate's `contact_inactive` gap opens it too.
+  `ClientChangeModal` for `managesPOs` roles while `poClientEditable`
+  (not CANCELLED and not `linesLocked`, the same signal as Ubah PO), and
+  the gate's `contact_inactive` gap opens it too.
 - Invoice: draft, sent, paid, cancelled; overdue is stored only on legacy
   rows. Draft goes to sent; sent or overdue to paid, which stamps `paid_at`
   and takes an optional proof stored under `invoices/<id>/payment/`; marking

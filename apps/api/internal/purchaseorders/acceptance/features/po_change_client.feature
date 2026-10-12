@@ -27,12 +27,26 @@ Feature: Change the PO's client
     And a sister company of the same holding
     And the PO has reached "<status>"
     When the user moves the PO to the sister company with its narahubung
-    Then the PO is refused as locked with "Klien PO yang sudah Dikirim atau Dibatalkan tidak dapat diganti."
+    Then the PO is refused as locked with "<message>"
 
     Examples:
-      | status    |
-      | DELIVERED |
-      | CANCELLED |
+      | status    | message                                                                                                                 |
+      | DELIVERED | Klien PO yang sudah Dikirim hanya dapat diganti setelah invoicenya dibatalkan dan sebelum invoice pengganti terbit. |
+      | CANCELLED | Klien PO yang dibatalkan tidak dapat diganti.                                                                           |
+
+  Scenario: A cancelled invoice lets the Pengganti bill the sister company
+    Given an accepted quotation
+    And a sister company of the same holding
+    And the PO has reached "DELIVERED"
+    When the user cancels the PO's invoice
+    And the user moves the PO to the sister company with its narahubung
+    Then the response status is 200
+    When the user issues the Pengganti invoice
+    Then the response status is 201
+    When the user reads the invoice by quotation
+    Then the invoice bills the sister company
+    When the user moves the PO to the sister company with the first client's narahubung
+    Then the PO is refused as locked with "hanya dapat diganti setelah invoicenya dibatalkan"
 
   Scenario: The PO number must be free under the new client
     Given an accepted quotation
