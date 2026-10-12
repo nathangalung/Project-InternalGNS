@@ -66,10 +66,10 @@ test.describe("quotation wizard", () => {
 
     await page.getByRole("button", { name: "Tambah Produk" }).click()
     const product = page.getByRole("dialog", { name: "Tambah Produk ke Quotation" })
-    await product.getByLabel("Kode IMPA/Nama Produk Request *").fill(item.name)
-    await page.getByRole("option", { name: `${item.impaCode} - ${item.name}` }).click()
-    await product.getByLabel("Kode IMPA/Nama Produk *", { exact: true }).fill(item.name)
-    await page.getByRole("option", { name: `${item.impaCode} - ${item.name}` }).click()
+    await product.getByLabel("Nama Produk Request *").fill(item.name)
+    await page.getByRole("option", { name: item.name }).click()
+    await product.getByLabel("Nama Produk Offer *").fill(item.name)
+    await page.getByRole("option", { name: item.name }).click()
     await expect(product.getByRole("combobox", { name: "Satuan *" })).toHaveText(/PCS/)
     await product.getByLabel("Jumlah Produk *").fill("4")
     await product.getByLabel("Nama Vendor *").click()
@@ -186,12 +186,11 @@ test.describe("quotation wizard", () => {
     await page.getByRole("button", { name: "Tambah Produk" }).click()
 
     const product = page.getByRole("dialog", { name: "Tambah Produk ke Quotation" })
-    await product.getByLabel("Kode IMPA/Nama Produk Request *").fill(item.name)
-    await page.getByRole("option", { name: `${item.impaCode} - ${item.name}` }).click()
+    await product.getByLabel("Nama Produk Request *").fill(item.name)
+    await page.getByRole("option", { name: item.name }).click()
     await product.getByRole("button", { name: "Salin ke Offer" }).click()
-    await expect(product.getByLabel("Kode IMPA/Nama Produk *", { exact: true })).toHaveValue(
-      `${item.impaCode} - ${item.name}`,
-    )
+    await expect(product.getByLabel("Nama Produk Offer *")).toHaveValue(item.name)
+    await expect(product.getByLabel("Kode IMPA Offer")).toHaveValue(item.impaCode)
     // The copied offer is the same catalog item, so its linked vendor and
     // default unit apply exactly as when the offer is picked directly.
     await expect(product.getByRole("combobox", { name: "Satuan *" })).toHaveText(/PCS/)
@@ -216,15 +215,16 @@ test.describe("quotation wizard", () => {
     await page.getByRole("button", { name: "Tambah Produk" }).click()
 
     const product = page.getByRole("dialog", { name: "Tambah Produk ke Quotation" })
-    // Typed as the client wrote it, not picked from the list.
-    const request = product.getByLabel("Kode IMPA/Nama Produk Request *")
-    await request.fill(`${item.impaCode} - nama dari klien`)
+    // Typed as the client wrote it, not picked from the list: the code
+    // finds the item whatever the name says.
+    await product.getByLabel("Kode IMPA Request").fill(`IMPA ${item.impaCode}`)
+    const request = product.getByLabel("Nama Produk Request *")
+    await request.fill("nama dari klien")
     await request.press("Escape")
     await product.getByRole("button", { name: "Salin ke Offer" }).click()
     await expect(product.getByText("Memakai produk katalog yang sama.")).toBeVisible()
-    await expect(product.getByLabel("Kode IMPA/Nama Produk *", { exact: true })).toHaveValue(
-      `${item.impaCode} - ${item.name}`,
-    )
+    await expect(product.getByLabel("Nama Produk Offer *")).toHaveValue(item.name)
+    await expect(product.getByLabel("Kode IMPA Offer")).toHaveValue(item.impaCode)
     // Like an Excel row: the recommendation fills the vendor and harga beli.
     await expect(product.getByLabel("Nama Vendor *")).toHaveValue(vendor.name)
     await expect(product.getByLabel("Harga Beli Satuan *")).toHaveValue("82000")
@@ -241,12 +241,12 @@ test.describe("quotation wizard", () => {
     await page.getByRole("button", { name: "Tambah Produk" }).click()
 
     const product = page.getByRole("dialog", { name: "Tambah Produk ke Quotation" })
-    const request = product.getByLabel("Kode IMPA/Nama Produk Request *")
+    const request = product.getByLabel("Nama Produk Request *")
     await request.fill(name)
     await request.press("Escape")
     await product.getByRole("button", { name: "Salin ke Offer" }).click()
     await expect(product.getByText("Produk baru ditambahkan ke katalog.")).toBeVisible()
-    await expect(product.getByLabel("Kode IMPA/Nama Produk *", { exact: true })).toHaveValue(name)
+    await expect(product.getByLabel("Nama Produk Offer *")).toHaveValue(name)
     expect(await seed.adopt("item", name)).toBeGreaterThan(0)
   })
 
@@ -258,7 +258,7 @@ test.describe("quotation wizard", () => {
     // and that code is then refused with the holder named.
     async function refusedByHolder(page: Page, seed: SalesSeed) {
       const client = await seed.client()
-      const impa = uniqueImpa()
+      const impa = await uniqueImpa()
       const wrong = seed.name("BT BJ SGKT")
       const right = seed.name("Baut Baja M10")
 
@@ -269,14 +269,16 @@ test.describe("quotation wizard", () => {
       await page.getByRole("button", { name: "Tambah Produk" }).click()
 
       const product = page.getByRole("dialog", { name: "Tambah Produk ke Quotation" })
-      const request = product.getByLabel("Kode IMPA/Nama Produk Request *")
-      await request.fill(`${impa} - ${wrong}`)
+      const request = product.getByLabel("Nama Produk Request *")
+      await product.getByLabel("Kode IMPA Request").fill(impa)
+      await request.fill(wrong)
       await request.press("Escape")
       await product.getByRole("button", { name: "Salin ke Offer" }).click()
       await expect(product.getByText("Produk baru ditambahkan ke katalog.")).toBeVisible()
       const holder = await seed.adopt("item", wrong)
 
-      const offer = product.getByLabel("Kode IMPA/Nama Produk *", { exact: true })
+      const offer = product.getByLabel("Nama Produk Offer *")
+      const offerCode = product.getByLabel("Kode IMPA Offer")
       await offer.click()
       await page.getByRole("button", { name: "Tambah Produk Baru" }).click()
       const create = page.getByRole("dialog", { name: "Tambah Produk Baru" })
@@ -284,30 +286,35 @@ test.describe("quotation wizard", () => {
       await create.getByLabel("Kode IMPA").fill(impa)
       await create.getByRole("button", { name: "Tambahkan" }).click()
       await expect(create.getByText(`Kode IMPA ini sudah dipakai “${wrong}”.`)).toBeVisible()
-      return { product, create, offer, impa, wrong, right, holder }
+      return { product, create, offer, offerCode, impa, wrong, right, holder }
     }
 
     test("Ganti Nama renames it and offers it", async ({ page, seed }) => {
-      const { create, offer, impa, right, holder } = await refusedByHolder(page, seed)
+      const { create, offer, offerCode, impa, right, holder } = await refusedByHolder(page, seed)
       await create.getByRole("button", { name: `Ganti Nama Jadi “${right}”` }).click()
       await expect(create).toBeHidden()
-      await expect(offer).toHaveValue(`${impa} - ${right}`)
+      await expect(offer).toHaveValue(right)
+      await expect(offerCode).toHaveValue(impa)
       const renamed = await api<{ name: string; impaCode: string }>("GET", `/items/${holder}`)
       expect([renamed.name, renamed.impaCode]).toEqual([right, impa])
     })
 
     test("Pakai Produk Ini offers it as it is", async ({ page, seed }) => {
-      const { create, offer, impa, wrong, holder } = await refusedByHolder(page, seed)
+      const { create, offer, offerCode, impa, wrong, holder } = await refusedByHolder(page, seed)
       await create.getByRole("button", { name: "Pakai Produk Ini" }).click()
       await expect(create).toBeHidden()
-      await expect(offer).toHaveValue(`${impa} - ${wrong}`)
+      await expect(offer).toHaveValue(wrong)
+      await expect(offerCode).toHaveValue(impa)
       const rows = await api<{ id: number }[]>("GET", `/items?q=${impa}`)
       expect(rows.map((r) => r.id)).toEqual([holder])
     })
 
     // A sent quotation keeps the name it was sent with.
     test("renaming a holder leaves its sent quotation as sent", async ({ page, seed }) => {
-      const { create, offer, impa, wrong, right, holder } = await refusedByHolder(page, seed)
+      const { create, offer, offerCode, impa, wrong, right, holder } = await refusedByHolder(
+        page,
+        seed,
+      )
       const client = await seed.client()
       const filed = { id: holder, name: wrong, impaCode: impa }
       const sent = await seed.quotation({
@@ -317,7 +324,8 @@ test.describe("quotation wizard", () => {
       await seed.send(sent.id)
       await create.getByRole("button", { name: `Ganti Nama Jadi “${right}”` }).click()
       await expect(create).toBeHidden()
-      await expect(offer).toHaveValue(`${impa} - ${right}`)
+      await expect(offer).toHaveValue(right)
+      await expect(offerCode).toHaveValue(impa)
 
       type Line = { itemType: string; offeredName?: string; offeredImpa?: string }
       const detail = await api<{ items: Line[] }>("GET", `/quotations/${sent.id}`)
@@ -370,8 +378,8 @@ test.describe("quotation wizard", () => {
     await page.getByRole("button", { name: "Lanjut" }).click()
     await page.getByRole("button", { name: "Tambah Produk" }).click()
     const product = page.getByRole("dialog", { name: "Tambah Produk ke Quotation" })
-    await product.getByLabel("Kode IMPA/Nama Produk Request *").fill(item.name)
-    await page.getByRole("option", { name: `${item.impaCode} - ${item.name}` }).click()
+    await product.getByLabel("Nama Produk Request *").fill(item.name)
+    await page.getByRole("option", { name: item.name }).click()
     await product.getByRole("button", { name: "Salin ke Offer" }).click()
     await product.getByLabel("Jumlah Produk *").fill("2")
     await product.getByRole("button", { name: "Simpan Data" }).click()
@@ -384,7 +392,7 @@ test.describe("quotation wizard", () => {
       route.fulfill({ status: 502, contentType: "application/problem+json", body: "{}" }),
     )
     await page.getByRole("button", { name: "Tambah Produk" }).click()
-    await product.getByLabel("Kode IMPA/Nama Produk Request *").fill(`${item.name} lain`)
+    await product.getByLabel("Nama Produk Request *").fill(`${item.name} lain`)
     await expect(
       page.getByRole("alert").filter({ hasText: "Gagal memuat katalog produk." }),
     ).toBeVisible()
@@ -392,7 +400,7 @@ test.describe("quotation wizard", () => {
     await page.getByRole("button", { name: "Coba Lagi" }).click()
     await expect(page.getByText("Gagal memuat katalog produk.")).toHaveCount(0)
     // Escape closes the open suggestions, not the dialog.
-    await product.getByLabel("Kode IMPA/Nama Produk Request *").press("Escape")
+    await product.getByLabel("Nama Produk Request *").press("Escape")
     await expect(product).toBeVisible()
     await product.getByRole("button", { name: "Batal" }).click()
 
@@ -412,8 +420,8 @@ test.describe("quotation wizard", () => {
     await page.getByRole("button", { name: "Lanjut" }).click()
     await page.getByRole("button", { name: "Tambah Produk" }).click()
     const product = page.getByRole("dialog", { name: "Tambah Produk ke Quotation" })
-    await product.getByLabel("Kode IMPA/Nama Produk Request *").fill(item.name)
-    await page.getByRole("option", { name: `${item.impaCode} - ${item.name}` }).click()
+    await product.getByLabel("Nama Produk Request *").fill(item.name)
+    await page.getByRole("option", { name: item.name }).click()
     await product.getByRole("button", { name: "Salin ke Offer" }).click()
     await product.getByLabel("Jumlah Produk *").fill("2")
     await product.getByRole("button", { name: "Simpan Data" }).click()
@@ -475,13 +483,58 @@ test.describe("quotation wizard import and requests", () => {
     await seed.adopt("item", fresh)
 
     const main = page.locator("main")
-    // The offer prints its code beside the name.
-    await expect(main.getByText(item.impaCode, { exact: true }).first()).toBeVisible()
+    // The offer shows its code apart from the name.
+    await expect(main.getByText(`IMPA ${item.impaCode}`, { exact: true }).first()).toBeVisible()
     await expect(main).toContainText(fresh)
     // MD-01: the deactivated cheaper vendor never supplies the price.
     await expect(main).toContainText(active.name)
     await expect(main).not.toContainText(cheap.name)
     await expect(main).toContainText("Rp 90.000")
+  })
+
+  // A coded row is matched by its code only.
+  // A code the catalog holds finds its product whatever the row names; a
+  // code it does not hold becomes a new product under that code, even when
+  // the row names an existing product; a row without a code is matched by
+  // name, and shows "-" for its code.
+  test("an import matches a coded row by its exact code only", async ({ page, seed }) => {
+    const client = await seed.client()
+    const item = await seed.item()
+    const newCode = await uniqueImpa()
+    const csv = [
+      "No,Kode IMPA,Nama Produk,Jumlah,Satuan",
+      `1,IMPA ${item.impaCode},nama lain dari klien,1,PCS`,
+      `2,${newCode},${item.name},2,PCS`,
+      `3,,${item.name},3,PCS`,
+    ].join("\n")
+
+    await page.goto("/quotations/add")
+    await page.getByLabel("Cari klien").fill(seed.prefix)
+    await page.getByRole("button", { name: new RegExp(client.name) }).click()
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.locator('input[type="file"][accept=".csv,.xlsx"]').setInputFiles({
+      name: "permintaan.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from(csv),
+    })
+    await expect(
+      page.getByText(
+        "3 produk diimpor (2 cocok dengan katalog, 1 produk baru). 0 terisi otomatis. 3 perlu vendor dan harga sebelum dikirim.",
+      ),
+    ).toBeVisible()
+    const created = await api<{ id: number; name: string; impaCode?: string }[]>(
+      "GET",
+      `/items?q=${newCode}`,
+    )
+    expect(created.map((r) => [r.name, r.impaCode])).toEqual([[item.name, newCode]])
+    seed.track("item", created[0].id)
+
+    const main = page.locator("main")
+    await expect(main.getByText(`IMPA ${item.impaCode}`, { exact: true })).toHaveCount(3)
+    await expect(main.getByText(`IMPA ${newCode}`, { exact: true })).toHaveCount(2)
+    await expect(main.getByText("nama lain dari klien", { exact: true })).toBeVisible()
+    // The third row asked by name only.
+    await expect(main.getByText("IMPA -", { exact: true })).toHaveCount(1)
   })
 
   // The API parses the workbook: the merged banner and DECK STORES rows
@@ -519,8 +572,8 @@ test.describe("quotation wizard import and requests", () => {
     ).toBeVisible()
     await seed.adopt("item", fresh)
     const main = page.locator("main")
-    // The offer prints its code beside the name.
-    await expect(main.getByText(item.impaCode, { exact: true }).first()).toBeVisible()
+    // The offer shows its code apart from the name.
+    await expect(main.getByText(`IMPA ${item.impaCode}`, { exact: true }).first()).toBeVisible()
     await expect(main).toContainText(fresh)
     await expect(main).not.toContainText("DECK STORES")
 
@@ -682,10 +735,10 @@ test.describe("quotation wizard import and requests", () => {
     await page.getByRole("button", { name: "Lanjut" }).click()
     await page.getByRole("button", { name: "Tambah Produk" }).click()
     const product = page.getByRole("dialog", { name: "Tambah Produk ke Quotation" })
-    await product.getByLabel("Kode IMPA/Nama Produk Request *").fill(item.name)
-    await page.getByRole("option", { name: `${item.impaCode} - ${item.name}` }).click()
-    await product.getByLabel("Kode IMPA/Nama Produk *", { exact: true }).fill(item.name)
-    await page.getByRole("option", { name: `${item.impaCode} - ${item.name}` }).click()
+    await product.getByLabel("Nama Produk Request *").fill(item.name)
+    await page.getByRole("option", { name: item.name }).click()
+    await product.getByLabel("Nama Produk Offer *").fill(item.name)
+    await page.getByRole("option", { name: item.name }).click()
     await expect(product.getByLabel("Nama Vendor *")).toHaveValue(vendor.name)
     await expect(product.getByLabel("Harga Beli Satuan *")).toHaveValue("80000")
     await expect(product.getByLabel("Harga Jual Satuan *")).toHaveValue("125000")
@@ -828,8 +881,8 @@ test.describe("quotation status", () => {
 
     await page.getByRole("button", { name: "Tambah Produk" }).click()
     const product = page.getByRole("dialog", { name: "Tambah Produk ke Quotation" })
-    await product.getByLabel("Kode IMPA/Nama Produk Request *").fill(item.name)
-    await page.getByRole("option", { name: `${item.impaCode} - ${item.name}` }).click()
+    await product.getByLabel("Nama Produk Request *").fill(item.name)
+    await page.getByRole("option", { name: item.name }).click()
     await product.getByRole("button", { name: "Salin ke Offer" }).click()
     await product.getByLabel("Jumlah Produk *").fill("1")
     await product.getByRole("button", { name: "Simpan Data" }).click()
