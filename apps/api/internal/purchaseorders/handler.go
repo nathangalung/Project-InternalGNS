@@ -529,11 +529,13 @@ func validateFile(req UpdateFileRequest) map[string]string {
 // A qty 0 line stays allowed and a blank value keeps the database default;
 // a sent harga jual must be above zero, as fn_update_po_items demands.
 // NaN passes every >= 0 test in Postgres, so it is refused here.
+// A line code is an IMPA code, rewritten in place to six digits or nil.
 func validateItemNumbers(req UpdateItemsRequest) map[string]string {
 	f := validate.Fields{}
 	given := func(s string) bool { return strings.TrimSpace(s) != "" }
 	for i, it := range req.Items {
 		key := "items[" + strconv.Itoa(i) + "]."
+		f.Add(key+"itemCode", validate.OptionalIMPA(&req.Items[i].ItemCode))
 		if given(it.Qty) {
 			f.Add(key+"qty", validate.NonNegative("Jumlah", it.Qty))
 		}

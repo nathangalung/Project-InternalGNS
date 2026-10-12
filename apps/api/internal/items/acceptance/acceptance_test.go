@@ -35,6 +35,7 @@ type scenarioState struct {
 	itemID  int64
 	name    string
 	impa    string
+	newImpa string
 }
 
 func (s *scenarioState) sendRequest(method, path string, body any) error {
@@ -234,10 +235,10 @@ func (s *scenarioState) rowCreatedWithEmptyPrice() error {
 // IMPA and vendor steps.
 // They cover MD-01, MD-03, MD-04 and MD-11.
 func (s *scenarioState) seedItemWithIMPA() error {
-	s.impa = fmt.Sprintf("AT%d", time.Now().UnixNano()%1_000_000_000_000)
+	s.impa = testutil.UniqueIMPA(s.t)
 	s.name = s.uniqueName("ATDD IMPA ITEM")
-	// Typed the way a user might: stored upper-cased and trimmed.
-	typed := " " + strings.ToLower(s.impa) + " "
+	// Typed the way a client writes it: stored as its six digits.
+	typed := " impa " + s.impa + " "
 	body := items.CreateItemRequest{Name: s.name, IMPACode: &typed}
 	if err := s.sendRequest(http.MethodPost, "/items/", body); err != nil {
 		return err
@@ -300,8 +301,8 @@ func (s *scenarioState) importIMPARow(code string, autoCreate bool) error {
 
 func (s *scenarioState) importByIMPA() error { return s.importIMPARow(s.impa, false) }
 
-func (s *scenarioState) importByLowercaseIMPA() error {
-	return s.importIMPARow(strings.ToLower(s.impa), true)
+func (s *scenarioState) importByMarkedIMPA() error {
+	return s.importIMPARow("(IMPA "+s.impa+")", true)
 }
 
 func (s *scenarioState) singleImportedRow() (items.MatchRowResult, error) {
@@ -419,6 +420,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 			state.itemID = 0
 			state.name = ""
 			state.impa = ""
+			state.newImpa = ""
 			return ctx, nil
 		})
 
@@ -442,7 +444,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the item is offered at (\d+) by a vendor that is later deactivated$`, state.offerByDeactivatedVendor)
 		sc.Step(`^the item is offered at (\d+) by an active vendor$`, state.offerByActiveVendor)
 		sc.Step(`^the user imports a row with the item's IMPA code$`, state.importByIMPA)
-		sc.Step(`^the user imports a row with the item's IMPA code in lowercase and auto-create$`, state.importByLowercaseIMPA)
+		sc.Step(`^the user imports a row with the item's IMPA code in its marked form and auto-create$`, state.importByMarkedIMPA)
 		sc.Step(`^the imported row carries the active vendor's price of "([^"]+)"$`, state.rowHasActivePrice)
 		sc.Step(`^the imported row matched the seeded item by IMPA code$`, state.rowMatchedByIMPA)
 		sc.Step(`^the user creates another item with the same IMPA code$`, state.createDuplicateIMPA)
@@ -453,6 +455,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the list holds only the item with the wildcard$`, state.listHoldsOnlySeeded)
 		sc.Step(`^the user sends GET "([^"]+)"$`, state.sendGet)
 		registerRuleSteps(sc, state)
+		registerIMPASteps(sc, state)
 	}
 }
 

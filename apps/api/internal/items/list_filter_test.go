@@ -59,8 +59,10 @@ func TestHandler_List_Filters(t *testing.T) {
 // Sort follows the whitelist.
 func TestHandler_List_SortByIMPA(t *testing.T) {
 	token := uniqueItemName("URUT")
-	z := "ZZ" + uniqueIMPA()
-	a := "AA" + uniqueIMPA()
+	a, z := uniqueIMPA(t), uniqueIMPA(t)
+	if a > z {
+		a, z = z, a
+	}
 	later := createItem(t, items.CreateItemRequest{Name: token + " 1", IMPACode: &z})
 	first := createItem(t, items.CreateItemRequest{Name: token + " 2", IMPACode: &a})
 

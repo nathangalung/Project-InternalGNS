@@ -42,7 +42,7 @@ func TestRepo_MatchRows_NamelessRowIsNotCreated(t *testing.T) {
 	repo := items.NewRepo(tx, testutil.Store(t))
 
 	out, err := repo.MatchRows(ctx, items.MatchRowsRequest{AutoCreate: true, Rows: []items.MatchRowInput{
-		{IMPACode: uniqueIMPA(), Name: "   ", Qty: 1},
+		{IMPACode: uniqueIMPA(t), Name: "   ", Qty: 1},
 	}}, 0.5, seedUserID)
 	require.NoError(t, err)
 	require.Len(t, out, 1)

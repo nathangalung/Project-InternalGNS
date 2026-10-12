@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/items"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/validate"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -391,7 +392,7 @@ func TestHandler_MatchRows_MinScoreInRange(t *testing.T) {
 	srv := newSrv(t)
 	for _, score := range []any{nil, 0.01, 1} {
 		t.Run(fmt.Sprint(score), func(t *testing.T) {
-			body := map[string]any{"rows": []map[string]any{{"impaCode": "TF9000001", "qty": 1}}}
+			body := map[string]any{"rows": []map[string]any{{"impaCode": "990001", "qty": 1}}}
 			if score != nil {
 				body["minScore"] = score
 			}
@@ -410,7 +411,7 @@ func TestHandler_MatchRows_IMPAExact(t *testing.T) {
 	srv := newSrv(t)
 	body := items.MatchRowsRequest{
 		Rows: []items.MatchRowInput{
-			{IMPACode: "TF9000001", Name: "Test Fixture Item", Qty: 1, Unit: "PCS"},
+			{IMPACode: "990001", Name: "Test Fixture Item", Qty: 1, Unit: "PCS"},
 		},
 	}
 	res := doJSON(t, srv, http.MethodPost, "/items/match-rows", body)
@@ -453,16 +454,38 @@ func TestHandler_MatchRows_NoMatch(t *testing.T) {
 	assert.Equal(t, "NONE", out.Rows[0].Source)
 }
 
-func TestHandler_MatchRows_IMPANotFoundFallsBack(t *testing.T) {
+// A missing code never falls back.
+// The row names the fixture item exactly, but its code is no product's, so
+// it stays unmatched instead of taking the item by name.
+func TestHandler_MatchRows_IMPANotFoundNeverFallsBack(t *testing.T) {
+	out := matchRows(t, items.MatchRowsRequest{Rows: []items.MatchRowInput{
+		{IMPACode: uniqueIMPA(t), Name: "Test Fixture Item", Qty: 1, Unit: "PCS"},
+	}})
+	require.Len(t, out.Rows, 1)
+	assert.Nil(t, out.Rows[0].Matched)
+	assert.Equal(t, "NONE", out.Rows[0].Source)
+}
+
+// A row code is six digits.
+// Every bad row is named, and nothing is matched or created.
+func TestHandler_MatchRows_BadCodeRefused(t *testing.T) {
 	srv := newSrv(t)
-	body := items.MatchRowsRequest{
-		Rows: []items.MatchRowInput{
-			{IMPACode: "NOSUCHIMPA", Name: "ZZZQQQNOTHING", Qty: 1, Unit: "PCS"},
-		},
-	}
+	body := items.MatchRowsRequest{AutoCreate: true, Rows: []items.MatchRowInput{
+		{IMPACode: "990001", Name: "Test Fixture Item", Qty: 1},
+		{IMPACode: "NOSUCHIMPA", Name: "ZZZQQQNOTHING", Qty: 1},
+		{IMPACode: "19010", Name: "ZZZQQQPENDEK", Qty: 1},
+	}}
 	res := doJSON(t, srv, http.MethodPost, "/items/match-rows", body)
 	defer res.Body.Close()
-	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+	var p struct {
+		Fields map[string]string `json:"fields"`
+	}
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&p))
+	assert.Equal(t, map[string]string{
+		"rows[1].impaCode": "Baris 2. " + validate.IMPAMessage,
+		"rows[2].impaCode": "Baris 3. " + validate.IMPAMessage,
+	}, p.Fields)
 }
 
 func itoa(n int64) string {

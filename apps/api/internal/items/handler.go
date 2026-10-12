@@ -131,6 +131,10 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
 		return
 	}
+	if msg := validate.OptionalIMPA(&req.IMPACode); msg != "" {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"impaCode": msg}))
+		return
+	}
 
 	userID := deps.CurrentUserID(r.Context())
 	item, err := h.repo.Create(r.Context(), req, userID)
@@ -155,6 +159,10 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	req.Name = strings.TrimSpace(req.Name)
 	if req.Name == "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
+		return
+	}
+	if msg := validate.OptionalIMPA(&req.IMPACode); msg != "" {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"impaCode": msg}))
 		return
 	}
 
@@ -297,16 +305,21 @@ func (h *Handler) SearchAdvanced(w http.ResponseWriter, r *http.Request) {
 		items, err = h.repo.SearchCatalog(egCtx, q, minScore, searchLayerCap, onlyActive)
 		return err
 	})
-	eg.Go(func() error {
-		var err error
-		offers, err = h.repo.SearchVendorOffers(egCtx, q, searchLayerCap, onlyActive)
-		return err
-	})
-	eg.Go(func() error {
-		var err error
-		requests, err = h.repo.SearchRequestHistory(egCtx, q, searchLayerCap, onlyActive)
-		return err
-	})
+	// An IMPA code names its holder, which only the catalog layer reads: a
+	// vendor SKU or an old request text holding the same digits is
+	// another product.
+	if code, _ := validate.IMPA(q); code == "" {
+		eg.Go(func() error {
+			var err error
+			offers, err = h.repo.SearchVendorOffers(egCtx, q, searchLayerCap, onlyActive)
+			return err
+		})
+		eg.Go(func() error {
+			var err error
+			requests, err = h.repo.SearchRequestHistory(egCtx, q, searchLayerCap, onlyActive)
+			return err
+		})
+	}
 	if err := eg.Wait(); err != nil {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
@@ -339,7 +352,7 @@ const MaxMatchRows = 500
 const msgMinScoreRange = "Skor minimal harus di atas 0 dan paling tinggi 1."
 
 // MatchRows batch-matches imported xlsx rows.
-// IMPA exact wins; else fuzzy.
+// A row with an IMPA code matches only that code; else its name.
 // No-match rows return Matched=nil so FE keeps row empty.
 func (h *Handler) MatchRows(w http.ResponseWriter, r *http.Request) {
 	var req MatchRowsRequest
@@ -363,6 +376,17 @@ func (h *Handler) MatchRows(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{
 			"rows": fmt.Sprintf("Terlalu banyak baris dalam satu permintaan: paling banyak %d. Bagi menjadi beberapa kelompok.", MaxMatchRows),
 		}))
+		return
+	}
+	// A typed code that is no IMPA code would create a product without it.
+	f := validate.Fields{}
+	for i, row := range req.Rows {
+		if _, msg := validate.IMPA(row.IMPACode); msg != "" {
+			f.Add(fmt.Sprintf("rows[%d].impaCode", i), fmt.Sprintf("Baris %d. %s", i+1, msg))
+		}
+	}
+	if fields := f.Result(); fields != nil {
+		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
 

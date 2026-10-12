@@ -22,7 +22,7 @@ func TestRepo_MatchRows_MapsEveryRowAcrossChunks(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := items.NewRepo(tx, testutil.Store(t))
 
-	code := uniqueIMPA()
+	code := uniqueIMPA(t)
 	byIMPA, err := repo.Create(ctx, items.CreateItemRequest{Name: uniqueItemName("MR IMPA"), IMPACode: &code}, seedUserID)
 	require.NoError(t, err)
 	byName, err := repo.Create(ctx, items.CreateItemRequest{Name: uniqueItemName("MR NAME")}, seedUserID)

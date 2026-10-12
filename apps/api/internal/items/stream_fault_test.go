@@ -104,7 +104,7 @@ func TestRepo_BrokenStreams(t *testing.T) {
 func TestRepo_MatchRows_AutoCreateKeepsIMPA(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := items.NewRepo(tx, testutil.Store(t))
-	impa := uniqueIMPA()
+	impa := uniqueIMPA(t)
 	row := items.MatchRowInput{IMPACode: impa, Name: uniqueItemName("AUTO IMPA"), Qty: 1}
 
 	first, err := repo.MatchRows(ctx, items.MatchRowsRequest{AutoCreate: true, Rows: []items.MatchRowInput{row}}, 0.99, seedUserID)
