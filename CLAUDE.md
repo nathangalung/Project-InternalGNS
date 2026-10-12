@@ -54,8 +54,8 @@ management picks a role from a dropdown with an Indonesian label and hint
 - operational (Kepala Operasional): quotations, purchase orders, the catalog
   and vendors, harga beli and harga jual. It edits drafts, sets selling
   prices and discounts, and downloads the quotation PDF, which is its last
-  step; it runs a PO (file, number, notes, status, cancelling) with
-  superadmin (`roles.ManagesPOs`). It deletes an unused client or vendor
+  step; it runs a PO (file, number, notes, status, cancelling, the
+  delivery note's row notes) with superadmin (`roles.ManagesPOs`). It deletes an unused client or vendor
   for good (Hapus Permanen).
 - operational_input (Input Data Operasional): client data, client requests,
   harga beli and the catalog (products, photos, vendors, store links). It
@@ -73,7 +73,8 @@ management picks a role from a dropdown with an Indonesian label and hint
   current: in Ubah PO it changes harga beli and vendor of the stored lines,
   everything the client ordered stays as stored (`keepStoredSale`; each line
   carries its PO line `id`, adding or dropping one is a 403), and it neither
-  moves the PO nor touches its file, number or notes. The storage proxy
+  moves the PO nor touches its file, number, notes or delivery note
+  notes. The storage proxy
   refuses it a PO document upload too. It deletes an unused client or
   vendor for good, as the heads do.
 - finance (Kepala Keuangan): invoices, Kas Lain and the financial dashboard,
@@ -429,6 +430,29 @@ shows a missing one as Belum ada No. PO.
   becomes that vendor link's current catalog price and quote date
   (00106), so the next quotation starts from what was paid; a price the
   edit leaves as it was never touches the catalog.
+  The delivery note's Address is where the goods go
+  (`deliveryNoteAddress`): the shipping line's address, else the one place
+  every addressed product line names (compared without case or spacing),
+  else the client's own address, which stays live like the To. No row
+  repeats it. Its last column is Notes, one note per product line in
+  `purchase_order_items.dn_note` (00114, up to 500 characters), so a
+  reprint prints the same notes. NULL means never saved: the row prints a
+  default worked out at render and on the items read (`dnNoteDefault`),
+  "Kirim ke:" and the line's own destination when that is not the
+  Address, else nothing. A saved note replaces it for good, and an empty
+  one prints nothing. `PATCH /purchase-orders/{id}/delivery-note` saves
+  `{notes: [{lineId, note}]}` (`fn_update_po_dn_notes`): If-Match is
+  required, only the rows sent change, each `lineId` must be a product
+  line of this PO (else a 422), and outside ON_PROGRESS and DELIVERED it
+  is a 409 `po_locked`. It is for the roles that run the PO (`header`
+  gate: superadmin and operational, `managesPOs` on the web). Ubah PO
+  carries each kept line's note over by its `id`, since it replaces every
+  line; a new line starts with none. On the PO detail, Unduh Surat Jalan
+  opens `DeliveryNoteModal` for those roles: each product row with its
+  saved note or default, Simpan dan Unduh saves every row once any changed
+  and then downloads, Unduh with no change only downloads, and a refusal
+  shows in the dialog. Every other role, and the list's download button,
+  downloads directly.
 - Invoice: draft, sent, paid, cancelled; overdue is stored only on legacy
   rows. Draft goes to sent; sent or overdue to paid, which stamps `paid_at`
   and takes an optional proof stored under `invoices/<id>/payment/`; marking
@@ -837,8 +861,10 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    party block and the table with no lead-in sentence. Each `.tex.tmpl`
    carries its own copy of the shared sizes (`\Doc*`, `_base/` is empty), so
    change all three together. The quotation addresses To, Attn, Email and
-   Contact No.; the delivery note To and Address only, with no vessel or
-   attention; the invoice its Client, NPWP and Address, with no vessel.
+   Contact No.; the delivery note To and Address only (the Address is where
+   the goods go, and its table ends in a Notes column, see the PO status
+   model), with no vessel or attention; the invoice its Client, NPWP and
+   Address, with no vessel.
    The terms and the signature sit clear of the table, and a long terms
    value wraps whole words inside its block (`tabularx`,
    `TestLatexExports_LongPaymentTermsWraps`). All three keep 0.9 cm
@@ -866,7 +892,7 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    (English patterns would split Indonesian names), and the client name goes
    through `pdfgen.LatexBreakable`, so a long name wraps instead of printing
    over the right-hand block. Every printed address (the party Address, the
-   quotation's Delivery Place, the note's Tujuan, the invoice's Description)
+   quotation's Delivery Place, the note's Notes, the invoice's Description)
    goes through `pdfgen.LatexAddress`: `NormalizeAddress` folds typed line
    breaks, stray spaces and doubled commas into one ", " between parts and
    keeps a house-number list such as "2,6,8", and a part up to `PartyKeep`
@@ -903,7 +929,8 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    invoice DPP), DPP Nilai Lain and PPN 12% when taxed, then Grand Total in
    bold. The label says Produk because shipping is never discounted. Rincian
    Biaya on the quotation, PO and invoice pages shows the same rows
-   (`CostBreakdown`, `discountLabel`). Invoices snapshot `gross_unit_price`
+   (`CostBreakdown`, `discountLabel`), and so does the quotation wizard's
+   summary (`wizardSummary`, whose Sub Total includes shipping). Invoices snapshot `gross_unit_price`
    and `total_discount`, so the PDF prints a gross line plus a real discount
    row (Total − Diskon Produk = Sub Total) without reading the quotation;
    the invoice stores no percent, so its detail read derives `discountPct`
