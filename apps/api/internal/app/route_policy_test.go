@@ -70,6 +70,7 @@ func TestRouter_RoutePolicy(t *testing.T) {
 		{"POST", "/quotations/999999999/lines", []string{s, o, oi}},
 		{"PUT", "/quotations/999999999/lines/1", []string{s, o, oi}},
 		{"PUT", "/quotations/999999999/header", []string{s, o, oi}},
+		{"PATCH", "/quotations/999999999/client", []string{s, o, oi}},
 		{"POST", "/quotations/999999999/requests", []string{s, o, oi}},
 
 		{"GET", "/purchase-orders", all},
@@ -79,6 +80,7 @@ func TestRouter_RoutePolicy(t *testing.T) {
 		{"PATCH", "/purchase-orders/999999999/status", []string{s, o}},
 		{"PUT", "/purchase-orders/999999999/items", []string{s, o, oi}},
 		{"PATCH", "/purchase-orders/999999999/details", []string{s, o}},
+		{"PATCH", "/purchase-orders/999999999/client", []string{s, o}},
 		{"PATCH", "/purchase-orders/999999999/delivery-note", []string{s, o}},
 		{"GET", "/purchase-orders/999999999/upload-url", []string{s, o}},
 

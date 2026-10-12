@@ -32,8 +32,6 @@ type QuotationDetailProps = {
   canRevise: boolean
   // The chosen narahubung
   contactId?: number
-  // Opened from the PO gate
-  openContactPicker?: boolean
   // Offered lines the send rule refuses
   incomplete?: number
   onEdit: () => void
@@ -47,7 +45,6 @@ export default function QuotationDetail({
   transitions,
   canRevise,
   contactId,
-  openContactPicker = false,
   incomplete = 0,
   onEdit,
 }: QuotationDetailProps) {
@@ -59,10 +56,16 @@ export default function QuotationDetail({
   const id = Number(q.id)
   const status = quotationStatusFromLabel(q.status)
   const { moves, cancel } = splitTransitions(transitions)
-  // The editor covers drafts; an accepted quote re-picks here.
+  // The editor covers drafts; an accepted quote re-picks here, and its PO
+  // follows while it keeps the quotation's client.
   const canChangeContact =
     status === "accepted" && q.clientId !== undefined && writesQuotation(me?.role)
-  const [changingContact, setChangingContact] = useState(openContactPicker && canChangeContact)
+  const [changingContact, setChangingContact] = useState(false)
+  // A sent quotation already reached the client, so it moves by revision.
+  const clientNote =
+    status === "sent" && writesQuotation(me?.role)
+      ? "Klien tidak dapat diganti setelah quotation dikirim. Buat revisi lalu ganti kliennya di draf revisi."
+      : undefined
 
   const totalShip = q.shipping.hargaSatuan
   const hasProducts = q.products.length > 0
@@ -121,6 +124,7 @@ export default function QuotationDetail({
         clientInfo={q.clientInfo}
         shippingAlamat={q.shipping.alamat}
         onChangeContact={canChangeContact ? () => setChangingContact(true) : undefined}
+        clientNote={clientNote}
       />
       {(q.seesSelling ? totalShip > 0 : q.shipping.nama !== "") && (
         <ShippingTable shipping={q.shipping} showPrice={q.seesSelling} />

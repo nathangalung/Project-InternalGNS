@@ -25,7 +25,7 @@ type ClientCompleteness struct {
 	ContactName  *string `db:"contact_name"`
 	ContactEmail *string `db:"contact_email"`
 	ContactPhone *string `db:"contact_phone"`
-	// The quotation's chosen contact was deactivated.
+	// The PO's contact was deactivated.
 	ContactInactive bool `db:"contact_inactive"`
 }
 
@@ -144,8 +144,8 @@ func missingClientFields(c ClientCompleteness) []CompletenessGap {
 	if !filled(c.Address) {
 		missing = append(missing, CompletenessGap{GapClientAddress, "Alamat"})
 	}
-	// A deactivated contact cannot be edited, so the quotation must pick
-	// another one; its own fields are moot until then.
+	// A deactivated contact cannot be edited, so the PO must pick another
+	// one; its own fields are moot until then.
 	if c.ContactInactive {
 		return append(missing, CompletenessGap{GapContactInactive, "Narahubung aktif"})
 	}

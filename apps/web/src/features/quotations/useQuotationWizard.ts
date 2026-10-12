@@ -107,13 +107,15 @@ export function useQuotationWizard(units: UnitRow[] | undefined, pricing = true)
   }, [])
 
   // Follow the stored draft live.
-  // Lines always follow the server; the header fields only when the caller
-  // is not editing them. A pick holds the header, so a stored contact that
-  // still changes (a claim that lapsed) replaces the pick instead of being
-  // overwritten by it. Page and client stay as the user left them.
+  // Lines and the client always follow the server, since Ganti Klien saves
+  // at once; the other header fields only when the caller is not editing
+  // them. A pick holds the header, so a stored contact that still changes (a
+  // claim that lapsed, or a new client) replaces the pick instead of being
+  // overwritten by it. The page stays as the user left it.
   const syncFromServer = useCallback((s: WizardSeed, header: boolean) => {
     if (s.selectedContactId !== storedContact.current) setSelectedContactId(s.selectedContactId)
     storedContact.current = s.selectedContactId
+    setSelectedClient(s.selectedClient)
     setProducts(s.products)
     if (!header) return
     setDiscountPct(s.discountPct)

@@ -16,8 +16,9 @@ type ContactModalProps = {
 
 // Ganti Narahubung picker.
 //
-// The editor is closed once a quotation leaves draft, but the PO gate
-// refuses a deactivated narahubung, so an accepted quotation re-picks here.
+// The editor is closed once a quotation leaves draft, but an accepted
+// quotation re-picks here, and its PO follows while it keeps the
+// quotation's client.
 // Only active contacts are listed.
 export default function ContactModal({
   quotationId,

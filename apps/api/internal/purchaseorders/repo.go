@@ -237,6 +237,28 @@ func (r *Repo) UpdateDeliveryNotes(
 	return v, nil
 }
 
+// ChangeClient moves the PO to a client.
+// It returns the new row_version, or the current one when nothing changed.
+// The handler refuses a request without If-Match. A delivered or cancelled
+// PO is ErrLocked, and a PO number the new client already uses is
+// ErrDuplicatePoNumber; a refused client or contact passes through as a
+// field raise.
+func (r *Repo) ChangeClient(
+	ctx context.Context, id, clientID int64, contactID *int64, actorID int64, ifMatch *int32,
+) (int32, error) {
+	var v int32
+	err := r.db.QueryRow(ctx, r.store.Get("purchase_orders.update_client"),
+		id, ifMatch, clientID, contactID, actorID).Scan(&v)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == db.SQLStateUniqueViolation {
+			return 0, ErrDuplicatePoNumber
+		}
+		return 0, classifyPgErr(err)
+	}
+	return v, nil
+}
+
 // ClientAddress reads the client's address.
 // A missing PO is ErrNotFound; a client with none reads "".
 func (r *Repo) ClientAddress(ctx context.Context, poID int64) (string, error) {

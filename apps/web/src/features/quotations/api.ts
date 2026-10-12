@@ -11,6 +11,7 @@ import {
 import type {
   MatchRowInput,
   QuotationAddLinesInput,
+  QuotationClientInput,
   QuotationContactInput,
   QuotationCreated,
   QuotationCreateInput,
@@ -195,6 +196,14 @@ export async function updateQuotationContact(id: number, contactId: number): Pro
     method: "PATCH",
     body: { contactId } satisfies QuotationContactInput,
   })
+}
+
+// Move a draft to another client.
+//
+// Part of the header, so the caller holds its claim. No contactId leaves
+// the draft without a narahubung.
+export async function changeClient(id: number, input: QuotationClientInput): Promise<void> {
+  await apiRequest<void>({ path: `/quotations/${id}/client`, method: "PATCH", body: input })
 }
 
 export async function listRevisions(id: number): Promise<QuotationRevisionRow[]> {

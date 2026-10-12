@@ -14,10 +14,13 @@ import type { ProductItem } from "./wizard"
 
 // Status history entry text.
 //
-// Creation carries a fixed server note, so only the status is shown.
+// Creation carries a fixed server note, so only the status is shown. A row
+// that keeps its status records another change, such as a new client, which
+// its note names.
 export function historyAction(ev: ApiStatusEvent): string {
   const to = quotationStatusLabel(ev.toStatus)
   if (!ev.fromStatus) return `Dibuat sebagai ${to}`
+  if (ev.fromStatus === ev.toStatus) return ev.note || to
   const move = `${quotationStatusLabel(ev.fromStatus)} → ${to}`
   return ev.note ? `${move}: ${ev.note}` : move
 }

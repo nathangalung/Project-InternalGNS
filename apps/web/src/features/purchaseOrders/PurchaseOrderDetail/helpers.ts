@@ -83,6 +83,16 @@ export function isPoFileLocked(status: PoStatus): boolean {
   return status === "DELIVERED" || status === "CANCELLED"
 }
 
+// The PO's client can change.
+//
+// Exactly while Ubah PO is open, as fn_po_update_client allows: until
+// delivery, and again on a delivered PO while its invoice is cancelled and
+// no Pengganti is issued, so the Pengganti bills the right company. A
+// cancelled PO is closed.
+export function poClientEditable(po: Pick<PurchaseOrderRow, "status" | "linesLocked">): boolean {
+  return po.status !== "CANCELLED" && !po.linesLocked
+}
+
 // Why Ubah PO is refused.
 //
 // The server sets linesLocked: a cancelled PO, or a delivered one unless its

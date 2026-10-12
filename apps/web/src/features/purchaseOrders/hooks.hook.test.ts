@@ -20,6 +20,7 @@ import * as api from "./api"
 import {
   type PoSaveResult,
   useActorNames,
+  useChangePoClient,
   useChangePoStatus,
   useInvoiceFiled,
   usePoFileUrl,
@@ -339,6 +340,31 @@ describe("PO writes", () => {
       vendorList,
       itemDetail,
     ])
+  })
+
+  it("a client move saves with the row version and refreshes the PO and the clients", async () => {
+    m.changeClient.mockResolvedValue({ id: 3, rowVersion: 6 })
+    const { qc, result } = renderQueryHook(() => useChangePoClient())
+    const clientList = queryKeys.clients.list()
+    const keys = [poDetail, poItems, clientList, dash, invList]
+    seed(qc, keys)
+    const input = { clientId: 8, contactId: 4 }
+    await settle(() => result.current.mutateAsync({ id: 3, input, rowVersion: 5 }))
+    expect(m.changeClient).toHaveBeenCalledWith(3, input, 5)
+    expect(invalidated(qc, keys)).toEqual([poDetail, poItems, clientList])
+  })
+
+  it.each<[string, () => Error, boolean]>([
+    ["version conflict", versionConflict, true],
+    ["lock refusal", lockRefusal, true],
+    ["network failure", () => new TypeError("fetch failed"), false],
+  ])("a client move leaves a %s to the dialog", async (_name, err, reloads) => {
+    m.changeClient.mockRejectedValue(err())
+    const { qc, result } = renderQueryHook(() => useChangePoClient())
+    seed(qc, [poDetail])
+    await settle(() => result.current.mutateAsync({ id: 3, input: { clientId: 8 }, rowVersion: 5 }))
+    expect(toast.error).not.toHaveBeenCalled()
+    expect(invalidated(qc, [poDetail])).toEqual(reloads ? [poDetail] : [])
   })
 
   it("delivery note notes save with the row version and refresh the PO and its lines", async () => {

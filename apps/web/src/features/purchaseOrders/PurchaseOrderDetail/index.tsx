@@ -3,11 +3,12 @@ import Modal from "@/components/shared/Modal"
 import { useMe } from "@/features/auth/hooks"
 import { getCompanyInitials } from "@/features/clients/helpers"
 import StoreLinkModal from "@/features/items/StoreLinkModal"
+import ClientChangeModal from "@/features/quotations/ClientChangeModal"
 import ClientSummaryCard from "@/features/quotations/QuotationDetail/ClientSummaryCard"
 import CostBreakdown from "@/features/quotations/QuotationDetail/CostBreakdown"
 import ProductTable from "@/features/quotations/QuotationDetail/ProductTable"
 import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
-import type { ProductRow, QuotationData } from "@/features/quotations/types"
+import type { ClientInfo, ProductRow } from "@/features/quotations/types"
 import { useNavTrail } from "@/hooks/useNavTrail"
 import { downloadFile, downloadPdf } from "@/lib/api-client"
 import { formatDate, toNum } from "@/lib/format"
@@ -20,6 +21,7 @@ import { poHistoryEntry, poItemsToProducts, poItemsToShipping, poRowFromBackend 
 import * as poApi from "../api"
 import {
   useActorNames,
+  useChangePoClient,
   useChangePoStatus,
   usePoHistory,
   usePoItems,
@@ -39,7 +41,9 @@ import {
   completenessIssues,
   deliveryNoteFileName,
   poBreakdown,
+  poClientEditable,
   poEditLockReason,
+  poErrorMessage,
   previewKind,
   uploadRules,
 } from "./helpers"
@@ -51,12 +55,12 @@ const fallback = [listCrumb("/purchase-orders")]
 
 type PurchaseOrderDetailProps = {
   po: PurchaseOrderRow
-  // Client card data; the PO has its own figures
-  quotation?: QuotationData
+  // The PO client's card, with its own narahubung
+  clientInfo?: ClientInfo
   onEdit: () => void
 }
 
-export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseOrderDetailProps) {
+export default function PurchaseOrderDetail({ po, clientInfo, onEdit }: PurchaseOrderDetailProps) {
   const nav = useNavTrail(fallback)
   const { data: me } = useMe()
   const { data: poItems } = usePoItems(po.id)
@@ -102,7 +106,32 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
 
   const figures = poBreakdown(po)
   const totalShip = shipping.hargaSatuan
-  const clientName = quotation?.client ?? po.companyName
+  const clientName = po.companyName
+  // Heads move an open PO to another client of the holding.
+  const clientEditable = writes && poClientEditable(po)
+  const [changingClient, setChangingClient] = useState(false)
+  const changeClient = useChangePoClient()
+
+  async function saveClient(clientId: number, contactId: number | undefined) {
+    try {
+      await changeClient.mutateAsync({
+        id: po.id,
+        input: { clientId, contactId },
+        rowVersion: po.rowVersion,
+      })
+    } catch (err) {
+      return poErrorMessage(err, "Gagal mengganti klien PO.")
+    }
+    toast.success("Klien PO diganti.")
+    setChangingClient(false)
+    return null
+  }
+
+  // The gate's narahubung link.
+  function changeContact() {
+    setGate(null)
+    setChangingClient(true)
+  }
   const dnReady = canDownloadDeliveryNote(po)
   const editLockReason = poEditLockReason(po)
   const fileRemovable = po.status === "PENDING" || po.status === "UPLOADED"
@@ -231,8 +260,9 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
           clientName={clientName}
           clientId={po.companyClientId}
           clientInitials={getCompanyInitials(clientName)}
-          clientInfo={quotation?.clientInfo}
+          clientInfo={clientInfo}
           shippingAlamat={shipping.alamat}
+          onChangeClient={clientEditable ? () => setChangingClient(true) : undefined}
         />
         {(sellingShown ? totalShip > 0 : Boolean(shipping.alamat || shipping.hari)) && (
           <div className="min-w-0 overflow-x-auto max-sm:*:min-w-max">
@@ -355,6 +385,18 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
           quotationId={po.quotationId}
           onClose={() => setGate(null)}
           onEnterPoNumber={writes && rules.editable ? enterPoNumber : undefined}
+          onChangeContact={clientEditable ? changeContact : undefined}
+        />
+      )}
+
+      {changingClient && (
+        <ClientChangeModal
+          clientId={po.companyClientId}
+          contactId={po.contactId}
+          allowSame
+          note="Pilih perusahaan lain, misalnya dari grup usaha yang sama, atau narahubung lain. Quotation tetap atas nama klien semula, dan invoice berikutnya ditagihkan ke klien yang dipilih."
+          onSave={saveClient}
+          onClose={() => setChangingClient(false)}
         />
       )}
     </>

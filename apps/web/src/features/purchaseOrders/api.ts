@@ -8,6 +8,7 @@ import {
 } from "@/lib/api-client"
 import type {
   PoBackendStatus,
+  PoClientInput,
   PoDeliveryNoteInput,
   PoDetailsInput,
   PoFileInput,
@@ -121,6 +122,23 @@ export async function updateDetails(
     path: `/purchase-orders/${id}/details`,
     method: "PATCH",
     body: payload,
+    headers: { "If-Match": String(rowVersion) },
+  })
+}
+
+// Move the PO to another client.
+//
+// Until delivery. The same client with another contact only changes the
+// narahubung.
+export async function changeClient(
+  id: number,
+  input: PoClientInput,
+  rowVersion: number,
+): Promise<PoSaved> {
+  return apiRequest<PoSaved>({
+    path: `/purchase-orders/${id}/client`,
+    method: "PATCH",
+    body: input,
     headers: { "If-Match": String(rowVersion) },
   })
 }

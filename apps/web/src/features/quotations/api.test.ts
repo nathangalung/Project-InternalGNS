@@ -135,6 +135,11 @@ describe("quotations api", () => {
       () => api.updateQuotationContact(5, 9),
       { path: "/quotations/5/contact", method: "PATCH", body: { contactId: 9 } },
     ],
+    [
+      "move to another client",
+      () => api.changeClient(5, { clientId: 8, contactId: 9 }),
+      { path: "/quotations/5/client", method: "PATCH", body: { clientId: 8, contactId: 9 } },
+    ],
     ["revisions", () => api.listRevisions(5), { path: "/quotations/5/revisions" }],
     ["requests", () => api.listRequests(5), { path: "/quotations/5/requests" }],
     [

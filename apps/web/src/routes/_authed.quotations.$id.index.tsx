@@ -13,23 +13,12 @@ import { useUnits } from "@/features/units/hooks"
 import { useTrailState } from "@/hooks/useNavTrail"
 import { isMissing } from "@/lib/errors"
 
-type QuotationSearch = {
-  // Open the Ganti Narahubung picker
-  narahubung?: true
-}
-
-// Deep link from PO gate.
-//
-// ?narahubung=true opens Ganti Narahubung.
 export const Route = createFileRoute("/_authed/quotations/$id/")({
-  validateSearch: (search: Record<string, unknown>): QuotationSearch =>
-    search.narahubung === true || search.narahubung === "true" ? { narahubung: true } : {},
   component: QuotationDetailRoute,
 })
 
 function QuotationDetailRoute() {
   const { id } = Route.useParams()
-  const { narahubung } = Route.useSearch()
   const navigate = useNavigate()
   const state = useTrailState()
 
@@ -81,7 +70,6 @@ function QuotationDetailRoute() {
       transitions={detail.allowedTransitions ?? []}
       canRevise={detail.canRevise === true}
       contactId={detail.contactId}
-      openContactPicker={narahubung === true}
       incomplete={incompleteLines(detail.items)}
       onEdit={() => void navigate({ to: "/quotations/$id/edit", params: { id }, state })}
     />

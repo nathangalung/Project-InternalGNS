@@ -175,8 +175,13 @@ SELECT fn_quotation_request_delete($1, $2, $3);
 -- name: quotations.update_contact
 -- Only a draft or an accepted quotation takes another contact: the draft in
 -- the live editor, as part of its header, the accepted one when the PO gate
--- asks for an active contact.
+-- asks for an active contact. An accepted quotation's PO follows while it is
+-- still on the quotation's client.
 SELECT fn_quotation_update_contact($1, $2, $3) AS result;
+
+-- name: quotations.update_client
+-- A draft's client and contact, part of its header; $3 NULL is no contact.
+SELECT fn_quotation_update_client($1::bigint, $2::bigint, $3::bigint, $4::bigint);
 
 -- name: quotations.lock
 SELECT fn_quotation_lock($1, $2, $3, $4);

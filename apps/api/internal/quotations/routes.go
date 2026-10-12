@@ -30,6 +30,7 @@ func Routes(d deps.Deps) chi.Router {
 	ownerOnly := rolegate.Deny(roles.Operational, roles.OperationalInput)
 	r.With(ownerOnly).Patch("/{id}/status", h.ChangeStatus)
 	r.Patch("/{id}/contact", h.ChangeContact)
+	r.Patch("/{id}/client", h.ChangeClient)
 	r.With(ownerOnly).Post("/{id}/send", h.Send)
 	r.With(ownerOnly).Post("/{id}/revise", h.Revise)
 	r.Get("/{id}/revisions", h.Revisions)

@@ -84,6 +84,68 @@ func TestRepo_TotalPurchase_ExcludesCancelledPO(t *testing.T) {
 	assertTotal("0", 0)
 }
 
+// The total follows the PO's client.
+// A PO moved to a company of the same holding is that company's purchase;
+// the quotation it came from stays with the first client.
+func TestRepo_TotalPurchase_FollowsPOClient(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := clients.NewRepo(tx, testutil.Store(t))
+
+	prefix := fmt.Sprintf("PT Pindah PO %d", time.Now().UnixNano())
+	numbers := freeNumbers(t, tx, 2)
+	newClient := func(name, number string) int64 {
+		var id int64
+		require.NoError(t, tx.QueryRow(ctx, `
+			INSERT INTO company_client (number, name, country_code, created_by, updated_by)
+			VALUES ($1, $2, 'IDN', $3, $3) RETURNING id`, number, name, seedUserID).Scan(&id))
+		return id
+	}
+	first := newClient(prefix+" A", numbers[0])
+	sister := newClient(prefix+" B", numbers[1])
+	var quotationID int64
+	require.NoError(t, tx.QueryRow(ctx, `
+		INSERT INTO quotations (quotation_no, company_client_id, company_client_name,
+		                        discount_pct, total_produk, total, total_discount,
+		                        status, created_by, updated_by)
+		VALUES ($1, $2, $3, 0, 10000, 10000, 0, 'sent', $4, $4) RETURNING id`,
+		"SQ-PINDAH-"+prefix, first, prefix+" A", seedUserID).Scan(&quotationID))
+	_, err := tx.Exec(ctx, `
+		INSERT INTO quotation_items (quotation_id, line_number, item_type, requested_name,
+		                             offered_item_id, vendor_product_id, qty, unit_id,
+		                             selling_price, cost_price, discount_pct, created_by)
+		VALUES ($1, 1, 'product', 'Test Fixture Item', 9000001, 9000001, 1, 19, 10000, 5000, 0, $2)`,
+		quotationID, seedUserID)
+	require.NoError(t, err)
+	_, err = tx.Exec(ctx, `SELECT fn_change_quotation_status($1, 'accepted', $2)`, quotationID, seedUserID)
+	require.NoError(t, err)
+	_, err = tx.Exec(ctx, `SELECT fn_po_update_client(id, NULL, $2, NULL, $3)
+		FROM purchase_orders WHERE quotation_id = $1`, quotationID, sister, seedUserID)
+	require.NoError(t, err)
+
+	got, err := repo.GetByIDs(ctx, []int64{first, sister})
+	require.NoError(t, err)
+	assert.Equal(t, "0", got[first].TotalPurchase, "clients.get_by_ids")
+	assert.Equal(t, "11100.00", got[sister].TotalPurchase, "clients.get_by_ids")
+	one, err := repo.GetByID(ctx, sister)
+	require.NoError(t, err)
+	assert.Equal(t, "11100.00", one.TotalPurchase, "clients.get_by_id")
+	assert.Equal(t, int64(0), one.QuotationCount, "the quotation stays with the first client")
+	updated, err := repo.Update(ctx, sister,
+		clients.UpdateClientRequest{Name: prefix + " B", CountryCode: "IDN", IsActive: true}, seedUserID)
+	require.NoError(t, err)
+	assert.Equal(t, "11100.00", updated.TotalPurchase, "clients.update")
+
+	list, err := repo.List(ctx, clients.ListFilter{Q: prefix, SortBy: "totalPurchase", Limit: 10})
+	require.NoError(t, err)
+	require.Len(t, list.Rows, 2)
+	assert.Equal(t, []int64{sister, first}, []int64{list.Rows[0].ID, list.Rows[1].ID}, "totalPurchase sort")
+	assert.Equal(t, "11100.00", list.Rows[0].TotalPurchase, "clients.list_base")
+	filtered, err := repo.List(ctx, clients.ListFilter{Q: prefix, MinTotal: ptr("1"), Limit: 10})
+	require.NoError(t, err)
+	require.Len(t, filtered.Rows, 1, "minTotal filter")
+	assert.Equal(t, sister, filtered.Rows[0].ID)
+}
+
 // The total follows the PO lines.
 // A PO edited after acceptance is what is delivered and invoiced, so the
 // total, the minTotal filter and the totalPurchase sort read its lines; an

@@ -43,8 +43,10 @@ type scenarioState struct {
 	requestID int64
 	contactID int64
 	// Offer snapshot fixtures.
-	snap  snapshotState
-	clean *testutil.Cleaner
+	snap snapshotState
+	// The other holding member and its narahubung.
+	sister, sisterContact int64
+	clean                 *testutil.Cleaner
 }
 
 func (s *scenarioState) reset() error {
@@ -369,12 +371,14 @@ func initScenario(t *testing.T, clean *testutil.Cleaner) func(*godog.ScenarioCon
 			state.origID = 0
 			state.newID = 0
 			state.otherID, state.requestID, state.contactID = 0, 0, 0
+			state.sister, state.sisterContact = 0, 0
 			return ctx, nil
 		})
 		registerStatusSteps(sc, state)
 		registerEdgeSteps(sc, state)
 		registerRFQSteps(sc, state)
 		registerOfferSnapshotSteps(sc, state)
+		registerChangeClientSteps(sc, state)
 
 		sc.Step(`^an authenticated user with id (\d+)$`, func(id int64) error { return state.authenticatedUser(id) })
 		sc.Step(`^the quotation domain is empty$`, state.emptyDomain)

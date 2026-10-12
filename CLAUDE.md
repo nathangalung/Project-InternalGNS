@@ -55,7 +55,9 @@ management picks a role from a dropdown with an Indonesian label and hint
   and vendors, harga beli and harga jual. It edits drafts, sets selling
   prices and discounts, and downloads the quotation PDF, which is its last
   step; it runs a PO (file, number, notes, status, cancelling, the
-  delivery note's row notes) with superadmin (`roles.ManagesPOs`). It deletes an unused client or vendor
+  delivery note's row notes, its client and narahubung while Ubah PO is
+  open)
+  with superadmin (`roles.ManagesPOs`). It deletes an unused client or vendor
   for good (Hapus Permanen).
 - operational_input (Input Data Operasional): client data, client requests,
   harga beli and the catalog (products, photos, vendors, product links). It
@@ -69,11 +71,12 @@ management picks a role from a dropdown with an Indonesian label and hint
   toggle and a line save with `isAvailable` false are a 403
   (`ErrPricedNoOffer`, the price read after the quotation row lock, in the
   save's transaction), while its new lines may start unoffered and putting
-  a line back on offer stays open to it. On a PO it only views and keeps the purchase data
+  a line back on offer stays open to it. It moves a draft to another client
+  like any draft writer. On a PO it only views and keeps the purchase data
   current: in Ubah PO it changes harga beli and vendor of the stored lines,
   everything the client ordered stays as stored (`keepStoredSale`; each line
   carries its PO line `id`, adding or dropping one is a 403), and it neither
-  moves the PO nor touches its file, number, notes or delivery note
+  moves the PO nor touches its file, number, notes, client or delivery note
   notes. The storage proxy
   refuses it a PO document upload too. It deletes an unused client or
   vendor for good, as the heads do.
@@ -211,8 +214,10 @@ endpoints return the total count in the `X-Total-Count` header. A stale
 `If-Match` is a 409 from `httperr.VersionConflict()` with `code:
 "version_conflict"` (a PO lock carries `po_locked`); the web branches on the
 code through `lib/errors.ts`, never on the detail text. A PO's lines,
-details and notes writes refuse a request without `If-Match` with a 400,
-so no caller overwrites them unguarded.
+details, notes and client writes refuse a request without `If-Match` with
+a 400, so no caller overwrites them unguarded. A plpgsql validation raise
+(P0014) that names its input with `USING COLUMN = 'clientId'` renders as
+that field's 422 (`httperr.FromDBErr`); one without a column stays prose.
 
 Every query key a repo reads is listed in `db/queries/required.go`, and
 `Load()` fails at startup when one is missing; add the key in the same commit
@@ -328,6 +333,27 @@ shows a missing one as Belum ada No. PO.
   Revisi is not a manual move: Buat Revisi (`POST /quotations/{id}/revise`,
   offered when `canRevise`, i.e. from sent) clones a new draft version with
   `parent_id` and a `Rev.n` number and moves the original to revision.
+  A draft can move to another client, typically a company of the same
+  holding (no holding is stored): `PATCH /quotations/{id}/client`
+  (`{clientId, contactId?}`, `fn_quotation_update_client`) for every draft
+  writer, refused past draft with a 409 that names Buat Revisi, since the
+  PDF already reached that company; the revision's draft can move. It is a
+  header change (the caller's header claim, no `If-Match`, since every line
+  save bumps the draft's `row_version`) and notifies the open editors. It
+  locks the quotation row, then the client row `FOR SHARE`; a missing or
+  inactive client and a contact of another client or inactive are a 422
+  on `clientId` or `contactId`. The client name snapshot and the contact
+  are replaced (no `contactId` leaves none); the client's reference
+  (`client_ref_no`) stays, since it is free text the summary step still
+  edits, and so do the lines, prices and vendors (no recommendation is
+  rerun). A history row keeps the status (draft to draft) and notes
+  `Klien diganti dari <lama> menjadi <baru>`; the PDF date reads only a
+  draft to sent move, so it is unaffected. The edit page's step 1 offers
+  Ganti Klien (`ClientChangeModal`: the wizard's paged picker from
+  `useClientPicker`, then the new client's narahubung, completed on the
+  spot by `ContactCompletion`), claiming the header for itself and hidden
+  while another user holds it; a sent quotation's client card says to
+  revise instead.
   A quotation keeps its offer as it left draft: every move out of draft
   (and `fn_create_quotation` given a status past draft, and the historical
   seed) runs `fn_freeze_quotation_offer`, which copies each line's offered
@@ -355,15 +381,15 @@ shows a missing one as Belum ada No. PO.
   These figures ride on the list row as `json:"-"` fields, so the list
   JSON stays as it was.
   A saved draft is edited live, by several users at once, one part each.
-  The parts are the header (contact, client reference, shipping, terms,
-  discount) and each line (`line:<id>`); `POST /quotations/{id}/locks`
+  The parts are the header (client, contact, client reference, shipping,
+  terms, discount) and each line (`line:<id>`); `POST /quotations/{id}/locks`
   claims one for two
   minutes (`EditLockTTL`, renewed every 30 s by `useEditLocks`, which drops
   a claim only when the server refuses the renewal, a 4xx per
   `isFinalRefusal`, and keeps it through a network error or a 5xx for the
   next beat), and a part
   someone else holds is a 409 `edit_locked` whose detail names them. A line
-  save and the header save need the caller's claim; add, delete, the
+  save, the header save and a client change need the caller's claim; add, delete, the
   Tidak Ditawarkan toggle and a contact change
   (`fn_quotation_update_contact`) need the part free; the edit page claims
   the header when a contact is picked and sends it while holding the
@@ -454,6 +480,45 @@ shows a missing one as Belum ada No. PO.
   and then downloads, Unduh with no change only downloads, and a refusal
   shows in the dialog. Every other role, and the list's download button,
   downloads directly.
+  A PO carries its own client and narahubung (`company_client_id`,
+  `contact_id`), copied from the quotation on acceptance. The gate, the
+  invoice's contact and the payment reminder read the PO's contact (the
+  quotation's only for an invoice without a PO); 00116 first copied the
+  quotation's contact onto every PO still on the quotation's client, so
+  nothing shown changed. An accepted quotation's Ganti Narahubung also
+  sets its PO's contact while the PO keeps the quotation's client. The
+  roles that run the PO move it to another client, typically a company of
+  the same holding, with `PATCH /purchase-orders/{id}/client`
+  (`{clientId, contactId?}`, If-Match required, `fn_po_update_client`)
+  exactly while Ubah PO is open (`fn_po_lines_locked`): PENDING, UPLOADED
+  or ON_PROGRESS, and a DELIVERED PO while its invoice is cancelled and no
+  live invoice replaces it, so the Pengganti issued afterwards copies the
+  new client as it is at issue (cancelling the invoice and issuing a
+  Pengganti is how a bill to the wrong company of a holding is corrected).
+  A CANCELLED PO, a DELIVERED one with a live invoice or none at all, and
+  any PO with a live invoice are a 409 `po_locked`, since the invoice
+  copied the buyer, and the cancelled invoice keeps the buyer it was filed
+  with. It locks the PO row, then the
+  client row `FOR SHARE`, the gate's order; a missing or inactive client
+  and a contact of another client or inactive are a 422 on `clientId` or
+  `contactId`, and a PO number the new client already uses
+  (`uq_purchase_orders_client_po_number`) is a 422 on `clientId`. The same
+  client with another contact only changes the narahubung; nothing
+  changed is a no-op. Each change is a history row that keeps the status
+  and notes `Klien diganti dari <lama> menjadi <baru>` (or `Narahubung
+  diganti menjadi <nama>`, `Narahubung dikosongkan`). The quotation keeps
+  its own client. Everything that names the PO's client reads it live by
+  id: the list and its search, the delivery note's To and its Address
+  fallback, the gate, the invoice made at DELIVERED (`fn_create_invoice`
+  copies the buyer from the PO's client) and Total Pembelian, which counts
+  a deal for its PO's client (the quotation's while it has no PO). The PO
+  read carries `contactId`, `contactName`, `contactEmail` and
+  `contactPhone`, read by id even once deactivated, and the PO detail's
+  client card shows the PO's client and narahubung (only the client's
+  reference comes from the quotation). Its Ganti Klien opens the same
+  `ClientChangeModal` for `managesPOs` roles while `poClientEditable`
+  (not CANCELLED and not `linesLocked`, the same signal as Ubah PO), and
+  the gate's `contact_inactive` gap opens it too.
 - Invoice: draft, sent, paid, cancelled; overdue is stored only on legacy
   rows. Draft goes to sent; sent or overdue to paid, which stamps `paid_at`
   and takes an optional proof stored under `invoices/<id>/payment/`; marking
@@ -537,11 +602,12 @@ completes a picked one in place (`ContactCompletion`, step 1 waits for it).
 An active contact's email is unique within its client only
 (`idx_company_contacts_email`, 00102), since one person can serve two
 clients of a group. The client card on the quotation, PO and wizard pages
-shows the document's own contact: the quotation detail carries
-`contactEmail` and `contactPhone`, read by id like the PDF, and the card
-never borrows the company email or the client's first contact. The wizard's
-client rows name the client only, and its picker pages every active client
-by name ten at a time (`pickerWindow`), a search paging its hits the same way.
+shows the document's own contact: the quotation detail and the PO read
+carry `contactEmail` and `contactPhone`, read by id like the PDF, and the
+card never borrows the company email or the client's first contact. The
+wizard's client rows name the client only, and its picker
+(`useClientPicker`, shared with Ganti Klien) pages every active client by
+name ten at a time (`pickerWindow`), a search paging its hits the same way.
 
 Two web links follow one rule. A vendor link's `product_url` is where the
 vendor sells that product (Link Produk), and a vendor's own `store_url`

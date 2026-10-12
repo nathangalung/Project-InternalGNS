@@ -10,6 +10,7 @@ import {
   downloadQuotationPdf,
   exportQuotationsXlsx,
   LOCK_HEARTBEAT_MS,
+  useChangeQuotationClient,
   useChangeQuotationStatus,
   useCreateQuotation,
   useDeleteQuotationRequest,
@@ -94,6 +95,19 @@ describe("quotation writes", () => {
     seed(qc, [...deps, poList])
     await settle(() => result.current.mutateAsync({} as never))
     expect(invalidated(qc, [...deps, poList])).toEqual(deps)
+  })
+
+  it("a client move refreshes the same caches and leaves refusals to the dialog", async () => {
+    m.changeClient.mockResolvedValue()
+    const { qc, result } = renderQueryHook(() => useChangeQuotationClient())
+    seed(qc, deps)
+    await settle(() => result.current.mutateAsync({ id: 5, input: { clientId: 8, contactId: 2 } }))
+    expect(m.changeClient).toHaveBeenCalledWith(5, { clientId: 8, contactId: 2 })
+    expect(invalidated(qc, deps)).toEqual(deps)
+
+    m.changeClient.mockRejectedValue(new Error("ditolak"))
+    await settle(() => result.current.mutateAsync({ id: 5, input: { clientId: 8 } }))
+    expect(toast.error).not.toHaveBeenCalled()
   })
 
   it("revise refreshes the same caches", async () => {

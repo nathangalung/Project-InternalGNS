@@ -64,6 +64,14 @@ type PurchaseOrder struct {
 	// replaced (fn_po_lines_locked).
 	LinesLocked bool `db:"lines_locked" json:"linesLocked"`
 
+	// The PO's own narahubung.
+	// Copied from the quotation on acceptance, then changed with the client.
+	// Read by id, so a deactivated contact keeps its name and channels.
+	ContactID    *int64  `db:"contact_id"    json:"contactId,omitempty"`
+	ContactName  *string `db:"contact_name"  json:"contactName,omitempty"`
+	ContactEmail *string `db:"contact_email" json:"contactEmail,omitempty"`
+	ContactPhone *string `db:"contact_phone" json:"contactPhone,omitempty"`
+
 	// Moves the caller may offer.
 	// Each starts from Status.
 	AllowedTransitions []Transition `db:"-" json:"allowedTransitions"`
@@ -151,6 +159,14 @@ type DeliveryNoteLineNote struct {
 type UpdateDetailsRequest struct {
 	PoNumber string `json:"poNumber"`
 	PoDate   string `json:"poDate"` // YYYY-MM-DD
+}
+
+// ChangeClientRequest moves the PO.
+// The contact must be the new client's own; none leaves the PO without one.
+// The same client with another contact only changes the contact.
+type ChangeClientRequest struct {
+	ClientID  int64  `json:"clientId"`
+	ContactID *int64 `json:"contactId,omitempty"`
 }
 
 // PO direct edit payload.

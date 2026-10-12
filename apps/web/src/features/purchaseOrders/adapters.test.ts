@@ -389,6 +389,17 @@ describe("poHistoryEntry", () => {
     )
   })
 
+  it("shows a client change by its note alone", () => {
+    const note = "Klien diganti dari PT Lama menjadi PT Baru"
+    const row = { ...ev, fromStatus: "UPLOADED", toStatus: "UPLOADED", note } as const
+    expect(poHistoryEntry(row, "Admin").action).toBe(note)
+  })
+
+  it("names a same-status row without a note by its status", () => {
+    const row = { ...ev, fromStatus: "UPLOADED", toStatus: "UPLOADED" } as const
+    expect(poHistoryEntry(row).action).toBe("PO Diunggah")
+  })
+
   it("keeps a backfill note", () => {
     expect(poHistoryEntry({ ...ev, note: "Status saat riwayat mulai dicatat" }).action).toBe(
       "Pending: Status saat riwayat mulai dicatat",

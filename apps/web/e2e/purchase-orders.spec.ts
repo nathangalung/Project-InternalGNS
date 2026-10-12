@@ -913,7 +913,7 @@ test.describe("purchase order address gaps", () => {
 })
 
 test.describe("purchase order contact gap", () => {
-  test("a deactivated narahubung is re-picked on the quotation, then the PO passes", async ({
+  test("a deactivated narahubung is re-picked on the PO, then the PO passes", async ({
     page,
     seed,
   }) => {
@@ -933,20 +933,22 @@ test.describe("purchase order contact gap", () => {
       "href",
       `/clients/${client.id}`,
     )
-    await modal.getByRole("link", { name: "Ganti Narahubung" }).click()
+    await modal.getByRole("button", { name: "Ganti Narahubung" }).click()
 
-    await expect(page).toHaveURL(new RegExp(`/quotations/${q.id}\\?narahubung=true$`))
-    const picker = page.getByRole("dialog", { name: "Ganti Narahubung" })
-    await picker.getByRole("button", { name: new RegExp(replacement) }).click()
-    await picker.getByRole("button", { name: "Simpan", exact: true }).click()
+    // The PO's own client stays picked; only its narahubung changes.
+    const picker = page.getByRole("dialog", { name: "Ganti Klien" })
+    await picker.getByRole("button").filter({ hasText: replacement }).click()
+    await picker.getByRole("button", { name: "Simpan Klien" }).click()
     await expect(picker).toBeHidden()
-    await expect.poll(async () => (await seed.getQuotation(q.id)).contactId).toBe(replacementId)
+    await expect.poll(async () => (await seed.poByQuotation(q.id)).contactId).toBe(replacementId)
+    await expect(page.getByText(`Narahubung diganti menjadi ${replacement}`)).toBeVisible()
+    const card = page.getByRole("heading", { name: "Ringkasan Klien" }).locator("xpath=..")
     await expect(
-      page.getByText("Narahubung", { exact: true }).locator("xpath=following-sibling::*[1]"),
+      card.getByText("Narahubung", { exact: true }).locator("xpath=following-sibling::*[1]"),
     ).toHaveText(replacement)
 
-    await page.goto(`/purchase-orders/${q.id}`)
-    await choosePoStatus(page, "PO Diunggah", "Dalam Progres")
+    // The refused move is still picked, so saving it again passes the gate.
+    await page.getByRole("button", { name: "Simpan Data" }).click()
     await expect(page).toHaveURL(/\/purchase-orders$/)
     expect((await seed.poByQuotation(q.id)).status).toBe("ON_PROGRESS")
   })
@@ -965,7 +967,8 @@ test.describe("purchase order contact gap", () => {
       return route.fulfill({ status: 500, contentType: "application/problem+json", body: "{}" })
     })
 
-    await page.goto(`/quotations/${q.id}?narahubung=true`)
+    await page.goto(`/quotations/${q.id}`)
+    await page.getByRole("button", { name: "Ganti Narahubung" }).click()
     const picker = page.getByRole("dialog", { name: "Ganti Narahubung" })
     await expect(picker.getByRole("alert")).toContainText("Gagal memuat narahubung.")
     await expect(picker.getByText(/belum memiliki narahubung aktif/)).toHaveCount(0)
@@ -974,5 +977,118 @@ test.describe("purchase order contact gap", () => {
       picker.getByRole("button", { name: new RegExp(`${seed.prefix} Narahubung`) }),
     ).toBeVisible()
     await expect(picker.getByRole("alert")).toHaveCount(0)
+  })
+})
+
+// Pick a client and narahubung.
+async function pickClient(page: Page, client: SeedClient, contact: string): Promise<void> {
+  const dialog = page.getByRole("dialog", { name: "Ganti Klien" })
+  await dialog.getByRole("textbox", { name: "Cari klien" }).fill(client.name)
+  await dialog.getByRole("button").filter({ hasText: client.name }).click()
+  await dialog.getByRole("button").filter({ hasText: contact }).click()
+  await dialog.getByRole("button", { name: "Simpan Klien" }).click()
+}
+
+test.describe("purchase order client", () => {
+  test("the heads move an open PO to a sister company and delivery bills it", async ({
+    page,
+    seed,
+  }) => {
+    const { client, q } = await acceptedPo(seed)
+    const sister = await seed.client({ label: "Klien Saudara" })
+    const sari = `${seed.prefix} Ibu Sari`
+    const sariId = await seed.contact(sister, sari)
+
+    await page.goto(`/purchase-orders/${q.id}`)
+    const card = page.getByRole("heading", { name: "Ringkasan Klien" }).locator("xpath=..")
+    await card.getByRole("button", { name: "Ganti Klien" }).click()
+    await pickClient(page, sister, sari)
+    await expect(page.getByRole("dialog", { name: "Ganti Klien" })).toBeHidden()
+    await expect(card.getByRole("link", { name: sister.name })).toHaveAttribute(
+      "href",
+      `/clients/${sister.id}`,
+    )
+    await expect(card).toContainText(sari)
+    await expect(
+      page.getByText(`Klien diganti dari ${client.name} menjadi ${sister.name}`),
+    ).toBeVisible()
+
+    const moved = await seed.poByQuotation(q.id)
+    expect(moved).toMatchObject({ companyClientId: sister.id, contactId: sariId })
+    expect((await seed.getQuotation(q.id)).companyClientId).toBe(client.id)
+
+    // Delivery bills the sister and closes the change.
+    const invoice = await seed.deliver(moved)
+    expect(invoice).toMatchObject({ companyClientId: sister.id, companyName: sister.name })
+    expect(invoice.contactName).toBe(sari)
+    await page.reload()
+    await expect(card.getByRole("link", { name: sister.name })).toBeVisible()
+    await expect(card.getByRole("button", { name: "Ganti Klien" })).toHaveCount(0)
+  })
+
+  test("a cancelled invoice reopens the change and the Pengganti bills the sister", async ({
+    page,
+    seed,
+  }) => {
+    const { client, q, po } = await acceptedPo(seed)
+    const invoice = await seed.deliver(po)
+    const sister = await seed.client({ label: "Klien Saudara" })
+    const sari = `${seed.prefix} Ibu Sari`
+    await seed.contact(sister, sari)
+    await page.goto(`/purchase-orders/${q.id}`)
+    const card = page.getByRole("heading", { name: "Ringkasan Klien" }).locator("xpath=..")
+    await expect(card.getByRole("link", { name: client.name })).toBeVisible()
+    await expect(card.getByRole("button", { name: "Ganti Klien" })).toHaveCount(0)
+
+    await api("PATCH", `/invoices/${invoice.id}/status`, {
+      status: "cancelled",
+      note: "Klien salah",
+    })
+    await page.reload()
+    await card.getByRole("button", { name: "Ganti Klien" }).click()
+    await pickClient(page, sister, sari)
+    await expect(page.getByRole("dialog", { name: "Ganti Klien" })).toBeHidden()
+    await expect(card.getByRole("link", { name: sister.name })).toBeVisible()
+
+    const pengganti = await api<{
+      companyClientId: number
+      companyName: string
+      contactName?: string
+    }>("POST", `/invoices/${invoice.id}/replacement`)
+    expect(pengganti).toMatchObject({
+      companyClientId: sister.id,
+      companyName: sister.name,
+      contactName: sari,
+    })
+    await page.reload()
+    await expect(card.getByRole("button", { name: "Ganti Klien" })).toHaveCount(0)
+  })
+
+  test("a PO number the sister already uses keeps the dialog open", async ({ page, seed }) => {
+    const { q, po } = await acceptedPo(seed)
+    const sister = await seed.client({ label: "Klien Saudara" })
+    await acceptedPo(seed, { client: sister, poNumber: po.poNumber })
+
+    await page.goto(`/purchase-orders/${q.id}`)
+    await page.getByRole("button", { name: "Ganti Klien" }).click()
+    await pickClient(page, sister, `${seed.prefix} Narahubung`)
+    const dialog = page.getByRole("dialog", { name: "Ganti Klien" })
+    await expect(dialog.getByRole("alert")).toHaveText(
+      "No. PO ini sudah dipakai PO lain milik klien tersebut. Ubah No. PO dulu atau pilih klien lain.",
+    )
+    await expect(dialog).toBeVisible()
+    expect((await seed.poByQuotation(q.id)).companyClientId).not.toBe(sister.id)
+  })
+
+  test.describe("as operational input", () => {
+    test.use({ session: "operational_input" })
+
+    test("the PO's client is read-only", async ({ page, seed }) => {
+      const { client, q } = await acceptedPo(seed)
+      await page.goto(`/purchase-orders/${q.id}`)
+      const card = page.getByRole("heading", { name: "Ringkasan Klien" }).locator("xpath=..")
+      await expect(card.getByRole("link", { name: client.name })).toBeVisible()
+      await expect(card.getByRole("button", { name: "Ganti Klien" })).toHaveCount(0)
+    })
   })
 })

@@ -44,6 +44,8 @@ func Routes(d deps.Deps) chi.Router {
 	r.With(header).Delete("/{id}/file", h.RemoveFile)
 	r.With(header).Patch("/{id}/notes", h.UpdateNotes)
 	r.With(header).Patch("/{id}/details", h.UpdateDetails)
+	// Another client of the same holding, until delivery.
+	r.With(header).Patch("/{id}/client", h.ChangeClient)
 	// The delivery note's row notes, written by the roles that run the PO.
 	r.With(header).Patch("/{id}/delivery-note", h.UpdateDeliveryNote)
 	r.Put("/{id}/items", h.UpdateItems)

@@ -308,6 +308,19 @@ func (r *Repo) UpdateContact(ctx context.Context, id, contactID, userID int64) e
 	return nil
 }
 
+// UpdateClient moves a draft to a client.
+// The client is part of the header, so the caller must hold its claim; the
+// contact is replaced with it and the change is announced to open editors.
+// Refusals are raises: P0011, P0013 past draft, P0015 for the claim, and
+// P0014 naming clientId or contactId.
+func (r *Repo) UpdateClient(ctx context.Context, id, clientID int64, contactID *int64, userID int64) error {
+	_, err := r.db.Exec(ctx, r.store.Get("quotations.update_client"), id, clientID, contactID, userID)
+	if err != nil {
+		return fmt.Errorf("update quotation %d client: %w", id, err)
+	}
+	return nil
+}
+
 // ListRevisions returns the version chain.
 // It covers every parent and child, ordered by version.
 // Empty slice when id is unknown.

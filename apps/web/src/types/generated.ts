@@ -527,6 +527,12 @@ export type ObjectKeyInput = {
 // From purchaseorders/dto.go
 export type PoBackendStatus = "CANCELLED" | "DELIVERED" | "ON_PROGRESS" | "PENDING" | "UPLOADED";
 
+// From purchaseorders/dto.go
+export type PoClientInput = {
+    clientId: number;
+    contactId?: number;
+};
+
 // From purchaseorders/completeness.go
 export type PoCompletenessGap = {
     code: PoGapCode;
@@ -731,12 +737,22 @@ export type PurchaseOrderRow = {
     legacyDnNo?: string;
     invoiceNo?: string;
     linesLocked: boolean;
+    contactId?: number;
+    contactName?: string;
+    contactEmail?: string;
+    contactPhone?: string;
     allowedTransitions: PoTransition[];
 };
 
 // From quotations/dto.go
 export type QuotationAddLinesInput = {
     items: QuotationItemInput[];
+};
+
+// From quotations/dto.go
+export type QuotationClientInput = {
+    clientId: number;
+    contactId?: number;
 };
 
 // From quotations/dto.go

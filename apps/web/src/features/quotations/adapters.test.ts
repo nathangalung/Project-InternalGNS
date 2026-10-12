@@ -122,6 +122,15 @@ describe("historyAction wording", () => {
   it("omits an empty note", () => {
     expect(historyAction(event({ fromStatus: "draft", toStatus: "sent" }))).toBe("Draf → Dikirim")
   })
+
+  it("shows a client change by its note alone", () => {
+    const note = "Klien diganti dari PT Lama menjadi PT Baru"
+    expect(historyAction(event({ fromStatus: "draft", toStatus: "draft", note }))).toBe(note)
+  })
+
+  it("names a same-status row without a note by its status", () => {
+    expect(historyAction(event({ fromStatus: "draft", toStatus: "draft" }))).toBe("Draf")
+  })
 })
 
 describe("toQuotationData offered item", () => {

@@ -104,7 +104,7 @@ test.describe("live quotation editing", () => {
       await toStep(page, 4)
       await expect(
         page.getByText(
-          `Narahubung, pengiriman, tenggat waktu dan diskon sedang diubah oleh ${operationalName}`,
+          `Klien, narahubung, pengiriman, tenggat waktu dan diskon sedang diubah oleh ${operationalName}`,
         ),
       ).toBeVisible()
       await expect(page.getByLabel(/BERLAKU SAMPAI/)).toBeDisabled()
@@ -144,7 +144,7 @@ test.describe("live quotation editing", () => {
       await page.goto(`/quotations/${q.id}/edit`)
       await expect(
         page.getByText(
-          `Narahubung, pengiriman, tenggat waktu dan diskon sedang diubah oleh ${operationalName}`,
+          `Klien, narahubung, pengiriman, tenggat waktu dan diskon sedang diubah oleh ${operationalName}`,
         ),
       ).toBeVisible()
       const pick = page.getByRole("button", { name: new RegExp(`^${second}`) })
@@ -160,6 +160,48 @@ test.describe("live quotation editing", () => {
       await expect.poll(async () => (await seed.getQuotation(q.id)).contactId).toBe(secondId)
       await expect(pick).toHaveAttribute("aria-pressed", "true")
       await expect(pick).toBeEnabled()
+    } finally {
+      await other.close()
+    }
+  })
+
+  test("a client change waits for the header and shows up live", async ({
+    browser,
+    page,
+    seed,
+  }) => {
+    const client = await seed.client()
+    const sister = await seed.client({ label: "Klien Saudara" })
+    const item = await seed.item()
+    const q = await seed.quotation({ client, lines: [{ item, qty: 1, price: 25_000 }] })
+    const other = await secondEditor(browser)
+    try {
+      await other.page.goto(`/quotations/${q.id}/edit`)
+      const theirChange = other.page.getByRole("button", { name: "Ganti Klien" })
+      await expect(theirChange).toBeVisible()
+
+      // Opening Ganti Klien claims the header, so the other page waits.
+      await page.goto(`/quotations/${q.id}/edit`)
+      await page.getByRole("button", { name: "Ganti Klien" }).click()
+      await expect(
+        other.page.getByText(/^Klien, narahubung, pengiriman, tenggat waktu dan diskon sedang/),
+      ).toBeVisible()
+      await expect(theirChange).toHaveCount(0)
+
+      const dialog = page.getByRole("dialog", { name: "Ganti Klien" })
+      await dialog.getByRole("textbox", { name: "Cari klien" }).fill(sister.name)
+      await dialog.getByRole("button").filter({ hasText: sister.name }).click()
+      await dialog
+        .getByRole("button")
+        .filter({ hasText: `${seed.prefix} Narahubung` })
+        .click()
+      await dialog.getByRole("button", { name: "Simpan Klien" }).click()
+      await expect(dialog).toBeHidden()
+
+      // The move and the freed header reach the other page without a reload.
+      await expect(other.page.getByRole("button").filter({ hasText: sister.name })).toBeVisible()
+      await expect(theirChange).toBeVisible()
+      await expect.poll(async () => (await seed.getQuotation(q.id)).companyClientId).toBe(sister.id)
     } finally {
       await other.close()
     }

@@ -38,14 +38,19 @@ type Step1ClientProps = {
   filteredClients: Client[]
   selectedClient: string
   setSelectedClient: (id: string) => void
-  setShowClientAdd: (show: boolean) => void
+  // Offers Tambah Klien Baru
+  setShowClientAdd?: (show: boolean) => void
   contacts?: ContactRow[]
   selectedContactId?: number | undefined
   setSelectedContactId?: (id: number | undefined) => void
-  // Edit mode: the client is fixed
+  // Edit mode: the stored client only
   lockClient?: boolean
+  // Edit mode: opens Ganti Klien
+  onChangeClient?: () => void
   // Edit mode: header held elsewhere
   contactReadOnly?: boolean
+  // False inside a dialog, which has its own title
+  heading?: boolean
   // Failed client lookup
   clientsFailure?: LookupFailure | null
   // Add mode pages the list
@@ -70,45 +75,58 @@ export default function Step1Client({
   selectedContactId,
   setSelectedContactId,
   lockClient = false,
+  onChangeClient,
   contactReadOnly = false,
+  heading = true,
   clientsFailure = null,
   picker,
 }: Step1ClientProps) {
   const picked = contacts.find((c) => c.id === selectedContactId)
   return (
     <div className={qe.stepContent}>
-      <div className={qe.sectionHeader}>
-        <div>
-          <h2 className={qe.sectionTitle}>Pilih Klien Strategis</h2>
-          <p className={qe.sectionDesc}>
-            {lockClient
-              ? "Klien tidak dapat diganti setelah quotation dibuat. Narahubung masih dapat diubah."
-              : "Pilih klien untuk quotation ini."}
-          </p>
-        </div>
-        {!lockClient && (
-          <button
-            type="button"
-            className={`${qe.addBtn} w-[210px] justify-center`}
-            onClick={() => setShowClientAdd(true)}
-          >
-            <svg
-              aria-hidden="true"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+      {heading && (
+        <div className={qe.sectionHeader}>
+          <div>
+            <h2 className={qe.sectionTitle}>Pilih Klien Strategis</h2>
+            <p className={qe.sectionDesc}>
+              {lockClient
+                ? "Ganti Klien bila quotation ini untuk perusahaan lain. Narahubung masih dapat diubah."
+                : "Pilih klien untuk quotation ini."}
+            </p>
+          </div>
+          {lockClient && onChangeClient && (
+            <button
+              type="button"
+              className={`${qe.addBtn} w-[210px] justify-center`}
+              onClick={onChangeClient}
             >
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            Tambah Klien Baru
-          </button>
-        )}
-      </div>
+              Ganti Klien
+            </button>
+          )}
+          {!lockClient && setShowClientAdd && (
+            <button
+              type="button"
+              className={`${qe.addBtn} w-[210px] justify-center`}
+              onClick={() => setShowClientAdd(true)}
+            >
+              <svg
+                aria-hidden="true"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              Tambah Klien Baru
+            </button>
+          )}
+        </div>
+      )}
 
       {!lockClient && (
         <div className={searchWrapper}>

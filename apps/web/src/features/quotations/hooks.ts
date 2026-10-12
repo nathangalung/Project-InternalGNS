@@ -15,6 +15,7 @@ import { followEventStream, isFinalRefusal } from "@/lib/event-stream"
 import { queryKeys } from "@/lib/query-keys"
 import { toast } from "@/lib/toast"
 import type {
+  QuotationClientInput,
   QuotationEditLock,
   QuotationItemRequestCreateInput,
   QuotationItemRequestUpdateInput,
@@ -116,6 +117,19 @@ export function useUpdateQuotationContact() {
       quotationsApi.updateQuotationContact(id, contactId),
     onSuccess: () => invalidateQuotationDeps(qc),
     onError: (err) => toast.error(errorMessage(err, "Gagal mengubah narahubung quotation.")),
+  })
+}
+
+// Ganti Klien on a draft.
+//
+// The dialog shows every refusal, so nothing is toasted. The client pages
+// count quotations, so they refresh with the lists.
+export function useChangeQuotationClient() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, input }: { id: number; input: QuotationClientInput }) =>
+      quotationsApi.changeClient(id, input),
+    onSuccess: () => invalidateQuotationDeps(qc),
   })
 }
 
