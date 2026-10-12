@@ -1,6 +1,6 @@
 % Delivery note template, rendered via text/template.
 % Compile: xelatex DeliveryNote.tex
-% Mirrors PO content. No prices. Lists product, qty, ship destination.
+% Mirrors PO content. No prices. Lists product, qty and a note per row.
 
 % Portrait: two signature blocks need the height.
 \documentclass[a4paper]{article}
@@ -137,7 +137,7 @@
 \newlength{\DNcol}\setlength{\DNcol}{0.8cm}
 \newlength{\DQcol}\setlength{\DQcol}{1.2cm}
 \newlength{\DUcol}\setlength{\DUcol}{1.2cm}
-% Item and destination share what is left, so the table spans the text width.
+% Item and notes share what is left, so the table spans the text width.
 \newlength{\DFlex}\setlength{\DFlex}{\dimexpr\textwidth-\DNcol-\DQcol-\DUcol-10\tabcolsep-6\arrayrulewidth\relax}
 \newlength{\DIcol}\setlength{\DIcol}{0.62\DFlex}
 \newlength{\DScol}\setlength{\DScol}{\dimexpr\DFlex-\DIcol\relax}
@@ -148,7 +148,7 @@
 \multicolumn{1}{c|}{\DocCellSize\bfseries Qty} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Unit} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Item} &
-\multicolumn{1}{c|}{\DocCellSize\bfseries Tujuan / Notes} \\
+\multicolumn{1}{c|}{\DocCellSize\bfseries Notes} \\
 \hline
 \endfirsthead
 
@@ -157,7 +157,7 @@
 \multicolumn{1}{c|}{\DocCellSize\bfseries Qty} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Unit} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Item} &
-\multicolumn{1}{c|}{\DocCellSize\bfseries Tujuan / Notes} \\
+\multicolumn{1}{c|}{\DocCellSize\bfseries Notes} \\
 \hline
 \endhead
 
@@ -168,7 +168,7 @@
 \endlastfoot
 
 [[range .Items]]
-[[.No]] & [[.Qty]] & [[.Unit]] & [[.Name]] & [[.ShipDestination]] \\
+[[.No]] & [[.Qty]] & [[.Unit]] & [[.Name]] & [[.Note]] \\
 \hline
 [[end]]
 

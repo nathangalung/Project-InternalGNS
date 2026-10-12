@@ -155,7 +155,8 @@ SELECT poi.id,
        poi.vendor_product_id,
        v.id   AS vendor_id,
        v.name AS vendor_name,
-       vp.product_url
+       vp.product_url,
+       poi.dn_note
 FROM purchase_order_items poi
 LEFT JOIN units u ON u.id = poi.unit_id
 LEFT JOIN vendor_products vp ON vp.id = poi.vendor_product_id
@@ -246,6 +247,18 @@ SELECT fn_update_po_notes($1::bigint, $2::int, $3::text, $4::bigint);
 -- $2 is the If-Match row_version. The handler requires it. NULL, which skips
 -- the optimistic-lock guard, is left to seeding callers.
 SELECT fn_update_po_details($1::bigint, $2::int, $3::text, $4::date, $5::bigint);
+
+-- name: purchase_orders.update_dn_notes
+-- $2 is the If-Match row_version. The handler requires it. $3 is a JSON
+-- array of {lineId, note}.
+SELECT fn_update_po_dn_notes($1::bigint, $2::int, $3::jsonb, $4::bigint);
+
+-- name: purchase_orders.client_address
+-- The client's own address, the delivery note's last resort; $1=po id.
+SELECT cc.address
+FROM purchase_orders po
+JOIN company_client cc ON cc.id = po.company_client_id
+WHERE po.id = $1;
 
 -- name: purchase_orders.change_status
 -- $4 is the note; CANCELLED requires one.

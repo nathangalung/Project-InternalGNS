@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/go-chi/chi/v5"
 
@@ -175,10 +176,94 @@ func (h *Handler) ListItems(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
+	// The client's address is read only when the lines name no one place.
+	address, ok := linesAddress(items)
+	if !ok {
+		address, err = h.repo.ClientAddress(r.Context(), id)
+		if err != nil && !errors.Is(err, ErrNotFound) {
+			httperr.RenderDBErrCtx(r.Context(), w, err)
+			return
+		}
+	}
+	withNoteDefaults(items, address)
 	for i := range items {
 		items[i].redact(deps.CurrentUserRole(r.Context()))
 	}
 	httpx.WriteJSON(w, http.StatusOK, items)
+}
+
+// UpdateDeliveryNote saves the Notes column.
+// Only the rows sent change. The note exists from ON_PROGRESS on, so any
+// other status is a lock refusal.
+func (h *Handler) UpdateDeliveryNote(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	ifMatch, err := httpx.ParseIfMatch(r.Header.Get("If-Match"))
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest(err.Error()))
+		return
+	}
+	if ifMatch == nil {
+		httperr.Render(w, httperr.BadRequest("If-Match header required"))
+		return
+	}
+	var req UpdateDeliveryNoteRequest
+	if !httpx.DecodeJSON(w, r, &req) {
+		return
+	}
+	if fields := validateDeliveryNotes(req.Notes); fields != nil {
+		httperr.Render(w, httperr.Unprocessable(fields))
+		return
+	}
+	actor := deps.CurrentUserID(r.Context())
+	v, err := h.repo.UpdateDeliveryNotes(r.Context(), id, req.Notes, actor, ifMatch)
+	if err != nil {
+		switch {
+		case errors.Is(err, ErrNotFound):
+			httperr.Render(w, httperr.NotFound("purchase order not found"))
+		case errors.Is(err, ErrVersionMismatch):
+			httperr.Render(w, httperr.VersionConflict())
+		case errors.Is(err, ErrLocked):
+			renderLocked(w, err.Error())
+		default:
+			httperr.RenderDBErrCtx(r.Context(), w, err)
+		}
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, UpdatedResponse{ID: id, RowVersion: v})
+}
+
+// maxDeliveryNote caps one row's note.
+// It matches purchase_order_items.dn_note.
+const maxDeliveryNote = 500
+
+// validateDeliveryNotes checks and trims notes.
+// Each line appears once; an empty note is kept as a cleared one.
+func validateDeliveryNotes(notes []DeliveryNoteLineNote) map[string]string {
+	if len(notes) == 0 {
+		return map[string]string{"notes": "Isi catatan untuk minimal satu baris."}
+	}
+	f := validate.Fields{}
+	seen := make(map[int64]bool, len(notes))
+	for i := range notes {
+		key := "notes[" + strconv.Itoa(i) + "]."
+		n := &notes[i]
+		n.Note = strings.TrimSpace(n.Note)
+		switch {
+		case n.LineID <= 0:
+			f.Add(key+"lineId", "Baris surat jalan tidak dikenal. Muat ulang halaman.")
+		case seen[n.LineID]:
+			f.Add(key+"lineId", "Baris ini terkirim dua kali.")
+		}
+		seen[n.LineID] = true
+		if utf8.RuneCountInString(n.Note) > maxDeliveryNote {
+			f.Add(key+"note", fmt.Sprintf("Catatan paling banyak %d karakter.", maxDeliveryNote))
+		}
+	}
+	return f.Result()
 }
 
 func (h *Handler) UpdateFile(w http.ResponseWriter, r *http.Request) {

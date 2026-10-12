@@ -218,6 +218,39 @@ func (r *Repo) UpdateDetails(
 	return nil
 }
 
+// UpdateDeliveryNotes saves row notes.
+// It returns the new row_version. The handler refuses a request without
+// If-Match, so ifMatch nil, which skips the guard, comes only from seeding
+// callers.
+func (r *Repo) UpdateDeliveryNotes(
+	ctx context.Context, id int64, notes []DeliveryNoteLineNote, actorID int64, ifMatch *int32,
+) (int32, error) {
+	payload, err := json.Marshal(notes)
+	if err != nil {
+		return 0, err
+	}
+	var v int32
+	err = r.db.QueryRow(ctx, r.store.Get("purchase_orders.update_dn_notes"), id, ifMatch, payload, actorID).Scan(&v)
+	if err != nil {
+		return 0, classifyPgErr(err)
+	}
+	return v, nil
+}
+
+// ClientAddress reads the client's address.
+// A missing PO is ErrNotFound; a client with none reads "".
+func (r *Repo) ClientAddress(ctx context.Context, poID int64) (string, error) {
+	var addr *string
+	err := r.db.QueryRow(ctx, r.store.Get("purchase_orders.client_address"), poID).Scan(&addr)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrNotFound
+	}
+	if err != nil || addr == nil {
+		return "", err
+	}
+	return *addr, nil
+}
+
 func (r *Repo) ListItems(ctx context.Context, poID int64) ([]PurchaseOrderItem, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("purchase_orders.list_items"), poID)
 	if err != nil {
