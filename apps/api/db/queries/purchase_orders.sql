@@ -31,10 +31,16 @@ SELECT po.id,
        COALESCE(t.po_total_discount::text, '0')   AS po_total_discount,
        po.row_version,
        po.created_at,
-       po.updated_at
+       po.updated_at,
+       po.contact_id,
+       ct.name  AS contact_name,
+       ct.email AS contact_email,
+       ct.phone AS contact_phone
 FROM purchase_orders po
 JOIN quotations q ON q.id = po.quotation_id
 JOIN company_client cc ON cc.id = po.company_client_id
+-- The PO's own narahubung, read by id even once deactivated.
+LEFT JOIN company_contacts ct ON ct.id = po.contact_id
 -- Totals per paged row through the (po_id, line_number) key. OFFSET 0
 -- keeps the planner from flattening this into a join that aggregates every
 -- PO line on each page load; the count keeps the plain join, which it drops
@@ -83,10 +89,16 @@ SELECT po.id,
        COALESCE(t.po_total_discount::text, '0')   AS po_total_discount,
        po.row_version,
        po.created_at,
-       po.updated_at
+       po.updated_at,
+       po.contact_id,
+       ct.name  AS contact_name,
+       ct.email AS contact_email,
+       ct.phone AS contact_phone
 FROM purchase_orders po
 JOIN quotations q ON q.id = po.quotation_id
 JOIN company_client cc ON cc.id = po.company_client_id
+-- The PO's own narahubung, read by id even once deactivated.
+LEFT JOIN company_contacts ct ON ct.id = po.contact_id
 LEFT JOIN v_po_totals t ON t.po_id = po.id
 WHERE po.id = $1;
 
@@ -123,10 +135,16 @@ SELECT po.id,
        COALESCE(t.po_total_discount::text, '0')   AS po_total_discount,
        po.row_version,
        po.created_at,
-       po.updated_at
+       po.updated_at,
+       po.contact_id,
+       ct.name  AS contact_name,
+       ct.email AS contact_email,
+       ct.phone AS contact_phone
 FROM purchase_orders po
 JOIN quotations q ON q.id = po.quotation_id
 JOIN company_client cc ON cc.id = po.company_client_id
+-- The PO's own narahubung, read by id even once deactivated.
+LEFT JOIN company_contacts ct ON ct.id = po.contact_id
 LEFT JOIN v_po_totals t ON t.po_id = po.id
 WHERE po.quotation_id = $1;
 
@@ -168,9 +186,9 @@ ORDER BY poi.line_number;
 -- name: purchase_orders.completeness_client
 -- The PO's own number and the client master data its documents need;
 -- $1=po id.
--- The narahubung is the quotation's chosen contact, even when it has since
--- been deactivated, so the gate can say so; only a quotation with no chosen
--- contact falls back to the client's first active one.
+-- The narahubung is the PO's own contact, even when it has since been
+-- deactivated, so the gate can say so; only a PO with no contact falls back
+-- to the client's first active one.
 -- The client row is share-locked: under the move's transaction a client
 -- edit waits for the move, so DELIVERED copies the client the gate passed.
 SELECT po.po_number,
@@ -186,13 +204,12 @@ SELECT po.po_number,
        COALESCE(NOT co.is_active, FALSE) AS contact_inactive
 FROM purchase_orders po
 JOIN company_client cc ON cc.id = po.company_client_id
-LEFT JOIN quotations q ON q.id = po.quotation_id
 LEFT JOIN LATERAL (
     SELECT name, email, phone, is_active
     FROM company_contacts
     WHERE company_id = cc.id
-      AND CASE WHEN q.contact_id IS NULL THEN is_active = TRUE
-               ELSE id = q.contact_id END
+      AND CASE WHEN po.contact_id IS NULL THEN is_active = TRUE
+               ELSE id = po.contact_id END
     ORDER BY id ASC
     LIMIT 1
 ) co ON TRUE
@@ -253,6 +270,11 @@ SELECT fn_update_po_details($1::bigint, $2::int, $3::text, $4::date, $5::bigint)
 -- $2 is the If-Match row_version. The handler requires it. $3 is a JSON
 -- array of {lineId, note}.
 SELECT fn_update_po_dn_notes($1::bigint, $2::int, $3::jsonb, $4::bigint);
+
+-- name: purchase_orders.update_client
+-- $2 is the If-Match row_version. The handler requires it. $4 is the new
+-- contact, NULL for none.
+SELECT fn_po_update_client($1::bigint, $2::int, $3::bigint, $4::bigint, $5::bigint);
 
 -- name: purchase_orders.client_address
 -- The client's own address, the delivery note's last resort; $1=po id.

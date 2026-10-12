@@ -40,14 +40,18 @@ var ErrEmailTaken = errors.New("contact email taken")
 
 // totalPurchaseExpr sums accepted deals.
 // Each deal counts at its PO grand total, since PO lines can be edited after
-// acceptance and are what is invoiced, or at its quotation total while it
-// has no PO; a cancelled PO drops the deal. Matches total_purchase in
-// clients.sql.
-const totalPurchaseExpr = "COALESCE((SELECT SUM(CASE WHEN po.id IS NULL THEN q.grand_total" +
-	" ELSE (SELECT t.po_grand_total FROM v_po_totals t WHERE t.po_id = po.id) END)" +
-	" FROM quotations q LEFT JOIN purchase_orders po ON po.quotation_id = q.id" +
+// acceptance and are what is invoiced, for the PO's client, which can be
+// another company of the holding; while it has no PO it counts at its
+// quotation total for the quotation's client. A cancelled PO drops the
+// deal. Matches total_purchase in clients.sql.
+const totalPurchaseExpr = "COALESCE((SELECT SUM(d.total) FROM (" +
+	"SELECT q.grand_total AS total FROM quotations q" +
 	" WHERE q.company_client_id = cc.id AND q.status = 'accepted'" +
-	" AND po.status IS DISTINCT FROM 'CANCELLED'), 0)"
+	" AND NOT EXISTS (SELECT 1 FROM purchase_orders po WHERE po.quotation_id = q.id)" +
+	" UNION ALL SELECT (SELECT t.po_grand_total FROM v_po_totals t WHERE t.po_id = po.id)" +
+	" FROM purchase_orders po JOIN quotations q ON q.id = po.quotation_id" +
+	" WHERE po.company_client_id = cc.id AND q.status = 'accepted'" +
+	" AND po.status <> 'CANCELLED') d), 0)"
 
 // sortable lists client sort keys.
 var sortable = listq.Whitelist{

@@ -37,14 +37,17 @@ func TestExportXLSX_EffectiveStatusLabel(t *testing.T) {
 			require.NoError(t, err)
 			inv, err := invoices.NewRepo(tx, testutil.Store(t)).GetByID(ctx, invID)
 			require.NoError(t, err)
-			// The reminder names the quotation's own contact.
+			// The reminder names the PO's own contact, here picked on the
+			// accepted quotation, which the PO follows.
 			var contactID int64
 			require.NoError(t, tx.QueryRow(ctx, `INSERT INTO company_contacts
 				(company_id, name, email, phone, country_code, created_by, updated_by)
 				VALUES ($1, 'Bu Pengingat', 'pengingat@contoh.test', '812345678', 'IDN', 1, 1)
 				RETURNING id`, inv.CompanyClientID).Scan(&contactID))
-			_, err = tx.Exec(ctx, `UPDATE quotations SET contact_id = $2 WHERE id = $1`, inv.QuotationID, contactID)
-			require.NoError(t, err)
+			var result string
+			require.NoError(t, tx.QueryRow(ctx, `SELECT fn_quotation_update_contact($1, $2, 1)`,
+				inv.QuotationID, contactID).Scan(&result))
+			require.Equal(t, "ok", result)
 
 			srv := assetServer(t, tx)
 			res, err := srv.Client().Get(srv.URL + "/invoices/export.xlsx?q=" + inv.InvoiceNo)

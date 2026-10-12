@@ -57,6 +57,8 @@ type scenarioState struct {
 	poNumber string
 	// bareAccept leaves the PO numberless.
 	bareAccept bool
+	// sister is the other holding member.
+	sister *sisterCompany
 }
 
 func (s *scenarioState) reset() error {
@@ -660,6 +662,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 			state.poID = 0
 			state.dnNumber = ""
 			state.gate = nil
+			state.sister = nil
 			return ctx, nil
 		})
 		sc.After(func(ctx context.Context, _ *godog.Scenario, err error) (context.Context, error) {
@@ -669,6 +672,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		registerListDetailsSteps(sc, state)
 		registerReadinessSteps(sc, state)
 		registerDeliveryNoteSteps(sc, state)
+		registerChangeClientSteps(sc, state)
 
 		sc.Step(`^an authenticated user with id (\d+)$`, func(id int64) error { return state.authenticatedUser(id) })
 		sc.Step(`^the commercial domain is empty$`, state.emptyDomain)

@@ -423,6 +423,56 @@ func (h *Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// MsgPONumberTaken refuses a client change.
+// The client's PO numbers are unique per client.
+const MsgPONumberTaken = "No. PO ini sudah dipakai PO lain milik klien tersebut. Ubah No. PO dulu atau pilih klien lain."
+
+// ChangeClient moves the PO.
+// Until delivery, since the invoice copies the buyer then. The contact must
+// be the new client's own.
+func (h *Handler) ChangeClient(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	ifMatch, err := httpx.ParseIfMatch(r.Header.Get("If-Match"))
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest(err.Error()))
+		return
+	}
+	if ifMatch == nil {
+		httperr.Render(w, httperr.BadRequest("If-Match header required"))
+		return
+	}
+	var req ChangeClientRequest
+	if !httpx.DecodeJSON(w, r, &req) {
+		return
+	}
+	if fields := validate.ClientChoice(req.ClientID, req.ContactID); fields != nil {
+		httperr.Render(w, httperr.Unprocessable(fields))
+		return
+	}
+	actor := deps.CurrentUserID(r.Context())
+	v, err := h.repo.ChangeClient(r.Context(), id, req.ClientID, req.ContactID, actor, ifMatch)
+	if err != nil {
+		switch {
+		case errors.Is(err, ErrNotFound):
+			httperr.Render(w, httperr.NotFound("purchase order not found"))
+		case errors.Is(err, ErrVersionMismatch):
+			httperr.Render(w, httperr.VersionConflict())
+		case errors.Is(err, ErrLocked):
+			renderLocked(w, err.Error())
+		case errors.Is(err, ErrDuplicatePoNumber):
+			httperr.Render(w, httperr.Unprocessable(map[string]string{"clientId": MsgPONumberTaken}))
+		default:
+			httperr.RenderDBErrCtx(r.Context(), w, err)
+		}
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, UpdatedResponse{ID: id, RowVersion: v})
+}
+
 func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {

@@ -1,4 +1,4 @@
--- Canonical current body of fn_quotation_update_contact (deployed by migration 00083).
+-- Canonical current body of fn_quotation_update_contact (deployed by migration 00116).
 CREATE OR REPLACE FUNCTION public.fn_quotation_update_contact(p_quotation_id bigint, p_contact_id bigint, p_user_id bigint)
  RETURNS text
  LANGUAGE plpgsql
@@ -29,6 +29,14 @@ BEGIN
   UPDATE quotations
   SET contact_id = p_contact_id, contact_name = v_name, updated_by = p_user_id, updated_at = NOW()
   WHERE id = p_quotation_id;
+
+  IF v_status = 'accepted' THEN
+    UPDATE purchase_orders
+    SET contact_id = p_contact_id, updated_by = p_user_id
+    WHERE quotation_id = p_quotation_id
+      AND company_client_id = v_company
+      AND contact_id IS DISTINCT FROM p_contact_id;
+  END IF;
 
   IF v_status = 'draft' THEN
     PERFORM fn_quotation_notify(p_quotation_id, 'header', 'header', p_user_id);

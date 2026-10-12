@@ -163,11 +163,14 @@ JOIN company_client cc ON cc.id = inv.company_client_id
 LEFT JOIN purchase_orders po ON po.id = inv.po_id
 LEFT JOIN invoices rp ON rp.id = inv.replaces_invoice_id
 LEFT JOIN invoices rb ON rb.replaces_invoice_id = inv.id
+-- The PO's contact, else the quotation's for an invoice without a PO, else
+-- the client's first active one.
 LEFT JOIN LATERAL (
     SELECT co.name, co.email, co.phone
     FROM company_contacts co
     WHERE co.company_id = cc.id AND co.is_active = TRUE
-    ORDER BY COALESCE(co.id = q.contact_id, FALSE) DESC, co.id ASC
+    ORDER BY COALESCE(co.id = CASE WHEN po.id IS NULL THEN q.contact_id ELSE po.contact_id END, FALSE) DESC,
+             co.id ASC
     LIMIT 1
 ) ct ON TRUE
 -- The product discount as a percent of the product gross, read from the
@@ -232,11 +235,14 @@ JOIN company_client cc ON cc.id = inv.company_client_id
 LEFT JOIN purchase_orders po ON po.id = inv.po_id
 LEFT JOIN invoices rp ON rp.id = inv.replaces_invoice_id
 LEFT JOIN invoices rb ON rb.replaces_invoice_id = inv.id
+-- The PO's contact, else the quotation's for an invoice without a PO, else
+-- the client's first active one.
 LEFT JOIN LATERAL (
     SELECT co.name, co.email, co.phone
     FROM company_contacts co
     WHERE co.company_id = cc.id AND co.is_active = TRUE
-    ORDER BY COALESCE(co.id = q.contact_id, FALSE) DESC, co.id ASC
+    ORDER BY COALESCE(co.id = CASE WHEN po.id IS NULL THEN q.contact_id ELSE po.contact_id END, FALSE) DESC,
+             co.id ASC
     LIMIT 1
 ) ct ON TRUE
 -- The product discount as a percent of the product gross, read from the
@@ -373,18 +379,21 @@ FROM invoices
 WHERE status <> 'cancelled';
 
 -- name: invoices.reminder_contacts
--- Who to remind about each invoice: the quotation's contact, else the
--- client's first active one, as the detail page shows, and the client email.
+-- Who to remind about each invoice: the PO's contact (the quotation's for an
+-- invoice without a PO), else the client's first active one, as the detail
+-- page shows, and the client email.
 SELECT inv.id, cc.email AS company_email,
        ct.name AS contact_name, ct.email AS contact_email, ct.phone AS contact_phone
 FROM invoices inv
 JOIN quotations q ON q.id = inv.quotation_id
 JOIN company_client cc ON cc.id = inv.company_client_id
+LEFT JOIN purchase_orders po ON po.id = inv.po_id
 LEFT JOIN LATERAL (
     SELECT co.name, co.email, co.phone
     FROM company_contacts co
     WHERE co.company_id = cc.id AND co.is_active = TRUE
-    ORDER BY COALESCE(co.id = q.contact_id, FALSE) DESC, co.id ASC
+    ORDER BY COALESCE(co.id = CASE WHEN po.id IS NULL THEN q.contact_id ELSE po.contact_id END, FALSE) DESC,
+             co.id ASC
     LIMIT 1
 ) ct ON TRUE
 WHERE inv.id = ANY($1::bigint[]);

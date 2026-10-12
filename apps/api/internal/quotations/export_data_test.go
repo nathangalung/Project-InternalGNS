@@ -359,6 +359,10 @@ func TestBuildExportData_DatedAtLastSend(t *testing.T) {
 		}, "Jakarta, 21 September 2026"},
 		{"legacy row without a send keeps its creation date", StatusAccepted, nil,
 			"Jakarta, 1 September 2026"},
+		{"a client change on the draft is no send", StatusSent, []StatusHistoryEntry{
+			sent(time.Date(2026, 9, 20, 3, 0, 0, 0, time.UTC)),
+			{FromStatus: &draft, ToStatus: StatusDraft, ChangedAt: time.Date(2026, 9, 27, 3, 0, 0, 0, time.UTC)},
+		}, "Jakarta, 20 September 2026"},
 		{"imported row ignores its creation log", StatusAccepted, []StatusHistoryEntry{
 			{ToStatus: StatusSent, ChangedAt: time.Date(2026, 9, 24, 3, 0, 0, 0, time.UTC)},
 			{FromStatus: &sentStatus, ToStatus: StatusAccepted,

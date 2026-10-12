@@ -220,6 +220,14 @@ type ChangeContactRequest struct {
 	ContactID int64 `json:"contactId"`
 }
 
+// ChangeClientRequest moves a draft.
+// The contact must be the new client's own; none leaves the draft without
+// one.
+type ChangeClientRequest struct {
+	ClientID  int64  `json:"clientId"`
+	ContactID *int64 `json:"contactId,omitempty"`
+}
+
 // dbItem mirrors fn_create_quotation keys.
 type dbItem struct {
 	RequestedItemID   *int64  `json:"requested_item_id,omitempty"`

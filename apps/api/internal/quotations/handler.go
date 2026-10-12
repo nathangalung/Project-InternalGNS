@@ -443,6 +443,30 @@ func (h *Handler) ChangeContact(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// ChangeClient moves a draft.
+// Past draft the PDF already reached the client, so Buat Revisi clones a
+// draft that can move instead.
+func (h *Handler) ChangeClient(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	var req ChangeClientRequest
+	if !httpx.DecodeJSON(w, r, &req) {
+		return
+	}
+	if fields := validate.ClientChoice(req.ClientID, req.ContactID); fields != nil {
+		httperr.Render(w, httperr.Unprocessable(fields))
+		return
+	}
+	if err := h.repo.UpdateClient(r.Context(), id, req.ClientID, req.ContactID, deps.CurrentUserID(r.Context())); err != nil {
+		httperr.RenderDBErrCtx(r.Context(), w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // Send moves status to sent.
 // An optional note rides along.
 func (h *Handler) Send(w http.ResponseWriter, r *http.Request) {

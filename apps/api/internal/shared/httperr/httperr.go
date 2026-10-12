@@ -174,7 +174,11 @@ func FromDBErr(err error) Error {
 			// Business-rule message raised intentionally by plpgsql; safe to
 			// surface. P0012 invalid transition and P0014 validation are the
 			// typed successors assigned by migration 00046. It is prose, not a
-			// field error, so it belongs in Detail like P0011 and P0013.
+			// field error, so it belongs in Detail like P0011 and P0013,
+			// unless the raise names its input with COLUMN.
+			if pgErr.Code == db.SQLStateValidation && pgErr.ColumnName != "" {
+				return Unprocessable(map[string]string{pgErr.ColumnName: pgErr.Message})
+			}
 			return UnprocessableDetail(pgErr.Message, nil)
 		case db.SQLStateNotFound:
 			return NotFound(pgErr.Message)

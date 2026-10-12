@@ -162,6 +162,29 @@ func TestFromDBErr_BusinessCodesKeepMessage(t *testing.T) {
 	assert.Equal(t, "PO 7 has an invoice; cannot revert from DELIVERED", got.Detail)
 }
 
+// A validation raise naming an input.
+// RAISE ... COLUMN marks it, so the form shows it on that field.
+func TestFromDBErr_ValidationColumn(t *testing.T) {
+	cases := []struct {
+		name       string
+		err        *pgconn.PgError
+		wantFields map[string]string
+	}{
+		{"named input", &pgconn.PgError{Code: "P0014", Message: "Pilih klien lain.", ColumnName: "clientId"},
+			map[string]string{"clientId": "Pilih klien lain."}},
+		{"no input named", &pgconn.PgError{Code: "P0014", Message: "Pilih klien lain."}, nil},
+		{"other code ignores it", &pgconn.PgError{Code: "P0012", Message: "Pilih klien lain.", ColumnName: "clientId"}, nil},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := FromDBErr(tc.err)
+			assert.Equal(t, http.StatusUnprocessableEntity, got.Status)
+			assert.Equal(t, "Pilih klien lain.", got.Detail)
+			assert.Equal(t, tc.wantFields, got.Fields)
+		})
+	}
+}
+
 func TestFromDBErr_Fallback(t *testing.T) {
 	got := FromDBErr(errors.New("plain"))
 	assert.Equal(t, http.StatusInternalServerError, got.Status)
