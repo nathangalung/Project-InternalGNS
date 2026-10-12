@@ -94,7 +94,7 @@ export function editsClients(role: Role | undefined): boolean {
   return role !== undefined && CLIENT_WRITE.includes(role)
 }
 
-// PO file, number and status.
+// PO file, number, status and Surat Jalan notes.
 // Operational input edits only harga beli and vendor in Ubah PO.
 export function managesPOs(role: Role | undefined): boolean {
   return role === "superadmin" || role === "operational"

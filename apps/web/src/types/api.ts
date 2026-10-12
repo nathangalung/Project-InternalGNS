@@ -55,6 +55,8 @@ export type {
   ObjectKeyInput,
   PoBackendStatus,
   PoCompletenessIssue,
+  PoDeliveryNoteInput,
+  PoDeliveryNoteLineInput,
   PoDetailsInput,
   PoFileInput,
   PoIncompleteProblem,

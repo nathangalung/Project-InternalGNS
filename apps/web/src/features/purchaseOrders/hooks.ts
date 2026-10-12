@@ -18,7 +18,7 @@ import { roleCanAccess } from "@/lib/rbac"
 import { uploadWithFreshKey } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
 import { validateAsset } from "@/lib/upload-validation"
-import type { PoBackendStatus, PoUpdateItemsInput } from "@/types/api"
+import type { PoBackendStatus, PoDeliveryNoteLineInput, PoUpdateItemsInput } from "@/types/api"
 import { detailsChanged } from "./adapters"
 import {
   completenessIssues,
@@ -210,6 +210,34 @@ export function useUploadPoFile() {
       qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
     },
     onError: (err) => reportPoError(qc, err, "Gagal mengunggah berkas PO."),
+  })
+}
+
+// Surat Jalan row notes.
+//
+// The dialog shows every refusal, so nothing is toasted. A stale version
+// or a lock reloads the PO, so a retry sends the newer version.
+export function useSaveDeliveryNote() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      id,
+      notes,
+      rowVersion,
+    }: {
+      id: number
+      notes: PoDeliveryNoteLineInput[]
+      rowVersion: number
+    }) => poApi.updateDeliveryNote(id, { notes }, rowVersion),
+    // The page reads the PO by its quotation, under the same prefix.
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
+    },
+    onError: (err) => {
+      if (isVersionConflict(err) || isPoLockRefusal(err)) {
+        qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
+      }
+    },
   })
 }
 

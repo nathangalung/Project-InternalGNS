@@ -30,6 +30,7 @@ import {
   usePurchaseOrderByQuotation,
   usePurchaseOrders,
   useRemovePoFile,
+  useSaveDeliveryNote,
   useUpdatePoDetails,
   useUpdatePoItems,
   useUploadPoFile,
@@ -338,6 +339,30 @@ describe("PO writes", () => {
       vendorList,
       itemDetail,
     ])
+  })
+
+  it("delivery note notes save with the row version and refresh the PO and its lines", async () => {
+    m.updateDeliveryNote.mockResolvedValue({ id: 3, rowVersion: 6 })
+    const { qc, result } = renderQueryHook(() => useSaveDeliveryNote())
+    seed(qc, [poDetail, poItems, dash])
+    const notes = [{ lineId: 9, note: "Serahkan ke mualim" }]
+    await settle(() => result.current.mutateAsync({ id: 3, notes, rowVersion: 5 }))
+    expect(m.updateDeliveryNote).toHaveBeenCalledWith(3, { notes }, 5)
+    expect(invalidated(qc, [poDetail, poItems, dash])).toEqual([poDetail, poItems])
+  })
+
+  // The dialog shows every refusal.
+  it.each<[string, () => Error, boolean]>([
+    ["version conflict", versionConflict, true],
+    ["lock refusal", lockRefusal, true],
+    ["network failure", () => new TypeError("fetch failed"), false],
+  ])("delivery note notes leave a %s to the dialog", async (_name, err, reloads) => {
+    m.updateDeliveryNote.mockRejectedValue(err())
+    const { qc, result } = renderQueryHook(() => useSaveDeliveryNote())
+    seed(qc, [poDetail])
+    await settle(() => result.current.mutateAsync({ id: 3, notes: [], rowVersion: 5 }))
+    expect(toast.error).not.toHaveBeenCalled()
+    expect(invalidated(qc, [poDetail])).toEqual(reloads ? [poDetail] : [])
   })
 
   // Stale version or lock reloads.
