@@ -1,4 +1,3 @@
-import { useNavigate } from "@tanstack/react-router"
 import { useMemo, useState } from "react"
 import Modal from "@/components/shared/Modal"
 import { useMe } from "@/features/auth/hooks"
@@ -9,8 +8,10 @@ import CostBreakdown from "@/features/quotations/QuotationDetail/CostBreakdown"
 import ProductTable from "@/features/quotations/QuotationDetail/ProductTable"
 import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
 import type { ProductRow, QuotationData } from "@/features/quotations/types"
+import { useNavTrail } from "@/hooks/useNavTrail"
 import { downloadFile, downloadPdf } from "@/lib/api-client"
 import { formatDate, toNum } from "@/lib/format"
+import { listCrumb } from "@/lib/nav-trail"
 import { canWriteCatalog, managesPOs } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
@@ -44,6 +45,9 @@ import {
 import ReasonModal from "./ReasonModal"
 import StatusBar from "./StatusBar"
 
+// Opened without a trail.
+const fallback = [listCrumb("/purchase-orders")]
+
 type PurchaseOrderDetailProps = {
   po: PurchaseOrderRow
   // Client card data; the PO has its own figures
@@ -52,7 +56,7 @@ type PurchaseOrderDetailProps = {
 }
 
 export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseOrderDetailProps) {
-  const navigate = useNavigate()
+  const nav = useNavTrail(fallback)
   const { data: me } = useMe()
   const { data: poItems } = usePoItems(po.id)
   const { data: events, isLoading: historyLoading } = usePoHistory(po.id)
@@ -108,7 +112,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
       await changeStatus.mutateAsync({ id: po.id, status: t.to, note })
       setShowReason(false)
       toast.success(`Status PO diubah menjadi ${t.label}.`)
-      void navigate({ to: "/purchase-orders" })
+      nav.back()
     } catch (err) {
       // The hook toasts everything but the completeness gate.
       const found = completenessIssues(err)
@@ -121,7 +125,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
 
   function handleSave() {
     if (!selected) {
-      void navigate({ to: "/purchase-orders" })
+      nav.back()
       return
     }
     if (selected.requiresNote) {

@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router"
 import EntityLink from "@/components/shared/EntityLink"
 import Modal from "@/components/shared/Modal"
+import { useTrailState } from "@/hooks/useNavTrail"
 import { ui } from "@/lib/ui"
 import type { PoCompletenessIssue, PoIssueKind } from "@/types/api"
 
@@ -30,6 +31,7 @@ export default function CompletenessModal({
   onClose,
   onEnterPoNumber,
 }: CompletenessModalProps) {
+  const trail = useTrailState()
   return (
     <Modal
       title="Data Belum Lengkap"
@@ -71,6 +73,7 @@ export default function CompletenessModal({
                 <Link
                   to="/purchase-orders/$id/edit"
                   params={{ id: String(quotationId) }}
+                  state={trail}
                   className={`${ui.entityLink} font-bold`}
                 >
                   Ubah PO
@@ -94,6 +97,7 @@ export default function CompletenessModal({
                           to="/quotations/$id"
                           params={{ id: String(quotationId) }}
                           search={{ narahubung: true }}
+                          state={trail}
                           className={`${ui.entityLink} font-semibold`}
                         >
                           Ganti Narahubung

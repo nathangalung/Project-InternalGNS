@@ -11,6 +11,7 @@ import StatusBadge from "@/components/shared/StatusBadge"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { ROLE_LABEL } from "@/features/users/helpers"
 import { useUsers } from "@/features/users/hooks"
+import { useTrailState } from "@/hooks/useNavTrail"
 import { filterChips } from "@/lib/filter-chips"
 import { statusFilterLabel } from "@/lib/filter-options"
 import { formatDateShort } from "@/lib/format"
@@ -42,6 +43,7 @@ const ROLE_BADGE: Record<Role, { bg: string; color: string }> = {
 const USER_FILTERS: UserFilters = { role: "all", status: "all" }
 
 export default function UserList() {
+  const trail = useTrailState()
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
   const [sortKey, setSortKey] = useState<SortKey>("createdAt")
   const [showFilter, setShowFilter] = useState(false)
@@ -196,6 +198,7 @@ export default function UserList() {
                         <Link
                           to="/users/$id"
                           params={{ id: String(u.id) }}
+                          state={trail}
                           className={ui.iconAction}
                           title="Lihat detail"
                           aria-label={`Lihat detail ${u.name}`}

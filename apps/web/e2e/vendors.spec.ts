@@ -72,7 +72,7 @@ test("the vendor's product list links to each product", async ({ page, seed }) =
   await link.click()
   await expect(page.getByRole("heading", { name: item.name, level: 2 })).toBeVisible()
   // And back again from the product's vendor list.
-  await page.getByRole("link", { name: vendor.name }).click()
+  await page.getByRole("link", { name: vendor.name, exact: true }).click()
   await expect(page).toHaveURL(new RegExp(`/vendors/${vendor.id}$`))
 })
 

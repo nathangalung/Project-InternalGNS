@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router"
+import { createFileRoute, useParams } from "@tanstack/react-router"
 import LoadingState from "@/components/shared/LoadingState"
 import NotFoundState from "@/components/shared/NotFoundState"
 import RouteErrorFallback from "@/components/shared/RouteErrorFallback"
@@ -11,7 +11,6 @@ export const Route = createFileRoute("/_authed/products/$id/")({
 })
 
 function ProductDetailRoute() {
-  const navigate = useNavigate()
   const { id } = useParams({ from: "/_authed/products/$id/" })
   const numericId = Number(id)
   const { data, isLoading, error, refetch } = useItem(numericId)
@@ -32,7 +31,5 @@ function ProductDetailRoute() {
 
   // Keyed so a different product remounts with fresh form state, while a
   // background refetch of the same product keeps in-progress edits.
-  return (
-    <ProductDetail key={data.id} product={data} onBack={() => void navigate({ to: "/products" })} />
-  )
+  return <ProductDetail key={data.id} product={data} />
 }

@@ -10,6 +10,7 @@ import {
   lineToInput,
   loadFailureMessage,
   type PoEditLine,
+  poCrumbLabel,
   poHistoryEntry,
   poItemsToProducts,
   poItemsToShipping,
@@ -475,5 +476,16 @@ describe("poHistoryEntry without a reason", () => {
       changedAt: "2026-09-01T03:00:00Z",
     } as const
     expect(poHistoryEntry(ev).action).toBe("Pending → PO Diunggah")
+  })
+})
+
+describe("poCrumbLabel", () => {
+  it("names a PO by its number", () => {
+    expect(poCrumbLabel("PO-77", "Q-00001/GNS/IX/2026")).toBe("PO PO-77")
+  })
+
+  it("names a numberless PO by its quotation", () => {
+    expect(poCrumbLabel(undefined, "Q-00001/GNS/IX/2026")).toBe("PO dari Q-00001/GNS/IX/2026")
+    expect(poCrumbLabel("  ", "Q-00001/GNS/IX/2026")).toBe("PO dari Q-00001/GNS/IX/2026")
   })
 })

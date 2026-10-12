@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router"
 import { useId, useState } from "react"
 import Modal from "@/components/shared/Modal"
 import { useReviseQuotation } from "@/features/quotations/hooks"
+import { useTrailState } from "@/hooks/useNavTrail"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 
@@ -17,6 +18,7 @@ type ReviseModalProps = {
 // so on success the user lands in the new draft's editor.
 export default function ReviseModal({ quotationId, version, onClose }: ReviseModalProps) {
   const navigate = useNavigate()
+  const trail = useTrailState()
   const noteId = useId()
   const [note, setNote] = useState("")
   const revise = useReviseQuotation()
@@ -29,7 +31,7 @@ export default function ReviseModal({ quotationId, version, onClose }: ReviseMod
         onSuccess: ({ id }) => {
           toast.success(`Draf revisi versi ${version + 1} dibuat.`)
           onClose()
-          void navigate({ to: "/quotations/$id/edit", params: { id: String(id) } })
+          void navigate({ to: "/quotations/$id/edit", params: { id: String(id) }, state: trail })
         },
       },
     )

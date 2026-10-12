@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from "react"
+import NavTrail from "@/components/shared/NavTrail"
 import {
   Select,
   SelectContent,
@@ -14,15 +15,19 @@ import { useEndOwnSession, useUpdateUser } from "@/features/users/hooks"
 import PasswordChecklist from "@/features/users/PasswordChecklist"
 import PasswordInput from "@/features/users/PasswordInput"
 import { passwordIsValid } from "@/features/users/password"
+import { useNavTrail } from "@/hooks/useNavTrail"
 import { formErrors, isInlineFormError } from "@/lib/form-errors"
+import { listCrumb } from "@/lib/nav-trail"
 import { ui } from "@/lib/ui"
 import { EMAIL_ERROR, isValidEmail } from "@/lib/validation"
 import type { Role, UserRow } from "@/types/api"
 
 type UserDetailProps = {
   user: UserRow
-  onBack: () => void
 }
+
+// Opened without a trail.
+const fallback = [listCrumb("/users")]
 
 const ROLE_OPTIONS: { value: Role; label: string }[] = ROLE_ORDER.map((r) => ({
   value: r,
@@ -43,7 +48,8 @@ function borderFor(error: string | undefined): string {
   return error ? "border-[#DC2626]" : "border-transparent"
 }
 
-export default function UserDetail({ user, onBack }: UserDetailProps) {
+export default function UserDetail({ user }: UserDetailProps) {
+  const nav = useNavTrail(fallback)
   const [name, setName] = useState(user.name)
   const [email, setEmail] = useState(user.email)
   const [password, setPassword] = useState("")
@@ -148,23 +154,13 @@ export default function UserDetail({ user, onBack }: UserDetailProps) {
   return (
     <div className={ui.pageContent}>
       <div className="flex flex-col gap-3">
-        <nav aria-label="Breadcrumb" className={ui.breadcrumb}>
-          <button type="button" className={ui.breadcrumbLink} onClick={onBack}>
-            Manajemen Pengguna
-          </button>
-          <span className={ui.breadcrumbSep} aria-hidden="true">
-            &rsaquo;
-          </span>
-          <span className={ui.breadcrumbCurrent} aria-current="page">
-            Detail Pengguna
-          </span>
-        </nav>
+        <NavTrail current={`Pengguna ${user.name}`} fallback={fallback} />
 
         <div className="flex items-center gap-5">
           <button
             type="button"
-            onClick={onBack}
-            aria-label="Kembali ke Daftar Pengguna"
+            onClick={nav.back}
+            aria-label={`Kembali ke ${nav.previous.label}`}
             title="Kembali"
             className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white shadow-[0px_1px_2px_rgba(0,0,0,0.05)] ${ui.focusRing}`}
           >

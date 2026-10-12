@@ -267,3 +267,11 @@ export function loadFailureMessage(unitsFailed: boolean, itemsFailed: boolean): 
         : "Item PO gagal dimuat."
   return `${what} Coba lagi dalam beberapa saat.`
 }
+
+// Trail name of a PO.
+//
+// The client's PO number, or the quotation it came from until one is entered.
+export function poCrumbLabel(poNumber: string | undefined, quotationNo: string): string {
+  const no = poNumber?.trim()
+  return no ? `PO ${no}` : `PO dari ${quotationNo}`
+}

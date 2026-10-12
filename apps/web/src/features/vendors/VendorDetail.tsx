@@ -1,5 +1,6 @@
 import { useId, useRef, useState } from "react"
 import EntityLink from "@/components/shared/EntityLink"
+import NavTrail from "@/components/shared/NavTrail"
 import Pagination from "@/components/shared/Pagination"
 import PermanentDelete from "@/components/shared/PermanentDelete"
 import StoreLink from "@/components/shared/StoreLink"
@@ -12,10 +13,12 @@ import {
   useVendorItems,
   useVendorLogoDownloadUrl,
 } from "@/features/vendors/hooks"
+import { useNavTrail } from "@/hooks/useNavTrail"
 import { useObjectUrl } from "@/hooks/useObjectUrl"
 import { logoBackground } from "@/lib/avatar"
 import { errorMessage } from "@/lib/errors"
 import { formatRupiah } from "@/lib/format"
+import { listCrumb } from "@/lib/nav-trail"
 import { canWriteCatalog, seesCost } from "@/lib/rbac"
 import { storeUrlError as typedStoreUrlError } from "@/lib/store-link"
 import { toast } from "@/lib/toast"
@@ -29,8 +32,10 @@ import VendorQuotations from "./VendorQuotations"
 
 type VendorDetailProps = {
   vendor: VendorRow
-  onBack: () => void
 }
+
+// Opened without a trail.
+const fallback = [listCrumb("/vendors")]
 
 function vendorInitials(name: string): string {
   const parts = name
@@ -63,7 +68,8 @@ const inputCls = `${inputBase} h-11 rounded-md border-transparent`
 const logoBoxCls =
   "flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg p-0 text-[20px] font-extrabold tracking-[0.5px] text-white"
 
-export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
+export default function VendorDetail({ vendor }: VendorDetailProps) {
+  const nav = useNavTrail(fallback)
   const initialEmail = getContactField(vendor.contactInfo, "email")
   const initialPhone = getContactField(vendor.contactInfo, "phone")
 
@@ -212,23 +218,13 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
   return (
     <div className={ui.pageContent}>
       <div className="flex flex-col gap-3">
-        <nav aria-label="Breadcrumb" className={ui.breadcrumb}>
-          <button type="button" className={ui.breadcrumbLink} onClick={onBack}>
-            Daftar Vendor
-          </button>
-          <span className={ui.breadcrumbSep} aria-hidden="true">
-            &rsaquo;
-          </span>
-          <span className={ui.breadcrumbCurrent} aria-current="page">
-            Detail Vendor
-          </span>
-        </nav>
+        <NavTrail current={`Vendor ${vendor.name}`} fallback={fallback} />
 
         <div className="flex flex-wrap items-center gap-5">
           <button
             type="button"
-            onClick={onBack}
-            aria-label="Kembali ke Daftar Vendor"
+            onClick={nav.back}
+            aria-label={`Kembali ke ${nav.previous.label}`}
             className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white shadow-[0px_1px_2px_rgba(0,0,0,0.05)] ${ui.focusRing}`}
           >
             <svg
@@ -255,7 +251,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
                 along="tautan produknya"
                 onDelete={async () => {
                   await removeVendor.mutateAsync(vendor.id)
-                  onBack()
+                  nav.back()
                 }}
               />
             </div>

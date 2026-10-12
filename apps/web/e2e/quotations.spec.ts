@@ -1216,8 +1216,8 @@ test.describe("quotation list", () => {
   })
 })
 
-test.describe("quotation store link", () => {
-  test("the product dialog adds the vendor's store link and keeps its harga beli", async ({
+test.describe("quotation product link", () => {
+  test("the product dialog adds the product link and keeps its harga beli", async ({
     page,
     seed,
   }) => {

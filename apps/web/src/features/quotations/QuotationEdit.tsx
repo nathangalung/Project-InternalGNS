@@ -1,7 +1,8 @@
-import { Link, useNavigate } from "@tanstack/react-router"
+import { Link } from "@tanstack/react-router"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import LoadingState from "@/components/shared/LoadingState"
 import Modal from "@/components/shared/Modal"
+import NavTrail from "@/components/shared/NavTrail"
 import NotFoundState from "@/components/shared/NotFoundState"
 import StateMessage from "@/components/shared/StateMessage"
 import { useMe } from "@/features/auth/hooks"
@@ -20,7 +21,9 @@ import {
 } from "@/features/quotations/hooks"
 import { useUnits } from "@/features/units/hooks"
 import { resolveUnit } from "@/features/units/match"
+import { useNavTrail } from "@/hooks/useNavTrail"
 import { formatNumber as formatRp } from "@/lib/format"
+import { listCrumb, pageCrumb } from "@/lib/nav-trail"
 import { canWriteCatalog, setsPrices } from "@/lib/rbac"
 import { ui } from "@/lib/ui"
 import type { QuotationDetail } from "@/types/api"
@@ -54,7 +57,6 @@ const ignore = () => undefined
 // the stored draft through the change stream; Simpan saves the header and
 // the contact, then returns to the detail page.
 export default function QuotationEdit({ quotationId }: QuotationEditProps) {
-  const navigate = useNavigate()
   const { data: unitsData } = useUnits()
   // A role that sets no harga jual sees and sends none
   const pricing = setsPrices(useMe().data?.role)
@@ -110,6 +112,16 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
   const hasNumericQuotationId = Number.isInteger(numericQuotationId) && numericQuotationId > 0
   const qid = hasNumericQuotationId ? numericQuotationId : undefined
   const { data: detail, isPending: isDetailPending } = useQuotation(qid)
+  const quotationNo = detail?.quotationNo
+  // Opened without a trail: the list, then this quotation.
+  const trailFallback = useMemo(
+    () => [
+      listCrumb("/quotations"),
+      pageCrumb(`/quotations/${quotationId}`, `Quotation ${quotationNo ?? quotationId}`),
+    ],
+    [quotationId, quotationNo],
+  )
+  const nav = useNavTrail(trailFallback)
   const updateContactMutation = useUpdateQuotationContact()
   const live = useLiveChange(qid)
   // Line waiting for delete confirmation
@@ -222,8 +234,9 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     profit: summaryProfit,
   } = summary
 
+  // Back along the trail when it came from the detail.
   function goToDetail() {
-    void navigate({ to: "/quotations/$id", params: { id: quotationId } })
+    nav.leaveTo(trailFallback[1])
   }
 
   // One live change; refusals toast in the hook.
@@ -403,32 +416,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
         {/* Header & Stepper */}
         <div className={qe.headerSection}>
           <div className={qe.headerLeft}>
-            <nav className={`${ui.breadcrumb} flex-wrap`} aria-label="Breadcrumb">
-              <button
-                type="button"
-                className={ui.breadcrumbLink}
-                onClick={() => void navigate({ to: "/quotations" })}
-              >
-                Daftar Quotation
-              </button>
-              <span className={ui.breadcrumbSep} aria-hidden="true">
-                &rsaquo;
-              </span>
-              <Link
-                activeOptions={{ exact: true }}
-                to="/quotations/$id"
-                params={{ id: quotationId }}
-                className={`${ui.breadcrumbLink} no-underline`}
-              >
-                Detail {detail.quotationNo}
-              </Link>
-              <span className={ui.breadcrumbSep} aria-hidden="true">
-                &rsaquo;
-              </span>
-              <span className={ui.breadcrumbCurrent} aria-current="page">
-                Ubah
-              </span>
-            </nav>
+            <NavTrail current={`Ubah Quotation ${detail.quotationNo}`} fallback={trailFallback} />
             <div className={qe.titleRow}>
               <h1 className={qe.title}>Ubah Quotation {detail.quotationNo}</h1>
             </div>

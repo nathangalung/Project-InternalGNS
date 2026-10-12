@@ -623,7 +623,7 @@ src/
   components/shared/ Sidebar, Modal, tables, pagination, states, links
   hooks/             Cross-feature hooks
   lib/               api-client, session (in-memory token), rbac, format,
-                     status, entity-link, chart helpers, ui (tailwind class
+                     status, entity-link, nav-trail, chart helpers, ui (tailwind class
                      primitives), useListScreen, validation (form field
                      rules), form-errors (422 to inputs), event-stream
                      (server-sent events over fetch)
@@ -648,13 +648,39 @@ covers detail and edit routes) and calls `logout` itself. Navigate with
 `useNavigate` or `Link` against the generated route tree; never reintroduce a
 hand-kept page union.
 
+Every detail and edit page knows the way it was reached. A link or
+navigate into another page passes `state` from `useTrailState()`
+(`hooks/useNavTrail`): the crumbs behind the current page plus the page
+itself, each with its href, an Indonesian label (Quotation Q-00012/GNS/X/2026,
+Produk Tali Tambat, Daftar Quotation) and the history index it was left at.
+The trail lives in router history state, so a reload of the same entry keeps
+it and a new tab, a bookmark or the menu starts without one. `lib/nav-trail`
+reads it defensively (well formed crumbs on this origin only), cuts it where
+the page already appears, so going back and forth adds nothing, and keeps
+the newest five. `EntityLink`, the list Lihat actions, Ubah and the invoice
+self links pass it. `NavTrail` (below) shows it, and `useNavTrail(fallback)`
+gives each page `back` and `goTo`: a crumb left one history entry after
+another is reached with a real history back, anything else is opened with
+the crumbs before it. Without a trail a page shows and follows its fallback,
+the list (and, on an edit page, the detail). The editors save with
+`leaveTo(detail)`, so the save returns along the trail, and a PO status move
+returns along it too. List filters live in component state, so a history back
+to a list still starts it unfiltered.
+
 Shared pieces in `components/shared`, reuse them instead of copying markup:
 
 - `EntityLink` links a document number or name to its detail page through
   `lib/entity-link.ts`. It renders a real anchor, and falls back to plain text
   when the id is missing or the viewer's role cannot open the target. PO and
   invoice routes are keyed by the quotation id, so those kinds take
-  `quotationId`.
+  `quotationId`. It carries the navigation trail.
+- `NavTrail` is the breadcrumb on every detail and edit page: a
+  `nav aria-label="Breadcrumb"` with an ordered list of real anchors, the
+  current page marked `aria-current="page"`, long labels truncated and the
+  list wrapping at 320px. It takes the page's own label (`current`), which
+  also names the crumb a link from the page leaves behind, and the
+  `fallback` crumbs, a module constant or memoised, for a page opened
+  without a trail.
 - `Modal` is the dialog shell: focus trap, Escape to close, scroll lock,
   focus returned to the opener, and a stack so only the top modal reacts.
 - `FilterFooter` is the Hapus Filter, Batal, Terapkan footer of every filter

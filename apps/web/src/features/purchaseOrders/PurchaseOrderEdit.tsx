@@ -1,5 +1,5 @@
-import { Link, useNavigate } from "@tanstack/react-router"
 import { useCallback, useEffect, useMemo, useState } from "react"
+import NavTrail from "@/components/shared/NavTrail"
 import StateMessage from "@/components/shared/StateMessage"
 import { useMe } from "@/features/auth/hooks"
 import { fromClientRow } from "@/features/clients/helpers"
@@ -13,8 +13,10 @@ import Step4Summary from "@/features/quotations/Step4Summary"
 import { wizardGates, wizardSummary } from "@/features/quotations/wizard"
 import { useUnits } from "@/features/units/hooks"
 import { unitIndex } from "@/features/units/match"
+import { useNavTrail } from "@/hooks/useNavTrail"
 import { isVersionConflict } from "@/lib/errors"
 import { formatNumber as formatRp, toNum } from "@/lib/format"
+import { listCrumb, pageCrumb } from "@/lib/nav-trail"
 import { canWriteCatalog, setsPrices } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
@@ -24,6 +26,7 @@ import {
   lineToInput,
   loadFailureMessage,
   type PoEditLine,
+  poCrumbLabel,
   poLinesToEdit,
   poNeedsAddress,
   upsertPoLine,
@@ -63,7 +66,13 @@ const arrowIcon = (
 )
 
 export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
-  const navigate = useNavigate()
+  const poLabel = poCrumbLabel(po.poNumber, po.quotationNo)
+  // Opened without a trail: the list, then this PO.
+  const trailFallback = useMemo(
+    () => [listCrumb("/purchase-orders"), pageCrumb(`/purchase-orders/${po.quotationId}`, poLabel)],
+    [po.quotationId, poLabel],
+  )
+  const nav = useNavTrail(trailFallback)
   // A role that sets no harga jual edits harga beli, vendor and qty of the
   // stored lines only
   const role = useMe().data?.role
@@ -205,11 +214,11 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
     }
     try {
       await updateMutation.mutateAsync({ id: po.id, input, rowVersion: po.rowVersion })
-      void navigate({ to: "/purchase-orders/$id", params: { id: String(po.quotationId) } })
+      nav.leaveTo(trailFallback[1])
     } catch (err) {
       // Locked meanwhile: nothing left to edit.
       if (isPoLockRefusal(err)) {
-        void navigate({ to: "/purchase-orders/$id", params: { id: String(po.quotationId) } })
+        nav.leaveTo(trailFallback[1])
         return
       }
       // Someone saved first: reload their version.
@@ -227,32 +236,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
       <div className={ui.pageContent}>
         <div className="flex w-full items-center justify-between gap-4 max-sm:flex-col max-sm:items-stretch">
           <div className="flex min-w-0 flex-col gap-3">
-            <nav className={`${ui.breadcrumb} flex-wrap`} aria-label="Breadcrumb">
-              <Link
-                activeOptions={{ exact: true }}
-                to="/purchase-orders"
-                className={`${ui.breadcrumbLink} no-underline`}
-              >
-                Daftar Purchase Order
-              </Link>
-              <span className={ui.breadcrumbSep} aria-hidden="true">
-                &rsaquo;
-              </span>
-              <Link
-                activeOptions={{ exact: true }}
-                to="/purchase-orders/$id"
-                params={{ id: String(po.quotationId) }}
-                className={`${ui.breadcrumbLink} no-underline`}
-              >
-                Detail <PoNumber value={po.poNumber} />
-              </Link>
-              <span className={ui.breadcrumbSep} aria-hidden="true">
-                &rsaquo;
-              </span>
-              <span className={ui.breadcrumbCurrent} aria-current="page">
-                Ubah
-              </span>
-            </nav>
+            <NavTrail current={`Ubah ${poLabel}`} fallback={trailFallback} />
             <h1 className="text-2xl font-bold leading-8 tracking-tight text-dark-900 [overflow-wrap:anywhere]">
               Ubah Purchase Order <PoNumber value={po.poNumber} />
             </h1>

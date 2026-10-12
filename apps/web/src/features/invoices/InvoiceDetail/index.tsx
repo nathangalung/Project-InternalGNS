@@ -6,6 +6,7 @@ import ClientSummaryCard from "@/features/quotations/QuotationDetail/ClientSumma
 import CostBreakdown from "@/features/quotations/QuotationDetail/CostBreakdown"
 import ProductTable from "@/features/quotations/QuotationDetail/ProductTable"
 import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
+import { useTrailState } from "@/hooks/useNavTrail"
 import { downloadPdf, fetchObjectUrl } from "@/lib/api-client"
 import { errorMessage } from "@/lib/errors"
 import { computeTaxBreakdown, toNum } from "@/lib/format"
@@ -57,6 +58,7 @@ async function openPresigned(downloadUrl: string): Promise<void> {
 // open it without the quotation or PO endpoints its role forbids.
 export default function InvoiceDetail({ inv }: InvoiceDetailProps) {
   const navigate = useNavigate()
+  const trail = useTrailState()
   const { data: invItems } = useInvoiceItems(inv.id)
   const uploadAttachment = useUploadInvoiceAttachment()
   const { data: attachmentDownload } = useInvoiceAttachmentDownloadUrl(
@@ -105,7 +107,12 @@ export default function InvoiceDetail({ inv }: InvoiceDetailProps) {
 
   // Show the invoice now current.
   function showNewest(quotationId: number) {
-    void navigate({ to: "/invoices/$id", params: { id: String(quotationId) }, search: {} })
+    void navigate({
+      to: "/invoices/$id",
+      params: { id: String(quotationId) },
+      search: {},
+      state: trail,
+    })
   }
 
   async function confirmAction({ note, proof }: { note: string; proof?: File }) {

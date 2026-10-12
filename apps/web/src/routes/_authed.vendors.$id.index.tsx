@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router"
+import { createFileRoute, useParams } from "@tanstack/react-router"
 import LoadingState from "@/components/shared/LoadingState"
 import NotFoundState from "@/components/shared/NotFoundState"
 import RouteErrorFallback from "@/components/shared/RouteErrorFallback"
@@ -11,7 +11,6 @@ export const Route = createFileRoute("/_authed/vendors/$id/")({
 })
 
 function VendorDetailRoute() {
-  const navigate = useNavigate()
   const { id } = useParams({ from: "/_authed/vendors/$id/" })
   const numericId = Number(id)
   const { data, isLoading, error, refetch } = useVendor(numericId)
@@ -33,7 +32,5 @@ function VendorDetailRoute() {
 
   // Keyed so a different vendor remounts with fresh form state, while a
   // background refetch of the same vendor keeps in-progress edits.
-  return (
-    <VendorDetail key={data.id} vendor={data} onBack={() => void navigate({ to: "/vendors" })} />
-  )
+  return <VendorDetail key={data.id} vendor={data} />
 }
