@@ -572,6 +572,117 @@ test.describe("purchase order after invoicing", () => {
   })
 })
 
+// A PO in work with two destinations.
+//
+// The second line goes somewhere other than the shipping address, so its
+// note starts with where it goes.
+async function workingPoWithTwoPlaces(seed: SalesSeed) {
+  const client = await seed.client()
+  const vendor = await seed.vendor()
+  const rope = await seed.item({ vendor, cost: 60_000 })
+  const paint = await seed.item({ vendor, cost: 10_000 })
+  const q = await seed.quotation({
+    client,
+    lines: [
+      { item: rope, qty: 3, price: 100_000 },
+      { item: paint, qty: 1, price: 20_000, dest: "Gudang Cakung Blok C7, Jakarta Timur" },
+    ],
+  })
+  const po = await seed.accept(q.id)
+  await seed.attachPoFile(po)
+  await seed.setPoStatus(po.id, "ON_PROGRESS")
+  return { q, po }
+}
+
+// Stand in for the rendered PDF.
+//
+// The CI browser job has no xelatex; the Go tests check the text. The real
+// request still runs, so the API's own CORS headers stay.
+async function stubDeliveryNote(page: Page, poId: number): Promise<void> {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "showSaveFilePicker", { value: undefined })
+  })
+  await page.route(`**/api/v1/purchase-orders/${poId}/delivery-note.pdf`, async (route) => {
+    const response = await route.fetch()
+    await route.fulfill({
+      response,
+      status: 200,
+      contentType: "application/pdf",
+      body: "%PDF-1.7\n%%EOF\n",
+    })
+  })
+}
+
+test.describe("purchase order delivery note", () => {
+  test("notes saved before the download stay for the reprint", async ({ page, seed }) => {
+    const { q, po } = await workingPoWithTwoPlaces(seed)
+    await stubDeliveryNote(page, po.id)
+
+    await page.goto(`/purchase-orders/${q.id}`)
+    await page.getByRole("button", { name: "Unduh Surat Jalan" }).click()
+    const dialog = page.getByRole("dialog", { name: "Unduh Surat Jalan" })
+    const notes = dialog.getByRole("textbox")
+    await expect(notes).toHaveCount(2)
+    await expect(notes.nth(0)).toHaveValue("")
+    await expect(notes.nth(1)).toHaveValue("Kirim ke: Gudang Cakung Blok C7, Jakarta Timur")
+    await expect(dialog.getByRole("button", { name: "Unduh", exact: true })).toBeVisible()
+
+    await notes.nth(0).fill("Serahkan ke mualim")
+    const download = page.waitForEvent("download")
+    await dialog.getByRole("button", { name: "Simpan dan Unduh" }).click()
+    const file = await download
+    expect(file.suggestedFilename()).toMatch(/\.pdf$/)
+    await expect(dialog).toBeHidden()
+
+    const lines = await api<PurchaseOrderItemRow[]>("GET", `/purchase-orders/${po.id}/items`)
+    expect(lines.filter((l) => l.itemType === "product").map((l) => l.dnNote)).toEqual([
+      "Serahkan ke mualim",
+      "Kirim ke: Gudang Cakung Blok C7, Jakarta Timur",
+    ])
+
+    // The reprint shows the saved notes and saves nothing.
+    const { rowVersion } = await seed.poByQuotation(q.id)
+    await page.getByRole("button", { name: "Unduh Surat Jalan" }).click()
+    await expect(notes.nth(0)).toHaveValue("Serahkan ke mualim")
+    const again = page.waitForEvent("download")
+    await dialog.getByRole("button", { name: "Unduh", exact: true }).click()
+    await again
+    await expect(dialog).toBeHidden()
+    expect((await seed.poByQuotation(q.id)).rowVersion).toBe(rowVersion)
+  })
+
+  test("a note saved elsewhere meanwhile is refused in the dialog", async ({ page, seed }) => {
+    const { q, po } = await workingPoWithTwoPlaces(seed)
+    await stubDeliveryNote(page, po.id)
+
+    await page.goto(`/purchase-orders/${q.id}`)
+    await page.getByRole("button", { name: "Unduh Surat Jalan" }).click()
+    const dialog = page.getByRole("dialog", { name: "Unduh Surat Jalan" })
+    await dialog.getByRole("textbox").nth(0).fill("Serahkan ke mualim")
+    await seed.setPoNotes(po.id, "Diubah di tab lain")
+    await dialog.getByRole("button", { name: "Simpan dan Unduh" }).click()
+    await expect(dialog.getByRole("alert")).toHaveText(
+      "Data PO sudah diubah pengguna lain. Halaman dimuat ulang, periksa lalu simpan kembali.",
+    )
+    await expect(dialog).toBeVisible()
+  })
+
+  test.describe("as finance", () => {
+    test.use({ session: "finance" })
+
+    test("the Surat Jalan downloads with no notes dialog", async ({ page, seed }) => {
+      const { q, po } = await workingPoWithTwoPlaces(seed)
+      await stubDeliveryNote(page, po.id)
+
+      await page.goto(`/purchase-orders/${q.id}`)
+      const download = page.waitForEvent("download")
+      await page.getByRole("button", { name: "Unduh Surat Jalan" }).click()
+      await download
+      await expect(page.getByRole("dialog")).toHaveCount(0)
+    })
+  })
+})
+
 test.describe("purchase order list", () => {
   test("the Dibatalkan filter keeps only the cancelled PO", async ({ page, seed }) => {
     const { client, po } = await acceptedPo(seed)
