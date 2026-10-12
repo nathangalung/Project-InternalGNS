@@ -103,6 +103,7 @@ list.
 | PUT | `/quotations/{id}` | `Update` | `fn_update_quotation_versioned` with `If-Match`, else `fn_update_quotation` (draft only) |
 | PATCH | `/quotations/{id}/status` | `ChangeStatus` | `fn_change_quotation_status` |
 | PATCH | `/quotations/{id}/contact` | `ChangeContact` | `fn_quotation_update_contact` (draft, with the header free of other claims, or accepted) |
+| PATCH | `/quotations/{id}/client` | `ChangeClient` | `fn_quotation_update_client` (draft only, header claim held; `{clientId, contactId?}`, 422 on either field) |
 | POST | `/quotations/{id}/send` | `Send` | `fn_change_quotation_status` to sent |
 | POST | `/quotations/{id}/revise` | `Revise` | `fn_revise_quotation` |
 | GET | `/quotations/{id}/revisions` | `Revisions` | `quotations.list_revisions` |
