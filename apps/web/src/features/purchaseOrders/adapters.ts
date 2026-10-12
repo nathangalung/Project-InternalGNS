@@ -247,7 +247,10 @@ export function poHistoryEntry(
   const to = PO_LABEL[ev.toStatus]
   const note = ev.note?.trim()
   let action: string
-  if (ev.fromStatus) {
+  // A row that keeps its status records a client or contact change.
+  if (ev.fromStatus === ev.toStatus) {
+    action = note || to
+  } else if (ev.fromStatus) {
     const move = `${PO_LABEL[ev.fromStatus]} → ${to}`
     action = note ? `${move}: ${note}` : move
   } else {

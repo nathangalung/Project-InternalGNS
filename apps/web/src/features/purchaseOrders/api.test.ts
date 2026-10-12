@@ -92,6 +92,16 @@ describe("purchase orders api", () => {
       },
     ],
     [
+      "a client move guards the row version",
+      () => api.changeClient(3, { clientId: 8, contactId: 4 }, 6),
+      {
+        path: "/purchase-orders/3/client",
+        method: "PATCH",
+        body: { clientId: 8, contactId: 4 },
+        headers: { "If-Match": "6" },
+      },
+    ],
+    [
       "delivery note notes guard the row version",
       () => api.updateDeliveryNote(3, { notes: [{ lineId: 9, note: "Serahkan ke mualim" }] }, 8),
       {

@@ -13,6 +13,7 @@ import ProductAdd from "@/features/items/ProductAdd"
 import type { ProductAddFormData } from "@/features/items/ProductAdd/helpers"
 import * as quotationsApi from "@/features/quotations/api"
 import {
+  useChangeQuotationClient,
   useEditLocks,
   useLiveChange,
   useQuotation,
@@ -22,12 +23,15 @@ import {
 import { useUnits } from "@/features/units/hooks"
 import { resolveUnit } from "@/features/units/match"
 import { useNavTrail } from "@/hooks/useNavTrail"
+import { errorMessage } from "@/lib/errors"
 import { formatNumber as formatRp } from "@/lib/format"
 import { listCrumb, pageCrumb } from "@/lib/nav-trail"
 import { canWriteCatalog, setsPrices } from "@/lib/rbac"
+import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import type { QuotationDetail } from "@/types/api"
 import { toItemInput } from "./adapters"
+import ClientChangeModal from "./ClientChangeModal"
 import DiscountModal from "./DiscountModal"
 import { HEADER_PART, headerInput, linePart, lockOwners, saveDraft } from "./live"
 import Step1Client, { type Client } from "./Step1Client"
@@ -136,11 +140,11 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
   const { data: contacts = [] } = useClientContacts(detail?.companyClientId)
   const { data: clientRow } = useClient(detail?.companyClientId)
 
-  // The client is fixed on edit.
+  // The stored client.
   //
-  // The draft has no client edit, so a different pick would be dropped
-  // silently. Step 1 shows the quotation's own client only; the summary
-  // reads its live data and the contact picked in step 1.
+  // Step 1 shows the quotation's own client only, and Ganti Klien saves a
+  // new one at once; the summary reads its live data and the contact picked
+  // in step 1.
   const lockedClient: Client | undefined = useMemo(() => {
     if (!detail) return undefined
     const contactId = selectedContactId ?? detail.contactId
@@ -288,6 +292,41 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     if (id === selectedContactId) return
     if (!holdsHeader && !(await acquire(HEADER_PART))) return
     setSelectedContactId(id)
+  }
+
+  // Ganti Klien claims the header for itself.
+  //
+  // The client is a header part, saved at once; the new client and contact
+  // reach this page and the other editors through the change stream.
+  const [changingClient, setChangingClient] = useState(false)
+  const clientClaim = useRef(false)
+  const changeClient = useChangeQuotationClient()
+
+  async function openClientChange() {
+    if (!holdsHeader) {
+      if (!(await acquire(HEADER_PART))) return
+      clientClaim.current = true
+    }
+    setChangingClient(true)
+  }
+
+  function closeClientChange() {
+    setChangingClient(false)
+    if (!clientClaim.current) return
+    clientClaim.current = false
+    void release(HEADER_PART)
+  }
+
+  async function saveClient(clientId: number, contactId: number | undefined) {
+    if (qid === undefined) return null
+    try {
+      await changeClient.mutateAsync({ id: qid, input: { clientId, contactId } })
+    } catch (err) {
+      return errorMessage(err, "Gagal mengganti klien quotation.")
+    }
+    toast.success("Klien quotation diganti.")
+    closeClientChange()
+    return null
   }
 
   // A discount opened from the product step claims the header for itself.
@@ -498,8 +537,8 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
         {/* Render Step Components */}
         {(onHeaderStep || step === 1) && owners.header && (
           <div role="status" className={headerNotice}>
-            Narahubung, pengiriman, tenggat waktu dan diskon sedang diubah oleh {owners.header}.
-            Bagian ini dapat diubah lagi setelah selesai.
+            Klien, narahubung, pengiriman, tenggat waktu dan diskon sedang diubah oleh{" "}
+            {owners.header}. Bagian ini dapat diubah lagi setelah selesai.
           </div>
         )}
         {step === 1 && (
@@ -514,6 +553,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
             selectedContactId={selectedContactId}
             setSelectedContactId={(id) => void pickContact(id)}
             lockClient
+            onChangeClient={owners.header ? undefined : () => void openClientChange()}
             contactReadOnly={Boolean(owners.header)}
           />
         )}
@@ -619,6 +659,15 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
         allowIncomplete
         storeLinks={canWriteCatalog(me?.role)}
       />
+      {changingClient && (
+        <ClientChangeModal
+          clientId={detail.companyClientId}
+          contactId={detail.contactId}
+          note="Pilih perusahaan lain, misalnya dari grup usaha yang sama, lalu narahubungnya. Produk, harga dan No. Referensi Klien tetap."
+          onSave={saveClient}
+          onClose={closeClientChange}
+        />
+      )}
       {pendingDelete !== null && (
         <Modal
           title="Hapus produk ini dari quotation?"

@@ -8,9 +8,7 @@ import { clientCardInfo, documentContact } from "@/features/clients/clientCard"
 import { useClient } from "@/features/clients/hooks"
 import { usePurchaseOrderByQuotation } from "@/features/purchaseOrders/hooks"
 import PurchaseOrderDetail from "@/features/purchaseOrders/PurchaseOrderDetail"
-import { toQuotationData } from "@/features/quotations/adapters"
 import { useQuotation } from "@/features/quotations/hooks"
-import { useUnits } from "@/features/units/hooks"
 import { useTrailState } from "@/hooks/useNavTrail"
 import { isMissing } from "@/lib/errors"
 import { roleCanAccess } from "@/lib/rbac"
@@ -28,29 +26,26 @@ function PurchaseOrderDetailRoute() {
   const numericId = Number(id)
   const quotationId = Number.isInteger(numericId) && numericId > 0 ? numericId : undefined
   const { data: po, isLoading, error, refetch } = usePurchaseOrderByQuotation(quotationId)
-  // Client card only; the PO carries its own figures. Finance input reads
-  // POs but not quotations, so its card shows the client alone. The id is
-  // the quotation's, so it loads beside the PO; a missing one is a 404 that
-  // stays out of the error boundary.
+  // The client card is the PO's own client and narahubung, which can differ
+  // from the quotation's. Only the client's reference comes from the
+  // quotation; finance input reads POs but not quotations, so its card goes
+  // without it. The id is the quotation's, so it loads beside the PO; a
+  // missing one is a 404 that stays out of the error boundary.
   const readsQuotation = roleCanAccess(useMe().data?.role, "quotation")
   const { data: detail } = useQuotation(readsQuotation ? quotationId : undefined)
-  const { data: units } = useUnits()
   const { data: client } = useClient(po?.companyClientId)
 
-  const unitOf = useMemo(() => {
-    const map = new Map<number, string>()
-    for (const u of units ?? []) map.set(u.id, u.code)
-    return (unitId?: number) => (unitId !== undefined ? (map.get(unitId) ?? "") : "")
-  }, [units])
-
-  const quotation = useMemo(() => {
-    if (!detail) return undefined
-    const q = toQuotationData(detail, unitOf)
-    return {
-      ...q,
-      clientInfo: clientCardInfo(q.clientInfo ?? {}, client, documentContact(detail)),
-    }
-  }, [detail, unitOf, client])
+  const clientInfo = useMemo(
+    () =>
+      po
+        ? clientCardInfo(
+            { narahubung: po.contactName, referenceNumber: detail?.clientRefNo },
+            client,
+            documentContact(po),
+          )
+        : undefined,
+    [po, detail?.clientRefNo, client],
+  )
 
   if (!po) {
     if (isLoading) return <LoadingState label="Memuat data Purchase Order…" />
@@ -70,7 +65,7 @@ function PurchaseOrderDetailRoute() {
   return (
     <PurchaseOrderDetail
       po={po}
-      quotation={quotation}
+      clientInfo={clientInfo}
       onEdit={() => void navigate({ to: "/purchase-orders/$id/edit", params: { id }, state })}
     />
   )

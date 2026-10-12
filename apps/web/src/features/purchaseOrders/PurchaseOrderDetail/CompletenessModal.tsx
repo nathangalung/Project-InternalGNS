@@ -14,6 +14,8 @@ type CompletenessModalProps = {
   onClose: () => void
   // Opens number form, unless locked
   onEnterPoNumber?: () => void
+  // Opens the PO's client and narahubung pick
+  onChangeContact?: () => void
 }
 
 const SCOPE: Record<PoIssueKind, string> = {
@@ -30,6 +32,7 @@ export default function CompletenessModal({
   quotationId,
   onClose,
   onEnterPoNumber,
+  onChangeContact,
 }: CompletenessModalProps) {
   const trail = useTrailState()
   return (
@@ -89,19 +92,17 @@ export default function CompletenessModal({
                 {issue.missing.map((gap) => (
                   <li key={gap.code}>
                     {gap.label}
-                    {/* A deactivated narahubung is re-picked on the quotation. */}
-                    {gap.code === "contact_inactive" && (
+                    {/* A deactivated narahubung is re-picked on the PO. */}
+                    {gap.code === "contact_inactive" && onChangeContact && (
                       <>
                         {": "}
-                        <Link
-                          to="/quotations/$id"
-                          params={{ id: String(quotationId) }}
-                          search={{ narahubung: true }}
-                          state={trail}
-                          className={`${ui.entityLink} font-semibold`}
+                        <button
+                          type="button"
+                          className={`${ui.entityLink} cursor-pointer border-0 bg-transparent p-0 font-semibold`}
+                          onClick={onChangeContact}
                         >
                           Ganti Narahubung
-                        </Link>
+                        </button>
                       </>
                     )}
                   </li>

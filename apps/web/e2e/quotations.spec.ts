@@ -954,7 +954,7 @@ test.describe("quotation status", () => {
 
     await page.goto(`/quotations/${q.id}/edit`)
     await expect(
-      page.getByText("Klien tidak dapat diganti setelah quotation dibuat."),
+      page.getByText("Ganti Klien bila quotation ini untuk perusahaan lain."),
     ).toBeVisible()
     await page.getByRole("button", { name: new RegExp(`^${second}`) }).click()
     await expect(page.getByRole("button", { name: new RegExp(`^${second}`) })).toHaveAttribute(
@@ -969,6 +969,76 @@ test.describe("quotation status", () => {
     await expect.poll(async () => (await seed.getQuotation(q.id)).contactId).toBe(secondId)
     const card = page.getByRole("heading", { name: "Ringkasan Klien" }).locator("xpath=..")
     await expect(card).toContainText(second)
+  })
+
+  test("the editor moves a draft to a sister company with its narahubung", async ({
+    page,
+    seed,
+  }) => {
+    const client = await seed.client()
+    const sister = await seed.client({ label: "Klien Saudara" })
+    const sari = `${seed.prefix} Ibu Sari`
+    const sariId = await seed.contact(sister, sari)
+    const item = await seed.item()
+    const ref = `${seed.prefix}-RFQ-7`
+    const q = await seed.quotation({
+      client,
+      clientRefNo: ref,
+      lines: [{ item, qty: 2, price: 40_000 }],
+    })
+
+    await page.goto(`/quotations/${q.id}/edit`)
+    await page.getByRole("button", { name: "Ganti Klien" }).click()
+    const dialog = page.getByRole("dialog", { name: "Ganti Klien" })
+    await expect(dialog.getByRole("button", { name: "Simpan Klien" })).toBeDisabled()
+    await dialog.getByRole("textbox", { name: "Cari klien" }).fill(sister.name)
+    await dialog.getByRole("button").filter({ hasText: sister.name }).click()
+    await dialog.getByRole("button").filter({ hasText: sari }).click()
+    await dialog.getByRole("button", { name: "Simpan Klien" }).click()
+    await expect(dialog).toBeHidden()
+    await expect(page.getByRole("button").filter({ hasText: sister.name })).toBeVisible()
+    await expect(page.getByRole("button").filter({ hasText: sari })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    )
+
+    const saved = await seed.getQuotation(q.id)
+    expect(saved).toMatchObject({
+      companyClientId: sister.id,
+      companyClientName: sister.name,
+      contactId: sariId,
+      clientRefNo: ref,
+      grandTotal: q.grandTotal,
+    })
+    await page.goto(`/quotations/${q.id}`)
+    await expect(
+      page.getByText(`Klien diganti dari ${client.name} menjadi ${sister.name}`),
+    ).toBeVisible()
+    const card = page.getByRole("heading", { name: "Ringkasan Klien" }).locator("xpath=..")
+    await expect(card.getByRole("link", { name: sister.name })).toHaveAttribute(
+      "href",
+      `/clients/${sister.id}`,
+    )
+    await expect(card).toContainText(sari)
+  })
+
+  test("a sent quotation keeps its client and points to a revision", async ({ page, seed }) => {
+    const client = await seed.client()
+    const item = await seed.item()
+    const q = await seed.quotation({ client, lines: [{ item, qty: 1, price: 30_000 }] })
+    await seed.send(q.id)
+
+    await page.goto(`/quotations/${q.id}`)
+    const card = page.getByRole("heading", { name: "Ringkasan Klien" }).locator("xpath=..")
+    await expect(card).toContainText(
+      "Klien tidak dapat diganti setelah quotation dikirim. Buat revisi lalu ganti kliennya di draf revisi.",
+    )
+    await expect(card.getByRole("button", { name: "Ganti Klien" })).toHaveCount(0)
+
+    // The revision's draft can move.
+    const draft = await seed.revise(q.id)
+    await page.goto(`/quotations/${draft}/edit`)
+    await expect(page.getByRole("button", { name: "Ganti Klien" })).toBeVisible()
   })
 
   test("a move picked from the menu hands focus back to the badge", async ({ page, seed }) => {

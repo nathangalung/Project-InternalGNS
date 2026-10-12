@@ -18,7 +18,12 @@ import { roleCanAccess } from "@/lib/rbac"
 import { uploadWithFreshKey } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
 import { validateAsset } from "@/lib/upload-validation"
-import type { PoBackendStatus, PoDeliveryNoteLineInput, PoUpdateItemsInput } from "@/types/api"
+import type {
+  PoBackendStatus,
+  PoClientInput,
+  PoDeliveryNoteLineInput,
+  PoUpdateItemsInput,
+} from "@/types/api"
 import { detailsChanged } from "./adapters"
 import {
   completenessIssues,
@@ -210,6 +215,35 @@ export function useUploadPoFile() {
       qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
     },
     onError: (err) => reportPoError(qc, err, "Gagal mengunggah berkas PO."),
+  })
+}
+
+// Ganti Klien on a PO.
+//
+// The dialog shows every refusal, so nothing is toasted. A stale version or
+// a lock reloads the PO, so a retry sends the newer version. Total
+// Pembelian moves between the two clients.
+export function useChangePoClient() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      id,
+      input,
+      rowVersion,
+    }: {
+      id: number
+      input: PoClientInput
+      rowVersion: number
+    }) => poApi.changeClient(id, input, rowVersion),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
+      qc.invalidateQueries({ queryKey: queryKeys.clients.all })
+    },
+    onError: (err) => {
+      if (isVersionConflict(err) || isPoLockRefusal(err)) {
+        qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
+      }
+    },
   })
 }
 

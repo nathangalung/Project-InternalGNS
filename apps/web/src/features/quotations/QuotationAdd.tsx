@@ -1,20 +1,15 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import NavTrail from "@/components/shared/NavTrail"
 import { useMe } from "@/features/auth/hooks"
 import ClientAdd from "@/features/clients/ClientAdd"
 import { pickedContact } from "@/features/clients/clientCard"
-import { dedupeByCompany, fromClientHit, fromClientRow } from "@/features/clients/helpers"
-import { useClient, useClientContacts, useClientSearch, useClients } from "@/features/clients/hooks"
 import ProductAdd from "@/features/items/ProductAdd"
 import { useCreateQuotation } from "@/features/quotations/hooks"
 import { useUnits } from "@/features/units/hooks"
 import { resolveUnit } from "@/features/units/match"
-import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { useNavTrail } from "@/hooks/useNavTrail"
 import { formatNumber as formatRp } from "@/lib/format"
-import { lookupFailure } from "@/lib/lookup"
 import { listCrumb } from "@/lib/nav-trail"
-import { INLINE_LOOKUP } from "@/lib/query-client"
 import { canWriteCatalog, setsPrices } from "@/lib/rbac"
 import { ui } from "@/lib/ui"
 import type { QuotationCreateInput, QuotationItemInput } from "@/types/api"
@@ -24,18 +19,11 @@ import Step1Client from "./Step1Client"
 import Step2Product from "./Step2Product"
 import Step3Shipping from "./Step3Shipping"
 import Step4Summary from "./Step4Summary"
+import { useClientPicker } from "./useClientPicker"
 import { useQuotationWizard } from "./useQuotationWizard"
 import { WIZARD_STEPS as steps, validityInput } from "./wizard"
 import { qe, stepLabel, stepNum, stepPill } from "./wizard-styles"
-import {
-  defaultContact,
-  PICKER_PAGE_SIZE,
-  type PickClient,
-  pickerWindow,
-  resolveClient,
-  visibleClients,
-  withContact,
-} from "./wizardClient"
+import { defaultContact, withContact } from "./wizardClient"
 
 // Opened without a trail.
 const fallback = [listCrumb("/quotations")]
@@ -100,75 +88,11 @@ export default function QuotationAdd() {
   } = useQuotationWizard(unitsData, pricing)
 
   // Client picking, add mode only.
-  const [search, setSearch] = useState("")
   const [showClientAdd, setShowClientAdd] = useState(false)
-
-  const trimmedSearch = search.trim()
-  const debouncedSearch = useDebouncedValue(trimmedSearch, 250)
-  // Search hits are active only; the first page must match. A failure shows
-  // on the client step, never on the route error boundary, which would
-  // discard every line already added.
-  // Every active client, a page at a time by name; a search pages its hits.
-  const [pickerPageNo, setPickerPageNo] = useState(1)
-  // A new search starts on page 1
-  const changeSearch = (s: string) => {
-    setSearch(s)
-    setPickerPageNo(1)
-  }
-  const clientsQuery = useClients(
-    {
-      limit: PICKER_PAGE_SIZE,
-      offset: (pickerPageNo - 1) * PICKER_PAGE_SIZE,
-      isActive: true,
-      sortBy: "name",
-      sortDir: "asc",
-    },
-    INLINE_LOOKUP,
-  )
-  // Every hit up to the API cap, paged here
-  const searchQuery = useClientSearch(debouncedSearch, { limit: 200 }, INLINE_LOOKUP)
-  const clientsData = clientsQuery.data
-  const searchHits = searchQuery.data
+  const { search, changeSearch, filteredClients, currentClient, contacts, clientsFailure, picker } =
+    useClientPicker(selectedClient)
   const createQuotation = useCreateQuotation()
-
   const numericClientId = Number(selectedClient)
-  const { data: contacts = [] } = useClientContacts(
-    numericClientId > 0 ? numericClientId : undefined,
-  )
-
-  const remoteClients: PickClient[] = useMemo(() => {
-    if (debouncedSearch.length > 0) {
-      return dedupeByCompany(searchHits ?? []).map(fromClientHit)
-    }
-    return (clientsData?.rows ?? []).map(fromClientRow)
-  }, [debouncedSearch, searchHits, clientsData])
-
-  // A selection outside the picker is fetched by id.
-  const isListed = remoteClients.some((c) => c.id === selectedClient)
-  const selectedQuery = useClient(
-    !isListed && numericClientId > 0 ? numericClientId : undefined,
-    INLINE_LOOKUP,
-  )
-  const selectedRow = selectedQuery.data
-  const clientsFailure = lookupFailure(
-    debouncedSearch.length > 0 ? searchQuery : clientsQuery,
-    selectedQuery,
-  )
-  const currentClient = useMemo(
-    () => resolveClient(remoteClients, selectedClient, selectedRow),
-    [remoteClients, selectedClient, selectedRow],
-  )
-
-  // The server pages the full list; search hits page here.
-  const searching = debouncedSearch.length > 0
-  const sortedClients = [...remoteClients].sort((a, b) => a.name.localeCompare(b.name, "id"))
-  const pickerTotal = searching ? sortedClients.length : (clientsData?.total ?? 0)
-  const picker = pickerWindow(pickerTotal, pickerPageNo)
-  const pageRows = searching
-    ? sortedClients.slice(picker.start, picker.start + PICKER_PAGE_SIZE)
-    : sortedClients
-  // The picked client stays in view on any page.
-  const filteredClients = visibleClients(pageRows, currentClient, PICKER_PAGE_SIZE + 1)
 
   // Auto-select contact when client or contacts list changes.
   const clientContactId = currentClient?.contactId
@@ -325,7 +249,7 @@ export default function QuotationAdd() {
             search={search}
             setSearch={changeSearch}
             filteredClients={filteredClients}
-            picker={{ ...picker, total: pickerTotal, onPage: setPickerPageNo }}
+            picker={picker}
             selectedClient={selectedClient}
             setSelectedClient={setSelectedClient}
             setShowClientAdd={setShowClientAdd}

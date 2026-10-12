@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import type { ClientRow } from "@/types/api"
 import {
+  clientChangeReady,
   defaultContact,
   type PickClient,
   pickerWindow,
@@ -132,5 +133,45 @@ describe("pickerWindow", () => {
     { name: "no rows", total: 0, page: 1, want: { page: 1, pages: 1, start: 0, from: 0, to: 0 } },
   ])("$name", ({ total, page, want }) => {
     expect(pickerWindow(total, page)).toEqual(want)
+  })
+})
+
+describe("clientChangeReady", () => {
+  const reach = { id: 5, email: "sari@holding.test" }
+  const silent = { id: 6 }
+  const base = {
+    from: { clientId: 1, contactId: 2 },
+    clientId: 9 as number | undefined,
+    contactId: 5 as number | undefined,
+    contacts: [reach, silent] as { id: number; email?: string; phone?: string }[],
+    contactsPending: false,
+    allowSame: false,
+  }
+
+  it.each<[string, Partial<typeof base>, boolean]>([
+    ["another client with a reachable contact", {}, true],
+    ["no client picked", { clientId: undefined }, false],
+    ["contacts still loading", { contactsPending: true }, false],
+    ["a contact is required when the client has some", { contactId: undefined }, false],
+    ["a contact without email or phone", { contactId: 6 }, false],
+    ["a contact not of this client", { contactId: 2 }, false],
+    ["a client without contacts moves without one", { contacts: [], contactId: undefined }, true],
+    [
+      "the same client and contact change nothing",
+      { clientId: 1, contacts: [{ id: 2, phone: "8123456789" }], contactId: 2, allowSame: true },
+      false,
+    ],
+    [
+      "the same client is refused on a draft",
+      { clientId: 1, contacts: [reach], contactId: 5 },
+      false,
+    ],
+    [
+      "the same client takes another contact on a PO",
+      { clientId: 1, contacts: [reach], contactId: 5, allowSame: true },
+      true,
+    ],
+  ])("%s", (_name, over, want) => {
+    expect(clientChangeReady({ ...base, ...over })).toBe(want)
   })
 })

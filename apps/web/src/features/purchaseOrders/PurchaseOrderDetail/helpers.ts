@@ -83,6 +83,14 @@ export function isPoFileLocked(status: PoStatus): boolean {
   return status === "DELIVERED" || status === "CANCELLED"
 }
 
+// The PO's client can change.
+//
+// Until delivery, as fn_po_update_client allows: the invoice copies the
+// buyer at delivery, and a cancelled PO is closed.
+export function poClientEditable(status: PoStatus): boolean {
+  return !isPoFileLocked(status)
+}
+
 // Why Ubah PO is refused.
 //
 // The server sets linesLocked: a cancelled PO, or a delivered one unless its

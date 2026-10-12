@@ -18,6 +18,7 @@ import {
   PO_STATUS_CONFIG,
   PO_STATUS_ORDER,
   poBreakdown,
+  poClientEditable,
   poDetailsErrors,
   poEditLockReason,
   poErrorMessage,
@@ -68,6 +69,18 @@ describe("isPoFileLocked", () => {
     ["CANCELLED", true],
   ] as const)("%s -> %s", (status, locked) => {
     expect(isPoFileLocked(status)).toBe(locked)
+  })
+})
+
+describe("poClientEditable", () => {
+  it.each([
+    ["PENDING", true],
+    ["UPLOADED", true],
+    ["ON_PROGRESS", true],
+    ["DELIVERED", false],
+    ["CANCELLED", false],
+  ] as const)("%s -> %s", (status, editable) => {
+    expect(poClientEditable(status)).toBe(editable)
   })
 })
 

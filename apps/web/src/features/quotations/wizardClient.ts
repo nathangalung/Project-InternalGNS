@@ -78,3 +78,29 @@ export function pickerWindow(total: number, page: number, size = PICKER_PAGE_SIZ
     to: Math.min(start + size, total),
   }
 }
+
+// A Ganti Klien choice.
+export type ClientChange = {
+  // What the document holds now
+  from: { clientId: number; contactId?: number }
+  clientId: number | undefined
+  contactId: number | undefined
+  contacts: { id: number; email?: string; phone?: string }[]
+  contactsPending: boolean
+  // A PO may keep its client and take another narahubung
+  allowSame: boolean
+}
+
+// When Ganti Klien may save.
+//
+// Another client, or on a PO another narahubung of the same one. A client
+// with contacts needs one picked that has an email or a phone; one with
+// none moves without. Nothing saves while the contacts load.
+export function clientChangeReady(c: ClientChange): boolean {
+  if (c.clientId === undefined || c.contactsPending) return false
+  const same = c.clientId === c.from.clientId
+  if (same && (!c.allowSame || c.contactId === c.from.contactId)) return false
+  if (c.contacts.length === 0) return c.contactId === undefined
+  const picked = c.contacts.find((k) => k.id === c.contactId)
+  return picked !== undefined && Boolean(picked.email || picked.phone)
+}

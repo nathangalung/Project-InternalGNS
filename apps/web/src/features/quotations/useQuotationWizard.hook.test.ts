@@ -189,7 +189,7 @@ describe("useQuotationWizard seed", () => {
     expect(result.current.gates.isWaktuFilled).toBe(true)
   })
 
-  it("follows the server without moving the page or the user's header", () => {
+  it("follows the server and its client without moving the page or the user's header", () => {
     const { result } = wizard()
     const stored = {
       selectedClient: "3",
@@ -209,21 +209,21 @@ describe("useQuotationWizard seed", () => {
     act(() => result.current.setShippingTime("9"))
     act(() => result.current.setClientRefNo("RFQ-8"))
 
-    // Editing the header: only the lines follow.
+    // Editing the header: only the lines and the client follow.
     act(() => result.current.syncFromServer(stored, false))
     expect(result.current).toMatchObject({
       products: [],
       prodPage: 2,
       shippingTime: "9",
       clientRefNo: "RFQ-8",
-      selectedClient: "",
+      selectedClient: "3",
       ppnEnabled: true,
     })
 
     act(() => result.current.syncFromServer(stored, true))
     expect(result.current).toMatchObject({
       prodPage: 2,
-      selectedClient: "",
+      selectedClient: "3",
       discountPct: 5,
       ppnEnabled: false,
       shippingAddress: "Jl. Pelabuhan No. 1, Jakarta Utara",
