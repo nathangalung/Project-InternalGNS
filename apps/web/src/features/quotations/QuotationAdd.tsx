@@ -219,10 +219,9 @@ export default function QuotationAdd() {
   const {
     totalProdukQty: summaryTotalProdukQty,
     totalHargaBeli: summaryTotalHargaBeli,
-    totalHargaJual: summaryTotalHargaJual,
+    total: summaryTotal,
     nominalDiskon,
     subTotal: summarySubTotal,
-    shippingCost: summaryShippingCost,
     dpp: summaryDpp,
     ppn: summaryPpn,
     grandTotal: summaryGrandTotal,
@@ -365,11 +364,12 @@ export default function QuotationAdd() {
             discountPct={discountPct}
             formatRp={formatRp}
             summaryTotalHargaBeli={summaryTotalHargaBeli}
-            summaryTotalHargaJual={summaryTotalHargaJual}
+            summaryTotal={summaryTotal}
             nominalDiskon={nominalDiskon}
             summarySubTotal={summarySubTotal}
             summaryDpp={summaryDpp}
             summaryPpn={summaryPpn}
+            summaryGrandTotal={summaryGrandTotal}
             withPPN={ppnEnabled}
             setWithPPN={pricing ? setPpnEnabled : undefined}
             onImportProducts={(newProds) => setProducts((prev) => [...prev, ...newProds])}
@@ -410,13 +410,12 @@ export default function QuotationAdd() {
             formatRp={formatRp}
             summaryTotalProdukQty={summaryTotalProdukQty}
             summaryTotalHargaBeli={summaryTotalHargaBeli}
-            summaryTotalHargaJual={summaryTotalHargaJual}
+            summaryTotal={summaryTotal}
             nominalDiskon={nominalDiskon}
             summarySubTotal={summarySubTotal}
             summaryDpp={summaryDpp}
             summaryPpn={summaryPpn}
             withPPN={ppnEnabled}
-            summaryShippingCost={summaryShippingCost}
             summaryProfit={summaryProfit}
             summaryGrandTotal={summaryGrandTotal}
             invalidQtyCount={invalidQty}

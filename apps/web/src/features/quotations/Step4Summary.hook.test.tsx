@@ -5,12 +5,11 @@ import Step4Summary from "./Step4Summary"
 const totals = {
   summaryTotalProdukQty: 0,
   summaryTotalHargaBeli: 0,
-  summaryTotalHargaJual: 0,
+  summaryTotal: 0,
   nominalDiskon: 0,
   summarySubTotal: 0,
   summaryDpp: 0,
   summaryPpn: 0,
-  summaryShippingCost: 0,
   summaryProfit: 0,
   summaryGrandTotal: 0,
 }
@@ -94,5 +93,35 @@ describe("Step4Summary client reference", () => {
   it("is read-only while another user holds the header", async () => {
     await mount(<Step4Summary {...base} terms={terms} readOnly />)
     expect(refInput()?.disabled).toBe(true)
+  })
+})
+
+// Rincian Biaya row labels.
+function costLabels(): string[] {
+  const title = [...document.querySelectorAll("div")].find((d) => d.textContent === "Rincian Biaya")
+  const rows = title?.parentElement?.querySelectorAll(
+    ":scope > div:nth-child(2) > div > span:first-child",
+  )
+  return [...(rows ?? [])].map((s) => s.textContent ?? "")
+}
+
+describe("Step4Summary cost rows", () => {
+  // Shipping sits in Total, as on the PDF, with no row of its own.
+  it("shows the PDF summary rows", async () => {
+    await mount(<Step4Summary {...base} shippingCost="50" discountPct={2.5} nominalDiskon={5} />)
+    expect(costLabels()).toEqual([
+      "Jumlah Produk",
+      "Total Harga Beli",
+      "Total",
+      "Diskon Produk 2,5%",
+      "Sub Total",
+      "DPP Nilai Lain",
+      "PPN 12%",
+    ])
+  })
+
+  it("drops the discount row at 0 and shows Tanpa PPN", async () => {
+    await mount(<Step4Summary {...base} withPPN={false} />)
+    expect(costLabels()).toEqual(["Jumlah Produk", "Total Harga Beli", "Total", "Sub Total", "PPN"])
   })
 })

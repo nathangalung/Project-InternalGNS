@@ -172,10 +172,9 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
   const {
     totalProdukQty: summaryTotalProdukQty,
     totalHargaBeli: summaryTotalHargaBeli,
-    totalHargaJual: summaryTotalHargaJual,
+    total: summaryTotal,
     nominalDiskon,
     subTotal: summarySubTotal,
-    shippingCost: summaryShippingCost,
     dpp: summaryDpp,
     ppn: summaryPpn,
     grandTotal: summaryGrandTotal,
@@ -370,11 +369,12 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
                 discountPct={discountPct}
                 formatRp={formatRp}
                 summaryTotalHargaBeli={summaryTotalHargaBeli}
-                summaryTotalHargaJual={summaryTotalHargaJual}
+                summaryTotal={summaryTotal}
                 nominalDiskon={nominalDiskon}
                 summarySubTotal={summarySubTotal}
                 summaryDpp={summaryDpp}
                 summaryPpn={summaryPpn}
+                summaryGrandTotal={summaryGrandTotal}
                 withPPN={po.ppnEnabled}
                 onImportProducts={(newProds) => setProducts((prev) => [...prev, ...newProds])}
                 allowZeroQty
@@ -408,13 +408,12 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
                 formatRp={formatRp}
                 summaryTotalProdukQty={summaryTotalProdukQty}
                 summaryTotalHargaBeli={summaryTotalHargaBeli}
-                summaryTotalHargaJual={summaryTotalHargaJual}
+                summaryTotal={summaryTotal}
                 nominalDiskon={nominalDiskon}
                 summarySubTotal={summarySubTotal}
                 summaryDpp={summaryDpp}
                 summaryPpn={summaryPpn}
                 withPPN={po.ppnEnabled}
-                summaryShippingCost={summaryShippingCost}
                 summaryProfit={summaryProfit}
                 summaryGrandTotal={summaryGrandTotal}
               />

@@ -75,13 +75,16 @@ export function validityInput(typed: string): number | undefined {
   return t ? Number(t) : undefined
 }
 
+// The PDF summary rows.
+//
+// total holds every line, shipping included, and subTotal is total less
+// the product discount.
 export type WizardSummary = {
   totalProdukQty: number
   totalHargaBeli: number
-  totalHargaJual: number
+  total: number
   nominalDiskon: number
   subTotal: number
-  shippingCost: number
   dpp: number
   ppn: number
   grandTotal: number
@@ -100,24 +103,22 @@ export function wizardSummary(
   // A Tidak Ditawarkan line is not sold, so it adds nothing.
   const offered = products.filter((p) => !p.noOffer)
   const totalHargaBeli = offered.reduce((sum, p) => sum + p.hargaBeli * p.jumlah, 0)
-  const totalHargaJual = offered.reduce((sum, p) => sum + p.hargaJual * p.jumlah, 0)
   // Discounted and taxed per line, as the server stores the totals.
   const nets = offered.map((p) => lineNet(p.jumlah, p.hargaJual, discountPct))
-  const subTotal = sumRupiah(nets)
+  const productNet = sumRupiah(nets)
   const nominalDiskon = sumRupiah(offered.map((p, i) => lineNet(p.jumlah, p.hargaJual) - nets[i]))
   const shipping = Number(shippingCost) || 0
   const tax = computeTaxBreakdown([...nets, shipping], withPPN)
   return {
     totalProdukQty: offered.reduce((sum, p) => sum + p.jumlah, 0),
     totalHargaBeli,
-    totalHargaJual,
+    total: sumRupiah([tax.subtotal, nominalDiskon]),
     nominalDiskon,
-    subTotal,
-    shippingCost: shipping,
+    subTotal: tax.subtotal,
     dpp: tax.dppNilaiLain,
     ppn: tax.ppnAmount,
     grandTotal: tax.grandTotal,
-    profit: offered.length > 0 ? subTotal - totalHargaBeli : 0,
+    profit: offered.length > 0 ? productNet - totalHargaBeli : 0,
   }
 }
 
