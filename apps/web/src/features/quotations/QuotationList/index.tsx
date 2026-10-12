@@ -14,7 +14,8 @@ import { exportsQuotation, seesCost, seesSelling, writesQuotation } from "@/lib/
 import { ui } from "@/lib/ui"
 import { useListScreen, usePageWithin } from "@/lib/useListScreen"
 import type { QuotationSortKey } from "@/types/api"
-import QuotationFilter, { type DatePreset, type StatusFilter } from "../QuotationFilter"
+import { QUOTATION_FILTERS, quotationListSchema } from "../list-search"
+import QuotationFilter from "../QuotationFilter"
 import { quotationStatusFromLabel } from "../status"
 import type { QuotationRow, SortableRowKey } from "./helpers"
 import PageHeader from "./PageHeader"
@@ -24,15 +25,6 @@ import SummaryCards from "./SummaryCards"
 
 type QuotationListProps = {
   onViewDetail?: (id: string) => void
-}
-
-type ActiveFilters = {
-  preset: DatePreset
-  startDate: string
-  endDate: string
-  statuses: StatusFilter[]
-  minHarga: string
-  maxHarga: string
 }
 
 // Column to API sort key.
@@ -46,22 +38,20 @@ const sortKeyToApi: Record<SortableRowKey, QuotationSortKey> = {
 // Quotation list orchestrator.
 export default function QuotationList({ onViewDetail }: QuotationListProps) {
   const [showFilter, setShowFilter] = useState(false)
-  const [sortConfig, setSortConfig] = useState<{
-    key: SortableRowKey
-    direction: "asc" | "desc"
-  } | null>(null)
+  const role = useMe().data?.role
+  // A total filter or sort is refused for a role that cannot see it, so a
+  // shared URL carrying one is read without it.
+  const showTotal = seesSelling(role)
 
-  const list = useListScreen<ActiveFilters | null>(null)
-  const { debouncedSearch, filters: activeFilters, itemsPerPage, startIndex } = list
+  const list = useListScreen(quotationListSchema, "/quotations")
+  const { debouncedSearch, filters: activeFilters, itemsPerPage, startIndex, sort } = list
   const { clearSearch, patchFilters } = list
+  const hasTotalRange =
+    showTotal && (activeFilters.minHarga !== "" || activeFilters.maxHarga !== "")
 
   function requestSort(key: SortableRowKey) {
-    let direction: "asc" | "desc" = "asc"
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
-      direction = "desc"
-    }
-    setSortConfig({ key, direction })
-    list.setCurrentPage(1)
+    const direction = sort?.key === key && sort.dir === "asc" ? "desc" : "asc"
+    list.setSort({ key, dir: direction })
   }
 
   const queryParams = useMemo(() => {
@@ -70,23 +60,22 @@ export default function QuotationList({ onViewDetail }: QuotationListProps) {
       limit: itemsPerPage,
       offset: startIndex,
     }
-    if (sortConfig) {
-      out.sortBy = sortKeyToApi[sortConfig.key]
-      out.sortDir = sortConfig.direction
+    if (sort && (sort.key !== "total" || showTotal)) {
+      out.sortBy = sortKeyToApi[sort.key]
+      out.sortDir = sort.dir
     }
-    if (!activeFilters) return out
     if (activeFilters.statuses.length > 0) {
       out.statuses = activeFilters.statuses.map(quotationStatusFromLabel)
     }
     const range = resolveRange(activeFilters.preset, activeFilters.startDate, activeFilters.endDate)
     if (range.start) out.dateFrom = range.start
     if (range.end) out.dateTo = range.end
-    const min = activeFilters.minHarga.replace(/\D/g, "")
-    if (min && min !== "0") out.minTotal = min
-    const max = activeFilters.maxHarga.replace(/\D/g, "")
-    if (max && max !== "0") out.maxTotal = max
+    if (showTotal) {
+      if (activeFilters.minHarga) out.minTotal = activeFilters.minHarga
+      if (activeFilters.maxHarga) out.maxTotal = activeFilters.maxHarga
+    }
     return out
-  }, [debouncedSearch, activeFilters, itemsPerPage, startIndex, sortConfig])
+  }, [debouncedSearch, activeFilters, itemsPerPage, startIndex, sort, showTotal])
 
   const { data, isLoading } = useQuotations(queryParams)
   const currentData: QuotationRow[] = useMemo(() => (data?.rows ?? []).map(toTableRow), [data])
@@ -101,40 +90,37 @@ export default function QuotationList({ onViewDetail }: QuotationListProps) {
     if (debouncedSearch) {
       out.push({ key: "q", label: `Cari: "${debouncedSearch}"`, onRemove: clearSearch })
     }
-    if (activeFilters) {
-      for (const s of activeFilters.statuses) {
-        out.push({
-          key: `status-${s}`,
-          label: `Status: ${s}`,
-          onRemove: () =>
-            patchFilters((p) => (p ? { ...p, statuses: p.statuses.filter((x) => x !== s) } : p)),
-        })
-      }
-      if (activeFilters.preset !== "semua") {
-        out.push({
-          key: "date",
-          label: `Tanggal: ${activeFilters.startDate} s/d ${activeFilters.endDate}`,
-          onRemove: () => patchFilters((p) => (p ? { ...p, preset: "semua" } : p)),
-        })
-      }
-      if (activeFilters.minHarga !== "" || activeFilters.maxHarga !== "") {
-        out.push({
-          key: "harga",
-          label: `Harga: ${activeFilters.minHarga || "0"} - ${activeFilters.maxHarga || "tanpa batas"}`,
-          onRemove: () => patchFilters((p) => (p ? { ...p, minHarga: "", maxHarga: "" } : p)),
-        })
-      }
+    for (const s of activeFilters.statuses) {
+      out.push({
+        key: `status-${s}`,
+        label: `Status: ${s}`,
+        onRemove: () =>
+          patchFilters((p) => ({ ...p, statuses: p.statuses.filter((x) => x !== s) })),
+      })
+    }
+    if (activeFilters.preset !== "semua") {
+      out.push({
+        key: "date",
+        label: `Tanggal: ${activeFilters.startDate} s/d ${activeFilters.endDate}`,
+        onRemove: () => patchFilters((p) => ({ ...p, preset: "semua" })),
+      })
+    }
+    if (hasTotalRange) {
+      out.push({
+        key: "harga",
+        label: `Harga: ${activeFilters.minHarga || "0"} - ${activeFilters.maxHarga || "tanpa batas"}`,
+        onRemove: () => patchFilters((p) => ({ ...p, minHarga: "", maxHarga: "" })),
+      })
     }
     return out
-  }, [debouncedSearch, activeFilters, clearSearch, patchFilters])
+  }, [debouncedSearch, activeFilters, hasTotalRange, clearSearch, patchFilters])
 
   const clearAllFilters = () => {
     clearSearch()
-    list.applyFilters(null)
+    list.applyFilters(QUOTATION_FILTERS)
   }
 
   // Download the quotation PDF.
-  const role = useMe().data?.role
   const handleDownload = (row: QuotationRow) => {
     void downloadQuotationPdf(Number(row.id), row.displayNo)
   }
@@ -159,13 +145,13 @@ export default function QuotationList({ onViewDetail }: QuotationListProps) {
           <QuotationTable
             rows={currentData}
             isLoading={isLoading}
-            sortKey={sortConfig?.key ?? null}
-            sortDir={sortConfig?.direction ?? null}
+            sortKey={sort?.key ?? null}
+            sortDir={sort?.dir ?? null}
             onSort={requestSort}
             onViewDetail={onViewDetail}
             onDownload={exportsQuotation(role) ? handleDownload : undefined}
             showHargaBeli={seesCost(role)}
-            showTotal={seesSelling(role)}
+            showTotal={showTotal}
             emptyText={emptyListText(list, "Belum ada Quotation.")}
           />
           <Pagination
@@ -184,9 +170,9 @@ export default function QuotationList({ onViewDetail }: QuotationListProps) {
       {showFilter && (
         <QuotationFilter
           onClose={() => setShowFilter(false)}
-          initialValues={activeFilters ?? undefined}
+          initialValues={activeFilters}
           onApply={list.applyFilters}
-          showTotalRange={seesSelling(role)}
+          showTotalRange={showTotal}
         />
       )}
     </>

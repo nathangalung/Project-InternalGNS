@@ -31,6 +31,12 @@ declare module "@tanstack/react-router" {
 // Crumbs kept before the page.
 export const TRAIL_CAP = 5
 
+// The shell's scrolling <main>.
+//
+// The router keeps its scroll per history entry under this id.
+export const MAIN_SCROLL_ID = "main"
+export const MAIN_SCROLL_SELECTOR = `[data-scroll-restoration-id="${MAIN_SCROLL_ID}"]`
+
 // Page names by section.
 const SECTION_LABEL: Record<Section, string> = {
   dashboard: "Dashboard",

@@ -1,8 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { validateVendorSearch } from "@/features/vendors/list-search"
 import VendorList from "@/features/vendors/VendorList"
 import { useTrailState } from "@/hooks/useNavTrail"
 
 export const Route = createFileRoute("/_authed/vendors/")({
+  validateSearch: validateVendorSearch,
   component: VendorListRoute,
 })
 

@@ -29,6 +29,7 @@ import { useListScreen, usePageWithin } from "@/lib/useListScreen"
 import { digitsOnly, optionalEmailError, optionalPhoneError } from "@/lib/validation"
 import type { VendorContactInfo, VendorRow } from "@/types/api"
 import { buildContactInfo, vendorFormErrors } from "./contact-info"
+import { vendorItemsSchema } from "./list-search"
 import VendorQuotations from "./VendorQuotations"
 
 type VendorDetailProps = {
@@ -108,7 +109,7 @@ export default function VendorDetail({ vendor }: VendorDetailProps) {
   const { data: logoDownload } = useVendorLogoDownloadUrl(vendor.id, vendor.logoObjectKey)
   const storedLogo = useObjectUrl(logoDownload?.downloadUrl)
   const logoDataUrl = logoPreview || storedLogo
-  const itemsList = useListScreen<Record<string, never>>({})
+  const itemsList = useListScreen(vendorItemsSchema, "/vendors/$id")
   const {
     data: vendorItems,
     isLoading: itemsLoading,

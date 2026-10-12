@@ -737,8 +737,9 @@ another is reached with a real history back, anything else is opened with
 the crumbs before it. Without a trail a page shows and follows its fallback,
 the list (and, on an edit page, the detail). The editors save with
 `leaveTo(detail)`, so the save returns along the trail, and a PO status move
-returns along it too. List filters live in component state, so a history back
-to a list still starts it unfiltered.
+returns along it too. A list keeps its state in its URL (below), so a crumb
+or a history back to a list opens it as it was left, scrolled where the
+reader was.
 
 Shared pieces in `components/shared`, reuse them instead of copying markup:
 
@@ -803,13 +804,36 @@ to `cmd/orphan-blobs`, which keeps every gallery key. Upload keys are stamped
 in nanoseconds, so repeated camera names never share one.
 
 List screens share one state machine, `lib/useListScreen.ts`: search with
-debounce, filters, page, per-page, and the reset-to-page-1 invariant. Note which
-mutator resets the page — `setSearch`, `applyFilters` and `setItemsPerPage` do,
-`clearSearch` and `patchFilters` do not, because removing a filter chip must
-keep the reader in place. Each screen still owns its own filter defaults and
-query call, and passes the server total to `usePageWithin`, which moves the
-reader to the new last page when a narrower result ends before the current
-one. Client-side tables (the quotation product tables) clamp the same way
+debounce, filters, sort, page, per-page, and the reset-to-page-1 invariant.
+Note which mutator resets the page — `setSearch`, `applyFilters`,
+`setItemsPerPage` and `setSort` do, `clearSearch` and `patchFilters` do not,
+because removing a filter chip must keep the reader in place. The state
+lives in the route's search params, not in component state: each list route
+(and the vendor page, for its product table's page) sets `validateSearch`
+from its feature's `list-search.ts` schema, built on `lib/list-search.ts`.
+Reading is tolerant, so a missing, unknown or malformed value reads as its
+default and never reaches the error boundary, and writing leaves defaults
+out, so a list in its default state has a plain URL and the menu, which
+links the bare path, opens it that way. Keys are short English names (`q`,
+`page`, `per`, `sort`, `dir`, `status`, `preset`, `from`, `to`, `min`, …)
+and statuses go by API key, never by label. Every change replaces the
+history entry (`replace`, `state: true` to keep the trail, `resetScroll:
+false`), so the back button leaves the list instead of stepping through
+keys; a typed search shows at once in the box and reaches the URL once it
+settles (250 ms). Each screen passes its own route path
+(`useListScreen(schema, "/quotations")`), every write targets that route,
+and a write made after the list closed, or once history has already moved
+to another page, does nothing, so list params never land on a detail URL. A total filter or sort a role cannot see is left out of
+the query and its chips, so a shared URL never draws a 403. Each screen
+still owns its query call and passes the server total to `usePageWithin`,
+which moves the reader to the new last page when a narrower result ends
+before the current one.
+The shell scrolls `<main>`, not the window, so the router restores it:
+`scrollRestoration` with `<main>`'s `data-scroll-restoration-id` in
+`scrollToTopSelectors` (`main.tsx`, `MAIN_SCROLL_SELECTOR`). The router keeps
+the scroll per history entry, so a history back or a crumb that goes back
+through history restores the list where the reader left it, and a new
+navigation starts at the top. Client-side tables (the quotation product tables) clamp the same way
 through `clampPage` in `lib/pagination.ts`, and every pager renders
 `components/shared/PageButtons`.
 `useListScreen` also reports `narrowed` (a search, or filters off their

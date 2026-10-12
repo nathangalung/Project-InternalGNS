@@ -3,10 +3,13 @@ import LoadingState from "@/components/shared/LoadingState"
 import NotFoundState from "@/components/shared/NotFoundState"
 import RouteErrorFallback from "@/components/shared/RouteErrorFallback"
 import { useVendor } from "@/features/vendors/hooks"
+import { validateVendorItemsSearch } from "@/features/vendors/list-search"
 import VendorDetail from "@/features/vendors/VendorDetail"
 import { isMissing } from "@/lib/errors"
 
 export const Route = createFileRoute("/_authed/vendors/$id/")({
+  // Page of the vendor's product table
+  validateSearch: validateVendorItemsSearch,
   component: VendorDetailRoute,
 })
 

@@ -19,8 +19,9 @@ import type { CashEntryRow } from "@/types/api"
 import * as cashApi from "./api"
 import CashEntryFilter from "./CashEntryFilter"
 import CashEntryModal from "./CashEntryModal"
-import { CASH_FILTERS, type CashFilterValues, cashParams, DIRECTION_LABEL } from "./helpers"
+import { CASH_FILTERS, cashParams, DIRECTION_LABEL } from "./helpers"
 import { useCashEntries, useCashSummary, useDeleteCashEntry } from "./hooks"
+import { cashListSchema } from "./list-search"
 
 const BADGE = {
   in: { bg: "#DCFCE7", color: "#166534" },
@@ -36,7 +37,7 @@ export default function CashEntryList() {
   const [deleting, setDeleting] = useState<CashEntryRow | null>(null)
   const remove = useDeleteCashEntry()
 
-  const list = useListScreen<CashFilterValues>(CASH_FILTERS)
+  const list = useListScreen(cashListSchema, "/cash-entries")
   const { debouncedSearch, filters, itemsPerPage, startIndex } = list
   const filterParams = useMemo(
     () => cashParams(debouncedSearch, filters),

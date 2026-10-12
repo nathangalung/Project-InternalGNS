@@ -17,8 +17,9 @@ import {
   katalogSource,
 } from "@/features/items/helpers"
 import { useItemSearchAdvanced, useItems } from "@/features/items/hooks"
+import { PRODUCT_FILTERS, productListSchema } from "@/features/items/list-search"
 import ProductCreateModal from "@/features/items/ProductCreateModal"
-import ProductFilter, { type ProductFilterValues } from "@/features/items/ProductFilter"
+import ProductFilter from "@/features/items/ProductFilter"
 import ProductThumb from "@/features/items/ProductThumb"
 import { useUnits } from "@/features/units/hooks"
 import { resolveUnit, unitIndex } from "@/features/units/match"
@@ -48,9 +49,6 @@ const TIER_BADGE: Record<AdvancedSearchTier, { label: string; cls: string }> = {
   ITEM_FUZZY: { label: "FUZZY", cls: "bg-[#F3F4F6] text-[#4B5563]" },
 }
 
-// Filters with nothing applied.
-const PRODUCT_FILTERS: ProductFilterValues = { status: "all", unitCode: "" }
-
 export default function ProductList({ onViewDetail }: ProductListProps) {
   const { data: unitsData } = useUnits()
   const { data: me } = useMe()
@@ -59,7 +57,7 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
   const [showAdd, setShowAdd] = useState(false)
   const [showFilter, setShowFilter] = useState(false)
 
-  const list = useListScreen<ProductFilterValues>(PRODUCT_FILTERS)
+  const list = useListScreen(productListSchema, "/products")
   const { debouncedSearch, filters, itemsPerPage, startIndex } = list
   const chips = filterChips(
     { term: debouncedSearch, clear: list.clearSearch },

@@ -11,8 +11,13 @@ import StoreLink from "@/components/shared/StoreLink"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useMe } from "@/features/auth/hooks"
 import { useVendors } from "@/features/vendors/hooks"
+import {
+  VENDOR_FILTERS,
+  type VendorSortKey,
+  vendorListSchema,
+} from "@/features/vendors/list-search"
 import VendorAddModal from "@/features/vendors/VendorAddModal"
-import VendorFilter, { type VendorFilterValues } from "@/features/vendors/VendorFilter"
+import VendorFilter from "@/features/vendors/VendorFilter"
 import { filterChips } from "@/lib/filter-chips"
 import { statusFilterLabel } from "@/lib/filter-options"
 import { formatRupiah } from "@/lib/format"
@@ -27,25 +32,18 @@ type VendorListProps = {
   onViewDetail?: (id: number) => void
 }
 
-type SortKey = "totalPembelian" | "productCount"
-
 const sortBtnCls = `inline-flex w-full items-center justify-center rounded-sm uppercase ${ui.focusRing}`
-
-// Filters with nothing applied.
-const VENDOR_FILTERS: VendorFilterValues = { status: "all", countryName: "", minTotal: "" }
 
 export default function VendorList({ onViewDetail }: VendorListProps) {
   const [showAdd, setShowAdd] = useState(false)
   const [showFilter, setShowFilter] = useState(false)
-  const [sortKey, setSortKey] = useState<SortKey | null>(null)
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
   const { data: me } = useMe()
   const canWrite = canWriteCatalog(me?.role)
   // Total purchase is a cost figure
   const showTotal = seesCost(me?.role)
 
-  const list = useListScreen<VendorFilterValues>(VENDOR_FILTERS)
-  const { debouncedSearch, filters, itemsPerPage, startIndex } = list
+  const list = useListScreen(vendorListSchema, "/vendors")
+  const { debouncedSearch, filters, itemsPerPage, startIndex, sort } = list
   const chips = filterChips(
     { term: debouncedSearch, clear: list.clearSearch },
     filters,
@@ -53,7 +51,7 @@ export default function VendorList({ onViewDetail }: VendorListProps) {
     {
       status: (v) => `Status: ${statusFilterLabel(v)}`,
       countryName: (v) => `Lokasi: ${v}`,
-      minTotal: (v) => `Min Total Pembelian: ${formatRupiah(v)}`,
+      minTotal: showTotal ? (v) => `Min Total Pembelian: ${formatRupiah(v)}` : undefined,
     },
     list.patchFilters,
   )
@@ -62,37 +60,36 @@ export default function VendorList({ onViewDetail }: VendorListProps) {
     list.applyFilters(VENDOR_FILTERS)
   }
 
-  function ariaSort(k: SortKey): "ascending" | "descending" | undefined {
-    if (sortKey !== k) return undefined
-    return sortDir === "asc" ? "ascending" : "descending"
+  function ariaSort(k: VendorSortKey): "ascending" | "descending" | undefined {
+    if (sort?.key !== k) return undefined
+    return sort.dir === "asc" ? "ascending" : "descending"
   }
 
-  function toggleSort(k: SortKey) {
-    if (sortKey === k) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"))
-    } else {
-      setSortKey(k)
-      setSortDir("desc")
-    }
+  function toggleSort(k: VendorSortKey) {
+    const dir = sort?.key === k && sort.dir === "desc" ? "asc" : "desc"
+    list.setSort({ key: k, dir })
   }
 
+  // A total filter or sort is refused for a role that cannot see totals,
+  // so a shared URL carrying one is read without it.
+  const sortKey = sort && (sort.key !== "totalPembelian" || showTotal) ? sort.key : null
   const queryParams = useMemo(
     () => ({
       q: debouncedSearch || undefined,
       isActive: filters.status === "all" ? undefined : filters.status === "active",
       countryName: filters.countryName || undefined,
-      minTotal: filters.minTotal && filters.minTotal !== "0" ? filters.minTotal : undefined,
+      minTotal: showTotal && filters.minTotal ? filters.minTotal : undefined,
       sortBy:
         sortKey === "productCount"
           ? ("productCount" as const)
           : sortKey === "totalPembelian"
             ? ("totalPurchase" as const)
             : undefined,
-      sortDir: sortKey ? sortDir : undefined,
+      sortDir: sortKey ? sort?.dir : undefined,
       limit: itemsPerPage,
       offset: startIndex,
     }),
-    [debouncedSearch, filters, sortKey, sortDir, itemsPerPage, startIndex],
+    [debouncedSearch, filters, sortKey, sort?.dir, showTotal, itemsPerPage, startIndex],
   )
 
   const { data, isLoading } = useVendors(queryParams)
