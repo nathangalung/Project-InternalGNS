@@ -19,6 +19,7 @@ import { useListScreen, usePageWithin } from "@/lib/useListScreen"
 import { poRowFromBackend } from "./adapters"
 import * as purchaseOrdersApi from "./api"
 import { usePoUpload, usePurchaseOrders } from "./hooks"
+import { PO_FILTERS, poListSchema } from "./list-search"
 import PoNumber from "./PoNumber"
 import {
   canDownloadDeliveryNote,
@@ -30,7 +31,7 @@ import {
   poRef,
   shortDocNo,
 } from "./PurchaseOrderDetail/helpers"
-import PurchaseOrderFilter, { type PoFilterValues } from "./PurchaseOrderFilter"
+import PurchaseOrderFilter from "./PurchaseOrderFilter"
 import type { PoRow } from "./types"
 import UploadPoModal from "./UploadPoModal"
 
@@ -47,9 +48,13 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
   const [uploadPoId, setUploadPoId] = useState<number | null>(null)
   const [showFilter, setShowFilter] = useState(false)
 
-  const list = useListScreen<PoFilterValues | null>(null)
+  const list = useListScreen(poListSchema)
   const { debouncedSearch, filters: activeFilters, itemsPerPage, startIndex } = list
   const { clearSearch, patchFilters } = list
+  // A total filter is refused for a role that cannot see totals, so a
+  // shared URL carrying one is read without it.
+  const hasTotalRange =
+    showTotal && (activeFilters.minHarga !== "" || activeFilters.maxHarga !== "")
 
   const queryParams = useMemo(() => {
     const out: Parameters<typeof usePurchaseOrders>[0] = {
@@ -59,19 +64,18 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
       sortBy: "poDate",
       sortDir: "desc",
     }
-    if (!activeFilters) return out
     if (activeFilters.statuses.length > 0) {
       out.status = activeFilters.statuses.join(",")
     }
     const range = resolveRange(activeFilters.preset, activeFilters.startDate, activeFilters.endDate)
     if (range.start) out.dateFrom = range.start
     if (range.end) out.dateTo = range.end
-    const min = activeFilters.minHarga.replace(/\D/g, "")
-    if (min && min !== "0") out.minTotal = min
-    const max = activeFilters.maxHarga.replace(/\D/g, "")
-    if (max && max !== "0") out.maxTotal = max
+    if (showTotal) {
+      if (activeFilters.minHarga) out.minTotal = activeFilters.minHarga
+      if (activeFilters.maxHarga) out.maxTotal = activeFilters.maxHarga
+    }
     return out
-  }, [debouncedSearch, activeFilters, itemsPerPage, startIndex])
+  }, [debouncedSearch, activeFilters, itemsPerPage, startIndex, showTotal])
 
   const { data: rawList, isLoading } = usePurchaseOrders(queryParams)
 
@@ -118,36 +122,34 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
     if (debouncedSearch) {
       out.push({ key: "q", label: `Cari: "${debouncedSearch}"`, onRemove: clearSearch })
     }
-    if (activeFilters) {
-      for (const s of activeFilters.statuses) {
-        out.push({
-          key: `status-${s}`,
-          label: `Status: ${PO_LABEL[s]}`,
-          onRemove: () =>
-            patchFilters((p) => (p ? { ...p, statuses: p.statuses.filter((x) => x !== s) } : p)),
-        })
-      }
-      if (activeFilters.preset !== "semua") {
-        out.push({
-          key: "date",
-          label: `Tanggal: ${activeFilters.startDate} s/d ${activeFilters.endDate}`,
-          onRemove: () => patchFilters((p) => (p ? { ...p, preset: "semua" } : p)),
-        })
-      }
-      if (activeFilters.minHarga !== "" || activeFilters.maxHarga !== "") {
-        out.push({
-          key: "total",
-          label: `Total: ${activeFilters.minHarga || "0"} - ${activeFilters.maxHarga || "tanpa batas"}`,
-          onRemove: () => patchFilters((p) => (p ? { ...p, minHarga: "", maxHarga: "" } : p)),
-        })
-      }
+    for (const s of activeFilters.statuses) {
+      out.push({
+        key: `status-${s}`,
+        label: `Status: ${PO_LABEL[s]}`,
+        onRemove: () =>
+          patchFilters((p) => ({ ...p, statuses: p.statuses.filter((x) => x !== s) })),
+      })
+    }
+    if (activeFilters.preset !== "semua") {
+      out.push({
+        key: "date",
+        label: `Tanggal: ${activeFilters.startDate} s/d ${activeFilters.endDate}`,
+        onRemove: () => patchFilters((p) => ({ ...p, preset: "semua" })),
+      })
+    }
+    if (hasTotalRange) {
+      out.push({
+        key: "total",
+        label: `Total: ${activeFilters.minHarga || "0"} - ${activeFilters.maxHarga || "tanpa batas"}`,
+        onRemove: () => patchFilters((p) => ({ ...p, minHarga: "", maxHarga: "" })),
+      })
     }
     return out
-  }, [debouncedSearch, activeFilters, clearSearch, patchFilters])
+  }, [debouncedSearch, activeFilters, hasTotalRange, clearSearch, patchFilters])
 
   const clearAllFilters = () => {
     clearSearch()
-    list.applyFilters(null)
+    list.applyFilters(PO_FILTERS)
   }
 
   return (
@@ -364,7 +366,7 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
       {showFilter && (
         <PurchaseOrderFilter
           onClose={() => setShowFilter(false)}
-          initialValues={activeFilters ?? undefined}
+          initialValues={activeFilters}
           onApply={list.applyFilters}
           showTotalRange={showTotal}
         />

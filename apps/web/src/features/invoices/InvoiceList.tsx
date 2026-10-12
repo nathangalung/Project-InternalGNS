@@ -18,8 +18,9 @@ import { useListScreen, usePageWithin } from "@/lib/useListScreen"
 import * as invoicesApi from "./api"
 import { runDownload, safeFileName } from "./download"
 import { useInvoiceSummary, useInvoices } from "./hooks"
-import InvoiceFilter, { type InvoiceFilterValues } from "./InvoiceFilter"
+import InvoiceFilter from "./InvoiceFilter"
 import { canExportCoretax, detailSearch, invoiceListParams, rowFromBackend } from "./list"
+import { INVOICE_FILTERS, invoiceListSchema } from "./list-search"
 import type { InvoiceRow } from "./types"
 import { INVOICE_LABEL, INVOICE_STATUS_STYLE } from "./types"
 
@@ -32,7 +33,7 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
   const trail = useTrailState()
   const [showFilter, setShowFilter] = useState(false)
 
-  const list = useListScreen<InvoiceFilterValues | null>(null)
+  const list = useListScreen(invoiceListSchema)
   const { debouncedSearch, filters: activeFilters, itemsPerPage, startIndex } = list
   const { clearSearch, patchFilters } = list
 
@@ -66,43 +67,41 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
     if (debouncedSearch) {
       out.push({ key: "q", label: `Cari: "${debouncedSearch}"`, onRemove: clearSearch })
     }
-    if (activeFilters) {
-      for (const s of activeFilters.statuses) {
-        out.push({
-          key: `status-${s}`,
-          label: `Status: ${INVOICE_LABEL[s]}`,
-          onRemove: () =>
-            patchFilters((p) => (p ? { ...p, statuses: p.statuses.filter((x) => x !== s) } : p)),
-        })
-      }
-      if (activeFilters.createdPreset !== "semua") {
-        out.push({
-          key: "created",
-          label: `Dibuat: ${activeFilters.createdStart} s/d ${activeFilters.createdEnd}`,
-          onRemove: () => patchFilters((p) => (p ? { ...p, createdPreset: "semua" } : p)),
-        })
-      }
-      if (activeFilters.duePreset !== "semua") {
-        out.push({
-          key: "due",
-          label: `Jatuh tempo: ${activeFilters.dueStart} s/d ${activeFilters.dueEnd}`,
-          onRemove: () => patchFilters((p) => (p ? { ...p, duePreset: "semua" } : p)),
-        })
-      }
-      if (activeFilters.minHarga !== "" || activeFilters.maxHarga !== "") {
-        out.push({
-          key: "total",
-          label: `Total: ${activeFilters.minHarga || "0"} - ${activeFilters.maxHarga || "tanpa batas"}`,
-          onRemove: () => patchFilters((p) => (p ? { ...p, minHarga: "", maxHarga: "" } : p)),
-        })
-      }
+    for (const s of activeFilters.statuses) {
+      out.push({
+        key: `status-${s}`,
+        label: `Status: ${INVOICE_LABEL[s]}`,
+        onRemove: () =>
+          patchFilters((p) => ({ ...p, statuses: p.statuses.filter((x) => x !== s) })),
+      })
+    }
+    if (activeFilters.createdPreset !== "semua") {
+      out.push({
+        key: "created",
+        label: `Dibuat: ${activeFilters.createdStart} s/d ${activeFilters.createdEnd}`,
+        onRemove: () => patchFilters((p) => ({ ...p, createdPreset: "semua" })),
+      })
+    }
+    if (activeFilters.duePreset !== "semua") {
+      out.push({
+        key: "due",
+        label: `Jatuh tempo: ${activeFilters.dueStart} s/d ${activeFilters.dueEnd}`,
+        onRemove: () => patchFilters((p) => ({ ...p, duePreset: "semua" })),
+      })
+    }
+    if (activeFilters.minHarga !== "" || activeFilters.maxHarga !== "") {
+      out.push({
+        key: "total",
+        label: `Total: ${activeFilters.minHarga || "0"} - ${activeFilters.maxHarga || "tanpa batas"}`,
+        onRemove: () => patchFilters((p) => ({ ...p, minHarga: "", maxHarga: "" })),
+      })
     }
     return out
   }, [debouncedSearch, activeFilters, clearSearch, patchFilters])
 
   const clearAllFilters = () => {
     clearSearch()
-    list.applyFilters(null)
+    list.applyFilters(INVOICE_FILTERS)
   }
 
   return (
@@ -360,7 +359,7 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
       {showFilter && (
         <InvoiceFilter
           onClose={() => setShowFilter(false)}
-          initialValues={activeFilters ?? undefined}
+          initialValues={activeFilters}
           onApply={list.applyFilters}
         />
       )}

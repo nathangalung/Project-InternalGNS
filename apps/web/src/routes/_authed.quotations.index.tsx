@@ -1,8 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { validateQuotationSearch } from "@/features/quotations/list-search"
 import QuotationList from "@/features/quotations/QuotationList"
 import { useTrailState } from "@/hooks/useNavTrail"
 
 export const Route = createFileRoute("/_authed/quotations/")({
+  validateSearch: validateQuotationSearch,
   component: QuotationListRoute,
 })
 

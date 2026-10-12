@@ -20,15 +20,12 @@ import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import { ui } from "@/lib/ui"
 import { useListScreen, usePageWithin } from "@/lib/useListScreen"
 import type { Role } from "@/types/api"
+import { USER_FILTERS, type UserSortKey, userListSchema } from "./list-search"
 import UserAddModal from "./UserAddModal"
-import UserFilter, { type RoleFilter, type StatusFilter } from "./UserFilter"
-
-type SortKey = "name" | "createdAt"
+import UserFilter from "./UserFilter"
 
 // Sortable header, keyboard reachable.
 const sortBtn = `mx-auto flex cursor-pointer items-center justify-center gap-1.5 rounded-sm p-0 font-bold uppercase tracking-[0.05em] ${ui.focusRing}`
-
-type UserFilters = { role: RoleFilter; status: StatusFilter }
 
 const ROLE_BADGE: Record<Role, { bg: string; color: string }> = {
   superadmin: { bg: "#EDE9FE", color: "#5B21B6" },
@@ -39,18 +36,15 @@ const ROLE_BADGE: Record<Role, { bg: string; color: string }> = {
   finance_input: { bg: "#E0F2FE", color: "#075985" },
 }
 
-// Filters with nothing applied.
-const USER_FILTERS: UserFilters = { role: "all", status: "all" }
-
 export default function UserList() {
   const trail = useTrailState()
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
-  const [sortKey, setSortKey] = useState<SortKey>("createdAt")
   const [showFilter, setShowFilter] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
 
-  const list = useListScreen<UserFilters>(USER_FILTERS)
+  const list = useListScreen(userListSchema)
   const { debouncedSearch, filters, itemsPerPage, startIndex } = list
+  // The schema has a default sort, so it is never null.
+  const { key: sortKey, dir: sortDir } = list.sort ?? { key: "createdAt", dir: "desc" }
   const chips = filterChips(
     { term: debouncedSearch, clear: list.clearSearch },
     filters,
@@ -66,19 +60,14 @@ export default function UserList() {
     list.applyFilters(USER_FILTERS)
   }
 
-  function ariaSort(key: SortKey): "ascending" | "descending" | "none" {
+  function ariaSort(key: UserSortKey): "ascending" | "descending" | "none" {
     if (sortKey !== key) return "none"
     return sortDir === "asc" ? "ascending" : "descending"
   }
 
-  function toggleSort(key: SortKey) {
-    if (sortKey === key) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"))
-    } else {
-      setSortKey(key)
-      setSortDir("asc")
-    }
-    list.setCurrentPage(1)
+  function toggleSort(key: UserSortKey) {
+    const dir = sortKey === key && sortDir === "asc" ? "desc" : "asc"
+    list.setSort({ key, dir })
   }
 
   const queryParams = useMemo(

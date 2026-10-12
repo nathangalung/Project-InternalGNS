@@ -1,9 +1,25 @@
-import { useCallback, useEffect, useState } from "react"
-import { useDebouncedValue } from "@/hooks/useDebouncedValue"
+import {
+  type AnyRouter,
+  type NavigateOptions,
+  useNavigate,
+  useSearch,
+} from "@tanstack/react-router"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import {
+  compact,
+  type ListSchema,
+  type ListSort,
+  type ListState,
+  type RawSearch,
+  readList,
+  writeList,
+} from "@/lib/list-search"
 import { clampPage, pageCount } from "@/lib/pagination"
 
-export type ListScreen<F> = {
+export type ListScreen<F, K extends string = never> = {
+  // The search box text, as typed
   search: string
+  // The term the list queries, from the URL
   debouncedSearch: string
   // Resets to page 1, like typing in the search box.
   setSearch: (value: string) => void
@@ -14,6 +30,9 @@ export type ListScreen<F> = {
   applyFilters: (next: F) => void
   // Partial update that keeps the current page.
   patchFilters: (update: (prev: F) => F) => void
+  sort: ListSort<K> | null
+  // Resets to page 1.
+  setSort: (next: ListSort<K>) => void
   currentPage: number
   setCurrentPage: (page: number) => void
   itemsPerPage: number
@@ -24,52 +43,113 @@ export type ListScreen<F> = {
   narrowed: boolean
 }
 
+// Wait before a typed search is written.
+const SEARCH_DELAY = 250
+
 // Shared list state machine.
-export function useListScreen<F>(initialFilters: F, initialItemsPerPage = 10): ListScreen<F> {
-  const [search, setSearchState] = useState("")
-  const [filters, setFiltersState] = useState<F>(initialFilters)
-  // First defaults, kept to tell a narrowed list.
-  const [defaults] = useState(() => JSON.stringify(initialFilters))
-  const [itemsPerPage, setItemsPerPageState] = useState(initialItemsPerPage)
-  const [currentPage, setCurrentPage] = useState(1)
+//
+// The state lives in the route's search params (lib/list-search). Every
+// change replaces the history entry, keeping its trail and its scroll, so
+// the back button leaves the list instead of undoing each change. Typing
+// shows at once in the box and reaches the URL once it settles.
+export function useListScreen<F, K extends string = never>(
+  schema: ListSchema<F, K>,
+): ListScreen<F, K> {
+  const navigate = useNavigate()
+  const raw: RawSearch = useSearch({ strict: false })
+  const state = useMemo(() => readList(schema, raw), [schema, raw])
 
-  const debouncedSearch = useDebouncedValue(search.trim(), 250)
-  const startIndex = (currentPage - 1) * itemsPerPage
+  const [search, setSearchText] = useState(state.q)
+  const pending = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
-  const setSearch = useCallback((value: string) => {
-    setSearchState(value)
-    setCurrentPage(1)
-  }, [])
+  // Read and write the URL in one step, so two changes made in one go
+  // both land. The options are typed for any route, since the hook serves
+  // every list.
+  const commit = useCallback(
+    (update: (prev: ListState<F, K>) => ListState<F, K>) => {
+      const options: NavigateOptions<AnyRouter> = {
+        to: ".",
+        search: (prev: RawSearch) => writeList(schema, update(readList(schema, prev))),
+        state: true,
+        replace: true,
+        resetScroll: false,
+      }
+      void navigate(options)
+    },
+    [navigate, schema],
+  )
 
-  const clearSearch = useCallback(() => setSearchState(""), [])
+  // Follow a URL changed elsewhere.
+  //
+  // A history back, a crumb or the menu can land on this list without a
+  // remount. Text still waiting to be written is left alone.
+  useEffect(() => {
+    if (pending.current !== undefined) return
+    setSearchText((typed) => (typed.trim() === state.q ? typed : state.q))
+  }, [state.q])
 
-  const applyFilters = useCallback((next: F) => {
-    setFiltersState(next)
-    setCurrentPage(1)
-  }, [])
+  useEffect(() => () => clearTimeout(pending.current), [])
 
-  const patchFilters = useCallback((update: (prev: F) => F) => setFiltersState(update), [])
+  const setSearch = useCallback(
+    (value: string) => {
+      setSearchText(value)
+      clearTimeout(pending.current)
+      pending.current = setTimeout(() => {
+        pending.current = undefined
+        commit((s) => ({ ...s, q: value.trim(), page: 1 }))
+      }, SEARCH_DELAY)
+    },
+    [commit],
+  )
 
-  const setItemsPerPage = useCallback((count: number) => {
-    setItemsPerPageState(count)
-    setCurrentPage(1)
-  }, [])
+  const clearSearch = useCallback(() => {
+    clearTimeout(pending.current)
+    pending.current = undefined
+    setSearchText("")
+    commit((s) => ({ ...s, q: "" }))
+  }, [commit])
+
+  const applyFilters = useCallback(
+    (next: F) => commit((s) => ({ ...s, filters: next, page: 1 })),
+    [commit],
+  )
+
+  const patchFilters = useCallback(
+    (update: (prev: F) => F) => commit((s) => ({ ...s, filters: update(s.filters) })),
+    [commit],
+  )
+
+  const setSort = useCallback(
+    (next: ListSort<K>) => commit((s) => ({ ...s, sort: next, page: 1 })),
+    [commit],
+  )
+
+  const setCurrentPage = useCallback((page: number) => commit((s) => ({ ...s, page })), [commit])
+
+  const setItemsPerPage = useCallback(
+    (count: number) => commit((s) => ({ ...s, per: count, page: 1 })),
+    [commit],
+  )
+
+  const filtersOff = Object.keys(compact(schema.writeFilters(state.filters))).length > 0
 
   return {
     search,
-    debouncedSearch,
+    debouncedSearch: state.q,
     setSearch,
     clearSearch,
-    filters,
+    filters: state.filters,
     applyFilters,
     patchFilters,
-    currentPage,
+    sort: state.sort,
+    setSort,
+    currentPage: state.page,
     setCurrentPage,
-    itemsPerPage,
+    itemsPerPage: state.per,
     setItemsPerPage,
-    startIndex,
-    totalPagesOf: (totalItems) => pageCount(totalItems, itemsPerPage),
-    narrowed: debouncedSearch !== "" || JSON.stringify(filters) !== defaults,
+    startIndex: (state.page - 1) * state.per,
+    totalPagesOf: (totalItems) => pageCount(totalItems, state.per),
+    narrowed: state.q !== "" || filtersOff,
   }
 }
 
@@ -79,7 +159,10 @@ export function useListScreen<F>(initialFilters: F, initialItemsPerPage = 10): L
 // total on the next fetch, so the server total can end before the page;
 // the reader moves to the new last page. An unknown total (still loading)
 // leaves the page alone.
-export function usePageWithin<F>(list: ListScreen<F>, totalItems: number | undefined): void {
+export function usePageWithin<F, K extends string>(
+  list: ListScreen<F, K>,
+  totalItems: number | undefined,
+): void {
   const { currentPage, setCurrentPage, itemsPerPage } = list
   useEffect(() => {
     if (totalItems === undefined) return

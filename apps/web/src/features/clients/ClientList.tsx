@@ -12,9 +12,10 @@ import StatusBadge from "@/components/shared/StatusBadge"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useMe } from "@/features/auth/hooks"
 import ClientAdd from "@/features/clients/ClientAdd"
-import ClientFilter, { type ClientFilterValues } from "@/features/clients/ClientFilter"
+import ClientFilter from "@/features/clients/ClientFilter"
 import { clientKpis } from "@/features/clients/helpers"
 import { useClientSummary, useClients } from "@/features/clients/hooks"
+import { CLIENT_FILTERS, clientListSchema } from "@/features/clients/list-search"
 import { useCountries } from "@/features/countries/hooks"
 import { useTrailState } from "@/hooks/useNavTrail"
 import { filterChips } from "@/lib/filter-chips"
@@ -26,9 +27,6 @@ import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import { ui } from "@/lib/ui"
 import { useListScreen, usePageWithin } from "@/lib/useListScreen"
 import type { ClientRow } from "@/types/api"
-
-// Filters with nothing applied.
-const CLIENT_FILTERS: ClientFilterValues = { status: "all", countryCode: "", minTotal: "" }
 
 export default function ClientList() {
   const trail = useTrailState()
@@ -42,19 +40,21 @@ export default function ClientList() {
   const [showAdd, setShowAdd] = useState(false)
   const [showFilter, setShowFilter] = useState(false)
 
-  const list = useListScreen<ClientFilterValues>(CLIENT_FILTERS)
+  const list = useListScreen(clientListSchema)
   const { debouncedSearch, filters, itemsPerPage, startIndex } = list
 
+  // A total filter is refused for a role that cannot see totals, so a
+  // shared URL carrying one is read without it.
   const queryParams = useMemo(
     () => ({
       q: debouncedSearch || undefined,
       isActive: filters.status === "all" ? undefined : filters.status === "active",
       countryCode: filters.countryCode || undefined,
-      minTotal: filters.minTotal && filters.minTotal !== "0" ? filters.minTotal : undefined,
+      minTotal: showTotal && filters.minTotal ? filters.minTotal : undefined,
       limit: itemsPerPage,
       offset: startIndex,
     }),
-    [debouncedSearch, filters, itemsPerPage, startIndex],
+    [debouncedSearch, filters, itemsPerPage, startIndex, showTotal],
   )
 
   const { data: clientsData, isLoading } = useClients(queryParams)
@@ -79,11 +79,11 @@ export default function ClientList() {
         {
           status: (v) => `Status: ${statusFilterLabel(v)}`,
           countryCode: (v) => `Negara: ${countryOf(v)}`,
-          minTotal: (v) => `Min Total Pembelian: ${formatRupiah(v)}`,
+          minTotal: showTotal ? (v) => `Min Total Pembelian: ${formatRupiah(v)}` : undefined,
         },
         list.patchFilters,
       ),
-    [debouncedSearch, filters, countryOf, list.clearSearch, list.patchFilters],
+    [debouncedSearch, filters, countryOf, showTotal, list.clearSearch, list.patchFilters],
   )
   const clearAllFilters = () => {
     list.clearSearch()
