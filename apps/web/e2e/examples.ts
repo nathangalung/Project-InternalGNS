@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs"
 import type {
   InvoiceDetail,
+  PurchaseOrderItemRow,
   PurchaseOrderRow,
   QuotationCreated,
   QuotationDetail,
@@ -168,6 +169,8 @@ async function main() {
       unitId: unit(l.unit),
       sellingPrice: l.sell,
       costPrice: l.cost,
+      // The last line goes elsewhere, so its Surat Jalan row says where.
+      shipDestination: i === lines.length - 1 ? "Dermaga Koja, Jakarta Utara" : undefined,
     })),
   })
   await post(token, `/quotations/${q.id}/send`)
@@ -192,6 +195,18 @@ async function main() {
   for (const status of ["ON_PROGRESS", "DELIVERED"]) {
     await post(token, `/purchase-orders/${po.id}/status`, { status }, "PATCH")
   }
+  // One row note, saved as the download dialog saves it.
+  const poLines = await json<PurchaseOrderItemRow[]>(`/purchase-orders/${po.id}/items`, token)
+  const delivered = await json<PurchaseOrderRow>(`/purchase-orders/by-quotation/${q.id}`, token)
+  await expectOk(
+    await call(`/purchase-orders/${po.id}/delivery-note`, {
+      method: "PATCH",
+      token,
+      headers: { "If-Match": String(delivered.rowVersion) },
+      body: JSON.stringify({ notes: [{ lineId: poLines[0].id, note: "Serahkan ke mualim jaga" }] }),
+    }),
+    "PATCH delivery note",
+  )
   await download(
     token,
     `/purchase-orders/${po.id}/delivery-note.pdf`,
@@ -275,7 +290,8 @@ The sale: PT Samudra Contoh Nusantara asks for five products (COIL, PKT,
 TIN, PCS and MTR lines from two vendors), with a 5% discount, a shipping
 charge and 12% PPN. Quotation ${quotationNo} is sent and accepted, the PO
 gets its file and the client's PO number, goes to ON_PROGRESS and
-DELIVERED, and invoice ${invoiceNo} is sent. Kas Lain holds one Masuk and
+DELIVERED, one Surat Jalan row gets a note and the line going elsewhere
+says where, and invoice ${invoiceNo} is sent. Kas Lain holds one Masuk and
 one Keluar entry.
 
 | File | Route | What it is |
