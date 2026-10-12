@@ -37,7 +37,7 @@ export default function CashEntryList() {
   const [deleting, setDeleting] = useState<CashEntryRow | null>(null)
   const remove = useDeleteCashEntry()
 
-  const list = useListScreen(cashListSchema)
+  const list = useListScreen(cashListSchema, "/cash-entries")
   const { debouncedSearch, filters, itemsPerPage, startIndex } = list
   const filterParams = useMemo(
     () => cashParams(debouncedSearch, filters),

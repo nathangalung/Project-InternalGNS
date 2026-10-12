@@ -109,7 +109,7 @@ export default function VendorDetail({ vendor }: VendorDetailProps) {
   const { data: logoDownload } = useVendorLogoDownloadUrl(vendor.id, vendor.logoObjectKey)
   const storedLogo = useObjectUrl(logoDownload?.downloadUrl)
   const logoDataUrl = logoPreview || storedLogo
-  const itemsList = useListScreen(vendorItemsSchema)
+  const itemsList = useListScreen(vendorItemsSchema, "/vendors/$id")
   const {
     data: vendorItems,
     isLoading: itemsLoading,

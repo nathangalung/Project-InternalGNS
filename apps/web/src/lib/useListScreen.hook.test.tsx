@@ -36,7 +36,7 @@ let seen: ListScreen<Filters, SortKey>
 let total: number | undefined
 
 function List() {
-  const list = useListScreen(schema)
+  const list = useListScreen(schema, "/list")
   usePageWithin(list, total)
   seen = list
   return null
@@ -251,6 +251,39 @@ describe("useListScreen", () => {
     await run(() => seen.setSearch("baut"))
     await act(async () => {
       await router.navigate({ href: "/other" })
+    })
+    await typingPause()
+    expect(href(router)).toBe("/other")
+  })
+
+  // Late writes do nothing.
+  //
+  // A mutator kept past the list, or called while the reader is already
+  // leaving it, must not write list params onto the next page.
+  it.each<[string, (s: ListScreen<Filters, SortKey>) => void]>([
+    ["setCurrentPage", (s) => s.setCurrentPage(3)],
+    ["applyFilters", (s) => s.applyFilters({ status: "active", tags: [] })],
+    ["patchFilters", (s) => s.patchFilters((f) => ({ ...f, tags: ["a"] }))],
+    ["setItemsPerPage", (s) => s.setItemsPerPage(5)],
+    ["setSort", (s) => s.setSort({ key: "name", dir: "asc" })],
+    ["clearSearch", (s) => s.clearSearch()],
+    ["setSearch", (s) => s.setSearch("baut")],
+  ])("%s after the list closed leaves the location alone", async (_name, change) => {
+    const router = await open("/list?q=kabel")
+    const list = seen
+    await act(async () => {
+      await router.navigate({ href: "/other" })
+    })
+    await run(() => change(list))
+    await typingPause()
+    expect(href(router)).toBe("/other")
+  })
+
+  it("writes nothing once the reader is leaving the list", async () => {
+    const router = await open("/list")
+    await act(async () => {
+      void router.navigate({ href: "/other" })
+      seen.setCurrentPage(3)
     })
     await typingPause()
     expect(href(router)).toBe("/other")

@@ -42,7 +42,7 @@ export default function VendorList({ onViewDetail }: VendorListProps) {
   // Total purchase is a cost figure
   const showTotal = seesCost(me?.role)
 
-  const list = useListScreen(vendorListSchema)
+  const list = useListScreen(vendorListSchema, "/vendors")
   const { debouncedSearch, filters, itemsPerPage, startIndex, sort } = list
   const chips = filterChips(
     { term: debouncedSearch, clear: list.clearSearch },

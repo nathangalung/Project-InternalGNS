@@ -176,6 +176,23 @@ test.describe("list state", () => {
     await expect(page).toHaveURL(/\/$/)
   })
 
+  test("a row opened right after typing carries no list params", async ({ page, seed }) => {
+    const client = await seedQuotations(seed)
+    await page.goto("/quotations")
+    await page.getByPlaceholder(SEARCH).fill(seed.prefix)
+    await expect(rows(page, client.name)).toHaveCount(10)
+
+    // The search write is still waiting when the row opens.
+    await page.getByPlaceholder(SEARCH).fill(`${seed.prefix} `)
+    await rows(page, client.name)
+      .first()
+      .getByRole("button", { name: /^Lihat / })
+      .click()
+    await expect(page).toHaveURL(/\/quotations\/\d+$/)
+    await page.waitForTimeout(500)
+    await expect(page).toHaveURL(/\/quotations\/\d+$/)
+  })
+
   test("the menu opens a list in its default state", async ({ page, seed }) => {
     const client = await seedQuotations(seed)
     await narrowList(page, seed, client.name)

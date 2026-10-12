@@ -43,7 +43,7 @@ export default function QuotationList({ onViewDetail }: QuotationListProps) {
   // shared URL carrying one is read without it.
   const showTotal = seesSelling(role)
 
-  const list = useListScreen(quotationListSchema)
+  const list = useListScreen(quotationListSchema, "/quotations")
   const { debouncedSearch, filters: activeFilters, itemsPerPage, startIndex, sort } = list
   const { clearSearch, patchFilters } = list
   const hasTotalRange =

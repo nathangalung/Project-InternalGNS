@@ -41,7 +41,7 @@ export default function UserList() {
   const [showFilter, setShowFilter] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
 
-  const list = useListScreen(userListSchema)
+  const list = useListScreen(userListSchema, "/users")
   const { debouncedSearch, filters, itemsPerPage, startIndex } = list
   // The schema has a default sort, so it is never null.
   const { key: sortKey, dir: sortDir } = list.sort ?? { key: "createdAt", dir: "desc" }

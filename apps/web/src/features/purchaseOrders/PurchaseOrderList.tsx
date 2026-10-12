@@ -48,7 +48,7 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
   const [uploadPoId, setUploadPoId] = useState<number | null>(null)
   const [showFilter, setShowFilter] = useState(false)
 
-  const list = useListScreen(poListSchema)
+  const list = useListScreen(poListSchema, "/purchase-orders")
   const { debouncedSearch, filters: activeFilters, itemsPerPage, startIndex } = list
   const { clearSearch, patchFilters } = list
   // A total filter is refused for a role that cannot see totals, so a

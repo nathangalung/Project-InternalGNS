@@ -820,7 +820,10 @@ and statuses go by API key, never by label. Every change replaces the
 history entry (`replace`, `state: true` to keep the trail, `resetScroll:
 false`), so the back button leaves the list instead of stepping through
 keys; a typed search shows at once in the box and reaches the URL once it
-settles (250 ms). A total filter or sort a role cannot see is left out of
+settles (250 ms). Each screen passes its own route path
+(`useListScreen(schema, "/quotations")`), every write targets that route,
+and a write made after the list closed, or once history has already moved
+to another page, does nothing, so list params never land on a detail URL. A total filter or sort a role cannot see is left out of
 the query and its chips, so a shared URL never draws a 403. Each screen
 still owns its query call and passes the server total to `usePageWithin`,
 which moves the reader to the new last page when a narrower result ends

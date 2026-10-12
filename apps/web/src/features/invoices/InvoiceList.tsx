@@ -33,7 +33,7 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
   const trail = useTrailState()
   const [showFilter, setShowFilter] = useState(false)
 
-  const list = useListScreen(invoiceListSchema)
+  const list = useListScreen(invoiceListSchema, "/invoices")
   const { debouncedSearch, filters: activeFilters, itemsPerPage, startIndex } = list
   const { clearSearch, patchFilters } = list
 

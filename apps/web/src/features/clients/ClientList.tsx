@@ -40,7 +40,7 @@ export default function ClientList() {
   const [showAdd, setShowAdd] = useState(false)
   const [showFilter, setShowFilter] = useState(false)
 
-  const list = useListScreen(clientListSchema)
+  const list = useListScreen(clientListSchema, "/clients")
   const { debouncedSearch, filters, itemsPerPage, startIndex } = list
 
   // A total filter is refused for a role that cannot see totals, so a

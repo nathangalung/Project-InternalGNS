@@ -2,6 +2,7 @@ import {
   type AnyRouter,
   type NavigateOptions,
   useNavigate,
+  useRouter,
   useSearch,
 } from "@tanstack/react-router"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -52,23 +53,43 @@ const SEARCH_DELAY = 250
 // change replaces the history entry, keeping its trail and its scroll, so
 // the back button leaves the list instead of undoing each change. Typing
 // shows at once in the box and reaches the URL once it settles.
+//
+// path is the list's own route path ("/quotations", "/vendors/$id"), so a
+// write always targets that route. A write made after the list closed, or
+// once the reader is leaving it, does nothing.
 export function useListScreen<F, K extends string = never>(
   schema: ListSchema<F, K>,
+  path: string,
 ): ListScreen<F, K> {
   const navigate = useNavigate()
+  const history = useRouter().history
   const raw: RawSearch = useSearch({ strict: false })
   const state = useMemo(() => readList(schema, raw), [schema, raw])
 
   const [search, setSearchText] = useState(state.q)
   const pending = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  // The pathname the list opened on
+  const home = useRef(history.location.pathname)
+  const open = useRef(true)
+
+  useEffect(() => {
+    open.current = true
+    return () => {
+      open.current = false
+      clearTimeout(pending.current)
+    }
+  }, [])
 
   // Read and write the URL in one step, so two changes made in one go
-  // both land. The options are typed for any route, since the hook serves
-  // every list.
+  // both land. History moves to the next page as soon as a link is
+  // followed, before the list closes, so its pathname tells a late write.
+  // The options are typed for any route, since the hook serves every list.
   const commit = useCallback(
     (update: (prev: ListState<F, K>) => ListState<F, K>) => {
+      if (!open.current || history.location.pathname !== home.current) return
       const options: NavigateOptions<AnyRouter> = {
-        to: ".",
+        to: path,
+        params: true,
         search: (prev: RawSearch) => writeList(schema, update(readList(schema, prev))),
         state: true,
         replace: true,
@@ -76,7 +97,7 @@ export function useListScreen<F, K extends string = never>(
       }
       void navigate(options)
     },
-    [navigate, schema],
+    [navigate, history, path, schema],
   )
 
   // Follow a URL changed elsewhere.
@@ -87,8 +108,6 @@ export function useListScreen<F, K extends string = never>(
     if (pending.current !== undefined) return
     setSearchText((typed) => (typed.trim() === state.q ? typed : state.q))
   }, [state.q])
-
-  useEffect(() => () => clearTimeout(pending.current), [])
 
   const setSearch = useCallback(
     (value: string) => {

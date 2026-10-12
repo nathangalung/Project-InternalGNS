@@ -57,7 +57,7 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
   const [showAdd, setShowAdd] = useState(false)
   const [showFilter, setShowFilter] = useState(false)
 
-  const list = useListScreen(productListSchema)
+  const list = useListScreen(productListSchema, "/products")
   const { debouncedSearch, filters, itemsPerPage, startIndex } = list
   const chips = filterChips(
     { term: debouncedSearch, clear: list.clearSearch },
