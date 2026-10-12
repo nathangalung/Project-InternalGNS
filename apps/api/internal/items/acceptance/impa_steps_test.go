@@ -25,7 +25,7 @@ func (s *scenarioState) importRows(autoCreate bool, rows ...items.MatchRowInput)
 	return nil
 }
 
-// importNewCodeByName names the item, codes another.
+// importNewCodeByName reuses the name.
 func (s *scenarioState) importNewCodeByName(autoCreate bool) error {
 	s.newImpa = testutil.UniqueIMPA(s.t)
 	return s.importRows(autoCreate, items.MatchRowInput{IMPACode: s.newImpa, Name: s.name, Qty: 1})

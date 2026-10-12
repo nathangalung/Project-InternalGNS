@@ -15,7 +15,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// A PO line code is an IMPA code.
+// PO line code is IMPA.
 // A marked one is stored as six digits; anything else is refused on its
 // field before the line is touched.
 func TestHandler_UpdateItems_ItemCode(t *testing.T) {

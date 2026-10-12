@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// IMPAMessage sits on an IMPA code.
+// IMPAMessage sits on impaCode.
 const IMPAMessage = "Kode IMPA harus 6 digit angka, misalnya 190105. Kosongkan bila tidak ada."
 
 // IMPA code patterns.
@@ -50,7 +50,7 @@ func IMPA(raw string) (code, msg string) {
 // Not glued to a following letter, digit or a separator before one.
 var impaInText = regexp.MustCompile(`(?i)\bIMPA\s*[:.#]?\s*([0-9]{6})(?:$|[^0-9A-Za-z./-]|[./-](?:$|[^0-9A-Za-z]))`)
 
-// IMPAInText finds the one marked code.
+// IMPAInText finds one marked code.
 // Only a code written after IMPA counts, since bare digits may be a model
 // number; text naming two different codes gives none. fn_impa_split moves
 // the same code out of a request text.

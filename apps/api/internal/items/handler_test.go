@@ -466,7 +466,7 @@ func TestHandler_MatchRows_IMPANotFoundNeverFallsBack(t *testing.T) {
 	assert.Equal(t, "NONE", out.Rows[0].Source)
 }
 
-// A row code is six digits.
+// Row codes are six digits.
 // Every bad row is named, and nothing is matched or created.
 func TestHandler_MatchRows_BadCodeRefused(t *testing.T) {
 	srv := newSrv(t)

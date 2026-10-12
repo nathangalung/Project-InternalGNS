@@ -24,7 +24,7 @@ func problemFields(t *testing.T, res *http.Response) map[string]string {
 	return p.Fields
 }
 
-// A request line stores its code once.
+// Request lines store codes once.
 // A marked code is kept as six digits and leaves the request text; a code
 // that is not six digits is refused on its field.
 func TestHandler_Lines_RequestedImpa(t *testing.T) {
@@ -57,7 +57,7 @@ func TestHandler_Lines_RequestedImpa(t *testing.T) {
 	assert.Equal(t, map[string]string{"items[0].requestedImpa": validate.IMPAMessage}, problemFields(t, res))
 }
 
-// A client request stores its code once.
+// Client requests store codes once.
 // The code a request text marks moves into its empty code field.
 func TestHandler_ItemRequests_RequestImpa(t *testing.T) {
 	srv, _ := resetServer(t)

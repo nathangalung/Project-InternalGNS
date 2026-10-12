@@ -151,7 +151,7 @@ def impa_codes_in_text(text: str | None) -> list[str]:
     return [c for c in _IMPA_IN_TEXT.findall(text) if c[:2] in IMPA_SECTIONS]
 
 
-# Own code out of a name.
+# Own code out of names.
 # Mirrors fn_impa_code and fn_impa_split (migration 00113), which every
 # write runs; the shared tables in db/migrations/testdata and
 # internal/shared/validate/testdata pin both copies.

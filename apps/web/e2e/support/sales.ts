@@ -55,7 +55,7 @@ export function uniquePrefix(): string {
   return `E2E${randomBytes(4).toString("hex").toUpperCase()}`
 }
 
-// IMPA code no active item holds.
+// Free IMPA code for tests.
 //
 // A code is six digits and an active one is unique. Real IMPA sections end
 // below 90, so the 9xxxxx block never meets the master data; a code an

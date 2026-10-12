@@ -56,7 +56,7 @@ func (h *Handler) renderSaveErr(w http.ResponseWriter, r *http.Request, err erro
 	httperr.RenderAs(w, p.Status, p)
 }
 
-// moveMarkedCode takes a code from the name.
+// moveMarkedCode fills an empty code.
 // Only into an empty code field and only a code no other active product
 // holds, as 00113 did for stored names; the database then drops it from
 // the name. A held code stays where it was typed.

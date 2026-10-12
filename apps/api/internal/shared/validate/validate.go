@@ -1,9 +1,9 @@
 // Package validate checks user input.
 //
 // It is the source of truth for phone, email and the IMPA code, which
-// apps/web/src/lib/validation.ts mirrors; testdata/contact_rules.json and
-// testdata/impa_rules.json pin
-// them to the same cases. The numeric rules have no web copy.
+// the web mirrors (lib/validation.ts, lib/impa.ts). testdata/contact_rules.json
+// and testdata/impa_rules.json pin both copies to the same cases. The
+// numeric rules have no web copy.
 package validate
 
 import "regexp"

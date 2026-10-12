@@ -122,14 +122,14 @@ func TestFnImpaCode_MatchesValidate(t *testing.T) {
 	}
 }
 
-// legacyRows are rows stored before 00113.
+// legacyRows holds pre-00113 rows.
 type legacyRows struct {
 	item, moved, blocked, holder, junk int64
 	quotation                          int64
 	request                            int64
 }
 
-// seedLegacy writes rows as the old schema allowed.
+// seedLegacy writes pre-00113 rows.
 func seedLegacy(ctx context.Context, t *testing.T, tx pgx.Tx, tag string, withJunk bool) legacyRows {
 	t.Helper()
 	var r legacyRows
@@ -175,7 +175,7 @@ func seedLegacy(ctx context.Context, t *testing.T, tx pgx.Tx, tag string, withJu
 	return r
 }
 
-// The Up cleans what was stored.
+// Up cleans stored rows.
 // Down, then legacy rows, then Up: a name loses its own code, a marked
 // code moves into an empty code field unless another active product holds
 // it, line versions stay and the learning cache learns nothing.
@@ -243,7 +243,7 @@ func TestMigration00113_CleansStoredRows(t *testing.T) {
 	assert.True(t, valid, "a clean catalog validates the check")
 }
 
-// A bad stored code is reported, never lost.
+// Bad stored codes are kept.
 // The Up keeps it, leaves the check unvalidated and still refuses a new
 // bad code.
 func TestMigration00113_KeepsBadCodes(t *testing.T) {

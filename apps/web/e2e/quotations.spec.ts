@@ -492,7 +492,7 @@ test.describe("quotation wizard import and requests", () => {
     await expect(main).toContainText("Rp 90.000")
   })
 
-  // A coded row is matched by its code only.
+  // Coded rows match by code.
   // A code the catalog holds finds its product whatever the row names; a
   // code it does not hold becomes a new product under that code, even when
   // the row names an existing product; a row without a code is matched by

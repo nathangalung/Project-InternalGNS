@@ -11,7 +11,7 @@ export const IMPA_ERROR =
 // Shown where a product has no code.
 export const NO_IMPA = "-"
 
-// Hyphen, en dash and em dash, by code point: the shown placeholder.
+// Dashes that mean no code.
 const DASHES = new Set(["-", String.fromCharCode(0x2013), String.fromCharCode(0x2014)])
 const MARK = /^IMPA\s*[:.#]?\s*/
 const BODY = /^[0-9][0-9 .-]*[0-9]$/

@@ -2,7 +2,7 @@ import { normalizeImpa } from "@/lib/impa"
 import type { MatchedItemWithVendor, MatchRowInput } from "@/types/generated"
 import type { CatalogItem } from "./helpers"
 
-// Request fields as a match row.
+// Request fields as match row.
 // A request with a code is matched by that code only; one without by name.
 export function copyRow(kode: string, nama: string, qty: string, unit: string): MatchRowInput {
   const n = Number(qty)

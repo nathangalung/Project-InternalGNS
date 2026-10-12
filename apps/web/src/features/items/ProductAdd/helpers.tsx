@@ -2,7 +2,7 @@ import { ui } from "@/lib/ui"
 
 export { CheckIcon as CheckmarkIcon } from "@/components/document/icons"
 
-// Request and offer, each a code and a name.
+// Request and offer fields.
 // The code is its own field; the offer's is the picked product's.
 export type ProductAddFormData = {
   requestedKodeImpa: string

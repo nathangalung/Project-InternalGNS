@@ -259,7 +259,7 @@ type splitRow struct {
 	Code string `db:"code"`
 }
 
-// splitRows stores rows as fn_impa_split does.
+// splitRows cleans rows like fn_impa_split.
 // A code that is no IMPA code is dropped first, so the row is matched by
 // its name; the handler refuses one before it gets here.
 func (r *Repo) splitRows(ctx context.Context, in []MatchRowInput) ([]MatchRowInput, error) {

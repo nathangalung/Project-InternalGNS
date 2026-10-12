@@ -89,7 +89,7 @@ func TestHandler_SavesRefuseBadCode(t *testing.T) {
 	}
 }
 
-// A code query finds its holder only.
+// Code queries find the holder.
 // Search by code, marked or bare, never returns another product whose
 // name or code merely resembles it.
 func TestHandler_SearchAdvanced_CodeFindsHolderOnly(t *testing.T) {
