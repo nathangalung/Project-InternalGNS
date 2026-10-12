@@ -50,13 +50,15 @@ type exportData struct {
 	InvoiceDate       string
 	DueDate           string
 	Items             []exportItem
-	TotalProduk       string
+	Total             string
+	HasDiscount       bool
+	DiscountPct       string
 	Diskon            string
-	DPP               string
+	Subtotal          string
 	WithPPN           bool
 	DPPNilaiLain      string
 	PPN               string
-	Total             string
+	GrandTotal        string
 	PaymentTerms      string
 	BankName          string
 	BankAccountNo     string
@@ -104,13 +106,9 @@ func (h *ExportHandler) ExportPDF(w http.ResponseWriter, r *http.Request) {
 // names the invoice it replaces.
 func (h *ExportHandler) buildData(det InvoiceDetail, items []InvoiceItem) exportData {
 	// Discount comes from the invoice snapshot, not the quotation: it is the
-	// realised per-line discount, so TotalProduk - Diskon = DPP by construction.
-	diskon := ""
-	if det.TotalDiscount != nil {
-		if v, _ := strconv.ParseFloat(*det.TotalDiscount, 64); v != 0 {
-			diskon = pdfgen.FormatIDRCents(*det.TotalDiscount)
-		}
-	}
+	// realised per-line discount, so Total - Diskon = Sub Total (the DPP) by
+	// construction. Only its percent is derived, never an amount.
+	discount := pdfgen.StrDeref(det.TotalDiscount)
 
 	poDate := ""
 	if det.PoDate != nil {
@@ -118,7 +116,7 @@ func (h *ExportHandler) buildData(det InvoiceDetail, items []InvoiceItem) export
 	}
 
 	expItems := make([]exportItem, 0, len(items))
-	totalProdukStr := "0"
+	totalStr := "0"
 	for i, it := range items {
 		unit := ""
 		if it.UnitCode != nil {
@@ -131,9 +129,9 @@ func (h *ExportHandler) buildData(det InvoiceDetail, items []InvoiceItem) export
 			gross = *it.GrossUnitPrice
 		}
 		amt := pdfgen.BigMul(it.Qty, gross)
-		// HARGA TOTAL spans every line, shipping included, so that
-		// TotalProduk - Diskon lands exactly on DPP.
-		totalProdukStr = pdfgen.BigAdd(totalProdukStr, amt)
+		// Total spans every line, shipping included, so that
+		// Total - Diskon lands exactly on DPP.
+		totalStr = pdfgen.BigAdd(totalStr, amt)
 		expItems = append(expItems, exportItem{
 			No:          i + 1,
 			Qty:         pdfgen.FormatQty(it.Qty),
@@ -169,13 +167,15 @@ func (h *ExportHandler) buildData(det InvoiceDetail, items []InvoiceItem) export
 		InvoiceDate:       det.InvoiceDate.Format("2 January 2006"),
 		DueDate:           dueDate,
 		Items:             expItems,
-		TotalProduk:       pdfgen.FormatIDRCents(totalProdukStr),
-		Diskon:            diskon,
-		DPP:               pdfgen.FormatIDRCents(pdfgen.StrDeref(det.Dpp)),
+		Total:             pdfgen.FormatIDRCents(totalStr),
+		HasDiscount:       !pdfgen.IsZero(discount),
+		DiscountPct:       pdfgen.FormatPct(pdfgen.StrDeref(det.DiscountPct)),
+		Diskon:            pdfgen.FormatIDRCents(discount),
+		Subtotal:          pdfgen.FormatIDRCents(pdfgen.StrDeref(det.Dpp)),
 		WithPPN:           det.PPNEnabled,
 		DPPNilaiLain:      pdfgen.FormatIDRCents(pdfgen.StrDeref(det.DppNilaiLain)),
 		PPN:               pdfgen.FormatIDRCents(pdfgen.StrDeref(det.PpnAmount)),
-		Total:             pdfgen.FormatIDRCents(pdfgen.StrDeref(det.Total)),
+		GrandTotal:        pdfgen.FormatIDRCents(pdfgen.StrDeref(det.Total)),
 		PaymentTerms:      pdfgen.LatexEscape(terms),
 		BankName:          pdfgen.LatexEscape(h.settings.BankName),
 		BankAccountNo:     pdfgen.LatexEscape(h.settings.BankAccountNo),

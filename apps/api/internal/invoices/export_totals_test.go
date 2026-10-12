@@ -63,7 +63,7 @@ func mustF(t *testing.T, s string) float64 {
 }
 
 // Printed totals block must balance.
-// TotalProduk - Diskon = DPP.
+// Total - Diskon Produk = Sub Total, the DPP, and the row names the percent.
 func TestExport_TotalsBlockBalances(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	invID := discountedPOWithInvoice(t, tx)
@@ -113,7 +113,7 @@ func TestExport_TotalsBlockBalances(t *testing.T) {
 		mustF(t, *inv.Dpp),
 		mustF(t, sum)-mustF(t, *inv.TotalDiscount),
 		0.001,
-		"TotalProduk - Diskon must equal DPP",
+		"Total - Diskon must equal DPP",
 	)
 
 	// And the same three figures as the builder wires them into the template.
@@ -122,11 +122,17 @@ func TestExport_TotalsBlockBalances(t *testing.T) {
 		pdfgen.NewRenderer(t.TempDir()),
 		deps.PdfSettings{},
 	)
-	totals := h.PDFTotalsForTest(invoices.InvoiceDetail{Invoice: inv}, items)
-	assert.Equal(t, pdfgen.FormatIDRCents(sum), totals.TotalProduk)
+	// The percent comes from the stored snapshot, never the quotation.
+	det, err := repo.GetDetail(ctx, invID)
+	require.NoError(t, err)
+	require.NotNil(t, det.DiscountPct)
+	assert.Equal(t, "10.00", *det.DiscountPct)
+	totals := h.PDFTotalsForTest(det, items)
+	assert.Equal(t, pdfgen.FormatIDRCents(sum), totals.Total)
 	assert.Equal(t, pdfgen.FormatIDRCents(*inv.TotalDiscount), totals.Diskon)
-	assert.Equal(t, pdfgen.FormatIDRCents(*inv.Dpp), totals.DPP)
-	assert.NotEmpty(t, totals.Diskon, "a real discount must print a Diskon row")
+	assert.Equal(t, pdfgen.FormatIDRCents(*inv.Dpp), totals.Subtotal)
+	assert.True(t, totals.HasDiscount, "a real discount must print a Diskon Produk row")
+	assert.Equal(t, "10", totals.DiscountPct)
 
 	// Per line the PDF shows the gross price, not the net one.
 	assert.Contains(t, totals.LineUnitPrices, pdfgen.FormatIDRCents("100000"))
@@ -154,10 +160,13 @@ func TestExport_TotalsBlock_NoDiscountHidesRow(t *testing.T) {
 		pdfgen.NewRenderer(t.TempDir()),
 		deps.PdfSettings{},
 	)
-	totals := h.PDFTotalsForTest(invoices.InvoiceDetail{Invoice: inv}, items)
-	assert.Empty(t, totals.Diskon, "zero discount must not print a Diskon row")
-	assert.Equal(t, pdfgen.FormatIDRCents(*inv.Dpp), totals.DPP)
-	assert.Equal(t, totals.DPP, totals.TotalProduk, "no discount means the two agree")
+	det, err := repo.GetDetail(ctx, invID)
+	require.NoError(t, err)
+	assert.Nil(t, det.DiscountPct, "no discount, no percent")
+	totals := h.PDFTotalsForTest(det, items)
+	assert.False(t, totals.HasDiscount, "zero discount must not print a Diskon Produk row")
+	assert.Equal(t, pdfgen.FormatIDRCents(*inv.Dpp), totals.Subtotal)
+	assert.Equal(t, totals.Subtotal, totals.Total, "no discount means the two agree")
 }
 
 // The PDF prints the sen.
@@ -179,18 +188,18 @@ func TestExport_PrintsSen(t *testing.T) {
 	}
 
 	got := newExportHandler(t, tx).PDFTotalsForTest(invoices.InvoiceDetail{Invoice: inv}, items)
-	assert.Equal(t, "Rp5.000,95", got.TotalProduk)
-	assert.Equal(t, "Rp5.000,95", got.DPP)
+	assert.Equal(t, "Rp5.000,95", got.Total)
+	assert.Equal(t, "Rp5.000,95", got.Subtotal)
 	assert.Equal(t, "Rp4.584,20", got.DPPNilaiLain)
 	assert.Equal(t, "Rp550,10", got.PPN)
-	assert.Equal(t, "Rp5.551,05", got.Total)
+	assert.Equal(t, "Rp5.551,05", got.GrandTotal)
 	assert.Equal(t, []string{"Rp5.000,95"}, got.LineUnitPrices)
 	assert.Equal(t, []string{"Rp5.000,95"}, got.LineAmounts)
 }
 
 // Fractional qty rounds like Postgres.
 // ROUND(2.5 x 1234.57, 2) is 3086.43, half away from zero, so the printed
-// line and TotalProduk must land on the stored DPP, not a binary 3086.42.
+// line and Total must land on the stored DPP, not a binary 3086.42.
 func TestExport_FractionalQtyMatchesDPP(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	store := testutil.Store(t)
@@ -227,8 +236,8 @@ func TestExport_FractionalQtyMatchesDPP(t *testing.T) {
 	assert.Equal(t, 3086.43, mustF(t, *inv.Dpp), "Postgres rounds half away from zero")
 
 	got := newExportHandler(t, tx).PDFTotalsForTest(invoices.InvoiceDetail{Invoice: inv}, items)
-	assert.Empty(t, got.Diskon, "no discount, no Diskon row")
+	assert.False(t, got.HasDiscount, "no discount, no Diskon Produk row")
 	assert.Equal(t, []string{"Rp3.086,43"}, got.LineAmounts)
-	assert.Equal(t, "Rp3.086,43", got.TotalProduk)
-	assert.Equal(t, got.DPP, got.TotalProduk, "TotalProduk - Diskon must equal DPP")
+	assert.Equal(t, "Rp3.086,43", got.Total)
+	assert.Equal(t, got.Subtotal, got.Total, "Total - Diskon must equal Sub Total")
 }

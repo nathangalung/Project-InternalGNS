@@ -137,9 +137,8 @@ func TestQuotationPDF_PrintsStoredTotals(t *testing.T) {
 		{"eight lines", 8, false},
 	}
 	wants := []struct{ label, amount string }{
-		{"Total Produk", "Rp2.001"},
-		{"Diskon 10.00%", "-Rp200,10"},
-		{"Pengiriman", "Rp150,25"},
+		{"Total", "Rp2.151,25"},
+		{"Diskon Produk 10%", "-Rp200,10"},
 		{"Sub Total", "Rp1.951,15"},
 		{"DPP Nilai Lain", "Rp1.788,55"},
 		{"PPN 12%", "Rp214,63"},
@@ -154,6 +153,11 @@ func TestQuotationPDF_PrintsStoredTotals(t *testing.T) {
 			for _, w := range wants {
 				if !strings.Contains(flat, w.label+" "+w.amount) {
 					t.Errorf("printed PDF misses %q followed by %q", w.label, w.amount)
+				}
+			}
+			for _, never := range []string{"Total Produk", "Pengiriman"} {
+				if strings.Contains(flat, never) {
+					t.Errorf("printed PDF has a %q row", never)
 				}
 			}
 			if !strings.Contains(flat, "TEKIRO PUNCHING TOOL SET") || !strings.Contains(flat, "(613802)") {

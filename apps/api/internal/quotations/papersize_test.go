@@ -119,7 +119,7 @@ func TestQuotationPaperSize(t *testing.T) {
 				AttnPhone:     "+62 800 0000",
 				DateLine:      "Jakarta, 8 July 2026",
 				Items:         items,
-				TotalProduk:   "Rp 100.000",
+				Total:         "Rp 100.000",
 				DiscountPct:   "0",
 				TotalDiscount: "Rp 0",
 				Subtotal:      "Rp 100.000",

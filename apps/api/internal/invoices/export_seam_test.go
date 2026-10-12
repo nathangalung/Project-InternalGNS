@@ -4,12 +4,14 @@ package invoices
 // exportData is unexported and testutil imports this package, so the
 // integration assertions live in invoices_test and reach buildData here.
 type PDFTotalsForTest struct {
-	TotalProduk      string
+	Total            string
+	HasDiscount      bool
+	DiscountPct      string
 	Diskon           string
-	DPP              string
+	Subtotal         string
 	DPPNilaiLain     string
 	PPN              string
-	Total            string
+	GrandTotal       string
 	LineNames        []string
 	LineDescriptions []string
 	LineUnitPrices   []string
@@ -20,8 +22,9 @@ type PDFTotalsForTest struct {
 func (h *ExportHandler) PDFTotalsForTest(det InvoiceDetail, items []InvoiceItem) PDFTotalsForTest {
 	d := h.buildData(det, items)
 	out := PDFTotalsForTest{
-		TotalProduk: d.TotalProduk, Diskon: d.Diskon, DPP: d.DPP,
-		DPPNilaiLain: d.DPPNilaiLain, PPN: d.PPN, Total: d.Total,
+		Total: d.Total, HasDiscount: d.HasDiscount, DiscountPct: d.DiscountPct,
+		Diskon: d.Diskon, Subtotal: d.Subtotal,
+		DPPNilaiLain: d.DPPNilaiLain, PPN: d.PPN, GrandTotal: d.GrandTotal,
 	}
 	for _, it := range d.Items {
 		out.LineNames = append(out.LineNames, it.Name)

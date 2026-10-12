@@ -65,7 +65,7 @@ func TestBuildExportData_ReconcilesWithStoredQuotation(t *testing.T) {
 
 	// Every header figure is the stored one.
 	fields := []struct{ name, got, stored string }{
-		{"TotalProduk", got.TotalProduk, d.TotalProduk},
+		{"Total", got.Total, d.Total},
 		{"TotalDiscount", got.TotalDiscount, d.TotalDiscount},
 		{"Subtotal", got.Subtotal, d.Subtotal},
 		{"DPP", got.DPP, d.DppNilaiLain},
@@ -75,13 +75,11 @@ func TestBuildExportData_ReconcilesWithStoredQuotation(t *testing.T) {
 	for _, f := range fields {
 		assert.Equal(t, pdfgen.FormatIDRCents(f.stored), f.got, f.name)
 	}
-	assert.Equal(t, "Rp150,37", got.Shipping)
-	assert.True(t, got.HasShipping)
-
-	// Total Produk - Diskon + Pengiriman = Sub Total.
+	// Total, shipping included, minus Diskon Produk is Sub Total.
+	assert.Equal(t, cents(t, d.TotalProduk)+15037, cents(t, d.Total), "Total carries the shipping line")
 	assert.Equal(t,
 		cents(t, d.Subtotal),
-		cents(t, d.TotalProduk)-cents(t, d.TotalDiscount)+15037,
+		cents(t, d.Total)-cents(t, d.TotalDiscount),
 		"the printed column must add up")
 
 	// The quoted lines sum to Total Produk.

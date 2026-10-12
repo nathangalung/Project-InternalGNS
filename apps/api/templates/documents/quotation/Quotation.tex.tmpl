@@ -187,12 +187,11 @@
 \hline
 [[end]]
 
-\multicolumn{5}{|r|}{\DocCellSize Total Produk} &
-  \multicolumn{2}{r|}{\DocCellSize [[.TotalProduk]]} \\
-\multicolumn{5}{|r|}{\DocCellSize Diskon [[.DiscountPct]]\%} &
+% Same rows as the invoice. Shipping is a line, so Total has it.
+\multicolumn{5}{|r|}{\DocCellSize Total} &
+  \multicolumn{2}{r|}{\DocCellSize [[.Total]]} \\
+[[if .HasDiscount]]\multicolumn{5}{|r|}{\DocCellSize Diskon Produk [[.DiscountPct]]\%} &
   \multicolumn{2}{r|}{\DocCellSize -[[.TotalDiscount]]} \\
-[[if .HasShipping]]\multicolumn{5}{|r|}{\DocCellSize Pengiriman} &
-  \multicolumn{2}{r|}{\DocCellSize [[.Shipping]]} \\
 [[end]]\multicolumn{5}{|r|}{\DocCellSize Sub Total} &
   \multicolumn{2}{r|}{\DocCellSize [[.Subtotal]]} \\
 [[if .WithPPN]]\multicolumn{5}{|r|}{\DocCellSize DPP Nilai Lain} &
