@@ -95,10 +95,11 @@ export default function InvoiceDetail({ inv }: InvoiceDetailProps) {
   const totalProduk = products.reduce((s, p) => s + p.qty * p.hargaSatuan, 0)
   const totalProfit = products.reduce((s, p) => s + p.qty * p.profitSatuan, 0)
   const totalShip = shipping.hargaSatuan
-  // The discount is snapshotted, so gross minus it lands on the stored DPP.
+  // The discount is snapshotted, so Total minus it lands on the stored DPP.
   const nominalDiskon = toNum(inv.totalDiscount)
-  const subTotal = totalProduk - nominalDiskon
-  const fallback = computeTaxBreakdown([subTotal, totalShip], inv.ppnEnabled)
+  const total = totalProduk + totalShip
+  const subTotal = total - nominalDiskon
+  const fallback = computeTaxBreakdown([totalProduk - nominalDiskon, totalShip], inv.ppnEnabled)
   const dppNilaiLain = toNum(inv.dppNilaiLain) || fallback.dppNilaiLain
   const ppn12 = toNum(inv.ppnAmount) || fallback.ppnAmount
   const grandTotal = toNum(inv.total) || fallback.grandTotal
@@ -191,13 +192,13 @@ export default function InvoiceDetail({ inv }: InvoiceDetailProps) {
       <ProductTable products={products} showProfit={hasCost} showRequest={false} />
       <CostBreakdown
         hasProducts={products.length > 0}
-        totalProduk={totalProduk}
+        total={total}
+        discountPct={toNum(inv.discountPct)}
         nominalDiskon={nominalDiskon}
         subTotal={subTotal}
         dppNilaiLain={dppNilaiLain}
         ppn12={ppn12}
         withPPN={inv.ppnEnabled}
-        totalShip={totalShip}
         totalProfit={totalProfit}
         showProfit={hasCost}
         grandTotal={grandTotal}

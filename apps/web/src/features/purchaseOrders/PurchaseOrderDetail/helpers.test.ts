@@ -208,12 +208,13 @@ describe("poBreakdown", () => {
     poTotalProfit: "200000.00",
   } as PurchaseOrderRow
 
+  // 1.000.000 products less 100.000, plus 50.000 shipping.
   it("reads every figure from the PO, not the quotation", () => {
     expect(poBreakdown(po)).toEqual({
-      totalProduk: 1000000,
+      total: 1050000,
       discountPct: 10,
       nominalDiskon: 100000,
-      subTotal: 900000,
+      subTotal: 950000,
       dppNilaiLain: 870833.33,
       ppn12: 104500,
       totalProfit: 200000,

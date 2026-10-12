@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { ProductRow } from "@/features/quotations/types"
-import { offerDiffers, profitAfterDiscount } from "./helpers"
+import { discountLabel, offerDiffers, profitAfterDiscount } from "./helpers"
 
 function row(qty: number, sell: number, cost: number): ProductRow {
   return { kode: "", nama: "x", qty, satuan: "PCS", hargaSatuan: sell, profitSatuan: sell - cost }
@@ -14,6 +14,17 @@ describe("profitAfterDiscount total", () => {
 
   it("equals gross profit with no discount", () => {
     expect(profitAfterDiscount([row(3, 10, 4)], 0)).toBe(18)
+  })
+})
+
+describe("discountLabel", () => {
+  it.each<[string, number | undefined, string]>([
+    ["whole percent", 5, "Diskon Produk 5%"],
+    ["decimal comma", 2.5, "Diskon Produk 2,5%"],
+    ["no percent known", 0, "Diskon Produk"],
+    ["percent omitted", undefined, "Diskon Produk"],
+  ])("%s", (_name, pct, want) => {
+    expect(discountLabel(pct)).toBe(want)
   })
 })
 

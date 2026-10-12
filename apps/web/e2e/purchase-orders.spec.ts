@@ -82,7 +82,7 @@ test.describe("purchase order detail", () => {
 
     // PO-05: the breakdown is the discounted PO the invoice will bill.
     const breakdown = page.getByRole("heading", { name: "Rincian Biaya" }).locator("xpath=..")
-    await expect(breakdown).toContainText("Diskon (10%)")
+    await expect(breakdown).toContainText("Diskon Produk 10%")
     await expect(
       breakdown.getByText("Grand Total", { exact: true }).locator("xpath=following-sibling::*[1]"),
     ).toHaveText(rupiah(Number(po.poGrandTotal)))

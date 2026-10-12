@@ -121,6 +121,11 @@ test.describe("quotation wizard", () => {
     await expect(page.getByText(ref, { exact: true })).toBeVisible()
     const breakdown = costBreakdown(page)
     await expect(amountAfter(breakdown, "Grand Total")).toHaveText(rupiah(wizardTotal))
+    // The PDF rows: Total has the 250.000 shipping, the discount names Produk.
+    await expect(amountAfter(breakdown, "Total")).toHaveText(rupiah(850_000))
+    await expect(amountAfter(breakdown, "Diskon Produk 10%")).toHaveText(`- ${rupiah(60_000)}`)
+    await expect(amountAfter(breakdown, "Sub Total")).toHaveText(rupiah(790_000))
+    await expect(breakdown.getByText("Biaya Pengiriman", { exact: true })).toHaveCount(0)
     // Q-10: the detail profit is taken after the discount, like the wizard.
     await expect(amountAfter(breakdown, "Total Estimasi Profit")).toHaveText(rupiah(140_000))
   })

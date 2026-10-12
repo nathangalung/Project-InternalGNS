@@ -186,7 +186,7 @@ export function poErrorMessage(err: unknown, fallback: string): string {
 
 // Figures the cost breakdown renders.
 export type PoBreakdown = {
-  totalProduk: number
+  total: number
   discountPct: number
   nominalDiskon: number
   subTotal: number
@@ -200,15 +200,15 @@ export type PoBreakdown = {
 //
 // Every figure comes from v_po_totals, which rounds per line the way the
 // invoice does, so the page matches the invoice this PO becomes. Sub Total is
-// the discounted product value, before shipping.
+// the invoice DPP, shipping included, and Total adds the discount back.
 export function poBreakdown(po: PurchaseOrderRow): PoBreakdown {
-  const totalProduk = toNum(po.poTotalProduk)
+  const subTotal = toNum(po.poSubtotal)
   const nominalDiskon = toNum(po.poTotalDiscount)
   return {
-    totalProduk,
+    total: subTotal + nominalDiskon,
     discountPct: toNum(po.discountPct),
     nominalDiskon,
-    subTotal: totalProduk - nominalDiskon,
+    subTotal,
     dppNilaiLain: toNum(po.poDppNilaiLain),
     ppn12: toNum(po.poPpnAmount),
     totalProfit: toNum(po.poTotalProfit),

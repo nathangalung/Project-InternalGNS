@@ -236,14 +236,13 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
         {sellingShown && (
           <CostBreakdown
             hasProducts={products.length > 0}
-            totalProduk={figures.totalProduk}
+            total={figures.total}
             discountPct={figures.discountPct}
             nominalDiskon={figures.nominalDiskon}
             subTotal={figures.subTotal}
             dppNilaiLain={figures.dppNilaiLain}
             ppn12={figures.ppn12}
             withPPN={po.ppnEnabled}
-            totalShip={totalShip}
             totalProfit={figures.totalProfit}
             showProfit={profitShown}
             grandTotal={figures.grandTotal}

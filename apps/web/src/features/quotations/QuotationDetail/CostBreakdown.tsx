@@ -1,10 +1,12 @@
 import { formatRupiah as formatRp } from "@/lib/format"
 import { qe } from "../wizard-styles"
+import { discountLabel } from "./helpers"
 
 interface CostBreakdownProps {
   hasProducts: boolean
-  totalProduk: number
-  // Omitted where the discount is per line and no single percent applies.
+  // Every line, shipping included, before the discount.
+  total: number
+  // Unknown on an invoice older than its gross snapshot.
   discountPct?: number
   nominalDiskon: number
   subTotal: number
@@ -12,7 +14,6 @@ interface CostBreakdownProps {
   ppn12: number
   // False when the document is sold without PPN
   withPPN?: boolean
-  totalShip: number
   totalProfit: number
   showProfit?: boolean
   grandTotal: number
@@ -22,16 +23,18 @@ const row = "flex justify-between text-xs text-[#4B5563]"
 const rowValue = "font-semibold text-[#111827]"
 
 // Cost summary, totals, grand total.
+//
+// The rows the quotation and invoice PDFs print: Total, Diskon Produk,
+// Sub Total, the PPN pair, Grand Total. Shipping is in Total.
 export default function CostBreakdown({
   hasProducts,
-  totalProduk,
+  total,
   discountPct = 0,
   nominalDiskon,
   subTotal,
   dppNilaiLain,
   ppn12,
   withPPN = true,
-  totalShip,
   totalProfit,
   showProfit = true,
   grandTotal,
@@ -43,17 +46,14 @@ export default function CostBreakdown({
         <div className="mb-5 flex flex-col gap-3">
           {hasProducts && (
             <div className={row}>
-              <span>Total Produk</span>
-              <span className={rowValue}>{formatRp(totalProduk)}</span>
+              <span>Total</span>
+              <span className={rowValue}>{formatRp(total)}</span>
             </div>
           )}
           {hasProducts && nominalDiskon > 0 && (
             <div className={row}>
-              <span>{discountPct > 0 ? `Diskon (${discountPct}%)` : "Diskon"}</span>
-              <div className="flex items-center gap-2">
-                <span className="text-[#9CA3AF] line-through">{formatRp(totalProduk)}</span>
-                <span className="font-semibold text-[#10B981]">- {formatRp(nominalDiskon)}</span>
-              </div>
+              <span>{discountLabel(discountPct)}</span>
+              <span className="font-semibold text-[#10B981]">- {formatRp(nominalDiskon)}</span>
             </div>
           )}
           {hasProducts && (
@@ -79,10 +79,6 @@ export default function CostBreakdown({
               <span className={rowValue}>Tanpa PPN</span>
             </div>
           )}
-          <div className={row}>
-            <span>Biaya Pengiriman</span>
-            <span className={rowValue}>{formatRp(totalShip)}</span>
-          </div>
         </div>
 
         <div className="mb-4 h-px bg-[#E5E7EB]" />

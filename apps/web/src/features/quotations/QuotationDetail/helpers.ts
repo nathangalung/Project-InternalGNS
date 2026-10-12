@@ -1,4 +1,13 @@
 import type { ProductRow } from "@/features/quotations/types"
+import { formatPercent } from "@/lib/format"
+
+// Discount row label.
+//
+// Produk because shipping is never discounted, as the PDF prints it. A
+// document whose percent is unknown names no figure.
+export function discountLabel(pct?: number): string {
+  return pct ? `Diskon Produk ${formatPercent(pct)}` : "Diskon Produk"
+}
 
 // Product profit after the discount.
 //

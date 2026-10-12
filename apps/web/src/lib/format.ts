@@ -32,6 +32,17 @@ export function formatNumber(value: number | string | null | undefined, fallback
   return n.toLocaleString("id-ID")
 }
 
+// Percent, Indonesian style.
+//
+// A comma before at most two decimals and none that add nothing ("5%",
+// "2,5%"), as pdfgen.FormatPct prints it. Missing or junk input is "".
+export function formatPercent(value: string | number | null | undefined): string {
+  if (value === null || value === undefined || value === "") return ""
+  const n = typeof value === "number" ? value : Number(value)
+  if (!Number.isFinite(n)) return ""
+  return `${n.toLocaleString("id-ID", { maximumFractionDigits: 2, useGrouping: false })}%`
+}
+
 // Compact rupiah axis ticks.
 export function formatRupiahAxis(v: number): string {
   if (v >= 1_000_000_000) return `Rp ${(v / 1_000_000_000).toFixed(0)}M`
