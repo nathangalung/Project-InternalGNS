@@ -15,10 +15,9 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Invoice summary reads like the quotation.
-// Total of every line, shipping included, the product discount with the
-// percent derived from the stored snapshot, Sub Total, the PPN pair and
-// Grand Total, with no HARGA TOTAL or bare DPP row.
+// Invoice summary matches the quotation.
+// The discount row carries the percent derived from the stored snapshot,
+// and the old HARGA TOTAL and DPP rows are gone.
 func TestExport_PDF_SummaryRows(t *testing.T) {
 	_, tx := testutil.BeginTx(t)
 	invID := discountedPOWithInvoice(t, tx)

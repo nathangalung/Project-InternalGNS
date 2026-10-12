@@ -3,7 +3,7 @@ package pdfgen
 import "testing"
 
 // Percent as Indonesians write it.
-// A comma for the decimals and none that add nothing: "5", never "5.00".
+// A decimal comma and no trailing zeros: "5", never "5.00".
 func TestFormatPct(t *testing.T) {
 	cases := []struct{ in, want string }{
 		{"5.00", "5"},

@@ -97,8 +97,7 @@ func TestLatexExports_Margins(t *testing.T) {
 				t.Errorf("text right at %.1f pt, want %.1f", right, paperW-marginSide)
 			}
 
-			// Top: page 1 opens under the reserved header band; its first
-			// 7 pt line sits a few points below the band.
+			// Top: page 1 starts just below the space kept for the header.
 			if body := marginTop + headHeight + headSep; top.yMin < body || top.yMin > body+9 {
 				t.Errorf("page 1 starts at y=%.1f (%q), want within 9 pt under %.1f", top.yMin, top.text, body)
 			}

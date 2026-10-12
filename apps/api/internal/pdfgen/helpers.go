@@ -98,9 +98,8 @@ func BigMulDiv(a, num, den string) string {
 }
 
 // FormatPct prints a percent figure.
-// Two decimals at most, a comma before them, none that add nothing:
-// "5.00" is "5", "2.50" is "2,5". Malformed input is "". The caller adds
-// the percent sign.
+// At most two decimals, a decimal comma and no trailing zeros: "5.00" is
+// "5", "2.50" is "2,5". Malformed input is "". The caller adds the % sign.
 func FormatPct(numericStr string) string {
 	d, err := decimal.NewFromString(strings.TrimSpace(numericStr))
 	if err != nil {

@@ -34,7 +34,7 @@ export function formatNumber(value: number | string | null | undefined, fallback
 
 // Percent, Indonesian style.
 //
-// A comma before at most two decimals and none that add nothing ("5%",
+// At most two decimals, a decimal comma and no trailing zeros ("5%",
 // "2,5%"), as pdfgen.FormatPct prints it. Missing or junk input is "".
 export function formatPercent(value: string | number | null | undefined): string {
   if (value === null || value === undefined || value === "") return ""

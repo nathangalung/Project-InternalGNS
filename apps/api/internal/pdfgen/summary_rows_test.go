@@ -8,10 +8,9 @@ import (
 )
 
 // Summary rows read alike.
-// The quotation and the invoice close their table with the same rows in the
-// same order: Total of every line, the product discount with its percent,
-// Sub Total, the PPN pair when taxed, and Grand Total. Shipping is a table
-// line, so no Pengiriman row adds it again, and a zero discount prints no row.
+// The quotation and the invoice print the same rows in the same order.
+// Shipping is a table line, so it gets no row of its own, and a zero
+// discount prints no row.
 func TestLatexExports_SummaryRows(t *testing.T) {
 	noDiscount := func(d map[string]any) map[string]any {
 		d["HasDiscount"] = false
