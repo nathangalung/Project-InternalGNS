@@ -16,6 +16,7 @@ import { useObjectUrl } from "@/hooks/useObjectUrl"
 import { logoBackground } from "@/lib/avatar"
 import { errorMessage } from "@/lib/errors"
 import { formatRupiah } from "@/lib/format"
+import { impaLabel } from "@/lib/impa"
 import { canWriteCatalog, seesCost } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
@@ -576,7 +577,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
                         {item.itemName}
                       </EntityLink>
                     </td>
-                    <td className={ui.tdCenter}>{item.impaCode ?? "-"}</td>
+                    <td className={ui.tdCenter}>{impaLabel(item.impaCode)}</td>
                     <td className={ui.tdCenter}>{item.vendorSku ?? "-"}</td>
                     {showCost && (
                       <td className={`${ui.tdCenter} font-extrabold text-primary-700`}>

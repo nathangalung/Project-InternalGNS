@@ -311,9 +311,10 @@ shows a missing one as Belum ada No. PO.
   Salin ke Offer makes the request the offer as a real catalog item: a
   picked catalog request is that item, and typed text goes through
   `POST /items/match-rows` with `autoCreate`, the Excel import's own
-  matcher and threshold: the IMPA code, then the closest name, reuses an
-  item (a look-alike asks the user to check it), anything else is added to
-  the catalog, and the pick then applies the line recommendation as an
+  matcher and threshold (see IMPA codes below): a request with a code
+  reuses only the product holding that exact code, one without a code the
+  closest name (a look-alike asks the user to check it), and anything else
+  is added to the catalog, and the pick then applies the line recommendation as an
   import does. Its `minScore` defaults to 0.5, and one outside (0, 1] is a
   422 on the field, since above 1 nothing matches and `autoCreate` would
   add every row again. Every product line shows the
@@ -539,11 +540,10 @@ sees it.
 each offer on the quotation and PO detail, and beside the picked vendor in
 the quotation product dialog.
 
-One IMPA code belongs to one active product (`uq_items_impa_code_active`,
-stored trimmed and upper-cased). The import and Salin ke Offer match the
-code first, so a row whose code an active product holds reuses it whatever
-its name, and only an unknown code is auto-created, under the request text
-as typed. When that text was abbreviated or wrong, Tambah Produk Baru with
+One IMPA code belongs to one active product (`uq_items_impa_code_active`).
+The import and Salin ke Offer match the code first, so a row whose code an
+active product holds reuses it whatever its name, and only an unknown code
+is auto-created, under the request text as typed. When that text was abbreviated or wrong, Tambah Produk Baru with
 the right name and the same code is refused: the 422 on `impaCode` (create
 and `PUT /items/{id}`) keeps its field message and carries `code:
 "impa_taken"` with `impaHolder` (`items.IMPATakenProblem`: id, name, code,
@@ -557,6 +557,55 @@ rename reaches only the catalog and the drafts that read it, exactly as the
 product page Ubah (`PUT /items/{id}`) always has. Items carry no row
 version, so the rename takes no `If-Match`. The product page Ubah and the
 catalog's Tambah Produk link the holder's name to its page instead.
+
+## IMPA codes
+
+An IMPA code is six digits. `validate.IMPA` (mirrored by `lib/impa` in the
+web, `fn_impa_code` in the database and `values.impa_code` in the import,
+all pinned by `validate/testdata/impa_rules.json`) reduces the forms people
+type (`IMPA 190105`, `(190105)`, `19 01 05`) to the digits and reads a blank
+or "-" as no code. Anything else is a 422 on its field with
+`validate.IMPAMessage`: `impaCode` on item create and update,
+`items[i].requestedImpa` on quotation lines, `requestImpa` on client
+requests, `items[i].itemCode` in Ubah PO and `rows[i].impaCode` in
+match-rows. A CHECK on `items.impa_code`, `quotation_items.requested_impa`
+and `offered_impa`, `quotation_item_requests.request_impa` and
+`purchase_order_items.item_code` (00113) keeps every other value out; 00113
+validates each one only when no stored row breaks it and otherwise names
+the count in a notice and leaves the row as it was. An RFQ code cell that
+is not an IMPA code (a row number, the client's own code) is dropped.
+
+Matching (`items/matchrows.go`, the RFQ import and Salin ke Offer): a row
+with a code resolves only by that exact code among active products. When
+no product holds it, `autoCreate` adds one under that code, else the row
+stays unmatched; it is never matched by name. Only a row without a code
+goes through `fn_match_request` with today's name tiers and threshold. A
+search whose query is a code (`fn_search_items`, search-advanced) returns
+only its holder, and no search compares codes by trigram similarity; a
+partly typed code still finds codes containing it.
+
+A name never repeats its own row's code. `fn_impa_split(name, code, move)`
+takes the code out of the text, bare, marked `IMPA` (with or without a
+space) or in brackets, with its ` - ` separator, and tidies the line it
+was on; a code inside a longer token (`XJ-190105-B`, `A190105`), another
+row's code and words like IMPACT stay, and a text that was only the code
+keeps it. With `move`, an empty code takes the one code the text marks
+`IMPA`. Triggers run it on every write: requests (`requested_name`,
+`request_text`) move, offers and PO lines (copies of the catalog) and
+products only strip. A product's marked code moves into its empty field
+only in the item create and update handlers and in the import, after
+checking no other active product holds it, since a trigger could hand it
+to the wrong row in a bulk load. 00113 cleaned every stored product,
+quotation line, request and PO line the same way. Invoice lines are never
+touched: they are what went to DJP through Coretax.
+
+The web keeps Kode IMPA and Nama Produk as two fields: the product dialog
+has a typed Kode IMPA Request beside Nama Produk Request, and a read-only
+Kode IMPA Offer (the picked product's) beside the Nama Produk Offer search,
+which still takes a code or a name. Lists, the request and offer cells
+(`RequestOffer`) and the pickers show the code apart from the name, a
+missing one as "-" (`impaLabel`, display only). The PDFs print the name,
+then the code in brackets.
 
 ## Units
 

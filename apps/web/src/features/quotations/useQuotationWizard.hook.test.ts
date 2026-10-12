@@ -9,8 +9,10 @@ import { useQuotationWizard } from "./useQuotationWizard"
 const UNITS = [{ id: 1, code: "PCS", aliases: ["PIECES"] }]
 
 const FORM: ProductAddFormData = {
-  requestedKodeImpaNama: "",
-  kodeImpaNama: "LAMP LED",
+  requestedKodeImpa: "",
+  requestedNama: "",
+  kodeImpa: "",
+  nama: "LAMP LED",
   jumlahProduk: "2",
   satuan: "PCS",
   namaVendor: "CV Laut",

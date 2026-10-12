@@ -81,7 +81,7 @@ func TestRepo_MatchRows_MixedBatchKeepsRowResults(t *testing.T) {
 	var unitCode string
 	require.NoError(t, tx.QueryRow(ctx, `SELECT id, code FROM units ORDER BY id LIMIT 1`).Scan(&unitID, &unitCode))
 
-	codeA, codeOld, codeBare, codeMiss := uniqueIMPA(), uniqueIMPA()+"o", uniqueIMPA()+"b", uniqueIMPA()+"m"
+	codeA, codeOld, codeBare, codeMiss, codeNew := uniqueIMPA(t), uniqueIMPA(t), uniqueIMPA(t), uniqueIMPA(t), uniqueIMPA(t)
 	priced, err := repo.Create(ctx, items.CreateItemRequest{
 		Name: uniqueItemName("BATCH PRICED"), IMPACode: &codeA, DefaultUnitID: &unitID,
 	}, seedUserID)
@@ -120,13 +120,15 @@ func TestRepo_MatchRows_MixedBatchKeepsRowResults(t *testing.T) {
 		{IMPACode: codeBare, Qty: 7},
 		{Name: retired.Name, Qty: 8},
 		{IMPACode: codeMiss, Qty: 9},
+		// A code no product holds never falls back to the name.
+		{IMPACode: codeNew, Name: byName.Name, Qty: 10},
 	}
 
 	n := 0
 	counted := items.NewRepo(countingTx{Tx: tx, n: &n}, testutil.Store(t))
 	out, err := counted.MatchRows(ctx, items.MatchRowsRequest{Rows: rows}, 0.5, seedUserID)
 	require.NoError(t, err)
-	assert.Equal(t, 3, n, "one IMPA, one name and one price statement per chunk")
+	assert.Equal(t, 4, n, "one split, one IMPA, one name and one price statement per chunk")
 	require.Len(t, out, len(rows))
 
 	cost := "200.00"
@@ -161,12 +163,15 @@ func TestRepo_MatchRows_MixedBatchKeepsRowResults(t *testing.T) {
 	assert.Equal(t, items.MatchedItemWithVendor{ItemID: bare.ID, ItemName: bare.Name, IMPACode: bare.IMPACode}, *out[6].Matched)
 	assert.Equal(t, "IMPA_EXACT", out[6].Source)
 
-	for _, i := range []int{2, 5, 7, 8} {
-		assert.Equal(t, items.MatchRowResult{Index: i, Requested: rows[i], Source: "NONE"}, out[i], "row %d", i)
+	// The echo is the stored form: the code trimmed to its six digits.
+	echo := append([]items.MatchRowInput(nil), rows...)
+	echo[0].IMPACode = codeA
+	for _, i := range []int{2, 5, 7, 8, 9} {
+		assert.Equal(t, items.MatchRowResult{Index: i, Requested: echo[i], Source: "NONE"}, out[i], "row %d", i)
 	}
 	for i, r := range out {
 		assert.Equal(t, i, r.Index)
-		assert.Equal(t, rows[i], r.Requested)
+		assert.Equal(t, echo[i], r.Requested)
 	}
 }
 
@@ -176,7 +181,7 @@ func TestRepo_MatchRows_MixedBatchKeepsRowResults(t *testing.T) {
 func TestRepo_MatchRows_NewIMPACreatedOnce(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := items.NewRepo(tx, testutil.Store(t))
-	code := uniqueIMPA()
+	code := uniqueIMPA(t)
 	rows := []items.MatchRowInput{
 		{IMPACode: code, Name: uniqueItemName("BATCH NEW CODE"), Qty: 1},
 		{IMPACode: " " + strings.ToUpper(code), Name: "nama lain", Qty: 2},
@@ -195,14 +200,15 @@ func TestRepo_MatchRows_NewIMPACreatedOnce(t *testing.T) {
 }
 
 // Statements stay per chunk.
-// A miss-only chunk skips the price statement, and a full import costs a
-// few statements per chunk whatever its row count.
+// A miss-only chunk skips the price statement, a chunk of coded rows the
+// name statement, and a full import costs a few statements per chunk
+// whatever its row count.
 func TestRepo_MatchRows_StatementsPerChunk(t *testing.T) {
 	nonce := time.Now().UnixNano()
 	misses := func(n int) []items.MatchRowInput {
 		rows := make([]items.MatchRowInput, n)
 		for i := range rows {
-			rows[i] = items.MatchRowInput{IMPACode: fmt.Sprintf("zq%d-%03d", nonce, i), Name: fmt.Sprintf("ZZQV%03dX%dMISS", i, nonce), Qty: 1}
+			rows[i] = items.MatchRowInput{IMPACode: uniqueIMPA(t), Name: fmt.Sprintf("ZZQV%03dX%dMISS", i, nonce), Qty: 1}
 		}
 		return rows
 	}
@@ -211,8 +217,9 @@ func TestRepo_MatchRows_StatementsPerChunk(t *testing.T) {
 		rows []items.MatchRowInput
 		want int
 	}{
+		// Coded misses skip the name statement.
 		{"one chunk of misses", misses(3), 2},
-		{"no codes", []items.MatchRowInput{{Name: fmt.Sprintf("ZZQV%dSOLO", nonce)}}, 1},
+		{"no codes", []items.MatchRowInput{{Name: fmt.Sprintf("ZZQV%dSOLO", nonce)}}, 2},
 		{"five chunks of misses", misses(items.MaxMatchRows), 10},
 	}
 	for _, c := range cases {
@@ -232,22 +239,23 @@ func TestRepo_MatchRows_StatementsPerChunk(t *testing.T) {
 // A result that fails mid-stream surfaces as an error naming its stage,
 // never as an empty lookup that would auto-create a duplicate.
 func TestRepo_MatchRows_BrokenStreamIsAnError(t *testing.T) {
-	// Statements run IMPA, name, the second row's create, then price.
+	// Statements run split, IMPA, name, the second row's create, then price.
 	cases := []struct {
 		name string
 		skip int
 		want string
 	}{
-		{"IMPA stream", 0, "match rows 0-1 by IMPA"},
-		{"name stream", 1, "match rows 0-1 by name"},
-		{"create stream", 2, "create row 1"},
-		{"price stream", 3, "price rows 0-1"},
+		{"split stream", 0, "split rows 0-1"},
+		{"IMPA stream", 1, "match rows 0-1 by IMPA"},
+		{"name stream", 2, "match rows 0-1 by name"},
+		{"create stream", 3, "create row 1"},
+		{"price stream", 4, "price rows 0-1"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ctx, tx := testutil.BeginTx(t)
 			store := testutil.Store(t)
-			code := uniqueIMPA()
+			code := uniqueIMPA(t)
 			_, err := items.NewRepo(tx, store).Create(ctx,
 				items.CreateItemRequest{Name: uniqueItemName("BROKEN"), IMPACode: &code}, seedUserID)
 			require.NoError(t, err)

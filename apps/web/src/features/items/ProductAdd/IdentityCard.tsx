@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { impaLabel } from "@/lib/impa"
 import type { LookupFailure } from "@/lib/lookup"
 import { dropdownLabel, ui } from "@/lib/ui"
 import {
@@ -23,7 +24,6 @@ import {
   type CatalogItem,
   CheckmarkIcon,
   type DropdownKey,
-  formatKodeNama,
   type ProductAddFormData,
 } from "./helpers"
 
@@ -33,7 +33,6 @@ type IdentityCardProps = {
   productCatalog: CatalogItem[]
   productMatches: CatalogItem[]
   requestMatches: CatalogItem[]
-  activeProductLabel?: string
   productOpen: boolean
   productRequestOpen: boolean
   satuanOptions: string[]
@@ -53,6 +52,30 @@ type IdentityCardProps = {
   // Failed catalog lookups
   requestFailure?: LookupFailure | null
   productFailure?: LookupFailure | null
+  // Why the typed request code is refused
+  requestImpaError?: string | null
+}
+
+// One catalog row.
+// The code and the name sit apart, a missing code as "-".
+function CatalogOption({
+  item,
+  active,
+  onPick,
+}: {
+  item: CatalogItem
+  active: boolean
+  onPick: () => void
+}) {
+  return (
+    <AutocompleteItem value={`${item.kode} ${item.nama}`} onClick={onPick}>
+      <span className="w-14 flex-shrink-0 text-xs font-bold tabular-nums text-dark-500">
+        {impaLabel(item.kode)}
+      </span>
+      <span className={`min-w-0 flex-1 ${dropdownLabel(active)}`}>{item.nama}</span>
+      {active && <CheckmarkIcon />}
+    </AutocompleteItem>
+  )
 }
 
 // Product identity card.
@@ -61,7 +84,6 @@ export default function IdentityCard({
   onChange,
   productMatches,
   requestMatches,
-  activeProductLabel,
   productOpen,
   productRequestOpen,
   satuanOptions,
@@ -78,13 +100,16 @@ export default function IdentityCard({
   minQty = 1,
   requestFailure = null,
   productFailure = null,
+  requestImpaError = null,
 }: IdentityCardProps) {
   const requestId = useId()
+  const requestCodeId = useId()
+  const requestCodeErrorId = useId()
   const offerId = useId()
+  const offerCodeId = useId()
   const unitId = useId()
   const qtyId = useId()
-  const canCopy = form.requestedKodeImpaNama.trim().length > 0 && !copying
-  const activeRequestLabel = form.requestedKodeImpaNama.trim()
+  const canCopy = form.requestedNama.trim().length > 0 && !copying && !requestImpaError
   // Per-field open and close.
   const openProps = (key: DropdownKey) => ({
     onOpenChange: (open: boolean) => (open ? setOpenDropdown(key) : closeIfMatch(key)),
@@ -93,62 +118,78 @@ export default function IdentityCard({
     <>
       <div className={ui.modalSection}>
         <div className={ui.modalSectionHeading}>Permintaan Klien (Request)</div>
-        <div className={ui.field}>
-          <label htmlFor={requestId} className={ui.fieldLabel}>
-            Kode IMPA/Nama Produk Request <span className="text-primary-700">*</span>
-          </label>
-          <Autocomplete
-            value={form.requestedKodeImpaNama}
-            onValueChange={(v, d) => {
-              if (d.reason === "input-change") onChange("requestedKodeImpaNama", v)
-            }}
-            open={productRequestOpen}
-            {...openProps("productRequest")}
-          >
-            <AutocompleteInput
-              id={requestId}
-              className="font-sans"
-              placeholder="Cari produk atau ketik permintaan klien"
-              onFocus={() => setOpenDropdown("productRequest")}
+        <div className={ui.codeNameRow}>
+          <div className={ui.field}>
+            <label htmlFor={requestCodeId} className={ui.fieldLabel}>
+              Kode IMPA Request
+            </label>
+            <input
+              id={requestCodeId}
+              className={`${ui.fieldInput} font-sans ${requestImpaError ? "border-error" : ""}`}
+              type="text"
+              inputMode="numeric"
+              placeholder="Kosongkan bila tidak ada"
+              aria-invalid={requestImpaError ? true : undefined}
+              aria-describedby={requestImpaError ? requestCodeErrorId : undefined}
+              value={form.requestedKodeImpa}
+              onChange={(e) => onChange("requestedKodeImpa", e.target.value)}
             />
-            <AutocompleteContent>
-              {requestFailure ? (
-                <LoadError
-                  message="Gagal memuat katalog produk."
-                  className="px-5 py-2.5"
-                  {...requestFailure}
-                />
-              ) : requestMatches.length === 0 ? (
-                <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>
-                  Tidak ada yang cocok di katalog. Teks ini disimpan apa adanya.
-                </div>
-              ) : (
-                <AutocompleteList>
-                  <AutocompleteGroup>
-                    <AutocompleteGroupLabel>Rekomendasi dari katalog</AutocompleteGroupLabel>
-                    {requestMatches.map((p) => {
-                      const label = formatKodeNama(p.kode, p.nama)
-                      const isActive = label === activeRequestLabel
-                      return (
-                        <AutocompleteItem
-                          key={p.id ?? label}
-                          value={label}
-                          onClick={() => {
-                            onChange("requestedKodeImpaNama", label)
+            {requestImpaError && (
+              <p id={requestCodeErrorId} className={ui.fieldError}>
+                {requestImpaError}
+              </p>
+            )}
+          </div>
+          <div className={ui.field}>
+            <label htmlFor={requestId} className={ui.fieldLabel}>
+              Nama Produk Request <span className="text-primary-700">*</span>
+            </label>
+            <Autocomplete
+              value={form.requestedNama}
+              onValueChange={(v, d) => {
+                if (d.reason === "input-change") onChange("requestedNama", v)
+              }}
+              open={productRequestOpen}
+              {...openProps("productRequest")}
+            >
+              <AutocompleteInput
+                id={requestId}
+                className="font-sans"
+                placeholder="Cari produk atau ketik permintaan klien"
+                onFocus={() => setOpenDropdown("productRequest")}
+              />
+              <AutocompleteContent>
+                {requestFailure ? (
+                  <LoadError
+                    message="Gagal memuat katalog produk."
+                    className="px-5 py-2.5"
+                    {...requestFailure}
+                  />
+                ) : requestMatches.length === 0 ? (
+                  <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>
+                    Tidak ada yang cocok di katalog. Teks ini disimpan apa adanya.
+                  </div>
+                ) : (
+                  <AutocompleteList>
+                    <AutocompleteGroup>
+                      <AutocompleteGroupLabel>Rekomendasi dari katalog</AutocompleteGroupLabel>
+                      {requestMatches.map((p) => (
+                        <CatalogOption
+                          key={p.id ?? p.nama}
+                          item={p}
+                          active={p.id !== undefined && p.id === form.requestedItemId}
+                          onPick={() => {
                             onPickRequestSuggestion?.(p)
                             setOpenDropdown(null)
                           }}
-                        >
-                          <span className={dropdownLabel(isActive)}>{label}</span>
-                          {isActive && <CheckmarkIcon />}
-                        </AutocompleteItem>
-                      )
-                    })}
-                  </AutocompleteGroup>
-                </AutocompleteList>
-              )}
-            </AutocompleteContent>
-          </Autocomplete>
+                        />
+                      ))}
+                    </AutocompleteGroup>
+                  </AutocompleteList>
+                )}
+              </AutocompleteContent>
+            </Autocomplete>
+          </div>
         </div>
       </div>
 
@@ -220,58 +261,67 @@ export default function IdentityCard({
       <div className={ui.modalSection}>
         <div className={ui.modalSectionHeading}>Produk yang Ditawarkan (Offer)</div>
 
-        <div className={ui.field}>
-          <label htmlFor={offerId} className={ui.fieldLabel}>
-            Kode IMPA/Nama Produk <span className="text-primary-700">*</span>
-          </label>
-          <Autocomplete
-            value={form.kodeImpaNama}
-            onValueChange={(v, d) => {
-              if (d.reason === "input-change") onChange("kodeImpaNama", v)
-            }}
-            open={productOpen}
-            {...openProps("product")}
-          >
-            <AutocompleteInput
-              id={offerId}
-              className="font-sans"
-              placeholder="Masukkan nama atau kode IMPA"
-              onFocus={() => setOpenDropdown("product")}
+        <div className={ui.codeNameRow}>
+          <div className={ui.field}>
+            <label htmlFor={offerCodeId} className={ui.fieldLabel}>
+              Kode IMPA Offer
+            </label>
+            {/* The picked product's own code, never typed here. */}
+            <input
+              id={offerCodeId}
+              className={`${ui.fieldInput} font-sans`}
+              type="text"
+              readOnly
+              tabIndex={-1}
+              value={impaLabel(form.kodeImpa)}
             />
-            <AutocompleteContent>
-              {productFailure ? (
-                <LoadError
-                  message="Gagal memuat katalog produk."
-                  className="px-5 py-2.5"
-                  {...productFailure}
-                />
-              ) : productMatches.length === 0 ? (
-                <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>Tidak ada hasil</div>
-              ) : (
-                <AutocompleteList>
-                  {productMatches.map((p) => {
-                    const label = formatKodeNama(p.kode, p.nama)
-                    const isActive = label === activeProductLabel
-                    return (
-                      <AutocompleteItem
-                        key={p.id ?? label}
-                        value={label}
-                        onClick={() => {
-                          onChange("kodeImpaNama", label)
+          </div>
+          <div className={ui.field}>
+            <label htmlFor={offerId} className={ui.fieldLabel}>
+              Nama Produk Offer <span className="text-primary-700">*</span>
+            </label>
+            <Autocomplete
+              value={form.nama}
+              onValueChange={(v, d) => {
+                if (d.reason === "input-change") onChange("nama", v)
+              }}
+              open={productOpen}
+              {...openProps("product")}
+            >
+              <AutocompleteInput
+                id={offerId}
+                className="font-sans"
+                placeholder="Cari nama atau kode IMPA"
+                onFocus={() => setOpenDropdown("product")}
+              />
+              <AutocompleteContent>
+                {productFailure ? (
+                  <LoadError
+                    message="Gagal memuat katalog produk."
+                    className="px-5 py-2.5"
+                    {...productFailure}
+                  />
+                ) : productMatches.length === 0 ? (
+                  <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>Tidak ada hasil</div>
+                ) : (
+                  <AutocompleteList>
+                    {productMatches.map((p) => (
+                      <CatalogOption
+                        key={p.id ?? p.nama}
+                        item={p}
+                        active={p.id !== undefined && p.id === form.itemId && p.nama === form.nama}
+                        onPick={() => {
                           onPickProduct?.(p)
                           setOpenDropdown(null)
                         }}
-                      >
-                        <span className={dropdownLabel(isActive)}>{label}</span>
-                        {isActive && <CheckmarkIcon />}
-                      </AutocompleteItem>
-                    )
-                  })}
-                </AutocompleteList>
-              )}
-              <AddNewButton label="Tambah Produk Baru" onClick={onAddProductNew} />
-            </AutocompleteContent>
-          </Autocomplete>
+                      />
+                    ))}
+                  </AutocompleteList>
+                )}
+                <AddNewButton label="Tambah Produk Baru" onClick={onAddProductNew} />
+              </AutocompleteContent>
+            </Autocomplete>
+          </div>
         </div>
 
         <div className={ui.row2}>

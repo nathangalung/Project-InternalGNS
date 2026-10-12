@@ -14,7 +14,7 @@ type ItemVendor = {
 
 test("Tambah Produk adds an item the Katalog search finds", async ({ page, seed }) => {
   const name = seed.name("Produk Baru")
-  const impa = uniqueImpa()
+  const impa = await uniqueImpa()
   await page.goto("/products")
   await page.getByRole("button", { name: "Tambah Produk" }).click()
   const modal = page.getByRole("dialog", { name: "Tambah Produk Baru" })

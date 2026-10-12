@@ -19,7 +19,7 @@ func newRepoWithQuotation(t *testing.T) (context.Context, *quotations.Repo, int6
 }
 
 func sampleItemRequest() quotations.ItemRequestCreate {
-	impa := "RFQ-001"
+	impa := "190105"
 	qty := "5"
 	uom := "PCS"
 	notes := "from email"

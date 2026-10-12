@@ -31,7 +31,7 @@ func decodeIMPATaken(t *testing.T, res *http.Response) items.IMPATakenProblem {
 // Create and update alike carry the active product that owns the code, so
 // the user can pick it or rename it instead of hitting a dead end.
 func TestHandler_IMPATaken_NamesHolder(t *testing.T) {
-	code := uniqueIMPA()
+	code := uniqueIMPA(t)
 	unit := defaultUnitID
 	holder := createItem(t, items.CreateItemRequest{Name: uniqueItemName("PEMEGANG"), IMPACode: ptrS(code), DefaultUnitID: &unit})
 	other := createItem(t, items.CreateItemRequest{Name: uniqueItemName("LAIN")})
@@ -62,7 +62,7 @@ func TestHandler_IMPATaken_NamesHolder(t *testing.T) {
 // The holder keeps its own code.
 // Saving the holder with the code it owns is no conflict at all.
 func TestHandler_IMPATaken_HolderItselfSaves(t *testing.T) {
-	code := uniqueIMPA()
+	code := uniqueIMPA(t)
 	holder := createItem(t, items.CreateItemRequest{Name: uniqueItemName("SENDIRI"), IMPACode: ptrS(code)})
 	res := doJSON(t, newSrv(t), http.MethodPut, "/items/"+itoa(holder.ID),
 		items.UpdateItemRequest{Name: holder.Name + " BARU", IMPACode: ptrS(code), IsActive: true})
@@ -73,7 +73,7 @@ func TestHandler_IMPATaken_HolderItselfSaves(t *testing.T) {
 // A failed holder read stays a 422.
 // The field message is still true, so the refusal is sent without a holder.
 func TestHandler_IMPATaken_HolderReadFails(t *testing.T) {
-	code := uniqueIMPA()
+	code := uniqueIMPA(t)
 	createItem(t, items.CreateItemRequest{Name: uniqueItemName("PEMEGANG"), IMPACode: ptrS(code)})
 	srv := mountedSrv(t, &testutil.CountingExec{Inner: testutil.Pool(t), FailAfter: 1})
 	res := doJSON(t, srv, http.MethodPost, "/items/", items.CreateItemRequest{Name: uniqueItemName("BARU"), IMPACode: ptrS(code)})
@@ -86,11 +86,11 @@ func TestHandler_IMPATaken_HolderReadFails(t *testing.T) {
 func TestRepo_IMPAHolder(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := items.NewRepo(tx, testutil.Store(t))
-	code := uniqueIMPA()
+	code := uniqueIMPA(t)
 	holder, err := repo.Create(ctx, items.CreateItemRequest{Name: uniqueItemName("PEMEGANG"), IMPACode: &code}, seedUserID)
 	require.NoError(t, err)
 	inactive := false
-	_, err = repo.Create(ctx, items.CreateItemRequest{Name: uniqueItemName("PENSIUN"), IMPACode: ptrS(uniqueIMPA()), IsActive: &inactive}, seedUserID)
+	_, err = repo.Create(ctx, items.CreateItemRequest{Name: uniqueItemName("PENSIUN"), IMPACode: ptrS(uniqueIMPA(t)), IsActive: &inactive}, seedUserID)
 	require.NoError(t, err)
 
 	cases := []struct {
@@ -101,7 +101,7 @@ func TestRepo_IMPAHolder(t *testing.T) {
 	}{
 		{"another item asks", " " + strings.ToUpper(code), 0, holder.ID},
 		{"the holder itself asks", code, holder.ID, 0},
-		{"no active holder", uniqueIMPA(), 0, 0},
+		{"no active holder", uniqueIMPA(t), 0, 0},
 		{"blank code", "", 0, 0},
 	}
 	for _, c := range cases {
@@ -195,14 +195,14 @@ func TestHandler_Rename_WhereverUsed(t *testing.T) {
 			filed := filedNames(t, ctx, tx, d.Item)
 
 			res := doJSON(t, mountedSrv(t, tx), http.MethodPost, "/items/"+itoa(d.Item)+"/rename",
-				items.RenameItemRequest{Name: "  Nama Benar " + d.ItemImpa + "  "})
+				items.RenameItemRequest{Name: "  Nama Benar R" + itoa(d.Item) + "  "})
 			defer res.Body.Close()
 			require.Equal(t, http.StatusOK, res.StatusCode)
 			var got items.Item
 			require.NoError(t, json.NewDecoder(res.Body).Decode(&got))
 			after, err := items.NewRepo(tx, testutil.Store(t)).GetByID(ctx, d.Item)
 			require.NoError(t, err)
-			assert.Equal(t, "Nama Benar "+d.ItemImpa, got.Name)
+			assert.Equal(t, "Nama Benar R"+itoa(d.Item), got.Name)
 			// JSON and the repo place the same instant in different zones.
 			assert.True(t, after.CreatedAt.Equal(got.CreatedAt) && after.UpdatedAt.Equal(got.UpdatedAt))
 			after.CreatedAt, after.UpdatedAt = got.CreatedAt, got.UpdatedAt
@@ -260,7 +260,7 @@ func TestHandler_Rename_Fault(t *testing.T) {
 // A row whose IMPA code an active product holds takes that product, whatever
 // its name, and auto-create adds nothing.
 func TestHandler_MatchRows_HeldIMPAReusesHolder(t *testing.T) {
-	code := uniqueIMPA()
+	code := uniqueIMPA(t)
 	holder := createItem(t, items.CreateItemRequest{Name: uniqueItemName("PEMEGANG"), IMPACode: ptrS(code)})
 	count := func() int {
 		var n int

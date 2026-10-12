@@ -51,7 +51,7 @@ func (s *scenarioState) productOnSentAndDraft() error {
 	ctx := context.Background()
 	pool := testutil.Pool(s.t)
 	tag := strconv.FormatInt(time.Now().UnixNano(), 36)
-	s.snap = snapshotState{oldName: "Tali Tambat " + tag, oldImpa: strings.ToUpper("t" + tag[len(tag)-7:])}
+	s.snap = snapshotState{oldName: "Tali Tambat " + tag, oldImpa: testutil.UniqueIMPA(s.t)}
 	if err := pool.QueryRow(ctx, `
 		INSERT INTO items (name, impa_code, default_unit_id, created_by, updated_by)
 		VALUES ($1, $2, $3, 1, 1) RETURNING id`, s.snap.oldName, s.snap.oldImpa, defaultUnit).Scan(&s.snap.item); err != nil {
@@ -79,7 +79,7 @@ func (s *scenarioState) productOnSentAndDraft() error {
 }
 
 func (s *scenarioState) renameProduct() error {
-	s.snap.newName, s.snap.newImpa = "Tali Tambat Nilon "+s.snap.oldImpa, "N"+s.snap.oldImpa[1:]
+	s.snap.newName, s.snap.newImpa = s.snap.oldName+" Nilon", testutil.UniqueIMPA(s.t)
 	unit := defaultUnit
 	_, err := items.NewRepo(testutil.Pool(s.t), testutil.Store(s.t)).Update(context.Background(), s.snap.item,
 		items.UpdateItemRequest{Name: s.snap.newName, IMPACode: &s.snap.newImpa, DefaultUnitID: &unit, IsActive: true},

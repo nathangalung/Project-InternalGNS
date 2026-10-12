@@ -155,8 +155,10 @@ export default function ProductTable({
               </thead>
               <tbody>
                 {slice.map((p, i) => {
-                  const reqKode = p.requestedKode || p.kode
-                  const reqNama = p.requestedNama || p.nama
+                  // A line with no request of its own shows the offer as asked.
+                  const own = Boolean(p.requestedNama)
+                  const reqKode = own ? (p.requestedKode ?? "") : p.kode
+                  const reqNama = own ? p.requestedNama : p.nama
                   return (
                     <tr key={p.lineId ?? start + i} className={ui.tr}>
                       <RequestOffer

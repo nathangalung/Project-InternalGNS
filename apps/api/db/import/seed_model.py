@@ -32,6 +32,7 @@ from paths import (
     VENDOR_OVERRIDES_FILE,
 )
 from unit_map import canonical_unit
+from values import split_impa
 from vendors import Decisions, channel_details, display_name, load_decisions, split_cell
 
 # Invoices dated before this are Dibayar: a month before the rebuild.
@@ -737,9 +738,21 @@ class Builder:
                 else:
                     impa, source = code, "enrichment"
                     taken[code.upper()] = p["id"]
+            # The name gives up its own code; a marked one fills an empty
+            # code only when no other product holds it (fn_impa_split).
+            name, code = split_impa(p["name"], impa, move=not impa)
+            if code and not impa:
+                owner = taken.get(code)
+                if owner and owner != p["id"]:
+                    name, code = p["name"], None
+                else:
+                    impa, source = code, "name"
+                    taken[code] = p["id"]
             desc = "\n".join(s for s in (p["description"], p["pack_note"]) if s) or None
             first = min(self.dates[s["quotation"]] for s in p["source_lines"])
-            prod = Product(0, p["id"], p["name"], desc, impa, p["default_unit"], p["kind"], first)
+            prod = Product(
+                0, p["id"], name or p["name"], desc, impa, p["default_unit"], p["kind"], first
+            )
             prod.impa_source = source
             self.products[p["id"]] = prod
             for s in p["source_lines"]:
@@ -877,13 +890,15 @@ class Builder:
                     notes.append(
                         f"Baris {len(out) + 1}: vendor alternatif " + ", ".join(cell.alternatives)
                     )
+            # The request keeps its code once, as the line trigger stores it.
+            requested, requested_impa = split_impa((ln["request"] or "").strip(), ln["impa"])
             out.append(
                 QLine(
                     id=0,
                     line_number=len(out) + 1,
                     item_type="product",
-                    requested_name=(ln["request"] or "").strip(),
-                    requested_impa=ln["impa"],
+                    requested_name=requested or "",
+                    requested_impa=requested_impa,
                     product=prod,
                     link=link,
                     qty=self.qty(ln, label),
@@ -1387,13 +1402,17 @@ class Builder:
 
     def po_line(self, pl: Doc, qline: QLine | None, same: bool, untaxed: bool) -> POLine:
         prod = qline.product if qline else None
+        # A PO line copies its offer, so it only drops its own code.
+        po_name, po_code = split_impa(
+            pl["description"].strip(), prod.impa if prod else None, move=False
+        )
         unit = canonical_unit(pl.get("unit")) or (qline.unit if qline else None)
         return POLine(
             id=0,
             line_number=0,
             item_type="shipping" if untaxed else "product",
-            item_name=pl["description"].strip(),
-            item_code=prod.impa if prod else None,
+            item_name=po_name or "",
+            item_code=po_code,
             product=prod,
             link=qline.link if qline else None,
             quotation_item_id=qline.id if qline and same else None,

@@ -48,11 +48,62 @@ Feature: Item lifecycle
     Then the response status is 200
     And the imported row carries the active vendor's price of "200.00"
 
-  Scenario: A lowercase IMPA code matches on import
+  Scenario: A marked IMPA code matches on import
     Given an existing item with an IMPA code
-    When the user imports a row with the item's IMPA code in lowercase and auto-create
+    When the user imports a row with the item's IMPA code in its marked form and auto-create
     Then the response status is 200
     And the imported row matched the seeded item by IMPA code
+
+  Scenario: A code no product holds is created under it, never matched by name
+    Given an existing item with an IMPA code
+    When the user imports a row with a new IMPA code and the item's name with auto-create
+    Then the response status is 200
+    And the imported row is a new product holding the new code
+
+  Scenario: A code no product holds stays unmatched without auto-create
+    Given an existing item with an IMPA code
+    When the user imports a row with a new IMPA code and the item's name
+    Then the response status is 200
+    And the imported row is unmatched
+
+  Scenario: A row without a code still matches by name
+    Given an existing item with an IMPA code
+    When the user imports a row with the item's name and no code
+    Then the response status is 200
+    And the imported row matched the seeded item by name
+
+  Scenario: A code named in the request text is matched as the code
+    Given an existing item with an IMPA code
+    When the user imports a row whose text names the item's IMPA code
+    Then the response status is 200
+    And the imported row matched the seeded item by IMPA code
+    And the imported request text no longer names the code
+
+  Scenario: An import row with a code that is not six digits is refused
+    When the user imports a row with the IMPA code "ABC"
+    Then the response status is 422
+    And the problem field "rows[0].impaCode" says "Baris 1. Kode IMPA harus 6 digit angka, misalnya 190105. Kosongkan bila tidak ada."
+
+  Scenario Outline: A product code that is not six digits is refused
+    When the user creates an item with the IMPA code "<code>"
+    Then the response status is 422
+    And the problem field "impaCode" says "Kode IMPA harus 6 digit angka, misalnya 190105. Kosongkan bila tidak ada."
+
+    Examples:
+      | code    |
+      | 19010   |
+      | 1901055 |
+      | N/A     |
+
+  Scenario: A product name keeps its own code once
+    When the user creates an item whose name repeats its IMPA code
+    Then the response status is 201
+    And the stored name no longer names the code
+
+  Scenario: A code typed as "-" means none
+    When the user creates an item with the IMPA code "-"
+    Then the response status is 201
+    And the stored item has no IMPA code
 
   Scenario: A duplicate active IMPA code lands on the IMPA field
     Given an existing item with an IMPA code

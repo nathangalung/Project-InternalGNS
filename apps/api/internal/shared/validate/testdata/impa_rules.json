@@ -1,0 +1,30 @@
+{
+  "comment": "Shared IMPA code format. validate_test.go (validate.IMPA), the migration test (fn_impa_code), apps/web/src/lib/validation.test.ts and the import tool's tests all run every case, so the four copies cannot drift. code is what is stored: empty means no code. An invalid case is refused with the message.",
+  "message": "Kode IMPA harus 6 digit angka, misalnya 190105. Kosongkan bila tidak ada.",
+  "cases": [
+    { "input": "190105", "code": "190105", "valid": true },
+    { "input": " 190105 ", "code": "190105", "valid": true, "note": "spaces around" },
+    { "input": "IMPA 190105", "code": "190105", "valid": true },
+    { "input": "IMPA190105", "code": "190105", "valid": true },
+    { "input": "impa 190105", "code": "190105", "valid": true, "note": "any case" },
+    { "input": "(IMPA 190105)", "code": "190105", "valid": true },
+    { "input": "(190105)", "code": "190105", "valid": true },
+    { "input": "IMPA: 190105", "code": "190105", "valid": true },
+    { "input": "IMPA#190105", "code": "190105", "valid": true },
+    { "input": "19 01 05", "code": "190105", "valid": true, "note": "the catalog's spaced form" },
+    { "input": "19.01.05", "code": "190105", "valid": true },
+    { "input": "", "code": "", "valid": true, "note": "no code" },
+    { "input": "   ", "code": "", "valid": true },
+    { "input": "-", "code": "", "valid": true, "note": "the shown placeholder" },
+    { "input": "--", "code": "", "valid": true },
+    { "input": "19010", "code": "", "valid": false, "note": "five digits" },
+    { "input": "1901055", "code": "", "valid": false, "note": "seven digits" },
+    { "input": "190105A", "code": "", "valid": false },
+    { "input": "XJ190105B", "code": "", "valid": false, "note": "a model number" },
+    { "input": "IMPA", "code": "", "valid": false },
+    { "input": "IMPACT", "code": "", "valid": false },
+    { "input": "N/A", "code": "", "valid": false },
+    { "input": "190105 190106", "code": "", "valid": false, "note": "two codes" },
+    { "input": "294883067759", "code": "", "valid": false, "note": "twelve digits" }
+  ]
+}

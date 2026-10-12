@@ -6,7 +6,6 @@ import {
   countUnknownUnits,
   type ProductItem,
   seedFromDetail,
-  splitOffer,
   unitIssue,
   upsertProduct,
   validityInput,
@@ -147,22 +146,12 @@ describe("wizardSummary", () => {
   })
 })
 
-describe("splitOffer", () => {
-  it.each<[string, { kode: string; nama: string }]>([
-    ["", { kode: "", nama: "" }],
-    ["   ", { kode: "", nama: "" }],
-    ["232001 - LAMP LED - 12W", { kode: "232001", nama: "LAMP LED - 12W" }],
-    ["LAMP - LED", { kode: "", nama: "LAMP - LED" }],
-    ["  Tali Tambat ", { kode: "", nama: "Tali Tambat" }],
-  ])("%j", (input, want) => {
-    expect(splitOffer(input)).toEqual(want)
-  })
-})
-
 describe("upsertProduct", () => {
   const form: ProductAddFormData = {
-    requestedKodeImpaNama: "",
-    kodeImpaNama: "232001 - LAMP LED",
+    requestedKodeImpa: "",
+    requestedNama: "",
+    kodeImpa: "232001",
+    nama: "LAMP LED",
     jumlahProduk: "3",
     satuan: "PCS",
     namaVendor: "CV Laut",
@@ -199,9 +188,13 @@ describe("upsertProduct", () => {
     expect(out[0]).toMatchObject({ id: 1, hargaBeli: 0, hargaJual: 0 })
   })
 
-  it("keeps the requested name when one was given", () => {
-    const out = upsertProduct([], null, { ...form, requestedKodeImpaNama: "111 - BOLT" })
-    expect(out[0]).toMatchObject({ requestedNama: "BOLT", requestedKodeImpa: "111" })
+  it("keeps the requested name and code when given", () => {
+    const out = upsertProduct([], null, {
+      ...form,
+      requestedKodeImpa: "IMPA 111111",
+      requestedNama: " BOLT ",
+    })
+    expect(out[0]).toMatchObject({ requestedNama: "BOLT", requestedKodeImpa: "111111" })
   })
 
   it("replaces the edited line in place", () => {

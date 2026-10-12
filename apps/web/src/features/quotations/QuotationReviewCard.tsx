@@ -6,6 +6,7 @@ import {
   useUpsertQuotationRequest,
 } from "@/features/quotations/hooks"
 import { errorMessage, isVersionConflict } from "@/lib/errors"
+import { impaCodeError, impaLabel, normalizeImpa } from "@/lib/impa"
 import { ui } from "@/lib/ui"
 import type {
   QuotationItemRequestRow,
@@ -110,10 +111,15 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
       setErrMsg("Nomor baris harus > 0.")
       return
     }
+    const impaError = impaCodeError(draft.requestImpa)
+    if (impaError) {
+      setErrMsg(impaError)
+      return
+    }
     const base = {
       lineNo: draft.lineNo,
       requestText: draft.requestText.trim(),
-      requestImpa: draft.requestImpa.trim() || undefined,
+      requestImpa: normalizeImpa(draft.requestImpa) || undefined,
       requestedQty: draft.requestedQty.trim() || undefined,
       requestedUom: draft.requestedUom.trim() || undefined,
       notes: draft.notes.trim() || undefined,
@@ -270,7 +276,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
                     <tr key={r.id} className="border-b border-[#F3F4F6]">
                       <td className="p-2 font-semibold">{r.lineNo}</td>
                       <td className="p-2">{r.requestText}</td>
-                      <td className="p-2 text-[#6B7280]">{r.requestImpa ?? "-"}</td>
+                      <td className="p-2 text-[#6B7280]">{impaLabel(r.requestImpa)}</td>
                       <td className="p-2">{r.requestedQty ?? "-"}</td>
                       <td className="p-2 text-[#6B7280]">{r.requestedUom ?? "-"}</td>
                       <td className="p-2">

@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process"
-import { randomBytes } from "node:crypto"
+import { randomBytes, randomInt } from "node:crypto"
 import { readFileSync } from "node:fs"
 import type { InvoiceDetail, PurchaseOrderRow, QuotationDetail } from "../../src/types/generated"
 import type { Tokens } from "./api"
@@ -55,13 +55,21 @@ export function uniquePrefix(): string {
   return `E2E${randomBytes(4).toString("hex").toUpperCase()}`
 }
 
-// IMPA code no real item holds.
+// Free IMPA code for tests.
 //
-// Active codes are unique and the master data holds real six-digit ones, so
-// a random six-digit code collides now and then. Twelve digits cannot hit
-// a real one and stay numeric, as the product forms require.
-export function uniqueImpa(): string {
-  return String(10 ** 11 + Math.floor(Math.random() * 9 * 10 ** 11))
+// A code is six digits and an active one is unique. Real IMPA sections end
+// below 90, so the 9xxxxx block never meets the master data; a code an
+// earlier run left active is skipped.
+export async function uniqueImpa(): Promise<string> {
+  for (let i = 0; i < 20; i++) {
+    const code = String(900000 + randomInt(100000))
+    const rows = await api<{ impaCode?: string }[]>(
+      "GET",
+      `/items?q=${code}&isActive=true&limit=10`,
+    )
+    if (!rows.some((r) => r.impaCode === code)) return code
+  }
+  throw new Error("no free IMPA code in the test block")
 }
 
 export async function api<T>(
@@ -221,7 +229,7 @@ export class SalesSeed {
   // Catalog item, optionally vendor-linked.
   async item(opts: { vendor?: SeedVendor; cost?: number; label?: string } = {}): Promise<SeedItem> {
     const name = this.name(opts.label ?? "Produk")
-    const impaCode = uniqueImpa()
+    const impaCode = await uniqueImpa()
     const created = await api<{ id: number }>("POST", "/items", {
       name,
       impaCode,

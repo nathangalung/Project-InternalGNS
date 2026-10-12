@@ -129,7 +129,7 @@ func TestHandler_AddVendor_RequiresVendorID(t *testing.T) {
 // PUT rewrites every field.
 func TestHandler_Update_RewritesItem(t *testing.T) {
 	it := createItem(t, items.CreateItemRequest{Name: uniqueItemName("UBAH"), Description: ptrS("lama")})
-	impa := uniqueIMPA()
+	impa := uniqueIMPA(t)
 	name := uniqueItemName("UBAH BARU")
 	res := doJSON(t, newSrv(t), http.MethodPut, "/items/"+itoa(it.ID), items.UpdateItemRequest{
 		Name: "  " + name + " ", IMPACode: ptrS(" " + impa + " "), DefaultUnitID: ptrI16(kgUnitID), IsActive: false,

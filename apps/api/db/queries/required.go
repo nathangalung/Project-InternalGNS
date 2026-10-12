@@ -90,6 +90,7 @@ var RequiredKeys = []string{
 	"items.search_catalog",
 	"items.search_request_history",
 	"items.search_vendor_offers",
+	"items.split_rows",
 	"items.suggest_selling_prices",
 	"items.update",
 	"items.vendor_active",

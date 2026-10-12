@@ -14,6 +14,7 @@ import { useUnits } from "@/features/units/hooks"
 import UnitCombobox from "@/features/units/UnitCombobox"
 import { formErrors } from "@/lib/form-errors"
 import { formatDate, formatRupiah } from "@/lib/format"
+import { impaCodeError, normalizeImpa } from "@/lib/impa"
 import { canWriteCatalog, seesCost } from "@/lib/rbac"
 import { ui } from "@/lib/ui"
 import type { ItemImpaHolder, ItemRow, ItemVendorRow } from "@/types/api"
@@ -105,22 +106,27 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
     setImpaHolder(null)
     const errs: Record<string, string> = {}
     if (!name.trim()) errs.name = "Nama produk wajib diisi."
+    const impaError = impaCodeError(impa)
+    if (impaError) errs.impaCode = impaError
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs)
       return
     }
     const unit = units?.find((u) => u.code === unitCode)
     try {
-      await updateItem.mutateAsync({
+      const saved = await updateItem.mutateAsync({
         id: product.id,
         input: {
           name: name.trim(),
-          impaCode: impa.trim() || undefined,
+          impaCode: normalizeImpa(impa) || undefined,
           defaultUnitId: unit?.id,
           description: description.trim() || undefined,
           isActive,
         },
       })
+      // The stored form: the server keeps the code out of the name.
+      setName(saved.name)
+      setImpa(saved.impaCode ?? "")
       setFieldErrors({})
     } catch (err) {
       const split = formErrors(err, ITEM_FIELDS, "Gagal menyimpan perubahan.")
@@ -250,6 +256,7 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                   type="text"
                   readOnly={!canWrite}
                   inputMode="numeric"
+                  maxLength={6}
                   aria-invalid={fieldErrors.impaCode ? true : undefined}
                   aria-describedby={fieldErrors.impaCode ? impaErrorId : undefined}
                   value={impa}
