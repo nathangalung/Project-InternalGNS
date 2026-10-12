@@ -22,11 +22,18 @@ var bboxWordRe = regexp.MustCompile(`<word xMin="([\d.]+)" yMin="([\d.]+)" xMax=
 // It skips the test when pdftotext is missing.
 func firstPageWords(t *testing.T, pdf string) []pdfWord {
 	t.Helper()
+	return pageWords(t, pdf, 1)
+}
+
+// pageWords reads one page's words.
+func pageWords(t *testing.T, pdf string, page int) []pdfWord {
+	t.Helper()
 	bin, err := exec.LookPath("pdftotext")
 	if err != nil {
 		t.Skip("pdftotext unavailable")
 	}
-	out, err := exec.Command(bin, "-bbox", "-f", "1", "-l", "1", pdf, "-").Output()
+	n := strconv.Itoa(page)
+	out, err := exec.Command(bin, "-bbox", "-f", n, "-l", n, pdf, "-").Output()
 	if err != nil {
 		t.Fatalf("pdftotext: %v", err)
 	}

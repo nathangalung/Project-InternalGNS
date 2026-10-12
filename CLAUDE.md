@@ -841,7 +841,7 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    attention; the invoice its Client, NPWP and Address, with no vessel.
    The terms and the signature sit clear of the table, and a long terms
    value wraps whole words inside its block (`tabularx`,
-   `TestLatexExports_LongPaymentTermsWraps`). All three keep 1.8 cm
+   `TestLatexExports_LongPaymentTermsWraps`). All three keep 0.9 cm
    side margins and every table spans exactly the text width (`\LTleft`,
    `\LTright` 0pt, the text columns sharing what the fixed ones leave), so
    the letterhead, party block, table rules and signature start and end on
@@ -856,8 +856,12 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    contextual alternates are off, `RawFeature = -calt`, since they swap a
    hyphen between digits for a minus sign), and `TestLatexExports_
    DocumentHead` checks all of it with `pdfinfo` and `pdftotext`.
-   Geometry uses `includehead` so the running header prints on the sheet
-   instead of off its top edge. The party block is a top-aligned `tabularx`
+   Geometry uses `includehead` and `includefoot` so the running header and
+   the page count print on the sheet: the header 0.4 cm from the top, the
+   count 0.75 cm from the bottom (`footskip` 16pt above it). The logo is
+   5.2 cm wide (`\DocLogoWidth`), the title `\Large` and the number under
+   it 11pt; `TestLatexExports_Margins` pins the margins, the logo width and
+   the number set smaller than the title. The party block is a top-aligned `tabularx`
    whose value column is plain `\raggedright` `X` with hyphenation off
    (English patterns would split Indonesian names), and the client name goes
    through `pdfgen.LatexBreakable`, so a long name wraps instead of printing
