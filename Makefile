@@ -288,7 +288,7 @@ examples: deps-up ## Regenerate docs/example with one file of every export
 	  JWT_SECRET=$$(openssl rand -hex 32) CORS_ALLOWED_ORIGINS=http://localhost:5174 \
 	  SUPERADMIN_EMAIL=contoh@example.com SUPERADMIN_NAME=Contoh SUPERADMIN_PASSWORD=$$pw \
 	  MINIO_ENDPOINT=localhost:9000 MINIO_ACCESS_KEY=minioadmin MINIO_SECRET_KEY=minioadmin \
-	  PDF_SIGNER_NAME=Direktur PDF_BANK_ACCOUNT_NO=1234567890 \
+	  PDF_SIGNER_NAME="Diah Arimurti" PDF_BANK_ACCOUNT_NO=1234567890 \
 	  CORETAX_SELLER_TIN=0987654321098765 CORETAX_SELLER_IDTKU=0987654321098765000000; \
 	cd $(API_DIR) && ./bin/api-examples -bootstrap >/dev/null && \
 	PGCLIENTENCODING=UTF8 psql "$$DATABASE_URL" -q -v ON_ERROR_STOP=1 < db/seeds/01_master.sql >/dev/null && \

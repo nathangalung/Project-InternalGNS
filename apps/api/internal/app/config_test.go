@@ -41,6 +41,7 @@ func TestLoadConfig_DefaultValues(t *testing.T) {
 	assert.Equal(t, 24*time.Hour, c.JWTExpiry)
 	assert.Equal(t, "Asia/Jakarta", c.TZ)
 	assert.Equal(t, "Seno Dwi Sasongko", c.PdfQuotationSignerName, "the scanned signature is his")
+	assert.Equal(t, "Diah Arimurti", c.PdfSignerName, "the invoice signer, signed by hand")
 }
 
 func TestLoadConfig_MissingRequired(t *testing.T) {
