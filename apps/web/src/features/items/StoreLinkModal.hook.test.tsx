@@ -2,7 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import * as itemsApi from "@/features/items/api"
 import { ApiError } from "@/lib/api-client"
-import { STORE_URL_ERROR } from "@/lib/store-link"
+import { PRODUCT_URL_ERROR } from "@/lib/store-link"
 import { button, byRole, click, mount, settle, type, unmount } from "@/test/dom"
 import { problem } from "@/test/problem"
 import { testQueryClient } from "@/test/query"
@@ -45,7 +45,7 @@ afterEach(unmount)
 describe("StoreLinkModal", () => {
   it("adds a link for the vendor, sending no price so the stored one stays", async () => {
     await open()
-    expect(title()).toBe("Tambah Link Toko")
+    expect(title()).toBe("Tambah Link Produk")
     expect(document.body.textContent).toContain("PT Tali Jaya")
     expect(button("Simpan").disabled).toBe(true)
     await type(urlInput(), " https://toko.example/tali ")
@@ -60,7 +60,7 @@ describe("StoreLinkModal", () => {
 
   it("changes a stored link and clears one with null", async () => {
     await open("https://toko.example/lama")
-    expect(title()).toBe("Ubah Link Toko")
+    expect(title()).toBe("Ubah Link Produk")
     expect(urlInput().value).toBe("https://toko.example/lama")
     expect(button("Simpan").disabled).toBe(true)
     await type(urlInput(), "")
@@ -72,7 +72,7 @@ describe("StoreLinkModal", () => {
   it("refuses an address that is not http or https before saving", async () => {
     await open()
     await type(urlInput(), "javascript:alert(1)")
-    expect(document.body.textContent).toContain(STORE_URL_ERROR)
+    expect(document.body.textContent).toContain(PRODUCT_URL_ERROR)
     expect(urlInput().getAttribute("aria-invalid")).toBe("true")
     expect(button("Simpan").disabled).toBe(true)
   })

@@ -401,7 +401,7 @@ export const ui = {
 export const btnRemove = `inline-flex items-center justify-center gap-2 rounded-md border border-transparent px-3 py-2 text-sm font-medium text-[#B91C1C] transition hover:bg-[#FEE2E2] disabled:cursor-not-allowed disabled:opacity-50 ${ui.focusRing}`
 
 // Small inline text action.
-// Beside a link it adds or changes, such as Tambah Link Toko.
+// Beside a link it adds or changes, such as Tambah Link Produk.
 export const linkAction = entityLink({ class: "text-xs font-semibold" })
 
 // Pill toggle classes.

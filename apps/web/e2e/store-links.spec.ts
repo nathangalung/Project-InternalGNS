@@ -2,24 +2,33 @@ import type { Page } from "@playwright/test"
 import { api, type SalesSeed } from "./support/sales"
 import { expect, test } from "./support/seed"
 
-// Store links, client picker.
+// Product and store links, client picker.
 //
-// A vendor's store link is set on the product page, the quotation product
-// dialog or a PO line, and shows wherever the item is bought from: the
-// product, the vendor, the quotation and the PO. Only an http or https link
-// is kept, so the anchor never runs script.
+// Link Produk is where a vendor sells one product. It is set on the product
+// page, the quotation product dialog or a PO line, and shows wherever the
+// item is bought from: the product, the vendor, the quotation and the PO.
+// Link Toko is the vendor's own shop, set on the vendor and shown beside its
+// name. Only an http or https link is kept, so the anchor never runs script.
 
 const link = "https://www.example.com/tali-tambat"
+const store = "https://www.example.com/toko-maju"
 
 async function expectStoreLink(page: Page): Promise<void> {
   const anchor = page.getByRole("link", { name: "Buka toko example.com di tab baru" }).first()
+  await expect(anchor).toBeVisible()
+  await expect(anchor).toHaveAttribute("href", store)
+  await expect(anchor).toHaveAttribute("target", "_blank")
+}
+
+async function expectProductLink(page: Page): Promise<void> {
+  const anchor = page.getByRole("link", { name: "Buka produk di example.com di tab baru" }).first()
   await expect(anchor).toBeVisible()
   await expect(anchor).toHaveAttribute("href", link)
   await expect(anchor).toHaveAttribute("target", "_blank")
   await expect(anchor).toHaveAttribute("rel", "noopener noreferrer")
 }
 
-test("a store link set on the product shows on every buying page", async ({ page, seed }) => {
+test("a product link set on the product shows on every buying page", async ({ page, seed }) => {
   const client = await seed.client()
   const vendor = await seed.vendor()
   const item = await seed.item({ vendor, cost: 60_000 })
@@ -35,23 +44,64 @@ test("a store link set on the product shows on every buying page", async ({ page
   await expect(dialog.getByLabel("Nama Vendor")).toHaveValue(vendor.name)
   await expect(dialog.getByLabel("Harga Beli")).toHaveValue("60.000")
 
-  await dialog.getByLabel("Link Toko").fill("javascript:alert(1)")
-  await expect(dialog.getByText("Link toko harus diawali http:// atau https://.")).toBeVisible()
+  await dialog.getByLabel("Link Produk").fill("javascript:alert(1)")
+  await expect(dialog.getByText("Link produk harus diawali http:// atau https://.")).toBeVisible()
   await expect(dialog.getByRole("button", { name: "Simpan" })).toBeDisabled()
 
-  await dialog.getByLabel("Link Toko").fill(link)
+  await dialog.getByLabel("Link Produk").fill(link)
   await dialog.getByRole("button", { name: "Simpan" }).click()
   await expect(dialog).toBeHidden()
-  await expectStoreLink(page)
+  await expectProductLink(page)
 
   await page.goto(`/vendors/${vendor.id}`)
-  await expectStoreLink(page)
+  await expectProductLink(page)
 
   await page.goto(`/quotations/${q.id}`)
-  await expectStoreLink(page)
+  await expectProductLink(page)
 
   await page.goto(`/purchase-orders/${q.id}`)
+  await expectProductLink(page)
+})
+
+test("a vendor's Link Toko is set on its page and shows beside the vendor", async ({
+  page,
+  seed,
+}) => {
+  const { vendor, item, q } = await acceptedPo(seed)
+  await api("POST", `/items/${item.id}/vendors`, { vendorId: vendor.id, productUrl: link })
+
+  await page.goto(`/vendors/${vendor.id}`)
+  await page.getByLabel("Link Toko").fill("javascript:alert(1)")
+  await expect(page.getByText("Link toko harus diawali http:// atau https://.")).toBeVisible()
+  await page.getByRole("button", { name: "Simpan Perubahan" }).click()
+  await expect
+    .poll(async () => (await api<{ storeUrl?: string }>("GET", `/vendors/${vendor.id}`)).storeUrl)
+    .toBeUndefined()
+
+  await page.getByLabel("Link Toko").fill(store)
+  await page.getByRole("button", { name: "Simpan Perubahan" }).click()
+  await expect
+    .poll(async () => (await api<{ storeUrl?: string }>("GET", `/vendors/${vendor.id}`)).storeUrl)
+    .toBe(store)
+  await page.reload()
+  await expect(page.getByLabel("Link Toko")).toHaveValue(store)
   await expectStoreLink(page)
+
+  await page.goto("/vendors")
+  await page.getByPlaceholder("Cari nama, negara asal vendor...").fill(vendor.name)
+  const row = page.getByRole("row", { name: new RegExp(vendor.name) })
+  await expect(row.getByRole("link", { name: "Buka toko example.com di tab baru" })).toBeVisible()
+
+  await page.goto(`/products/${item.id}`)
+  await expectStoreLink(page)
+  await expectProductLink(page)
+
+  // Each line names the vendor's shop and the product page apart.
+  for (const path of [`/quotations/${q.id}`, `/purchase-orders/${q.id}`]) {
+    await page.goto(path)
+    await expectStoreLink(page)
+    await expectProductLink(page)
+  }
 })
 
 // Accepted quotation, linked vendor.
@@ -76,77 +126,80 @@ async function storedLink(itemId: number, vendorId: number) {
   return rows.find((r) => r.vendorId === vendorId)
 }
 
-test.describe("store link from the PO", () => {
-  test("Tambah Link Toko on a PO line sets the link at once and keeps harga beli", async ({
+test.describe("product link from the PO", () => {
+  test("Tambah Link Produk on a PO line sets the link at once and keeps harga beli", async ({
     page,
     seed,
   }) => {
     const { vendor, item, q } = await acceptedPo(seed)
 
     await page.goto(`/purchase-orders/${q.id}`)
-    await page.getByRole("button", { name: "Tambah Link Toko" }).click()
-    const dialog = page.getByRole("dialog", { name: "Tambah Link Toko" })
+    await page.getByRole("button", { name: "Tambah Link Produk" }).click()
+    const dialog = page.getByRole("dialog", { name: "Tambah Link Produk" })
     await expect(dialog).toContainText(vendor.name)
     await expect(dialog.getByRole("button", { name: "Simpan" })).toBeDisabled()
 
-    await dialog.getByLabel("Link Toko").fill("javascript:alert(1)")
-    await expect(dialog.getByText("Link toko harus diawali http:// atau https://.")).toBeVisible()
+    await dialog.getByLabel("Link Produk").fill("javascript:alert(1)")
+    await expect(dialog.getByText("Link produk harus diawali http:// atau https://.")).toBeVisible()
     await expect(dialog.getByRole("button", { name: "Simpan" })).toBeDisabled()
 
-    await dialog.getByLabel("Link Toko").fill(link)
+    await dialog.getByLabel("Link Produk").fill(link)
     await dialog.getByRole("button", { name: "Simpan" }).click()
     await expect(dialog).toBeHidden()
-    await expectStoreLink(page)
-    await expect(page.getByRole("button", { name: "Ubah Link Toko" })).toBeVisible()
+    await expectProductLink(page)
+    await expect(page.getByRole("button", { name: "Ubah Link Produk" })).toBeVisible()
 
     const stored = await storedLink(item.id, vendor.id)
     expect([stored?.productUrl, stored?.costPrice]).toEqual([link, "60000.00"])
 
     // The quotation reads the same link.
     await page.goto(`/quotations/${q.id}`)
-    await expectStoreLink(page)
+    await expectProductLink(page)
   })
 
-  test("Ubah Link Toko changes the link and an emptied one is removed", async ({ page, seed }) => {
+  test("Ubah Link Produk changes the link and an emptied one is removed", async ({
+    page,
+    seed,
+  }) => {
     const { vendor, item, q } = await acceptedPo(seed)
     await api("POST", `/items/${item.id}/vendors`, { vendorId: vendor.id, productUrl: link })
     const moved = "https://www.example.com/tali-baru"
 
     await page.goto(`/purchase-orders/${q.id}`)
-    await expectStoreLink(page)
-    await page.getByRole("button", { name: "Ubah Link Toko" }).click()
-    const dialog = page.getByRole("dialog", { name: "Ubah Link Toko" })
-    await expect(dialog.getByLabel("Link Toko")).toHaveValue(link)
-    await dialog.getByLabel("Link Toko").fill(moved)
+    await expectProductLink(page)
+    await page.getByRole("button", { name: "Ubah Link Produk" }).click()
+    const dialog = page.getByRole("dialog", { name: "Ubah Link Produk" })
+    await expect(dialog.getByLabel("Link Produk")).toHaveValue(link)
+    await dialog.getByLabel("Link Produk").fill(moved)
     await dialog.getByRole("button", { name: "Simpan" }).click()
     await expect(dialog).toBeHidden()
     await expect(
-      page.getByRole("link", { name: "Buka toko example.com di tab baru" }),
+      page.getByRole("link", { name: "Buka produk di example.com di tab baru" }),
     ).toHaveAttribute("href", moved)
 
-    await page.getByRole("button", { name: "Ubah Link Toko" }).click()
-    await dialog.getByLabel("Link Toko").fill("")
+    await page.getByRole("button", { name: "Ubah Link Produk" }).click()
+    await dialog.getByLabel("Link Produk").fill("")
     await dialog.getByRole("button", { name: "Simpan" }).click()
     await expect(dialog).toBeHidden()
-    await expect(page.getByRole("link", { name: /^Buka toko / })).toHaveCount(0)
-    await expect(page.getByRole("button", { name: "Tambah Link Toko" })).toBeVisible()
+    await expect(page.getByRole("link", { name: /^Buka produk di / })).toHaveCount(0)
+    await expect(page.getByRole("button", { name: "Tambah Link Produk" })).toBeVisible()
     const stored = await storedLink(item.id, vendor.id)
     expect([stored?.productUrl, stored?.costPrice]).toEqual([undefined, "60000.00"])
   })
 
-  test("Tambah Link Toko on the quotation sets the link and keeps harga beli", async ({
+  test("Tambah Link Produk on the quotation sets the link and keeps harga beli", async ({
     page,
     seed,
   }) => {
     const { vendor, item, q } = await acceptedPo(seed)
 
     await page.goto(`/quotations/${q.id}`)
-    await page.getByRole("button", { name: "Tambah Link Toko" }).click()
-    const dialog = page.getByRole("dialog", { name: "Tambah Link Toko" })
-    await dialog.getByLabel("Link Toko").fill(link)
+    await page.getByRole("button", { name: "Tambah Link Produk" }).click()
+    const dialog = page.getByRole("dialog", { name: "Tambah Link Produk" })
+    await dialog.getByLabel("Link Produk").fill(link)
     await dialog.getByRole("button", { name: "Simpan" }).click()
     await expect(dialog).toBeHidden()
-    await expectStoreLink(page)
+    await expectProductLink(page)
 
     const stored = await storedLink(item.id, vendor.id)
     expect([stored?.productUrl, stored?.costPrice]).toEqual([link, "60000.00"])
@@ -161,8 +214,8 @@ test.describe("store link from the PO", () => {
 
       for (const path of [`/purchase-orders/${q.id}`, `/quotations/${q.id}`]) {
         await page.goto(path)
-        await expectStoreLink(page)
-        await expect(page.getByRole("button", { name: /Link Toko$/ })).toHaveCount(0)
+        await expectProductLink(page)
+        await expect(page.getByRole("button", { name: /Link Produk$/ })).toHaveCount(0)
       }
     })
   })

@@ -134,15 +134,15 @@ describe("ProductAdd store link", () => {
   }
 
   const hasAction = () =>
-    [...document.querySelectorAll("button")].some((b) => b.textContent === "Tambah Link Toko")
+    [...document.querySelectorAll("button")].some((b) => b.textContent === "Tambah Link Produk")
 
   it("adds the store link of the line's linked vendor from the dialog", async () => {
     items.listVendors.mockResolvedValue([link])
     items.addVendor.mockResolvedValue({ ...link, productUrl: "https://toko.example/baut" })
     await openLine(line, true)
-    await click(button("Tambah Link Toko"))
+    await click(button("Tambah Link Produk"))
     expect(byRole("dialog").map((d) => d.querySelector("h2")?.textContent)).toContain(
-      "Tambah Link Toko",
+      "Tambah Link Produk",
     )
     const input = document.querySelector<HTMLInputElement>('input[type="url"]')
     if (!input) throw new Error("no url input")

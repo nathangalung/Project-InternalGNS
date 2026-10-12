@@ -46,12 +46,15 @@ describe("poItemsToProducts", () => {
         vendorId: 7,
         vendorName: "PT Laut",
         productUrl: "https://toko.example/rope",
+        vendorStoreUrl: "https://toko.example",
       }),
       line({ id: 2 }),
     ])
-    expect(rows.map((r) => [r.itemId, r.vendorId, r.vendor, r.storeUrl])).toEqual([
-      [42, 7, "PT Laut", "https://toko.example/rope"],
-      [undefined, undefined, undefined, undefined],
+    expect(
+      rows.map((r) => [r.itemId, r.vendorId, r.vendor, r.productUrl, r.vendorStoreUrl]),
+    ).toEqual([
+      [42, 7, "PT Laut", "https://toko.example/rope", "https://toko.example"],
+      [undefined, undefined, undefined, undefined, undefined],
     ])
   })
 

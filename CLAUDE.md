@@ -58,7 +58,7 @@ management picks a role from a dropdown with an Indonesian label and hint
   superadmin (`roles.ManagesPOs`). It deletes an unused client or vendor
   for good (Hapus Permanen).
 - operational_input (Input Data Operasional): client data, client requests,
-  harga beli and the catalog (products, photos, vendors, store links). It
+  harga beli and the catalog (products, photos, vendors, product links). It
   writes quotation drafts but never sees or sets a selling figure: no harga
   jual, discount, shipping charge, totals, tax or profit, no harga jual
   history, no quotation PDF and no quotation or PO export. Its line and
@@ -518,14 +518,25 @@ never borrows the company email or the client's first contact. The wizard's
 client rows name the client only, and its picker pages every active client
 by name ten at a time (`pickerWindow`), a search paging its hits the same way.
 
-A vendor link's `product_url` is where the vendor sells the item (Link
-Toko). `validate.ProductURL` keeps only an http or https address with a host
-(a 422 on `productUrl`), mirrored by `lib/store-link`, so the anchor never
-runs script. Only `POST /items/{id}/vendors` writes it, and a cleared link
+Two web links follow one rule. A vendor link's `product_url` is where the
+vendor sells that product (Link Produk), and a vendor's own `store_url`
+(00115) is its shop (Link Toko). `validate.ProductURL` and
+`validate.StoreURL` keep only an http or https address with a host (a 422 on
+`productUrl` or `storeUrl`, each with its own message), mirrored by
+`productUrlError` and `storeUrlError` in `lib/store-link`, so the anchor
+never runs script. The vendor create and edit forms (`VendorAddModal`,
+`VendorDetail`) write Link Toko, with the vendor writes' roles; a blank one
+stores NULL and, since PUT replaces the vendor, an absent one clears it.
+The vendor, product vendor, quotation line and PO line reads carry it
+(`storeUrl`, `vendorStoreUrl`), and `StoreLink kind="store"` shows it beside
+the vendor's name on the vendor list and page, the product page and under
+each quotation and PO line. Internal names keep the older store wording
+for the product link (`StoreLinkModal`, `onEditStoreLink`, `storeLinks`).
+Only `POST /items/{id}/vendors` writes Link Produk, and a cleared link
 is sent as null. An unsent `costPrice` keeps the stored harga beli and its
 quote date, so Ubah sends the price only when it was changed. Three places
 write it: the Tambah Vendor and Ubah dialogs on the product page, and
-`features/items/StoreLinkModal` (Tambah Link Toko, Ubah Link Toko), which
+`features/items/StoreLinkModal` (Tambah Link Produk, Ubah Link Produk), which
 sends only `vendorId` and `productUrl` and is opened beside the picked
 vendor in the quotation and PO product dialog and under each line on
 the quotation and PO detail. It is offered only to the roles that write the catalog
@@ -535,7 +546,7 @@ the product already links (`vendorProductId`), since a link alone would
 create one at harga beli 0. A save refreshes the item's vendors and the
 quotation and PO queries, which read the link live. Every other role only
 sees it.
-`StoreLink` shows it in a new tab on the product and vendor pages, under
+`StoreLink` shows Link Produk in a new tab on the product and vendor pages, under
 each offer on the quotation and PO detail, and beside the picked vendor in
 the quotation product dialog.
 

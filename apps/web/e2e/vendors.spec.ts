@@ -19,6 +19,9 @@ test("Tambah Vendor creates an active vendor the list finds", async ({ page, see
   await modal.getByLabel("Nama Vendor *").fill(name)
   await modal.getByLabel("Alamat (Opsional)").fill("Jl. Rungkut Industri No. 5, Surabaya")
   await expect(save).toBeDisabled()
+  await modal.getByLabel("Link Toko (Opsional)").fill("ftp://toko.example")
+  await expect(modal.getByText("Link toko harus diawali http:// atau https://.")).toBeVisible()
+  await modal.getByLabel("Link Toko (Opsional)").fill("https://toko.example/vendor-baru")
   await modal.getByLabel("Email (Opsional)").fill(`${seed.prefix.toLowerCase()}@vendor.example`)
   await save.click()
   await expect(modal).toBeHidden()
@@ -27,6 +30,9 @@ test("Tambah Vendor creates an active vendor the list finds", async ({ page, see
   await page.getByPlaceholder("Cari nama, negara asal vendor...").fill(seed.prefix)
   const row = page.getByRole("row", { name: new RegExp(name) })
   await expect(row).toContainText("AKTIF")
+  await expect(
+    row.getByRole("link", { name: "Buka toko toko.example di tab baru" }),
+  ).toHaveAttribute("href", "https://toko.example/vendor-baru")
   const link = row.getByRole("link", { name, exact: true })
   await expect(link).toHaveAttribute("href", `/vendors/${id}`)
   await link.click()

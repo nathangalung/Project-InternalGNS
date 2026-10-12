@@ -423,7 +423,7 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                   <th className={`${ui.thCenter} w-[200px]`}>SKU Vendor</th>
                   {showCost && <th className={`${ui.thCenter} w-[180px]`}>Harga Beli</th>}
                   <th className={`${ui.thCenter} w-[200px]`}>Penawaran Terakhir</th>
-                  <th className={`${ui.thCenter} w-[180px]`}>Link Toko</th>
+                  <th className={`${ui.thCenter} w-[180px]`}>Link Produk</th>
                   {canWrite && <th className={`${ui.thCenter} w-[100px]`}>Aksi</th>}
                 </tr>
               </thead>
@@ -454,14 +454,17 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                             >
                               {initials}
                             </div>
-                            <EntityLink
-                              kind="vendor"
-                              id={v.vendorId}
-                              tone="name"
-                              className="text-sm font-medium"
-                            >
-                              {v.vendorName}
-                            </EntityLink>
+                            <span className="flex min-w-0 flex-col items-start gap-0.5">
+                              <EntityLink
+                                kind="vendor"
+                                id={v.vendorId}
+                                tone="name"
+                                className="text-sm font-medium"
+                              >
+                                {v.vendorName}
+                              </EntityLink>
+                              <StoreLink kind="store" labeled url={v.vendorStoreUrl} />
+                            </span>
                           </div>
                         </td>
                         <td className={`${ui.tdCenter} font-medium`}>{v.vendorSku ?? "-"}</td>

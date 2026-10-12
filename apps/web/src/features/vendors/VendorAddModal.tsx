@@ -2,6 +2,7 @@ import { useId, useState } from "react"
 import Modal from "@/components/shared/Modal"
 import { useCreateVendor } from "@/features/vendors/hooks"
 import { ApiError } from "@/lib/api-client"
+import { storeUrlError } from "@/lib/store-link"
 import { ui } from "@/lib/ui"
 import {
   digitsOnly,
@@ -39,6 +40,7 @@ export default function VendorAddModal({
   const [name, setName] = useState("")
   const [address, setAddress] = useState("")
   const [sku, setSku] = useState("")
+  const [storeUrl, setStoreUrl] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
   const [isActive, setIsActive] = useState(true)
@@ -52,8 +54,9 @@ export default function VendorAddModal({
 
   const isNameFilled = name.trim().length > 0
   const addressError = isNameFilled ? optionalAddressError(address) : null
-  // Alamat is optional; a filled one must still be valid.
-  const isVendorReady = isNameFilled && addressError === null
+  // Alamat and Link Toko are optional; filled ones must still be valid.
+  const storeError = isNameFilled ? storeUrlError(storeUrl) : null
+  const isVendorReady = isNameFilled && addressError === null && storeError === null
 
   const phoneError = isVendorReady ? optionalPhoneError(phone) : null
   const emailError = isVendorReady ? optionalEmailError(email) : null
@@ -67,6 +70,7 @@ export default function VendorAddModal({
     setName("")
     setAddress("")
     setSku("")
+    setStoreUrl("")
     setEmail("")
     setPhone("")
     setIsActive(true)
@@ -93,6 +97,7 @@ export default function VendorAddModal({
         name: name.trim(),
         location: address.trim() || undefined,
         contactInfo: Object.keys(contactInfo).length > 0 ? contactInfo : undefined,
+        storeUrl: storeUrl.trim() || undefined,
         isActive,
       })
       onSuccess?.(created)
@@ -196,6 +201,27 @@ export default function VendorAddModal({
               onChange={(e) => setSku(e.target.value)}
               disabled={!isNameFilled}
             />
+          </div>
+          <div className={ui.field}>
+            <label htmlFor={`${fid}-store`} className={ui.fieldLabel}>
+              Link Toko <span className={optionalCls}>(Opsional)</span>
+            </label>
+            <input
+              className={inputCls}
+              type="url"
+              id={`${fid}-store`}
+              placeholder="https://toko.com/nama-vendor"
+              value={storeUrl}
+              onChange={(e) => setStoreUrl(e.target.value)}
+              disabled={!isNameFilled}
+              aria-invalid={storeError ? true : undefined}
+              aria-describedby={storeError ? `${fid}-store-error` : undefined}
+            />
+            {storeError && (
+              <span id={`${fid}-store-error`} className={fieldErrorCls}>
+                {storeError}
+              </span>
+            )}
           </div>
         </div>
 

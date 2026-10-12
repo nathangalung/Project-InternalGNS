@@ -1,8 +1,11 @@
-// Store link rules.
+// Web link rules.
 //
 // Mirrors apps/api/internal/shared/validate/url.go: only an http or https
-// address with a host and no spaces is a store link, so an anchor built
-// from one never runs script.
+// address with a host and no spaces is a link, so an anchor built from one
+// never runs script. Two links follow the rule: Link Produk, where a vendor
+// sells one product, and Link Toko, the vendor's own shop.
+
+export const PRODUCT_URL_ERROR = "Link produk harus diawali http:// atau https://."
 
 export const STORE_URL_ERROR = "Link toko harus diawali http:// atau https://."
 
@@ -21,9 +24,19 @@ function parse(s: string): URL | null {
 }
 
 // Optional link, checked once filled.
-export function storeUrlError(s: string): string | null {
+function linkError(s: string, message: string): string | null {
   const t = s.trim()
-  return t === "" || parse(t) ? null : STORE_URL_ERROR
+  return t === "" || parse(t) ? null : message
+}
+
+// Product link error, or null.
+export function productUrlError(s: string): string | null {
+  return linkError(s, PRODUCT_URL_ERROR)
+}
+
+// Store link error, or null.
+export function storeUrlError(s: string): string | null {
+  return linkError(s, STORE_URL_ERROR)
 }
 
 export type StoreLink = { href: string; host: string }

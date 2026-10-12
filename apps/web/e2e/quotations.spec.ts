@@ -1234,18 +1234,18 @@ test.describe("quotation store link", () => {
     await page.getByRole("button", { name: "Lanjut" }).click()
     await page.getByRole("button", { name: "Ubah produk 1" }).click()
     const product = page.getByRole("dialog", { name: "Ubah Produk Quotation" })
-    await product.getByRole("button", { name: "Tambah Link Toko" }).click()
-    const dialog = page.getByRole("dialog", { name: "Tambah Link Toko" })
+    await product.getByRole("button", { name: "Tambah Link Produk" }).click()
+    const dialog = page.getByRole("dialog", { name: "Tambah Link Produk" })
     await expect(dialog).toContainText(vendor.name)
-    await dialog.getByLabel("Link Toko").fill(link)
+    await dialog.getByLabel("Link Produk").fill(link)
     await dialog.getByRole("button", { name: "Simpan" }).click()
     await expect(dialog).toBeHidden()
 
     // The link shows at once beside the vendor, ready to change.
     await expect(
-      product.getByRole("link", { name: "Buka toko example.com di tab baru" }),
+      product.getByRole("link", { name: "Buka produk di example.com di tab baru" }),
     ).toHaveAttribute("href", link)
-    await expect(product.getByRole("button", { name: "Ubah Link Toko" })).toBeVisible()
+    await expect(product.getByRole("button", { name: "Ubah Link Produk" })).toBeVisible()
     await product.getByRole("button", { name: "Batal" }).click()
 
     const [stored] = (

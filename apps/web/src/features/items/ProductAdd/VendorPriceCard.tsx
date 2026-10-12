@@ -147,12 +147,12 @@ export default function VendorPriceCard({
           <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-dark-600">
             {exactVendor.storeUrl && (
               <span className="flex min-w-0 items-center gap-1.5">
-                Link toko <StoreLink url={exactVendor.storeUrl} />
+                Link produk <StoreLink url={exactVendor.storeUrl} />
               </span>
             )}
             {onEditStoreLink && (
               <button type="button" className={linkAction} onClick={onEditStoreLink}>
-                {exactVendor.storeUrl ? "Ubah Link Toko" : "Tambah Link Toko"}
+                {exactVendor.storeUrl ? "Ubah Link Produk" : "Tambah Link Produk"}
               </button>
             )}
           </span>
