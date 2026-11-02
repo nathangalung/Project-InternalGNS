@@ -1,13 +1,12 @@
 import { useId, useState } from "react"
 import Modal from "@/components/shared/Modal"
+import MoneyInput from "@/components/shared/MoneyInput"
 import { todayInJakarta } from "@/lib/date-range"
 import { isVersionConflict } from "@/lib/errors"
 import { formErrors } from "@/lib/form-errors"
 import { chip, ui } from "@/lib/ui"
 import type { CashEntryRow } from "@/types/api"
 import {
-  amountShown,
-  amountTyped,
   type CashFieldErrors,
   type CashForm,
   cashFieldErrors,
@@ -159,14 +158,12 @@ export default function CashEntryModal({ entry, onClose }: CashEntryModalProps) 
           </label>
           <div className={ui.prefixWrap}>
             <span className={ui.prefixLabel}>IDR</span>
-            <input
+            <MoneyInput
               id={`${id}-amount`}
               className={ui.prefixInput}
-              type="text"
-              inputMode="decimal"
               placeholder="0"
-              value={amountShown(form.amount)}
-              onChange={(e) => set("amount", amountTyped(e.target.value))}
+              value={form.amount}
+              onValueChange={(v) => set("amount", v)}
               aria-invalid={errors.amount ? true : undefined}
               aria-describedby={describedBy("amount")}
             />

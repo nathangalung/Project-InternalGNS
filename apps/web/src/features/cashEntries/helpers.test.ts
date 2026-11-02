@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { CashEntryRow } from "@/types/api"
 import {
-  amountShown,
-  amountTyped,
   CASH_FILTERS,
   cashFieldErrors,
   cashFormFromRow,
@@ -106,20 +104,5 @@ describe("cashFieldErrors", () => {
     ["description", { description: "a".repeat(501) }, "Keterangan paling banyak 500 karakter."],
   ])("%s %j", (field, over, msg) => {
     expect(cashFieldErrors({ ...good, ...over })).toEqual({ [field]: msg })
-  })
-})
-
-describe("amount input", () => {
-  it.each([
-    ["4.500.000", "4500000", "4.500.000"],
-    ["4500000", "4500000", "4.500.000"],
-    ["12,5", "12.5", "12,5"],
-    ["1.250,755", "1250.75", "1.250,75"],
-    ["12,", "12.", "12,"],
-    ["Rp 1a2", "12", "12"],
-    ["", "", ""],
-  ])("%s", (raw, canonical, shown) => {
-    expect(amountTyped(raw)).toBe(canonical)
-    expect(amountShown(canonical)).toBe(shown)
   })
 })

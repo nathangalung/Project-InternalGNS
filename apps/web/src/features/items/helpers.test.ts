@@ -24,7 +24,6 @@ import {
   storeLinkBody,
   storeLinkError,
   vendorInitials,
-  wholeRupiah,
 } from "./helpers"
 
 // Hit fixture builder.
@@ -290,18 +289,6 @@ describe("findVendorByName", () => {
     ["blank", "  ", undefined],
   ])("%s", (_name, query, want) => {
     expect(findVendorByName(rows, query)?.id).toBe(want)
-  })
-})
-
-describe("wholeRupiah", () => {
-  it.each([
-    [undefined, ""],
-    ["", ""],
-    ["150000.00", "150000"],
-    ["150000", "150000"],
-    ["0.00", "0"],
-  ])("%j", (input, want) => {
-    expect(wholeRupiah(input)).toBe(want)
   })
 })
 

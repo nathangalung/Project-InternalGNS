@@ -125,7 +125,7 @@ test.describe("purchase order detail", () => {
     await page.goto(`/purchase-orders/${q.id}/edit`)
     await page.getByRole("button", { name: "Ubah produk 1" }).click()
     const modal = page.getByRole("dialog", { name: "Ubah Produk PO" })
-    await expect(modal.getByLabel("Harga Jual Satuan *")).toHaveValue("100000")
+    await expect(modal.getByLabel("Harga Jual Satuan *")).toHaveValue("100.000")
     await modal.getByLabel("Harga Jual Satuan *").fill("120000")
     await modal.getByRole("button", { name: "Simpan Perubahan" }).click()
     const confirm = page.getByRole("dialog", { name: "Konfirmasi Perubahan Harga" })
@@ -158,7 +158,7 @@ test.describe("purchase order detail", () => {
     await modal.getByLabel("Nama Vendor *").fill(other.name)
     await page.getByRole("option", { name: new RegExp(other.name) }).click()
     // The pick brings the vendor's own harga beli, so no price prompt.
-    await expect(modal.getByLabel("Harga Beli Satuan *")).toHaveValue("50000")
+    await expect(modal.getByLabel("Harga Beli Satuan *")).toHaveValue("50.000")
     await modal.getByRole("button", { name: "Simpan Perubahan" }).click()
     await expect(modal).toBeHidden()
     await page.getByRole("button", { name: "Lanjut" }).click()
@@ -771,7 +771,7 @@ async function addresslessQuotation(page: Page, seed: SalesSeed): Promise<number
   ).toBeVisible()
   await address.fill("")
   await expect(page.getByLabel("Waktu Pengiriman (Hari) *")).toHaveValue("5")
-  await expect(page.getByLabel("Biaya Pengiriman *")).toHaveValue("75000")
+  await expect(page.getByLabel("Biaya Pengiriman *")).toHaveValue("75.000")
   await page.getByRole("button", { name: "Lanjut" }).click()
 
   await page.getByLabel("JATUH TEMPO PEMBAYARAN (HARI) *").fill("30")
@@ -853,13 +853,13 @@ test.describe("purchase order address gaps", () => {
     const days = page.getByLabel("Waktu Pengiriman (Hari) *")
     const cost = page.getByLabel("Biaya Pengiriman *")
     await expect(days).toHaveValue("5")
-    await expect(cost).toHaveValue("75000")
+    await expect(cost).toHaveValue("75.000")
     // Key by key, as a person types: no keystroke wipes the stored charge.
     await page
       .getByLabel("Alamat Lengkap (Opsional)")
       .pressSequentially("Jl. Pelabuhan Raya No. 12, Tanjung Priok")
     await expect(days).toHaveValue("5")
-    await expect(cost).toHaveValue("75000")
+    await expect(cost).toHaveValue("75.000")
     await page.getByRole("button", { name: "Lanjut" }).click()
     await page.getByRole("button", { name: "Simpan", exact: true }).click()
     await expect(page).toHaveURL(new RegExp(`/purchase-orders/${qid}$`))

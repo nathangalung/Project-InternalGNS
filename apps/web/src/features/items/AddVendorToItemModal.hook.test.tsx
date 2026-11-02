@@ -113,7 +113,8 @@ describe("AddVendorToItemModal edit", () => {
     expect(dialogTitles()).toEqual(["Ubah Vendor Terkait"])
     expect(input("Nama Vendor").value).toBe("PT Laut")
     expect(input("Nama Vendor").readOnly).toBe(true)
-    expect(input("Harga Beli").value).toBe("150.000")
+    // The stored sen show, so a save never drops them.
+    expect(input("Harga Beli").value).toBe("150.000,50")
     expect(input("Link Produk").value).toBe("https://toko.example/rope")
   })
 
