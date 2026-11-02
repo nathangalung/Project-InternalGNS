@@ -1471,6 +1471,54 @@ test.describe("quotation product dialog", () => {
       product.getByRole("link", { name: "Buka produk di example.com di tab baru" }),
     ).toHaveAttribute("href", link)
   })
+
+  // Input changes harga beli only.
+  // The line carries the vendor link and harga beli a head priced it with,
+  // as a recommendation fills it. A low harga beli against a high harga jual
+  // makes a profit past 1000 percent, which once failed the save.
+  test.describe("as operational input", () => {
+    test.use({ session: "operational_input" })
+
+    for (const [price, typed, stored, shown] of [
+      [900_000, "400.000", "400000.00", "Rp 400.000"],
+      [1_100_000, "1.000", "1000.00", "Rp 1.000"],
+    ] as const) {
+      test(`a priced line saves harga beli typed ${typed}`, async ({ page, seed }) => {
+        const client = await seed.client()
+        const vendor = await seed.vendor()
+        const item = await seed.item({ vendor, cost: 385_000 })
+        const q = await seed.quotation({
+          client,
+          lines: [{ item, qty: 4, price, cost: 385_000 }],
+        })
+
+        await page.goto(`/quotations/${q.id}/edit`)
+        await page.getByRole("button", { name: "Lanjut" }).click()
+        await page.getByRole("button", { name: "Ubah produk 1" }).click()
+        const product = page.getByRole("dialog", { name: "Ubah Produk Quotation" })
+        await expect(product.getByLabel("Harga Jual Satuan *")).toHaveCount(0)
+        await typeRupiah(product.getByLabel("Harga Beli Satuan *"), typed)
+        const freed = page.waitForResponse(
+          (r) => r.request().method() === "DELETE" && r.url().includes("/locks/"),
+        )
+        await product.getByRole("button", { name: "Simpan Perubahan" }).click()
+        const confirm = page.getByRole("dialog", { name: "Konfirmasi Perubahan Harga" })
+        await expect(confirm).toContainText(`Harga beli dari Rp385.000 menjadi Rp${typed}`)
+        await confirm.getByRole("button", { name: "Ya, Ubah" }).click()
+        await expect(product).toBeHidden()
+        await freed
+
+        await expect
+          .poll(async () =>
+            (await seed.getQuotation(q.id)).items
+              .filter((l) => l.itemType === "product")
+              .map((l) => [l.costPrice, l.sellingPrice]),
+          )
+          .toEqual([[stored, `${price}.00`]])
+        await expect(page.locator("main")).toContainText(shown)
+      })
+    }
+  })
 })
 
 test.describe("quotation discount", () => {
