@@ -32,12 +32,13 @@ func SeedMasterIfMissing(ctx context.Context, pool *pgxpool.Pool) error {
 		   ('TIN','Tin','UM.0033'),('TUB','Tube','UM.0033'),('PKT','Packet','UM.0033'),
 		   ('BTL','Bottle','UM.0033'),('PRS','Pairs','UM.0033'),('RLS','Rolls','UM.0033'),
 		   ('SPL','Spool','UM.0033'),('LGH','Length','UM.0033'),('COIL','Coil','UM.0033'),
-		   ('PAIL','Pail','UM.0033'),('DRUM','Drum','UM.0033')
+		   ('PAIL','Pail','UM.0033'),('DRUM','Drum','UM.0033'),
+		   ('VOL','Volume','UM.0033'),('SCT','Sachet','UM.0033'),('STRP','Strip','UM.0033')
 		 ON CONFLICT (code) DO NOTHING`,
 
 		`SELECT setval('units_id_seq', GREATEST(40, (SELECT COALESCE(MAX(id), 1) FROM units)), true)`,
 
-		// Same list as migrations 00109 and 00111, kept in step by their test.
+		// Same list as migrations 00109, 00111 and 00118, kept in step by their test.
 		`INSERT INTO unit_aliases (alias, unit_id)
 		 SELECT v.alias, u.id
 		 FROM (VALUES
@@ -61,6 +62,8 @@ func SeedMasterIfMissing(ctx context.Context, pool *pgxpool.Pool) error {
 		   ('SPOOL','SPL'),('SPOOLS','SPL'),
 		   ('LENGTH','LGH'),('LENGTHS','LGH'),('BATANG','LGH'),('BTG','LGH'),
 		   ('COILS','COIL'),('C/L','COIL'),('PAILS','PAIL'),('EMBER','PAIL'),('DRUMS','DRUM'),('DRM','DRUM'),
+		   ('VOLUME','VOL'),('VOLS','VOL'),('SACHET','SCT'),('SACHETS','SCT'),('SACH','SCT'),
+		   ('STRIP','STRP'),('STRIPS','STRP'),('STIP','STRP'),
 		   ('DAYS','DAY'),('HARI','DAY'),('HOUR','HR'),('HOURS','HR'),('JAM','HR')
 		 ) v(alias, code)
 		 JOIN units u ON u.code = v.code

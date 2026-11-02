@@ -729,8 +729,8 @@ A unit (Satuan) keeps the short code every document prints and exports
 to 33 carry the DJP Coretax names and codes UM.0001 to UM.0033; the
 ship-supply units map to UM.0033 and are named by the long form of their
 code (TIN Tin, PKT Packet, RLS Rolls), one name with no slash. Every other
-way a unit is written is an alias in `unit_aliases` (migrations 00109 and
-00111):
+way a unit is written is an alias in `unit_aliases` (migrations 00109,
+00111 and 00118):
 PC, PIECES and EA for PCS, CAN for TIN, SHEET and LEMBAR for LBR, PACK for
 PKT. An alias is stored normalised by `fn_unit_text` (upper case, one
 space between words, no trailing dot), and triggers refuse an alias equal
@@ -749,7 +749,10 @@ test keeps the three alias lists equal. The server reads no unit text, so
 nothing there resolves one. The historical import (`db/import/unit_map.py`)
 reads the codes and aliases from `01_master.sql`, so it resolves a spelling
 as the app does; only its reviewed `IMPORT_OVERRIDES` come first, each to
-OTH (AMP in the old files is an ampoule, never Ampere).
+OTH (AMP in the old files is an ampoule, never Ampere). Migration 00118
+added VOL Volume (a volume of a publication: tide tables, almanacs, log
+books), SCT Sachet and STRP Strip (a strip of tablets), so the import maps
+vol, sachet and strip to them instead of OTH.
 
 ## Kas Lain
 
@@ -862,7 +865,10 @@ Shared pieces in `components/shared`, reuse them instead of copying markup:
   and Ubah PO) reads the same way through `lib/percent-input`: a comma or
   a dot starts the decimals, since a percent has no grouping, two at most,
   0 to 100, so "2,5" is 2.5 as the PDF prints it, and anything else is
-  refused on the field with the API's own message.
+  refused on the field with the API's own message. The lists' Min and Max
+  Total filters read a typed amount the same way (`amount` in
+  `lib/list-search`): dots group thousands and the sen after a comma are
+  dropped, since the bound is whole rupiah, so "200.000,50" is 200000.
 - `StatCard` is the summary tile on list screens and dashboards.
 - `EntityLogo` is the list avatar: initials, or an image when given `src`.
 - `RecentQuotations` is the Quotation Terakhir section of the product, vendor

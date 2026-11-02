@@ -2,6 +2,7 @@ package migrations_test
 
 import (
 	"context"
+	"errors"
 	"maps"
 	"os"
 	"regexp"
@@ -22,6 +23,9 @@ const unitAliasesMigration = "00109_unit_aliases.sql"
 
 // The import spellings that 00111 adds.
 const importAliasesMigration = "00111_unit_aliases_import.sql"
+
+// Volume, Sachet and Strip with their spellings.
+const newUnitsMigration = "00118_units_vol_sachet_strip.sql"
 
 // unitID reads one unit by code.
 func unitID(ctx context.Context, t *testing.T, tx pgx.Tx, code string) int16 {
@@ -217,6 +221,7 @@ func aliasPairs(t *testing.T, sql string) []string {
 // fresh database resolves what production resolves.
 func TestMigration00109_SeedsCarryAliases(t *testing.T) {
 	want := append(aliasPairs(t, upSQL(t, unitAliasesMigration)), aliasPairs(t, upSQL(t, importAliasesMigration))...)
+	want = append(want, aliasPairs(t, upSQL(t, newUnitsMigration))...)
 	sort.Strings(want)
 	require.NotEmpty(t, want)
 
@@ -265,4 +270,55 @@ func TestMigration00111_ImportAliases(t *testing.T) {
 	_, err = tx.Exec(ctx, upSQL(t, importAliasesMigration))
 	require.NoError(t, err)
 	assert.Equal(t, want, read())
+}
+
+// Volume, Sachet and Strip exist.
+// Down removes the three units and their spellings, Up brings each back
+// under UM.0033 with its aliases.
+func TestMigration00118_NewUnits(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	read := func() map[string]string {
+		rows, err := tx.Query(ctx, `
+			SELECT u.code || '=' || u.name || '/' || u.coretax_code
+			FROM units u WHERE u.code IN ('VOL', 'SCT', 'STRP')`)
+		require.NoError(t, err)
+		got := map[string]string{}
+		for rows.Next() {
+			var s string
+			require.NoError(t, rows.Scan(&s))
+			got[s[:strings.Index(s, "=")]] = s
+		}
+		require.NoError(t, rows.Err())
+		return got
+	}
+	resolves := func(text string) string {
+		var code string
+		err := tx.QueryRow(ctx, `
+			SELECT u.code FROM unit_aliases a JOIN units u ON u.id = a.unit_id
+			WHERE a.alias = fn_unit_text($1)`, text).Scan(&code)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ""
+		}
+		require.NoError(t, err)
+		return code
+	}
+
+	_, err := tx.Exec(ctx, downSQL(t, newUnitsMigration))
+	require.NoError(t, err)
+	assert.Empty(t, read())
+	assert.Empty(t, resolves("sachet"))
+
+	_, err = tx.Exec(ctx, upSQL(t, newUnitsMigration))
+	require.NoError(t, err)
+	assert.Equal(t, map[string]string{
+		"VOL":  "VOL=Volume/UM.0033",
+		"SCT":  "SCT=Sachet/UM.0033",
+		"STRP": "STRP=Strip/UM.0033",
+	}, read())
+	for text, code := range map[string]string{
+		"volume": "VOL", "Vols": "VOL", "sachet": "SCT", "SACHETS": "SCT", "sach": "SCT",
+		"strip": "STRP", "Strips": "STRP", "stip": "STRP",
+	} {
+		assert.Equal(t, code, resolves(text), text)
+	}
 }
