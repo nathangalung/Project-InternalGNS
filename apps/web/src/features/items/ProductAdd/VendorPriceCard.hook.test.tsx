@@ -93,7 +93,7 @@ describe("VendorPriceCard lookups", () => {
   })
 })
 
-// Field whose label starts with this.
+// Field by label start.
 function labelled(label: string): HTMLInputElement {
   const lbl = [...document.querySelectorAll("label")].find((l) => l.textContent?.startsWith(label))
   const el = document.getElementById(lbl?.htmlFor ?? "")

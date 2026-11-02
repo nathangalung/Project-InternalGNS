@@ -73,11 +73,14 @@ management picks a role from a dropdown with an Indonesian label and hint
   save's transaction), while its new lines may start unoffered and putting
   a line back on offer stays open to it. It moves a draft to another client
   like any draft writer. On a PO it only views and keeps the purchase data
-  current: in Ubah PO it changes harga beli and vendor of the stored lines,
-  everything the client ordered stays as stored (`keepStoredSale`; each line
-  carries its PO line `id`, adding or dropping one is a 403), and it neither
+  current: in Ubah PO it changes harga beli, vendor and Link Produk of the
+  stored lines, everything the client ordered stays as stored
+  (`keepStoredSale`; each line carries its PO line `id`, adding or dropping
+  one is a 403), and it neither
   moves the PO nor touches its file, number, notes, client or delivery note
-  notes. The storage proxy
+  notes. Its product dialog there (`purchaseOnly`) never waits on the product,
+  unit or qty it keeps, so a stored line with no unit still takes a new
+  harga beli and vendor. The storage proxy
   refuses it a PO document upload too. It deletes an unused client or
   vendor for good, as the heads do.
 - finance (Kepala Keuangan): invoices, Kas Lain and the financial dashboard,
@@ -623,20 +626,31 @@ The vendor, product vendor, quotation line and PO line reads carry it
 the vendor's name on the vendor list and page, the product page and under
 each quotation and PO line. Internal names keep the older store wording
 for the product link (`StoreLinkModal`, `onEditStoreLink`, `storeLinks`).
-Only `POST /items/{id}/vendors` writes Link Produk, and a cleared link
-is sent as null. An unsent `costPrice` keeps the stored harga beli and its
-quote date, so Ubah sends the price only when it was changed. Three places
-write it: the Tambah Vendor and Ubah dialogs on the product page, and
-`features/items/StoreLinkModal` (Tambah Link Produk, Ubah Link Produk), which
-sends only `vendorId` and `productUrl` and is opened beside the picked
-vendor in the quotation and PO product dialog and under each line on
-the quotation and PO detail. It is offered only to the roles that write the catalog
-(`canWriteCatalog`, passed as `storeLinks` to `ProductAdd` and as
-`onEditStoreLink` to `ProductTable`), and in the dialog only for a vendor
-the product already links (`vendorProductId`), since a link alone would
-create one at harga beli 0. A save refreshes the item's vendors and the
-quotation and PO queries, which read the link live. Every other role only
-sees it.
+Two writes set Link Produk. `POST /items/{id}/vendors` sets it on its own,
+and a cleared link is sent as null. An unsent `costPrice` keeps the stored
+harga beli and its quote date, so Ubah sends the price only when it was
+changed. Its callers are the Tambah Vendor and Ubah dialogs on the product
+page and `features/items/StoreLinkModal` (Tambah Link Produk, Ubah Link
+Produk), which sends only `vendorId` and `productUrl` and is opened under
+each line on the quotation and PO detail, only for a vendor the product
+already links, since a link alone would create one at harga beli 0. A line
+save carries it too: a quotation line and an Ubah PO line take an optional
+`productUrl`, which `fn_prepare_quotation_lines` and `fn_update_po_items`
+(00117) write to the vendor link the line uses or creates. An absent key
+keeps the stored link, a blank one clears it, a line with no vendor link
+(Tidak Ditawarkan included) writes nothing, and a bad link is a 422 on
+`items[i].productUrl` (`validate.OptionalProductURL`). So the product
+dialog (`ProductAdd`, in the wizard, the draft editor and Ubah PO) has a
+Link Produk field beside the picked vendor, linked or not, filled with the
+stored link and checked with `productUrlError`. It sends the link only
+when it changed, and a vendor change drops what was typed. The wizard
+keeps the typed link on its line until Buat Penawaran. Both are offered
+only to the roles that write the catalog (`canWriteCatalog`, passed as
+`storeLinks` to `ProductAdd` and as `onEditStoreLink` to `ProductTable`).
+Every role that saves a quotation or PO line writes the catalog, so the
+server needs no gate of its own: the mounts already refuse the rest. A
+save refreshes the item's vendors and the quotation and PO queries, which
+read the link live. Every other role only sees it.
 `StoreLink` shows Link Produk in a new tab on the product and vendor pages, under
 each offer on the quotation and PO detail, and beside the picked vendor in
 the quotation product dialog.
@@ -748,8 +762,8 @@ only the finance head and superadmin delete or export it. An edit needs
 `If-Match` with the entry's `rowVersion`. The page totals Masuk, Keluar and
 their difference over the current filter. The entries do not feed the
 financial dashboard or Laba Bersih, which stay paid DPP minus cost of
-goods: a capital injection or a loan is not profit. The amount input reads
-Indonesian (dots group thousands, a comma starts the sen).
+goods: a capital injection or a loan is not profit. The amount is a
+`MoneyInput` like every other rupiah field.
 
 ## Frontend layout (`apps/web`)
 
@@ -837,6 +851,13 @@ Shared pieces in `components/shared`, reuse them instead of copying markup:
   error boundary, through `throwOnError: false` or `INLINE_LOOKUP` from
   `lib/query-client`, and shows its failure with `LoadError` instead, since
   the boundary would discard the document being edited.
+- `MoneyInput` is every rupiah field (harga beli and jual, shipping cost,
+  vendor prices, Kas Lain). It reads Indonesian through `lib/money-input`:
+  dots group thousands, a comma starts the sen (two at most), anything
+  else such as a pasted "Rp" is dropped, so "200.000" is two hundred
+  thousand. It shows the value grouped and hands back a plain decimal
+  string ("200000.50") that `Number()` and the API read as is. Never use
+  `type="number"` for money: it keeps "200.000" as 200.
 - `StatCard` is the summary tile on list screens and dashboards.
 - `EntityLogo` is the list avatar: initials, or an image when given `src`.
 - `RecentQuotations` is the Quotation Terakhir section of the product, vendor

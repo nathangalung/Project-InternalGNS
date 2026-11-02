@@ -15,7 +15,7 @@ export function moneyTyped(raw: string): string {
   return `${digits || "0"}.${rest.join("").slice(0, 2)}`
 }
 
-// The value as the input shows it.
+// Value as the input shows.
 export function moneyShown(value: string): string {
   const [whole, sen] = value.split(".")
   const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ".")

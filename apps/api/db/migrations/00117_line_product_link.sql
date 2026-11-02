@@ -9,7 +9,7 @@
 -- writes nothing. The key never reaches quotation_items or
 -- purchase_order_items.
 
--- Lines link the vendors they name.
+-- Line preparation, with the link.
 -- +goose StatementBegin
 CREATE OR REPLACE FUNCTION public.fn_prepare_quotation_lines(p_items jsonb, p_user_id bigint)
  RETURNS jsonb
@@ -70,7 +70,7 @@ $function$
 
 -- +goose StatementEnd
 
--- Ubah PO lines, with the link.
+-- Ubah PO, with the link.
 -- +goose StatementBegin
 CREATE OR REPLACE FUNCTION public.fn_update_po_items(p_po_id bigint, p_user_id bigint, p_discount_pct numeric, p_notes text, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb)
  RETURNS void
@@ -354,7 +354,7 @@ $function$
 
 -- +goose StatementEnd
 
--- Ubah PO lines, as before.
+-- Ubah PO, as before.
 -- +goose StatementBegin
 CREATE OR REPLACE FUNCTION public.fn_update_po_items(p_po_id bigint, p_user_id bigint, p_discount_pct numeric, p_notes text, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb)
  RETURNS void

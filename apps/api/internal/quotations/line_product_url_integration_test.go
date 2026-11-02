@@ -11,7 +11,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 )
 
-// linkURL reads a vendor link's Link Produk.
+// linkURL reads Link Produk.
 func linkURL(t *testing.T, ctx context.Context, tx pgx.Tx, link int64) *string {
 	t.Helper()
 	var url *string
@@ -26,7 +26,7 @@ func setLinkURL(t *testing.T, ctx context.Context, tx pgx.Tx, link int64, url st
 	require.NoError(t, err)
 }
 
-// A line sets its vendor's Link Produk.
+// Lines set Link Produk.
 // The product dialog takes the link with the vendor and prices, so every
 // line write carries it to the vendor link the line uses or creates.
 // Absent keeps the stored link and blank clears it.

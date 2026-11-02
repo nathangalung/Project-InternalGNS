@@ -14,7 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Ubah PO sets the line vendor's Link Produk.
+// Ubah PO sets Link Produk.
 // Both roles that edit a PO line write the catalog, operational input
 // included, so both may set it. Absent keeps the stored link and blank
 // clears it.

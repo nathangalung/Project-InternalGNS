@@ -142,7 +142,7 @@ describe("ProductAdd saved line", () => {
     return onSuccess
   }
 
-  // Saves through the price confirmation when it asks.
+  // Save, confirming prices.
   async function save(): Promise<void> {
     await click(button("Simpan Perubahan"))
     if ([...document.querySelectorAll("button")].some((b) => b.textContent === "Ya, Ubah")) {

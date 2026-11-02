@@ -606,7 +606,7 @@ export function insertUnreachableContact(clientId: number, name: string): number
   return Number(String(out).trim())
 }
 
-// Imported PO lines with no unit.
+// PO lines without a unit.
 //
 // Every write path asks for a unit, but stored lines may lack one, so the
 // unit is cleared through psql.
