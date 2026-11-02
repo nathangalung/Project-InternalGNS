@@ -1062,9 +1062,9 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    paper edges (`margin=0.75cm`, the bottom margin the page count always
    had). `includehead` and `includefoot` keep the running header and the
    page count inside it: from page 2 on the header starts at the top margin
-   (`headheight` 9.7pt, the least fancyhdr accepts, then `headsep` 6pt),
-   and the count's baseline sits on the bottom margin (`footskip` 14pt
-   above it). Page 1 has no running header, so a negative `\vspace*` of
+   (`headheight` 9.7pt, just over the 9.61pt fancyhdr asks for, then
+   `headsep` 6pt), and the count's baseline sits on the bottom margin
+   (`footskip` 14pt above it). Page 1 has no running header, so a negative `\vspace*` of
    `\headheight`, `\headsep`, `\topskip` and `\parskip` lifts the
    letterhead to the top margin and gives page 1 that height back. Nothing
    stretches and the leftover space is always at the bottom: `\DocTitle`
