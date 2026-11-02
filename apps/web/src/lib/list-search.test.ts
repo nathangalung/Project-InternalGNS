@@ -93,6 +93,9 @@ describe("field parsers", () => {
 
   it.each<[unknown, string | undefined]>([
     ["1.500.000", "1500000"],
+    ["200.000,50", "200000"],
+    ["Rp 200.000", "200000"],
+    [",50", undefined],
     [250000, "250000"],
     ["0", undefined],
     ["007", "7"],
