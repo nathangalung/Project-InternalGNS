@@ -598,6 +598,7 @@ export type PoItemInput = {
     shipDestination?: string;
     vendorProductId?: number;
     vendorId?: number;
+    productUrl?: string;
 };
 
 // From purchaseorders/dto.go
@@ -862,6 +863,7 @@ export type QuotationItemInput = {
     shipDestination?: string;
     dueDate?: string;
     isAvailable?: boolean;
+    productUrl?: string;
 };
 
 // From quotations/qir.go

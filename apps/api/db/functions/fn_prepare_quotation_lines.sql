@@ -1,4 +1,4 @@
--- Canonical current body of fn_prepare_quotation_lines (deployed by migration 00103).
+-- Canonical current body of fn_prepare_quotation_lines (deployed by migration 00117).
 CREATE OR REPLACE FUNCTION public.fn_prepare_quotation_lines(p_items jsonb, p_user_id bigint)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -19,7 +19,7 @@ BEGIN
     v_vendor := NULLIF(v_item->>'vendor_id', '')::BIGINT;
     IF (v_item->>'is_available') = 'false' THEN
       -- Tidak Ditawarkan: nothing is sold, so nothing is priced.
-      v_item := (v_item - 'vendor_product_id' - 'cost_price' - 'update_vendor_price')
+      v_item := (v_item - 'vendor_product_id' - 'cost_price' - 'update_vendor_price' - 'product_url')
                 || jsonb_build_object('selling_price', '0');
     ELSIF v_vendor IS NOT NULL AND NULLIF(v_item->>'vendor_product_id', '') IS NULL THEN
       v_offered := NULLIF(v_item->>'offered_item_id', '')::BIGINT;
@@ -40,7 +40,17 @@ BEGIN
       RAISE EXCEPTION 'Vendor ini tidak menyediakan produk tersebut. Pilih vendor lain.'
         USING ERRCODE = 'P0014';
     END IF;
-    v_out := v_out || jsonb_build_array(v_item - 'vendor_id');
+    -- A typed Link Produk goes on the line's vendor link; none keeps it.
+    v_link := NULLIF(v_item->>'vendor_product_id', '')::BIGINT;
+    IF v_item ? 'product_url' AND v_link IS NOT NULL THEN
+      UPDATE vendor_products
+         SET product_url = NULLIF(BTRIM(v_item->>'product_url'), ''),
+             updated_by  = p_user_id
+       WHERE id = v_link
+         AND item_id = NULLIF(v_item->>'offered_item_id', '')::BIGINT
+         AND product_url IS DISTINCT FROM NULLIF(BTRIM(v_item->>'product_url'), '');
+    END IF;
+    v_out := v_out || jsonb_build_array(v_item - 'vendor_id' - 'product_url');
   END LOOP;
   RETURN v_out;
 END;

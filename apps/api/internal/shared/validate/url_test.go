@@ -47,3 +47,35 @@ func TestWebURLs(t *testing.T) {
 		}
 	}
 }
+
+// A line's link field.
+// Absent keeps the stored link, blank clears it, and a filled one is
+// trimmed and checked.
+func TestOptionalProductURL(t *testing.T) {
+	str := func(s string) *string { return &s }
+	cases := []struct {
+		name string
+		in   *string
+		want *string
+		msg  string
+	}{
+		{"absent", nil, nil, ""},
+		{"blank clears", str("  "), str(""), ""},
+		{"trimmed", str(" https://toko.example/tali "), str("https://toko.example/tali"), ""},
+		{"script scheme", str("javascript:alert(1)"), str("javascript:alert(1)"), ProductURLMessage},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			p := c.in
+			if got := OptionalProductURL(&p); got != c.msg {
+				t.Errorf("message = %q, want %q", got, c.msg)
+			}
+			switch {
+			case c.want == nil && p != nil:
+				t.Errorf("value = %q, want nil", *p)
+			case c.want != nil && (p == nil || *p != *c.want):
+				t.Errorf("value = %v, want %q", p, *c.want)
+			}
+		})
+	}
+}

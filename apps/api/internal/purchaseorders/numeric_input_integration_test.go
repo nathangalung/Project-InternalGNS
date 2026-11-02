@@ -105,6 +105,8 @@ func TestHandler_UpdateItems_RefusesBadNumbers(t *testing.T) {
 			"items[0].costPrice", "Harga beli harus berupa angka 0 atau lebih."},
 		{"cost negative", func(r *purchaseorders.UpdateItemsRequest) { r.Items[0].CostPrice = strPtr("-900000") },
 			"items[0].costPrice", "Harga beli harus berupa angka 0 atau lebih."},
+		{"product link script", func(r *purchaseorders.UpdateItemsRequest) { r.Items[0].ProductURL = strPtr("ftp://toko.example") },
+			"items[0].productUrl", "Link produk harus diawali http:// atau https://."},
 		{"shipping cost NaN", func(r *purchaseorders.UpdateItemsRequest) {
 			r.ShippingAddress, r.ShippingCost = &addr, strPtr("NaN")
 		}, "shippingCost", "Biaya pengiriman harus berupa angka 0 atau lebih."},

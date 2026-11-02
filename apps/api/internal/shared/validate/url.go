@@ -25,6 +25,21 @@ func ProductURL(s string) string {
 	return ""
 }
 
+// OptionalProductURL normalises a line's link.
+// Absent (nil) keeps the stored link and blank clears it, so a blank is
+// rewritten to "". A filled link is trimmed in place and checked.
+func OptionalProductURL(p **string) string {
+	if *p == nil {
+		return ""
+	}
+	trimmed := strings.TrimSpace(**p)
+	*p = &trimmed
+	if trimmed == "" {
+		return ""
+	}
+	return ProductURL(trimmed)
+}
+
 // StoreURL checks a vendor's store link.
 // Same rule as ProductURL, for vendors.store_url.
 func StoreURL(s string) string {
