@@ -858,6 +858,11 @@ Shared pieces in `components/shared`, reuse them instead of copying markup:
   thousand. It shows the value grouped and hands back a plain decimal
   string ("200000.50") that `Number()` and the API read as is. Never use
   `type="number"` for money: it keeps "200.000" as 200.
+  The discount percent (`DiscountModal`, in the wizard, the draft editor
+  and Ubah PO) reads the same way through `lib/percent-input`: a comma or
+  a dot starts the decimals, since a percent has no grouping, two at most,
+  0 to 100, so "2,5" is 2.5 as the PDF prints it, and anything else is
+  refused on the field with the API's own message.
 - `StatCard` is the summary tile on list screens and dashboards.
 - `EntityLogo` is the list avatar: initials, or an image when given `src`.
 - `RecentQuotations` is the Quotation Terakhir section of the product, vendor
