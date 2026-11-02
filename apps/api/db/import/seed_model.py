@@ -43,8 +43,8 @@ DAY_START = time(9, 0)
 CENT = Decimal("0.01")
 ZERO = Decimal(0)
 HUNDRED = Decimal(100)
-# profit_pct is NUMERIC(7,4): (sell - cost) / cost must stay below this.
-PROFIT_PCT_MAX = Decimal("999.9999")
+# profit_pct is NUMERIC(19,4) since 00119: (sell - cost) / cost must stay below this.
+PROFIT_PCT_MAX = Decimal("999999999999999.9999")
 # quotation_items.ship_destination is VARCHAR(255).
 SHIP_DESTINATION_MAX = 255
 # vendors.location is VARCHAR(255).

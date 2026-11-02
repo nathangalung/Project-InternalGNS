@@ -167,3 +167,12 @@ def test_a_rebuilt_quotation_has_products_its_po_discount_and_service_codes() ->
     (inv,) = model.invoices
     assert [ln.goods_or_service for ln in inv.lines] == ["B", "J"]
     assert "Pihak kedua: PT DUA CONTOH" in q.notes
+
+
+def test_a_low_harga_beli_against_a_high_harga_jual_is_kept() -> None:
+    model = build(
+        inputs([staged("b.xlsx#S", "Q-2/GNS/I/2026", "2026-10-03", [line(1, 900000, cost=400)])])
+    )
+    (q,) = model.quotations
+    assert q.lines[0].cost == D("400.00")
+    assert not [r for _, r in model.flagged if "profit overflow" in r]

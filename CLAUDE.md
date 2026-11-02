@@ -1169,6 +1169,11 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    cancelled and replaced by a Pengganti. Only the invoice and due dates stay
    editable, and only until the invoice is paid or cancelled; the due date
    the payment terms set is only where it starts.
+   A line's stored profit ratio (`profit_pct` on quotation and PO lines,
+   (harga jual minus harga beli) over harga beli) is NUMERIC(19,4) since
+   00119, wide enough for any ratio two NUMERIC(15,2) prices make, so a very
+   low harga beli against a high harga jual never refuses a save; the
+   historical import's `PROFIT_PCT_MAX` follows the same column.
 
 ## Tooling and style
 
