@@ -167,6 +167,8 @@ test.describe("quotation wizard", () => {
     // whenever it is among the first 50 clients.
     const dropped = await seed.client({ name: `000 ${seed.prefix} Nonaktif` })
     await deactivate("client", dropped.id)
+    // Its own active client, so the page never depends on another test's rows.
+    const kept = await seed.client({ name: `000 ${seed.prefix} Aktif` })
     // Read before the page loads, so a client another test deactivates
     // later is not blamed on the picker.
     const clients = await api<{ name: string; isActive: boolean }[]>("GET", "/clients?limit=200")
@@ -179,6 +181,7 @@ test.describe("quotation wizard", () => {
     const options = page.locator("main button[aria-pressed]")
     await expect(options.first()).toBeVisible()
     const shown = await options.allTextContents()
+    expect(shown.some((text) => text.includes(kept.name))).toBe(true)
     expect(shown.filter((text) => inactive.some((name) => text.includes(`${name} -`)))).toEqual([])
   })
 
