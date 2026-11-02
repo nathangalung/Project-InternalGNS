@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from "react"
 import Modal from "@/components/shared/Modal"
+import { parsePercent, percentShown } from "@/lib/percent-input"
 import { ui } from "@/lib/ui"
 
 type DiscountModalProps = {
@@ -16,21 +17,25 @@ export default function DiscountModal({
   onSuccess,
 }: DiscountModalProps) {
   const inputId = useId()
+  const errorId = useId()
   const [tempDiscount, setTempDiscount] = useState<string>("")
 
   // Sync input on open.
   useEffect(() => {
     if (open) {
-      setTempDiscount(initialDiscount > 0 ? String(initialDiscount) : "")
+      setTempDiscount(percentShown(initialDiscount))
     }
   }, [open, initialDiscount])
 
   if (!open) return null
 
+  // A comma or a dot starts the decimals, 0 to 100.
+  const parsed = parsePercent(tempDiscount)
+  const error = "error" in parsed ? parsed.error : null
+
   function handleSaveDiscount() {
-    const val = parseFloat(tempDiscount)
-    // Server accepts 0 to 100.
-    onSuccess(Number.isNaN(val) ? 0 : Math.min(100, Math.max(0, val)))
+    if ("error" in parsed) return
+    onSuccess(Number(parsed.value ?? 0))
   }
 
   return (
@@ -43,7 +48,12 @@ export default function DiscountModal({
           <button type="button" className={ui.modalCancel} onClick={() => onOpenChange(false)}>
             Batal
           </button>
-          <button type="button" className={ui.modalSubmit} onClick={handleSaveDiscount}>
+          <button
+            type="button"
+            className={ui.modalSubmit}
+            onClick={handleSaveDiscount}
+            disabled={error !== null}
+          >
             Simpan Data
           </button>
         </>
@@ -57,14 +67,20 @@ export default function DiscountModal({
           </label>
           <input
             id={inputId}
-            type="number"
-            min="0"
-            max="100"
-            placeholder="Masukkan persentase diskon (contoh: 5 untuk diskon 5%)"
+            type="text"
+            inputMode="decimal"
+            placeholder="Masukkan persentase diskon, contoh 5 atau 2,5"
             value={tempDiscount}
             onChange={(e) => setTempDiscount(e.target.value)}
-            className={ui.fieldInput}
+            className={`${ui.fieldInput} ${error ? "border-error" : ""}`}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? errorId : undefined}
           />
+          {error && (
+            <p id={errorId} className="m-0 text-[12px] text-error">
+              {error}
+            </p>
+          )}
         </div>
       </div>
     </Modal>

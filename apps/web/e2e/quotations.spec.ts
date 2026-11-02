@@ -1473,6 +1473,44 @@ test.describe("quotation product dialog", () => {
   })
 })
 
+test.describe("quotation discount", () => {
+  // A comma starts the decimals, as the PDF prints the percent.
+  test("a discount typed as 2,5 is 2.5 percent everywhere", async ({ page, seed }) => {
+    const client = await seed.client()
+    const vendor = await seed.vendor()
+    const item = await seed.item({ vendor, cost: 60_000 })
+    const q = await seed.quotation({
+      client,
+      lines: [{ item, qty: 2, price: 100_000, cost: 60_000 }],
+    })
+
+    await page.goto(`/quotations/${q.id}/edit`)
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Tambah Diskon" }).click()
+    const dialog = page.getByRole("dialog", { name: "Tambah Diskon Pembayaran" })
+    const pct = dialog.getByLabel("Persentase Diskon *")
+    await pct.fill("101")
+    await expect(dialog.getByText("Diskon harus berupa angka antara 0 dan 100.")).toBeVisible()
+    await expect(dialog.getByRole("button", { name: "Simpan Data" })).toBeDisabled()
+    await pct.fill("")
+    await pct.pressSequentially("2,5")
+    await dialog.getByRole("button", { name: "Simpan Data" }).click()
+    await expect(dialog).toBeHidden()
+    await expect(page.getByRole("button", { name: "Diskon (2,5%)" })).toBeVisible()
+    await expect.poll(async () => (await seed.getQuotation(q.id)).discountPct).toBe("2.50")
+
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await expect(page.locator("main")).toContainText("Diskon Produk 2,5%")
+
+    // 2 x 100.000 less 2,5% is a 5.000 discount.
+    await page.goto(`/quotations/${q.id}`)
+    await expect(amountAfter(costBreakdown(page), "Diskon Produk 2,5%")).toHaveText(
+      `- ${rupiah(5_000)}`,
+    )
+  })
+})
+
 test.describe("quotation PPN", () => {
   test("a draft switched to Tanpa PPN totals without tax", async ({ page, seed }) => {
     const client = await seed.client()
