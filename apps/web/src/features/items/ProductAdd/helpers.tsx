@@ -18,6 +18,8 @@ export type ProductAddFormData = {
   requestedItemId?: number
   vendorProductId?: number
   vendorId?: number
+  // Link Produk as typed, absent while untouched
+  productUrl?: string
 }
 
 // Stored row for form hydration.
@@ -35,6 +37,8 @@ export type ProductAddInitialData = {
   requestedItemId?: number
   vendorId?: number
   vendorProductId?: number
+  // Link Produk typed for this line, not saved yet
+  productUrl?: string
 }
 
 export type VendorOption = {
@@ -75,11 +79,6 @@ export const INITIAL_FORM: ProductAddFormData = {
   namaVendor: "",
   hargaBeli: "",
   hargaJual: "",
-}
-
-export function parseRp(v: string): number {
-  const n = Number(v.replace(/[^0-9]/g, ""))
-  return Number.isFinite(n) ? n : 0
 }
 
 export { formatNumber as formatRp } from "@/lib/format"

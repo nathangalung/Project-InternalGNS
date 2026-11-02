@@ -98,7 +98,7 @@ describe("ProductAdd catalog", () => {
   })
 })
 
-describe("ProductAdd store link", () => {
+describe("ProductAdd saved line", () => {
   const line: ProductAddInitialData = {
     kodeImpa: "330212",
     nama: "Baut Baja",
@@ -118,54 +118,124 @@ describe("ProductAdd store link", () => {
     costPrice: "1000.00",
   }
 
-  async function openLine(initialData: ProductAddInitialData, storeLinks: boolean) {
+  type Opts = { storeLinks?: boolean; purchaseOnly?: boolean; pricing?: boolean; po?: boolean }
+
+  async function openLine(initialData: ProductAddInitialData, opts: Opts = {}) {
+    const onSuccess = vi.fn()
+    items.priceHistory.mockResolvedValue([])
     await mount(
       <QueryClientProvider client={throwingQueryClient()}>
         <ProductAdd
           open
           onOpenChange={vi.fn()}
-          onSuccess={vi.fn()}
+          onSuccess={onSuccess}
           initialData={initialData}
-          storeLinks={storeLinks}
+          storeLinks={opts.storeLinks}
+          purchaseOnly={opts.purchaseOnly}
+          pricing={opts.pricing}
+          docKind={opts.po ? "po" : "quotation"}
+          allowIncomplete={!opts.po}
         />
       </QueryClientProvider>,
     )
     await settle()
+    return onSuccess
   }
 
-  const hasAction = () =>
-    [...document.querySelectorAll("button")].some((b) => b.textContent === "Tambah Link Produk")
+  // Saves through the price confirmation when it asks.
+  async function save(): Promise<void> {
+    await click(button("Simpan Perubahan"))
+    if ([...document.querySelectorAll("button")].some((b) => b.textContent === "Ya, Ubah")) {
+      await click(button("Ya, Ubah"))
+    }
+  }
 
-  it("adds the store link of the line's linked vendor from the dialog", async () => {
+  const saveButton = () => button("Simpan Perubahan") as HTMLButtonElement
+  const hasLinkField = () =>
+    [...document.querySelectorAll("label")].some((l) => l.textContent?.startsWith("Link Produk"))
+
+  it("carries a typed product link with the line", async () => {
     items.listVendors.mockResolvedValue([link])
-    items.addVendor.mockResolvedValue({ ...link, productUrl: "https://toko.example/baut" })
-    await openLine(line, true)
-    await click(button("Tambah Link Produk"))
-    expect(byRole("dialog").map((d) => d.querySelector("h2")?.textContent)).toContain(
-      "Tambah Link Produk",
+    const onSuccess = await openLine(line, { storeLinks: true })
+    await type(field("Link Produk"), " https://toko.example/baut ")
+    await save()
+    expect(onSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({ vendorId: 4, productUrl: "https://toko.example/baut" }),
     )
-    const input = document.querySelector<HTMLInputElement>('input[type="url"]')
-    if (!input) throw new Error("no url input")
-    await type(input, "https://toko.example/baut")
-    await click(button("Simpan"))
-    await settle()
-    expect(items.addVendor).toHaveBeenCalledWith(1, {
-      vendorId: 4,
-      productUrl: "https://toko.example/baut",
-    })
+    expect(items.addVendor).not.toHaveBeenCalled()
   })
 
-  it("offers nothing to a role that may not write the catalog", async () => {
+  it("shows the stored link and sends nothing when it is left alone", async () => {
+    items.listVendors.mockResolvedValue([{ ...link, productUrl: "https://toko.example/lama" }])
+    const onSuccess = await openLine(line, { storeLinks: true })
+    expect(field("Link Produk").value).toBe("https://toko.example/lama")
+    await save()
+    expect(onSuccess.mock.calls[0][0].productUrl).toBeUndefined()
+  })
+
+  it("clears a stored link when the field is emptied", async () => {
+    items.listVendors.mockResolvedValue([{ ...link, productUrl: "https://toko.example/lama" }])
+    const onSuccess = await openLine(line, { storeLinks: true })
+    await type(field("Link Produk"), "")
+    await save()
+    expect(onSuccess.mock.calls[0][0].productUrl).toBe("")
+  })
+
+  it("holds the save while the link is not a web address", async () => {
     items.listVendors.mockResolvedValue([link])
-    await openLine(line, false)
-    expect(hasAction()).toBe(false)
+    await openLine(line, { storeLinks: true })
+    await type(field("Link Produk"), "javascript:alert(1)")
+    expect(saveButton().disabled).toBe(true)
   })
 
-  // A URL alone would create the link at harga beli 0.
-  it("offers nothing for a vendor the product is not linked to yet", async () => {
+  // The save links the vendor and sets its link at once.
+  it("takes a link for a vendor the product is not linked to yet", async () => {
     items.listVendors.mockResolvedValue([])
-    await openLine({ ...line, itemId: 2, vendorProductId: undefined }, true)
-    expect(hasAction()).toBe(false)
+    const onSuccess = await openLine(
+      { ...line, itemId: 2, vendorProductId: undefined },
+      { storeLinks: true },
+    )
+    await type(field("Link Produk"), "https://toko.example/baru")
+    await save()
+    expect(onSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({ vendorId: 4, productUrl: "https://toko.example/baru" }),
+    )
+  })
+
+  it("asks no link of a role that may not write the catalog", async () => {
+    items.listVendors.mockResolvedValue([link])
+    const onSuccess = await openLine(line, { storeLinks: false })
+    expect(hasLinkField()).toBe(false)
+    await save()
+    expect(onSuccess.mock.calls[0][0].productUrl).toBeUndefined()
+  })
+
+  // The input reads Indonesian.
+  it("saves typed prices as rupiah, not as decimals", async () => {
+    items.listVendors.mockResolvedValue([link])
+    const onSuccess = await openLine(line)
+    await type(field("Harga Beli Satuan"), "200.000")
+    await type(field("Harga Jual Satuan"), "250.000,50")
+    await save()
+    expect(onSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({ hargaBeli: "200000", hargaJual: "250000.50" }),
+    )
+  })
+
+  // A stored PO line may have no unit.
+  // The role cannot pick one, so harga beli must not wait for it.
+  it("lets a purchase-only role change harga beli on a line with no unit", async () => {
+    items.listVendors.mockResolvedValue([link])
+    const onSuccess = await openLine(
+      { ...line, satuan: "" },
+      { purchaseOnly: true, pricing: false, po: true },
+    )
+    const beli = field("Harga Beli Satuan")
+    expect(beli.disabled).toBe(false)
+    expect(field("Nama Vendor").disabled).toBe(false)
+    await type(beli, "1.200")
+    await save()
+    expect(onSuccess).toHaveBeenCalledWith(expect.objectContaining({ hargaBeli: "1200" }))
   })
 })
 

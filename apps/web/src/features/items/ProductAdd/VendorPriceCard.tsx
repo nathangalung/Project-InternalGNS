@@ -1,6 +1,7 @@
 import { Menu } from "@base-ui/react/menu"
 import { useId } from "react"
 import LoadError from "@/components/shared/LoadError"
+import MoneyInput from "@/components/shared/MoneyInput"
 import StoreLink from "@/components/shared/StoreLink"
 import {
   Autocomplete,
@@ -10,7 +11,8 @@ import {
   AutocompleteList,
 } from "@/components/ui/autocomplete"
 import type { LookupFailure } from "@/lib/lookup"
-import { dropdown, dropdownLabel, linkAction, ui } from "@/lib/ui"
+import { productUrlError } from "@/lib/store-link"
+import { dropdown, dropdownLabel, ui } from "@/lib/ui"
 import { cn } from "@/lib/utils"
 import {
   AddNewButton,
@@ -44,8 +46,10 @@ type VendorPriceCardProps = {
   recommendationFailure?: LookupFailure | null
   // False for a role that sets no harga jual
   pricing?: boolean
-  // Opens the store link dialog; absent when the role or vendor cannot
-  onEditStoreLink?: () => void
+  // Link Produk shown for the picked vendor
+  linkUrl?: string
+  // Absent for a role that may not write the catalog
+  onLinkChange?: (url: string) => void
 }
 
 // Vendor and price card.
@@ -69,11 +73,15 @@ export default function VendorPriceCard({
   historyFailure = null,
   recommendationFailure = null,
   pricing = true,
-  onEditStoreLink,
+  linkUrl = "",
+  onLinkChange,
 }: VendorPriceCardProps) {
   const vendorId = useId()
   const buyId = useId()
   const sellId = useId()
+  const linkId = useId()
+  const linkErrorId = useId()
+  const linkError = onLinkChange ? productUrlError(linkUrl) : null
   return (
     <div
       className={`${ui.modalSection} transition-opacity duration-200 ease-[ease] ${
@@ -143,35 +151,47 @@ export default function VendorPriceCard({
             <AddNewButton label="Tambah Vendor Baru" onClick={onAddVendorNew} />
           </AutocompleteContent>
         </Autocomplete>
-        {exactVendor && (exactVendor.storeUrl || onEditStoreLink) && (
-          <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-dark-600">
-            {exactVendor.storeUrl && (
-              <span className="flex min-w-0 items-center gap-1.5">
-                Link produk <StoreLink url={exactVendor.storeUrl} />
-              </span>
-            )}
-            {onEditStoreLink && (
-              <button type="button" className={linkAction} onClick={onEditStoreLink}>
-                {exactVendor.storeUrl ? "Ubah Link Produk" : "Tambah Link Produk"}
-              </button>
-            )}
+        {exactVendor?.storeUrl && (
+          <span className="flex min-w-0 items-center gap-1.5 text-xs text-dark-600">
+            Link produk <StoreLink url={exactVendor.storeUrl} />
           </span>
         )}
       </div>
+
+      {exactVendor && onLinkChange && (
+        <div className={ui.field}>
+          <label htmlFor={linkId} className={ui.fieldLabel}>
+            Link Produk <span className="font-normal text-dark-500">(Opsional)</span>
+          </label>
+          <input
+            id={linkId}
+            className={`${ui.fieldInput} font-sans ${linkError ? "border-error" : ""}`}
+            type="url"
+            placeholder="https://toko.com/produk/..."
+            value={linkUrl}
+            onChange={(e) => onLinkChange(e.target.value)}
+            aria-invalid={linkError ? true : undefined}
+            aria-describedby={linkError ? linkErrorId : undefined}
+          />
+          {linkError && (
+            <p id={linkErrorId} className="m-0 text-[12px] text-error">
+              {linkError}
+            </p>
+          )}
+        </div>
+      )}
 
       <div className={ui.row2}>
         <div className={ui.field}>
           <label htmlFor={buyId} className={ui.fieldLabel}>
             Harga Beli Satuan <span className="text-primary-700">*</span>
           </label>
-          <input
+          <MoneyInput
             id={buyId}
             className={`${ui.fieldInput} font-sans ${ui.disabledField}`}
-            type="number"
-            min={0}
             placeholder="Masukkan harga beli"
             value={form.hargaBeli}
-            onChange={(e) => onChange("hargaBeli", e.target.value)}
+            onValueChange={(v) => onChange("hargaBeli", v)}
             disabled={!isVendorFilled}
           />
         </div>
@@ -180,14 +200,12 @@ export default function VendorPriceCard({
             <label htmlFor={sellId} className={ui.fieldLabel}>
               Harga Jual Satuan <span className="text-primary-700">*</span>
             </label>
-            <input
+            <MoneyInput
               id={sellId}
               className={`${ui.fieldInput} font-sans ${ui.disabledField}`}
-              type="number"
-              min={0}
               placeholder="Masukkan harga jual"
               value={form.hargaJual}
-              onChange={(e) => onChange("hargaJual", e.target.value)}
+              onValueChange={(v) => onChange("hargaJual", v)}
               disabled={!isVendorFilled}
             />
           </div>

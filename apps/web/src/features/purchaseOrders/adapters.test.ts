@@ -228,6 +228,16 @@ describe("edit wizard round trip", () => {
     })
   })
 
+  // Absent keeps the vendor's stored link.
+  it.each([
+    ["a typed link", "https://toko.example/tali", "https://toko.example/tali"],
+    ["a cleared link", "", ""],
+    ["no link", undefined, undefined],
+  ])("sends %s with the line", (_name, productUrl, want) => {
+    const edited: PoEditLine = { ...hydrated, productUrl, touched: true }
+    expect(lineToInput(edited, units).productUrl).toBe(want)
+  })
+
   it("sends a cost the user entered", () => {
     const edited: PoEditLine = { ...hydrated, hargaBeli: 80, touched: true }
     expect(lineToInput(edited, units).costPrice).toBe("80")

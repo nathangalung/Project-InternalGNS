@@ -189,6 +189,18 @@ describe("upsertProduct", () => {
     expect(out[0]).toMatchObject({ id: 1, hargaBeli: 0, hargaJual: 0 })
   })
 
+  // The form holds plain decimals, as the money input hands them back.
+  it("keeps the sen and the typed link", () => {
+    const link = "https://toko.example/lampu"
+    const out = upsertProduct([], null, {
+      ...form,
+      hargaBeli: "200000",
+      hargaJual: "250000.50",
+      productUrl: link,
+    })
+    expect(out[0]).toMatchObject({ hargaBeli: 200000, hargaJual: 250000.5, productUrl: link })
+  })
+
   it("keeps the requested name and code when given", () => {
     const out = upsertProduct([], null, {
       ...form,

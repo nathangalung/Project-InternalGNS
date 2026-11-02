@@ -1,4 +1,4 @@
-import { api } from "./support/sales"
+import { api, clearPoLineUnits } from "./support/sales"
 import { expect, test } from "./support/seed"
 
 // What each input role sees.
@@ -75,6 +75,49 @@ test.describe("as operational input", () => {
       return [line?.costPrice, line?.qty, links.find((l) => l.vendorId === vendor.id)?.costPrice]
     }
     await expect.poll(costs).toEqual(["55000.00", "2.00", "55000.00"])
+  })
+
+  // A stored PO line may have no unit, and this role cannot pick one.
+  // Harga beli and the vendor stay open, typed the Indonesian way.
+  test("a PO line with no unit still takes a new harga beli", async ({ page, seed }) => {
+    const client = await seed.client()
+    const vendor = await seed.vendor()
+    const item = await seed.item({ vendor, cost: 60_000 })
+    const q = await seed.quotation({
+      client,
+      lines: [{ item, qty: 2, price: 100_000, cost: 60_000 }],
+    })
+    const po = await seed.accept(q.id)
+    clearPoLineUnits(po.id)
+
+    await page.goto(`/purchase-orders/${q.id}/edit`)
+    await page.getByRole("button", { name: "Ubah produk 1" }).click()
+    const modal = page.getByRole("dialog", { name: "Ubah Produk PO" })
+    const beli = modal.getByLabel("Harga Beli Satuan *")
+    await expect(beli).toHaveValue("60.000")
+    await expect(beli).toBeEnabled()
+    await expect(modal.getByLabel("Nama Vendor *")).toBeEnabled()
+    await beli.fill("")
+    await beli.pressSequentially("55.000")
+    await modal.getByRole("button", { name: "Simpan Perubahan" }).click()
+    const confirm = page.getByRole("dialog", { name: "Konfirmasi Perubahan Harga" })
+    await expect(confirm).toContainText("Harga beli dari Rp60.000 menjadi Rp55.000")
+    await confirm.getByRole("button", { name: "Ya, Ubah" }).click()
+    await expect(modal).toBeHidden()
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Simpan", exact: true }).click()
+    await expect(page).toHaveURL(new RegExp(`/purchase-orders/${q.id}$`))
+
+    const cost = async () => {
+      const lines = await api<{ itemType: string; costPrice?: string; unitId?: number }[]>(
+        "GET",
+        `/purchase-orders/${po.id}/items`,
+      )
+      const line = lines.find((l) => l.itemType === "product")
+      return [line?.costPrice, line?.unitId]
+    }
+    await expect.poll(cost).toEqual(["55000.00", undefined])
   })
 
   test("the product dialog asks for harga beli only", async ({ page, seed }) => {

@@ -74,7 +74,7 @@ test.describe("quotation wizard", () => {
     await product.getByLabel("Jumlah Produk *").fill("4")
     await product.getByLabel("Nama Vendor *").click()
     await page.getByRole("option", { name: new RegExp(vendor.name) }).click()
-    await expect(product.getByLabel("Harga Beli Satuan *")).toHaveValue("100000")
+    await expect(product.getByLabel("Harga Beli Satuan *")).toHaveValue("100.000")
     await product.getByLabel("Harga Jual Satuan *").fill("150000")
     await product.getByRole("button", { name: "Simpan Data" }).click()
     await expect(product).toBeHidden()
@@ -205,7 +205,7 @@ test.describe("quotation wizard", () => {
     await product.getByLabel("Jumlah Produk *").fill("2")
     await product.getByLabel("Nama Vendor *").click()
     await page.getByRole("option", { name: new RegExp(vendor.name) }).click()
-    await expect(product.getByLabel("Harga Beli Satuan *")).toHaveValue("75000")
+    await expect(product.getByLabel("Harga Beli Satuan *")).toHaveValue("75.000")
   })
 
   test("Salin ke Offer on typed text finds the item and its recommendation", async ({
@@ -235,7 +235,7 @@ test.describe("quotation wizard", () => {
     await expect(product.getByLabel("Kode IMPA Offer")).toHaveValue(item.impaCode)
     // Like an Excel row: the recommendation fills the vendor and harga beli.
     await expect(product.getByLabel("Nama Vendor *")).toHaveValue(vendor.name)
-    await expect(product.getByLabel("Harga Beli Satuan *")).toHaveValue("82000")
+    await expect(product.getByLabel("Harga Beli Satuan *")).toHaveValue("82.000")
   })
 
   test("Salin ke Offer adds a product the catalog does not have", async ({ page, seed }) => {
@@ -748,8 +748,8 @@ test.describe("quotation wizard import and requests", () => {
     await product.getByLabel("Nama Produk Offer *").fill(item.name)
     await page.getByRole("option", { name: item.name }).click()
     await expect(product.getByLabel("Nama Vendor *")).toHaveValue(vendor.name)
-    await expect(product.getByLabel("Harga Beli Satuan *")).toHaveValue("80000")
-    await expect(product.getByLabel("Harga Jual Satuan *")).toHaveValue("125000")
+    await expect(product.getByLabel("Harga Beli Satuan *")).toHaveValue("80.000")
+    await expect(product.getByLabel("Harga Jual Satuan *")).toHaveValue("125.000")
 
     await product.getByLabel("Jumlah Produk *").fill("2")
     await product.getByLabel("Nama Vendor *").fill(other.name)
@@ -1347,8 +1347,74 @@ test.describe("quotation list", () => {
   })
 })
 
-test.describe("quotation product link", () => {
-  test("the product dialog adds the product link and keeps its harga beli", async ({
+test.describe("quotation product dialog", () => {
+  type VendorLink = { vendorId: number; productUrl?: string; costPrice?: string }
+  const vendorLink = async (itemId: number, vendorId: number) =>
+    (await api<VendorLink[]>("GET", `/items/${itemId}/vendors`)).find(
+      (v) => v.vendorId === vendorId,
+    )
+
+  // One dialog, no save and reopen.
+  // The second line takes its prices the Indonesian way (200.000 is two
+  // hundred thousand) and its product link beside a vendor the product had
+  // no link to yet, all in the same Simpan Data.
+  test("a new line takes typed rupiah and its product link at once", async ({ page, seed }) => {
+    const link = "https://www.example.com/tali-baja"
+    const client = await seed.client()
+    const vendor = await seed.vendor()
+    const other = await seed.vendor({ label: "Vendor Baru" })
+    const first = await seed.item({ vendor, cost: 60_000 })
+    const second = await seed.item({ vendor, cost: 60_000, label: "Tali Baja" })
+    const q = await seed.quotation({
+      client,
+      lines: [{ item: first, qty: 1, price: 100_000, cost: 60_000 }],
+    })
+
+    await page.goto(`/quotations/${q.id}/edit`)
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Tambah Produk" }).click()
+    const product = page.getByRole("dialog", { name: "Tambah Produk ke Quotation" })
+    await product.getByLabel("Nama Produk Request *").fill(second.name)
+    await page.getByRole("option", { name: second.name }).click()
+    await product.getByLabel("Nama Produk Offer *").fill(second.name)
+    await page.getByRole("option", { name: second.name }).click()
+    await product.getByLabel("Jumlah Produk *").fill("2")
+    await product.getByLabel("Nama Vendor *").fill(other.name)
+    await page.getByRole("option", { name: new RegExp(other.name) }).click()
+
+    const beli = product.getByLabel("Harga Beli Satuan *")
+    await beli.fill("")
+    await beli.pressSequentially("200.000")
+    await expect(beli).toHaveValue("200.000")
+    const jual = product.getByLabel("Harga Jual Satuan *")
+    await jual.fill("")
+    await jual.pressSequentially("250.000")
+    await expect(jual).toHaveValue("250.000")
+
+    await product.getByLabel("Link Produk").fill("javascript:alert(1)")
+    await expect(product.getByText("Link produk harus diawali http:// atau https://.")).toBeVisible()
+    await expect(product.getByRole("button", { name: "Simpan Data" })).toBeDisabled()
+    await product.getByLabel("Link Produk").fill(link)
+    await product.getByRole("button", { name: "Simpan Data" }).click()
+    // The recommendation started harga beli at the other vendor's 60.000.
+    const confirm = page.getByRole("dialog", { name: "Konfirmasi Perubahan Harga" })
+    await expect(confirm).toContainText("Harga beli dari Rp60.000 menjadi Rp200.000")
+    await confirm.getByRole("button", { name: "Ya, Ubah" }).click()
+    await expect(product).toBeHidden()
+
+    await expect(page.locator("main")).toContainText("Rp 200.000")
+    await expect
+      .poll(async () => {
+        const lines = (await seed.getQuotation(q.id)).items.filter(
+          (l) => l.itemType === "product" && l.offeredItemId === second.id,
+        )
+        return lines.map((l) => [l.costPrice, l.sellingPrice, l.productUrl])
+      })
+      .toEqual([["200000.00", "250000.00", link]])
+    expect((await vendorLink(second.id, other.id))?.productUrl).toBe(link)
+  })
+
+  test("a saved line changes its product link and keeps its harga beli", async ({
     page,
     seed,
   }) => {
@@ -1365,27 +1431,19 @@ test.describe("quotation product link", () => {
     await page.getByRole("button", { name: "Lanjut" }).click()
     await page.getByRole("button", { name: "Ubah produk 1" }).click()
     const product = page.getByRole("dialog", { name: "Ubah Produk Quotation" })
-    await product.getByRole("button", { name: "Tambah Link Produk" }).click()
-    const dialog = page.getByRole("dialog", { name: "Tambah Link Produk" })
-    await expect(dialog).toContainText(vendor.name)
-    await dialog.getByLabel("Link Produk").fill(link)
-    await dialog.getByRole("button", { name: "Simpan" }).click()
-    await expect(dialog).toBeHidden()
+    await expect(product.getByLabel("Link Produk")).toHaveValue("")
+    await product.getByLabel("Link Produk").fill(link)
+    await product.getByRole("button", { name: "Simpan Perubahan" }).click()
+    await expect(product).toBeHidden()
+    await expect.poll(async () => (await vendorLink(item.id, vendor.id))?.productUrl).toBe(link)
+    expect((await vendorLink(item.id, vendor.id))?.costPrice).toBe("75000.00")
 
-    // The link shows at once beside the vendor, ready to change.
+    // Opened again, the field holds the stored link.
+    await page.getByRole("button", { name: "Ubah produk 1" }).click()
+    await expect(product.getByLabel("Link Produk")).toHaveValue(link)
     await expect(
       product.getByRole("link", { name: "Buka produk di example.com di tab baru" }),
     ).toHaveAttribute("href", link)
-    await expect(product.getByRole("button", { name: "Ubah Link Produk" })).toBeVisible()
-    await product.getByRole("button", { name: "Batal" }).click()
-
-    const [stored] = (
-      await api<{ vendorId: number; productUrl?: string; costPrice?: string }[]>(
-        "GET",
-        `/items/${item.id}/vendors`,
-      )
-    ).filter((v) => v.vendorId === vendor.id)
-    expect([stored.productUrl, stored.costPrice]).toEqual([link, "75000.00"])
   })
 })
 

@@ -96,6 +96,7 @@ export function toItemInput(p: ProductItem, unitId: number, pricing = true): Quo
     vendorId: p.vendorProductId === undefined ? p.vendorId : undefined,
     sellingPrice: pricing ? String(p.hargaJual) : undefined,
     costPrice: String(p.hargaBeli),
+    productUrl: p.productUrl,
   }
 }
 

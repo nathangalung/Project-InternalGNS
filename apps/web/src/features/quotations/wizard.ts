@@ -25,6 +25,8 @@ export type ProductItem = {
   hargaJual: number
   // Requested but not offered (Tidak Ditawarkan)
   noOffer?: boolean
+  // Link Produk to save with the line; absent keeps the stored one
+  productUrl?: string
 }
 
 export const WIZARD_STEPS = [
@@ -163,6 +165,7 @@ export function productFields(data: ProductAddFormData): Omit<ProductItem, "id" 
     satuan: data.satuan,
     hargaBeli: Number(data.hargaBeli) || 0,
     hargaJual: Number(data.hargaJual) || 0,
+    productUrl: data.productUrl,
   }
 }
 

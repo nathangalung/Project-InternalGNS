@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { LookupFailure } from "@/lib/lookup"
-import { button, byRole, click, mount, type, unmount } from "@/test/dom"
+import { byRole, click, mount, type, unmount } from "@/test/dom"
 import {
   type DropdownKey,
   INITIAL_FORM,
@@ -15,12 +15,15 @@ type Failures = {
   historyFailure?: LookupFailure | null
   recommendationFailure?: LookupFailure | null
   exactVendor?: VendorOption
-  onEditStoreLink?: () => void
+  linkUrl?: string
+  onLinkChange?: (url: string) => void
+  onForm?: (form: ProductAddFormData) => void
 }
 
-function Harness(failures: Failures) {
+function Harness({ onForm, ...failures }: Failures) {
   const [form, setForm] = useState<ProductAddFormData>({ ...INITIAL_FORM, jumlahProduk: "2" })
   const [open, setOpen] = useState<DropdownKey | null>(null)
+  onForm?.(form)
   return (
     <VendorPriceCard
       form={form}
@@ -90,35 +93,80 @@ describe("VendorPriceCard lookups", () => {
   })
 })
 
-describe("VendorPriceCard store link", () => {
+// Field whose label starts with this.
+function labelled(label: string): HTMLInputElement {
+  const lbl = [...document.querySelectorAll("label")].find((l) => l.textContent?.startsWith(label))
+  const el = document.getElementById(lbl?.htmlFor ?? "")
+  if (!(el instanceof HTMLInputElement)) throw new Error(`no field ${label}`)
+  return el
+}
+
+describe("VendorPriceCard prices", () => {
+  // Dots group thousands, a comma starts the sen.
+  it.each([
+    ["Harga Beli Satuan", "hargaBeli", "200.000", "200000", "200.000"],
+    ["Harga Jual Satuan", "hargaJual", "200.000", "200000", "200.000"],
+    ["Harga Beli Satuan", "hargaBeli", "200.000,50", "200000.50", "200.000,50"],
+    ["Harga Jual Satuan", "hargaJual", "Rp 200.000", "200000", "200.000"],
+  ] as const)("%s reads %s as %s", async (label, key, typed, kept, shown) => {
+    let form = INITIAL_FORM
+    await mount(<Harness onForm={(f) => (form = f)} />)
+    await type(labelled(label), typed)
+    expect(form[key]).toBe(kept)
+    expect(labelled(label).value).toBe(shown)
+  })
+})
+
+describe("VendorPriceCard product link", () => {
   const linked: VendorOption = {
     nama: "PT Tali Jaya",
     harga: 1000,
     vendorId: 4,
     vendorProductId: 7,
   }
-  const storeLink = () => document.querySelector('a[target="_blank"]')
+  const anchor = () => document.querySelector('a[target="_blank"]')
+  const hasLinkField = () =>
+    [...document.querySelectorAll("label")].some((l) => l.textContent?.startsWith("Link Produk"))
 
-  it("offers Tambah Link Produk beside a linked vendor without one", async () => {
-    const onEditStoreLink = vi.fn()
-    await mount(<Harness exactVendor={linked} onEditStoreLink={onEditStoreLink} />)
-    expect(storeLink()).toBeNull()
-    await click(button("Tambah Link Produk"))
-    expect(onEditStoreLink).toHaveBeenCalledTimes(1)
+  it("takes the link beside the picked vendor", async () => {
+    const onLinkChange = vi.fn()
+    await mount(<Harness exactVendor={linked} linkUrl="" onLinkChange={onLinkChange} />)
+    await type(labelled("Link Produk"), "https://toko.example/tali")
+    expect(onLinkChange).toHaveBeenLastCalledWith("https://toko.example/tali")
   })
 
-  it("shows the stored link and offers to change it", async () => {
-    const onEditStoreLink = vi.fn()
-    const withLink = { ...linked, storeUrl: "https://toko.example/tali" }
-    await mount(<Harness exactVendor={withLink} onEditStoreLink={onEditStoreLink} />)
-    expect(storeLink()?.getAttribute("href")).toBe("https://toko.example/tali")
-    await click(button("Ubah Link Produk"))
-    expect(onEditStoreLink).toHaveBeenCalledTimes(1)
+  it("shows the stored link in the field, ready to change", async () => {
+    const stored = { ...linked, storeUrl: "https://toko.example/tali" }
+    await mount(
+      <Harness exactVendor={stored} linkUrl="https://toko.example/tali" onLinkChange={vi.fn()} />,
+    )
+    expect(labelled("Link Produk").value).toBe("https://toko.example/tali")
+    expect(anchor()?.getAttribute("href")).toBe("https://toko.example/tali")
+  })
+
+  it("names a link that is not http or https", async () => {
+    await mount(
+      <Harness exactVendor={linked} linkUrl="javascript:alert(1)" onLinkChange={vi.fn()} />,
+    )
+    expect(document.body.textContent).toContain("Link produk harus diawali http:// atau https://.")
+    expect(labelled("Link Produk").getAttribute("aria-invalid")).toBe("true")
+  })
+
+  // The save links a new vendor together with its link.
+  it("takes a link for a vendor the product has no link to yet", async () => {
+    const fresh: VendorOption = { nama: "PT Baru", harga: 0, vendorId: 9 }
+    await mount(<Harness exactVendor={fresh} linkUrl="" onLinkChange={vi.fn()} />)
+    expect(hasLinkField()).toBe(true)
+  })
+
+  it("asks for no link before a vendor is picked", async () => {
+    await mount(<Harness linkUrl="" onLinkChange={vi.fn()} />)
+    expect(hasLinkField()).toBe(false)
   })
 
   it("only shows the link when the role may not change it", async () => {
     await mount(<Harness exactVendor={{ ...linked, storeUrl: "https://toko.example/tali" }} />)
-    expect(storeLink()).not.toBeNull()
-    expect(document.body.textContent).not.toContain("Link Produk")
+    expect(anchor()).not.toBeNull()
+    expect(hasLinkField()).toBe(false)
   })
 })
