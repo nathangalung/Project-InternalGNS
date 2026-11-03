@@ -762,7 +762,8 @@ func (s *scenarioState) coretaxNamesIssuedItem() error {
 	if err := xml.Unmarshal(raw, &doc); err != nil {
 		return err
 	}
-	want := coretaxGood{Code: offeredCode, Name: offeredName}
+	// Code is DJP's reference, never the IMPA code.
+	want := coretaxGood{Code: "000000", Name: offeredName}
 	if len(doc.Goods) != 1 || doc.Goods[0] != want {
 		return fmt.Errorf("want %+v got %+v", want, doc.Goods)
 	}

@@ -87,7 +87,7 @@ func TestBuildCoretaxWorkbook_ClearsSampleAndFills(t *testing.T) {
 	// Rows: 1 NPWP header, 2 blank, 3 header, then one row per invoice.
 	dataFaktur := 0
 	for i, row := range fakturRows {
-		if i < 3 || len(row) == 0 || row[0] == "" {
+		if i < 3 || len(row) == 0 || row[0] == "" || row[0] == coretaxEndMarker {
 			continue
 		}
 		dataFaktur++
@@ -101,7 +101,7 @@ func TestBuildCoretaxWorkbook_ClearsSampleAndFills(t *testing.T) {
 	for _, items := range itemsByID {
 		totalLines += len(items)
 	}
-	dataDetail := len(detailRows) - 1 // minus header
+	dataDetail := len(detailRows) - 2 // minus header and END
 	if dataDetail != totalLines {
 		t.Fatalf("DetailFaktur data rows = %d, want %d", dataDetail, totalLines)
 	}
@@ -120,10 +120,9 @@ func TestBuildCoretaxWorkbook_ClearsSampleAndFills(t *testing.T) {
 		t.Fatalf("NPWP header = %q, want %q", v, settings.SellerTIN)
 	}
 
-	// Last DetailFaktur row's invoice number must be one we exported.
-	lastInv := detailRows[len(detailRows)-1][14]
-	if lastInv != "INV-B/GNS/V/2026" {
-		t.Fatalf("last detail Nomor Invoice = %q, want exported invoice", lastInv)
+	// The last line belongs to the second faktur.
+	if last := detailRows[len(detailRows)-2][0]; last != "2" {
+		t.Fatalf("last detail Baris = %q, want 2", last)
 	}
 
 	// Spot-check first line's DPP (col I, index 8) and PPN (col L, index 11).
@@ -154,7 +153,7 @@ func TestBuildCoretaxWorkbook_EmptySellerTIN(t *testing.T) {
 	}
 	rows, _ := f.GetRows(coretaxSheetFaktur)
 	for i, row := range rows {
-		if i >= 3 && len(row) > 0 && row[0] != "" {
+		if i >= 3 && len(row) > 0 && row[0] != "" && row[0] != coretaxEndMarker {
 			t.Fatalf("expected no data rows, found %v", row)
 		}
 	}

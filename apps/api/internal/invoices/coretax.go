@@ -35,6 +35,9 @@ func NewCoretaxHandler(repo *Repo, c *clients.Repo, s deps.CoretaxSettings, temp
 	return &CoretaxHandler{repo: repo, clients: c, settings: s, templatesRoot: templatesRoot}
 }
 
+// coretaxNoGoodsCode is DJP's catch-all code.
+const coretaxNoGoodsCode = "000000"
+
 type coretaxGoodService struct {
 	XMLName       xml.Name `xml:"GoodService"`
 	Opt           string   `xml:"Opt"`
@@ -59,6 +62,7 @@ type coretaxTaxInvoice struct {
 	TrxCode         string               `xml:"TrxCode"`
 	AddInfo         string               `xml:"AddInfo"`
 	CustomDoc       string               `xml:"CustomDoc"`
+	CustomDocPeriod string               `xml:"CustomDocMonthYear"`
 	RefDesc         string               `xml:"RefDesc"`
 	FacilityStamp   string               `xml:"FacilityStamp"`
 	SellerIDTKU     string               `xml:"SellerIDTKU"`
@@ -216,6 +220,10 @@ func coretaxInvoiceFor(settings deps.CoretaxSettings, inv Invoice, items []Invoi
 // service). Coretax XML `<Opt>` uses 'A' for Barang and 'B' for Jasa — the
 // remap is intentional, not a typo. Unit falls back to "UM.0033" (general
 // "Other/Lainnya") when no Coretax code is recorded for the unit.
+//
+// Code is DJP's Kode Barang/Jasa, which Coretax checks against its own
+// reference when filled. The IMPA code is another code space, so every line
+// files coretaxNoGoodsCode, the reference's "no matching code".
 func buildGoodService(it InvoiceItem) coretaxGoodService {
 	opt := "A"
 	if it.GoodsOrService != nil && strings.EqualFold(*it.GoodsOrService, "J") {
@@ -228,7 +236,7 @@ func buildGoodService(it InvoiceItem) coretaxGoodService {
 	price, discount := lineGrossAndDiscount(it)
 	return coretaxGoodService{
 		Opt:           opt,
-		Code:          strDeref(it.ItemCode),
+		Code:          coretaxNoGoodsCode,
 		Name:          it.ItemName,
 		Unit:          unit,
 		Price:         price,

@@ -54,11 +54,15 @@ func TestBuildCoretaxWorkbook_CellsCentred(t *testing.T) {
 		return s
 	}
 
-	written := map[string][]string{coretaxSheetFaktur: {"A1", "C1"}}
+	written := map[string][]string{coretaxSheetFaktur: {"A1", "C1", "A5"}, coretaxSheetDetail: {"A3"}}
+	// Blank optional fields stay unwritten, as in the DJP template.
+	blank := map[string]bool{"E4": true, "F4": true, "G4": true, "I4": true}
 	for c := range coretaxFakturHeaders {
 		for _, row := range []int{3, 4} {
 			cell, _ := excelize.CoordinatesToCellName(c+1, row)
-			written[coretaxSheetFaktur] = append(written[coretaxSheetFaktur], cell)
+			if !blank[cell] {
+				written[coretaxSheetFaktur] = append(written[coretaxSheetFaktur], cell)
+			}
 		}
 	}
 	for c := range coretaxDetailHeaders {
@@ -79,8 +83,8 @@ func TestBuildCoretaxWorkbook_CellsCentred(t *testing.T) {
 			}
 		}
 	}
-	if got := style(coretaxSheetFaktur, "B4").NumFmt; got != 17 {
-		t.Errorf("Faktur B4 number format = %d, want 17", got)
+	if got := style(coretaxSheetFaktur, "B4").NumFmt; got != 14 {
+		t.Errorf("Faktur B4 number format = %d, want 14", got)
 	}
 	if v, _ := f.GetCellValue(coretaxSheetDetail, "I2"); v != "5800000" {
 		t.Errorf("DetailFaktur I2 = %q, want 5800000", v)

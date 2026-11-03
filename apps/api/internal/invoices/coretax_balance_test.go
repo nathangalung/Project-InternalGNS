@@ -114,8 +114,8 @@ func TestBuildCoretaxWorkbook_LineBalances(t *testing.T) {
 	}
 	defer func() { _ = f.Close() }()
 	rows, err := f.GetRows(coretaxSheetDetail)
-	if err != nil || len(rows) != 2 {
-		t.Fatalf("detail rows = %d (%v), want header plus one line", len(rows), err)
+	if err != nil || len(rows) != 3 {
+		t.Fatalf("detail rows = %d (%v), want header, one line and END", len(rows), err)
 	}
 	// Columns F Harga Satuan, G Jumlah, H Total Diskon, I DPP.
 	line := rows[1]

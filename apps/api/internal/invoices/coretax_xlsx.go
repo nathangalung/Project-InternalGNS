@@ -39,8 +39,11 @@ var coretaxDetailHeaders = []string{
 	"Baris", "Barang/Jasa", "Kode Barang Jasa", "Nama Barang/Jasa",
 	"Nama Satuan Ukur", "Harga Satuan", "Jumlah Barang Jasa", "Total Diskon",
 	"DPP", "DPP Nilai Lain", "Tarif PPN", "PPN", "Tarif PPnBM", "PPnBM",
-	"Nomor Invoice",
 }
+
+// coretaxEndMarker closes each sheet.
+// The DJP converter reads column A down to it.
+const coretaxEndMarker = "END"
 
 // ExportBulkXLSX serves GET /invoices/coretax.xlsx.
 // Every invoice matching the current list filter is rendered into the DJP
@@ -183,7 +186,7 @@ func buildCoretaxWorkbook(
 	if err != nil {
 		return nil, err
 	}
-	dateStyle, err := f.NewStyle(&excelize.Style{NumFmt: 17, Alignment: middle}) // dd-mmm-yy
+	dateStyle, err := f.NewStyle(&excelize.Style{NumFmt: 14, Alignment: middle}) // the template's date format
 	if err != nil {
 		return nil, err
 	}
@@ -214,9 +217,15 @@ func buildCoretaxWorkbook(
 		if buyerDocNo == "" {
 			buyerDocNo = "-"
 		}
+		// DetailFaktur rows name their faktur by this Baris.
+		baris := i + 1
+		// Keterangan Tambahan, the supporting document and Cap Fasilitas
+		// serve codes 07 and 08. The app records none, so they stay empty
+		// cells as in the DJP template.
 		faktur := []any{
-			i + 1, nil, tx.TaxInvoiceOpt, tx.TrxCode, tx.AddInfo, tx.CustomDoc,
-			"", tx.RefDesc, tx.FacilityStamp, tx.SellerIDTKU, tx.BuyerTin,
+			strconv.Itoa(baris), nil, tx.TaxInvoiceOpt, tx.TrxCode, nil,
+			nil, nil, tx.RefDesc,
+			nil, tx.SellerIDTKU, tx.BuyerTin,
 			tx.BuyerDocument, tx.BuyerCountry, buyerDocNo, tx.BuyerName,
 			tx.BuyerAdress, tx.BuyerEmail, tx.BuyerIDTKU,
 		}
@@ -227,21 +236,19 @@ func buildCoretaxWorkbook(
 		_ = f.SetCellStyle(coretaxSheetFaktur, dateCell, dateCell, dateStyle)
 		fakturRow++
 
-		for j, g := range tx.ListOfGoodSrv {
-			code := g.Code
-			if code == "" {
-				code = "000000"
-			}
+		for _, g := range tx.ListOfGoodSrv {
 			detail := []any{
-				j + 1, g.Opt, code, g.Name, g.Unit,
+				baris, g.Opt, g.Code, g.Name, g.Unit,
 				num(g.Price), num(g.Qty), num(g.TotalDiscount), num(g.TaxBase),
 				num(g.OtherTaxBase), num(g.VATRate), num(g.VAT),
-				num(g.STLGRate), num(g.STLG), inv.InvoiceNo,
+				num(g.STLGRate), num(g.STLG),
 			}
 			writeRow(f, coretaxSheetDetail, detailRow, detail, cellStyle)
 			detailRow++
 		}
 	}
+	writeRow(f, coretaxSheetFaktur, fakturRow, []any{coretaxEndMarker}, cellStyle)
+	writeRow(f, coretaxSheetDetail, detailRow, []any{coretaxEndMarker}, cellStyle)
 
 	var buf bytes.Buffer
 	if err := f.Write(&buf); err != nil {

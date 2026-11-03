@@ -142,7 +142,8 @@ func TestInvoice_CatalogRenameLeavesIssuedInvoice(t *testing.T) {
 	pdfBefore := pdfLineNames(t, tx, invID)
 	goodsBefore := coretaxGoods(t, tx, invID)
 	require.Equal(t, []string{offeredName}, pdfBefore)
-	require.Equal(t, []coretaxGood{{Code: offeredCode, Name: offeredName}}, goodsBefore)
+	// Coretax files DJP's catch-all code, never the IMPA code.
+	require.Equal(t, []coretaxGood{{Code: "000000", Name: offeredName}}, goodsBefore)
 
 	_, err := tx.Exec(ctx,
 		`UPDATE items SET name = $2, impa_code = $3 WHERE id = $1`,

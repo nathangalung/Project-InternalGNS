@@ -192,6 +192,9 @@ func TestCoretaxXLSX_FollowsTheListFilter(t *testing.T) {
 	defer func() { _ = f.Close() }()
 	detail, err := f.GetRows("DetailFaktur")
 	require.NoError(t, err)
-	require.Len(t, detail, 2, "header plus the one line of the filtered invoice")
-	assert.Equal(t, fx.sent.InvoiceNo, detail[1][14])
+	require.Len(t, detail, 3, "header, the one line of the filtered invoice and END")
+	assert.Equal(t, "1", detail[1][0], "the line names the one faktur")
+	rows, err := f.GetRows("Faktur")
+	require.NoError(t, err)
+	assert.Equal(t, fx.sent.InvoiceNo, rows[3][7])
 }

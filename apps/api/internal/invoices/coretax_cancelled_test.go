@@ -69,7 +69,8 @@ func TestCoretaxBulkExport_SkipsCancelledInvoice(t *testing.T) {
 
 			f, err := excelize.OpenReader(bytes.NewReader(rec.Body.Bytes()))
 			require.NoError(t, err)
-			rows, err := f.GetRows("DetailFaktur")
+			// Faktur carries the invoice number as Referensi.
+			rows, err := f.GetRows("Faktur")
 			require.NoError(t, err)
 			filed := false
 			for _, row := range rows {
