@@ -1,3 +1,4 @@
+import { moneyFromStored } from "@/lib/money-input"
 import type { CashDirection, CashEntryInput, CashEntryRow } from "@/types/api"
 import type { CashEntryParams } from "./api"
 
@@ -60,7 +61,7 @@ export function cashFormFromRow(row: CashEntryRow): CashForm {
     entryDate: row.entryDate,
     direction: row.direction,
     category: row.category,
-    amount: row.amount.replace(/\.00$/, ""),
+    amount: moneyFromStored(row.amount),
     description: row.description,
   }
 }
@@ -104,21 +105,4 @@ export function cashFieldErrors(form: CashForm): CashFieldErrors {
     out.description = `Keterangan paling banyak ${MAX_DESCRIPTION} karakter.`
   }
   return out
-}
-
-// Typed amount to canonical.
-// The input reads Indonesian: dots group thousands and a comma starts the
-// sen, which stop at two digits. The result is digits with an optional dot.
-export function amountTyped(raw: string): string {
-  const [whole, ...rest] = raw.replace(/[^\d,]/g, "").split(",")
-  if (rest.length === 0) return whole
-  return `${whole}.${rest.join("").slice(0, 2)}`
-}
-
-// Canonical amount for the input.
-// The inverse of amountTyped, so a trailing comma survives while typing.
-export function amountShown(canonical: string): string {
-  const [whole, sen] = canonical.split(".")
-  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-  return sen === undefined ? grouped : `${grouped},${sen}`
 }

@@ -1,4 +1,5 @@
 import { useId } from "react"
+import MoneyInput from "@/components/shared/MoneyInput"
 import { optionalCls } from "@/features/clients/ClientAdd/helpers"
 import { ui } from "@/lib/ui"
 import { optionalAddressError } from "@/lib/validation"
@@ -107,12 +108,11 @@ export default function Step3Shipping({
             <label htmlFor={`${id}-biaya`} className={fieldLabel}>
               Biaya Pengiriman <span className="text-error">*</span>
             </label>
-            <input
+            <MoneyInput
               id={`${id}-biaya`}
-              type="number"
-              placeholder="3570000 (Isi hanya dengan angka)"
+              placeholder="Contoh: 3.570.000"
               value={shippingCost}
-              onChange={(e) => setShippingCost(e.target.value)}
+              onValueChange={setShippingCost}
               disabled={readOnly || !isWaktuFilled}
               className={fieldInput}
             />

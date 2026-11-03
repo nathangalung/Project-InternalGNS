@@ -1,11 +1,13 @@
 import { useId, useState } from "react"
 import LoadError from "@/components/shared/LoadError"
 import Modal from "@/components/shared/Modal"
+import MoneyInput from "@/components/shared/MoneyInput"
 import SearchCombobox from "@/components/shared/SearchCombobox"
-import { addVendorError, wholeRupiah } from "@/features/items/helpers"
+import { addVendorError } from "@/features/items/helpers"
 import { useActiveVendorOptions, useAddVendorToItem } from "@/features/items/hooks"
 import VendorAddModal from "@/features/vendors/VendorAddModal"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
+import { moneyFromStored } from "@/lib/money-input"
 import { productUrlError } from "@/lib/store-link"
 import { ui } from "@/lib/ui"
 import type { ItemVendorRow, VendorRow } from "@/types/api"
@@ -27,7 +29,7 @@ export default function AddVendorToItemModal({
   // Picked vendor, kept while searches change
   const [vendor, setVendor] = useState<VendorRow | null>(null)
   const [vendorQuery, setVendorQuery] = useState("")
-  const [costPrice, setCostPrice] = useState(() => wholeRupiah(edit?.costPrice))
+  const [costPrice, setCostPrice] = useState(() => moneyFromStored(edit?.costPrice))
   // An untouched stored price is not sent, so the server keeps it
   const [costTouched, setCostTouched] = useState(false)
   const [productUrl, setProductUrl] = useState(edit?.productUrl ?? "")
@@ -60,7 +62,7 @@ export default function AddVendorToItemModal({
     setVendor(null)
     setVendorQuery("")
     setVendorListOpen(false)
-    setCostPrice(wholeRupiah(edit?.costPrice))
+    setCostPrice(moneyFromStored(edit?.costPrice))
     setCostTouched(false)
     setProductUrl(edit?.productUrl ?? "")
     setSubmitError(null)
@@ -95,13 +97,6 @@ export default function AddVendorToItemModal({
       setVendorError(placed.field ?? null)
       setSubmitError(placed.form ?? null)
     }
-  }
-
-  const formatRupiah = (digits: string) => {
-    if (!digits) return ""
-    const n = Number(digits)
-    if (!Number.isFinite(n)) return ""
-    return n.toLocaleString("id-ID")
   }
 
   return (
@@ -251,15 +246,13 @@ export default function AddVendorToItemModal({
               <span className="flex items-center whitespace-nowrap border-r border-dark-300 px-3 text-sm font-medium text-dark-600">
                 IDR
               </span>
-              <input
+              <MoneyInput
                 id={priceInputId}
                 className="flex-1 border-none bg-transparent px-3 py-0 font-sans text-sm text-dark-900 outline-none placeholder:text-dark-500"
-                type="text"
-                inputMode="numeric"
                 placeholder="0"
-                value={formatRupiah(costPrice)}
-                onChange={(e) => {
-                  setCostPrice(e.target.value.replace(/\D/g, ""))
+                value={costPrice}
+                onValueChange={(v) => {
+                  setCostPrice(v)
                   setCostTouched(true)
                 }}
               />

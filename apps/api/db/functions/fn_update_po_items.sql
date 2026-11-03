@@ -1,4 +1,4 @@
--- Canonical current body of fn_update_po_items (deployed by migration 00114).
+-- Canonical current body of fn_update_po_items (deployed by migration 00117).
 CREATE OR REPLACE FUNCTION public.fn_update_po_items(p_po_id bigint, p_user_id bigint, p_discount_pct numeric, p_notes text, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb)
  RETURNS void
  LANGUAGE plpgsql
@@ -135,6 +135,14 @@ BEGIN
     ELSIF v_vendor IS NOT NULL THEN
       v_link := fn_link_vendor_item(
         v_vendor, v_offered, NULLIF(it->>'costPrice','')::NUMERIC, p_user_id);
+    END IF;
+
+    -- A typed Link Produk goes on the line's vendor link; none keeps it.
+    IF it ? 'productUrl' AND v_link IS NOT NULL THEN
+      UPDATE vendor_products
+         SET product_url = NULLIF(BTRIM(it->>'productUrl'), ''), updated_by = p_user_id
+       WHERE id = v_link
+         AND product_url IS DISTINCT FROM NULLIF(BTRIM(it->>'productUrl'), '');
     END IF;
 
     INSERT INTO purchase_order_items (

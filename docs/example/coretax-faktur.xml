@@ -3,12 +3,12 @@
   <TIN>0987654321098765</TIN>
   <ListOfTaxInvoice>
     <TaxInvoice>
-      <TaxInvoiceDate>2026-10-12</TaxInvoiceDate>
+      <TaxInvoiceDate>2026-11-03</TaxInvoiceDate>
       <TaxInvoiceOpt>Normal</TaxInvoiceOpt>
       <TrxCode>04</TrxCode>
       <AddInfo></AddInfo>
       <CustomDoc></CustomDoc>
-      <RefDesc>INV-00001/GNS/X/2026</RefDesc>
+      <RefDesc>INV-00001/GNS/XI/2026</RefDesc>
       <FacilityStamp></FacilityStamp>
       <SellerIDTKU>0987654321098765000000</SellerIDTKU>
       <BuyerTin>0123456789012345</BuyerTin>

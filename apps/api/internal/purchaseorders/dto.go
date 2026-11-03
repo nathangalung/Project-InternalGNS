@@ -201,6 +201,9 @@ type UpdateItemsLine struct {
 	// none to yet.
 	VendorProductID *int64 `json:"vendorProductId,omitempty"`
 	VendorID        *int64 `json:"vendorId,omitempty"`
+	// ProductURL sets the line vendor's Link Produk; absent keeps it,
+	// blank clears it
+	ProductURL *string `json:"productUrl,omitempty"`
 }
 
 type ListFilter struct {

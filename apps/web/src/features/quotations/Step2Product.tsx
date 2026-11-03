@@ -5,6 +5,7 @@ import RowsPerPageMenu from "@/components/shared/RowsPerPageMenu"
 import { matchRows, recommend } from "@/features/items/api"
 import type { UnitIndex } from "@/features/units/match"
 import { errorMessage } from "@/lib/errors"
+import { formatPercent } from "@/lib/format"
 import { clampPage, pageCount } from "@/lib/pagination"
 import { ui } from "@/lib/ui"
 import { parseRfq } from "./api"
@@ -226,7 +227,7 @@ export default function Step2Product({
               >
                 <path d="M12 5v14M5 12h14" />
               </svg>
-              {discountPct > 0 ? `Diskon (${discountPct}%)` : "Tambah Diskon"}
+              {discountPct > 0 ? `Diskon (${formatPercent(discountPct)})` : "Tambah Diskon"}
             </button>
           )}
           {!fixedLines && (

@@ -201,6 +201,7 @@ export function lineToInput(line: PoEditLine, unitByText: UnitIndex): PoItemInpu
     shipDestination: s?.shipDestination,
     vendorProductId: line.vendorProductId,
     vendorId: line.vendorProductId === undefined ? line.vendorId : undefined,
+    productUrl: line.productUrl,
   }
 }
 

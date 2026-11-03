@@ -468,6 +468,16 @@ describe("vendor and no-offer round trip", () => {
     ])
   })
 
+  // Absent keeps the vendor's stored link; a no-offer line names no vendor.
+  it("sends the typed link with an offered line only", () => {
+    const p = toWizardProduct(item({ vendorProductId: 5, vendorId: 9 }), 1, "PCS")
+    const link = "https://toko.example/tali"
+    expect(toItemInput({ ...p, productUrl: link }, 3).productUrl).toBe(link)
+    expect(toItemInput({ ...p, productUrl: "" }, 3).productUrl).toBe("")
+    expect(toItemInput(p, 3).productUrl).toBeUndefined()
+    expect(toItemInput({ ...p, productUrl: link, noOffer: true }, 3).productUrl).toBeUndefined()
+  })
+
   it("does not send the vendor id once the link exists", () => {
     const p = toWizardProduct(item({ vendorProductId: 5, vendorId: 9 }), 1, "PCS")
     expect(toItemInput(p, 3).vendorId).toBeUndefined()

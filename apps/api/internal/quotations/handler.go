@@ -191,13 +191,15 @@ func validateCreateStatus(status *Status) map[string]string {
 // Quantity is above zero and both prices are finite and not negative; a
 // blank harga beli is an unfinished draft line, left to the send rule. A
 // requested IMPA code is rewritten in place to its six digits, or nil
-// for none. Every failure is keyed items[<i>].<field>.
+// for none, and a product link is trimmed in place. Every failure is keyed
+// items[<i>].<field>.
 func validateLines(items []CreateItem) map[string]string {
 	f := validate.Fields{}
 	for i, it := range items {
 		key := "items[" + strconv.Itoa(i) + "]."
 		f.Add(key+"qty", validate.Positive("Jumlah", it.Qty))
 		f.Add(key+"requestedImpa", validate.OptionalIMPA(&items[i].RequestedImpa))
+		f.Add(key+"productUrl", validate.OptionalProductURL(&items[i].ProductURL))
 		f.Add(key+"sellingPrice", validate.NonNegative("Harga jual", it.SellingPrice))
 		if it.CostPrice != nil && strings.TrimSpace(*it.CostPrice) != "" {
 			f.Add(key+"costPrice", validate.NonNegative("Harga beli", *it.CostPrice))

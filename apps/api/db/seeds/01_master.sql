@@ -1,5 +1,5 @@
 -- MASTER DATA — required for app to run
--- Tables: units (44), unit_aliases, countries (251)
+-- Tables: units (47), unit_aliases, countries (251)
 -- Idempotent: row-level ON CONFLICT, safe to re-run any time.
 -- Run after migrations applied (make migrate-up).
 
@@ -8,7 +8,7 @@ BEGIN;
 -- UNITS (Coretax DJP UM.XXXX + ship-supply extras)
 -- IDs 1-33  = Coretax official UM.0001-UM.0033 (exact UM.XXXX order)
 -- IDs 34-40 = ship-supply extras (mapped to UM.0033 Lainnya)
--- Later units take the next id (LGH, COIL, PAIL, DRUM).
+-- Later units take the next id (LGH, COIL, PAIL, DRUM, VOL, SCT, STRP).
 -- The code is what documents print; a ship-supply name is the long form
 -- of its code, and other spellings are aliases below.
 -- LGH: one length of pipe or bar as cut (a 6 m pipe), not a metre.
@@ -58,7 +58,10 @@ INSERT INTO seed_units (id, code, name, coretax_code) VALUES
   (NULL, 'LGH',  'Length',            'UM.0033'),
   (NULL, 'COIL', 'Coil',              'UM.0033'),
   (NULL, 'PAIL', 'Pail',              'UM.0033'),
-  (NULL, 'DRUM', 'Drum',              'UM.0033');
+  (NULL, 'DRUM', 'Drum',              'UM.0033'),
+  (NULL, 'VOL',  'Volume',            'UM.0033'),
+  (NULL, 'SCT',  'Sachet',            'UM.0033'),
+  (NULL, 'STRP', 'Strip',             'UM.0033');
 
 -- Explicit ids keep contract with dev samples (e.g. unit_id 19=SET, 21=PCS)
 -- wherever the id and the code are both free.
@@ -82,7 +85,7 @@ ON CONFLICT (code) DO NOTHING;
 
 -- Unit aliases
 -- Other spellings of a unit, stored normalised (fn_unit_text). The same
--- list as migrations 00109 and 00111, which a test keeps in step. The
+-- list as migrations 00109, 00111 and 00118, which a test keeps in step. The
 -- import (db/import/unit_map.py) reads this list too.
 INSERT INTO unit_aliases (alias, unit_id)
 SELECT v.alias, u.id
@@ -111,6 +114,9 @@ FROM (VALUES
   ('COILS', 'COIL'), ('C/L', 'COIL'),
   ('PAILS', 'PAIL'), ('EMBER', 'PAIL'),
   ('DRUMS', 'DRUM'), ('DRM', 'DRUM'),
+  ('VOLUME', 'VOL'), ('VOLS', 'VOL'),
+  ('SACHET', 'SCT'), ('SACHETS', 'SCT'), ('SACH', 'SCT'),
+  ('STRIP', 'STRP'), ('STRIPS', 'STRP'), ('STIP', 'STRP'),
   ('DAYS', 'DAY'), ('HARI', 'DAY'),
   ('HOUR', 'HR'), ('HOURS', 'HR'), ('JAM', 'HR')
 ) v(alias, code)

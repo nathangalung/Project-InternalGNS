@@ -1,5 +1,6 @@
 import { useId } from "react"
 import Modal from "@/components/shared/Modal"
+import MoneyInput from "@/components/shared/MoneyInput"
 import { ui } from "@/lib/ui"
 import type { NewVendorForm } from "./helpers"
 
@@ -76,14 +77,12 @@ export default function VendorAddModal({
           <label htmlFor={priceId} className={ui.fieldLabel}>
             Harga Beli (Rp) <span className="text-primary-700">*</span>
           </label>
-          <input
+          <MoneyInput
             id={priceId}
             className={`${ui.fieldInput} font-sans`}
-            type="number"
-            min={0}
             placeholder="Masukkan harga beli"
             value={form.harga}
-            onChange={(e) => onChange({ ...form, harga: e.target.value })}
+            onValueChange={(harga) => onChange({ ...form, harga })}
           />
         </div>
       </div>

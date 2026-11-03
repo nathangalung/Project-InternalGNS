@@ -73,11 +73,14 @@ management picks a role from a dropdown with an Indonesian label and hint
   save's transaction), while its new lines may start unoffered and putting
   a line back on offer stays open to it. It moves a draft to another client
   like any draft writer. On a PO it only views and keeps the purchase data
-  current: in Ubah PO it changes harga beli and vendor of the stored lines,
-  everything the client ordered stays as stored (`keepStoredSale`; each line
-  carries its PO line `id`, adding or dropping one is a 403), and it neither
+  current: in Ubah PO it changes harga beli, vendor and Link Produk of the
+  stored lines, everything the client ordered stays as stored
+  (`keepStoredSale`; each line carries its PO line `id`, adding or dropping
+  one is a 403), and it neither
   moves the PO nor touches its file, number, notes, client or delivery note
-  notes. The storage proxy
+  notes. Its product dialog there (`purchaseOnly`) never waits on the product,
+  unit or qty it keeps, so a stored line with no unit still takes a new
+  harga beli and vendor. The storage proxy
   refuses it a PO document upload too. It deletes an unused client or
   vendor for good, as the heads do.
 - finance (Kepala Keuangan): invoices, Kas Lain and the financial dashboard,
@@ -623,20 +626,31 @@ The vendor, product vendor, quotation line and PO line reads carry it
 the vendor's name on the vendor list and page, the product page and under
 each quotation and PO line. Internal names keep the older store wording
 for the product link (`StoreLinkModal`, `onEditStoreLink`, `storeLinks`).
-Only `POST /items/{id}/vendors` writes Link Produk, and a cleared link
-is sent as null. An unsent `costPrice` keeps the stored harga beli and its
-quote date, so Ubah sends the price only when it was changed. Three places
-write it: the Tambah Vendor and Ubah dialogs on the product page, and
-`features/items/StoreLinkModal` (Tambah Link Produk, Ubah Link Produk), which
-sends only `vendorId` and `productUrl` and is opened beside the picked
-vendor in the quotation and PO product dialog and under each line on
-the quotation and PO detail. It is offered only to the roles that write the catalog
-(`canWriteCatalog`, passed as `storeLinks` to `ProductAdd` and as
-`onEditStoreLink` to `ProductTable`), and in the dialog only for a vendor
-the product already links (`vendorProductId`), since a link alone would
-create one at harga beli 0. A save refreshes the item's vendors and the
-quotation and PO queries, which read the link live. Every other role only
-sees it.
+Two writes set Link Produk. `POST /items/{id}/vendors` sets it on its own,
+and a cleared link is sent as null. An unsent `costPrice` keeps the stored
+harga beli and its quote date, so Ubah sends the price only when it was
+changed. Its callers are the Tambah Vendor and Ubah dialogs on the product
+page and `features/items/StoreLinkModal` (Tambah Link Produk, Ubah Link
+Produk), which sends only `vendorId` and `productUrl` and is opened under
+each line on the quotation and PO detail, only for a vendor the product
+already links, since a link alone would create one at harga beli 0. A line
+save carries it too: a quotation line and an Ubah PO line take an optional
+`productUrl`, which `fn_prepare_quotation_lines` and `fn_update_po_items`
+(00117) write to the vendor link the line uses or creates. An absent key
+keeps the stored link, a blank one clears it, a line with no vendor link
+(Tidak Ditawarkan included) writes nothing, and a bad link is a 422 on
+`items[i].productUrl` (`validate.OptionalProductURL`). So the product
+dialog (`ProductAdd`, in the wizard, the draft editor and Ubah PO) has a
+Link Produk field beside the picked vendor, linked or not, filled with the
+stored link and checked with `productUrlError`. It sends the link only
+when it changed, and a vendor change drops what was typed. The wizard
+keeps the typed link on its line until Buat Penawaran. Both are offered
+only to the roles that write the catalog (`canWriteCatalog`, passed as
+`storeLinks` to `ProductAdd` and as `onEditStoreLink` to `ProductTable`).
+Every role that saves a quotation or PO line writes the catalog, so the
+server needs no gate of its own: the mounts already refuse the rest. A
+save refreshes the item's vendors and the quotation and PO queries, which
+read the link live. Every other role only sees it.
 `StoreLink` shows Link Produk in a new tab on the product and vendor pages, under
 each offer on the quotation and PO detail, and beside the picked vendor in
 the quotation product dialog.
@@ -715,8 +729,8 @@ A unit (Satuan) keeps the short code every document prints and exports
 to 33 carry the DJP Coretax names and codes UM.0001 to UM.0033; the
 ship-supply units map to UM.0033 and are named by the long form of their
 code (TIN Tin, PKT Packet, RLS Rolls), one name with no slash. Every other
-way a unit is written is an alias in `unit_aliases` (migrations 00109 and
-00111):
+way a unit is written is an alias in `unit_aliases` (migrations 00109,
+00111 and 00118):
 PC, PIECES and EA for PCS, CAN for TIN, SHEET and LEMBAR for LBR, PACK for
 PKT. An alias is stored normalised by `fn_unit_text` (upper case, one
 space between words, no trailing dot), and triggers refuse an alias equal
@@ -735,7 +749,10 @@ test keeps the three alias lists equal. The server reads no unit text, so
 nothing there resolves one. The historical import (`db/import/unit_map.py`)
 reads the codes and aliases from `01_master.sql`, so it resolves a spelling
 as the app does; only its reviewed `IMPORT_OVERRIDES` come first, each to
-OTH (AMP in the old files is an ampoule, never Ampere).
+OTH (AMP in the old files is an ampoule, never Ampere). Migration 00118
+added VOL Volume (a volume of a publication: tide tables, almanacs, log
+books), SCT Sachet and STRP Strip (a strip of tablets), so the import maps
+vol, sachet and strip to them instead of OTH.
 
 ## Kas Lain
 
@@ -748,8 +765,8 @@ only the finance head and superadmin delete or export it. An edit needs
 `If-Match` with the entry's `rowVersion`. The page totals Masuk, Keluar and
 their difference over the current filter. The entries do not feed the
 financial dashboard or Laba Bersih, which stay paid DPP minus cost of
-goods: a capital injection or a loan is not profit. The amount input reads
-Indonesian (dots group thousands, a comma starts the sen).
+goods: a capital injection or a loan is not profit. The amount is a
+`MoneyInput` like every other rupiah field.
 
 ## Frontend layout (`apps/web`)
 
@@ -837,6 +854,21 @@ Shared pieces in `components/shared`, reuse them instead of copying markup:
   error boundary, through `throwOnError: false` or `INLINE_LOOKUP` from
   `lib/query-client`, and shows its failure with `LoadError` instead, since
   the boundary would discard the document being edited.
+- `MoneyInput` is every rupiah field (harga beli and jual, shipping cost,
+  vendor prices, Kas Lain). It reads Indonesian through `lib/money-input`:
+  dots group thousands, a comma starts the sen (two at most), anything
+  else such as a pasted "Rp" is dropped, so "200.000" is two hundred
+  thousand. It shows the value grouped and hands back a plain decimal
+  string ("200000.50") that `Number()` and the API read as is. Never use
+  `type="number"` for money: it keeps "200.000" as 200.
+  The discount percent (`DiscountModal`, in the wizard, the draft editor
+  and Ubah PO) reads the same way through `lib/percent-input`: a comma or
+  a dot starts the decimals, since a percent has no grouping, two at most,
+  0 to 100, so "2,5" is 2.5 as the PDF prints it, and anything else is
+  refused on the field with the API's own message. The lists' Min and Max
+  Total filters read a typed amount the same way (`amount` in
+  `lib/list-search`): dots group thousands and the sen after a comma are
+  dropped, since the bound is whole rupiah, so "200.000,50" is 200000.
 - `StatCard` is the summary tile on list screens and dashboards.
 - `EntityLogo` is the list avatar: initials, or an image when given `src`.
 - `RecentQuotations` is the Quotation Terakhir section of the product, vendor
@@ -1043,8 +1075,8 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    Address, with no vessel.
    The terms and the signature sit clear of the table, and a long terms
    value wraps whole words inside its block (`tabularx`,
-   `TestLatexExports_LongPaymentTermsWraps`). All three keep 0.9 cm
-   side margins and every table spans exactly the text width (`\LTleft`,
+   `TestLatexExports_LongPaymentTermsWraps`). All three keep one page
+   margin (below) and every table spans exactly the text width (`\LTleft`,
    `\LTright` 0pt, the text columns sharing what the fixed ones leave), so
    the letterhead, party block, table rules and signature start and end on
    the same two lines; `TestLatexExports_TableMeetsTextEdges` renders the
@@ -1058,12 +1090,29 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    contextual alternates are off, `RawFeature = -calt`, since they swap a
    hyphen between digits for a minus sign), and `TestLatexExports_
    DocumentHead` checks all of it with `pdfinfo` and `pdftotext`.
-   Geometry uses `includehead` and `includefoot` so the running header and
-   the page count print on the sheet: the header 0.4 cm from the top, the
-   count 0.75 cm from the bottom (`footskip` 16pt above it). The logo is
-   5.2 cm wide (`\DocLogoWidth`), the title `\Large` and the number under
-   it 11pt; `TestLatexExports_Margins` pins the margins, the logo width and
-   the number set smaller than the title. The party block is a top-aligned `tabularx`
+   Every page keeps the same 0.75 cm between its printed marks and all four
+   paper edges (`margin=0.75cm`, the bottom margin the page count always
+   had). `includehead` and `includefoot` keep the running header and the
+   page count inside it: from page 2 on the header starts at the top margin
+   (`headheight` 9.7pt, just over the 9.61pt fancyhdr asks for, then
+   `headsep` 6pt), and the count's baseline sits on the bottom margin
+   (`footskip` 14pt above it). Page 1 has no running header, so a negative `\vspace*` of
+   `\headheight`, `\headsep`, `\topskip` and `\parskip` lifts the
+   letterhead to the top margin and gives page 1 that height back. Nothing
+   stretches and the leftover space is always at the bottom: `\DocTitle`
+   uses fixed gaps instead of `center`, `\LTpost` is 0pt so the terms or
+   the acknowledgements follow the table by their own fixed gap (0.8 cm,
+   1.0 cm on the delivery note), and the article default `\raggedbottom`
+   puts the rest below the last line. The logo is 5.2 cm wide
+   (`\DocLogoWidth`), the title `\Large` and the number under it 11pt.
+   `TestLatexExports_Margins` renders every page of a long document and
+   checks its ink against the margin on all four sides, the letterhead as
+   page 1's first line, the logo width and the number set smaller than the
+   title. `TestLatexExports_RunningHeader` keeps the header at the top
+   margin and clear of the table on every later page and the page count as
+   every page's lowest line, and `TestLatexExports_BlankAtBottom` holds a
+   one-page document to the top margin, the fixed gap after the table and
+   the blank below its last line. The party block is a top-aligned `tabularx`
    whose value column is plain `\raggedright` `X` with hyphenation off
    (English patterns would split Indonesian names), and the client name goes
    through `pdfgen.LatexBreakable`, so a long name wraps instead of printing
@@ -1120,6 +1169,11 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    cancelled and replaced by a Pengganti. Only the invoice and due dates stay
    editable, and only until the invoice is paid or cancelled; the due date
    the payment terms set is only where it starts.
+   A line's stored profit ratio (`profit_pct` on quotation and PO lines,
+   (harga jual minus harga beli) over harga beli) is NUMERIC(19,4) since
+   00119, wide enough for any ratio two NUMERIC(15,2) prices make, so a very
+   low harga beli against a high harga jual never refuses a save; the
+   historical import's `PROFIT_PCT_MAX` follows the same column.
 
 ## Tooling and style
 

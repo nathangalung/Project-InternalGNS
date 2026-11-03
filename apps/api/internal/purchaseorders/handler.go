@@ -671,6 +671,7 @@ func validateItemNumbers(req UpdateItemsRequest) map[string]string {
 	for i, it := range req.Items {
 		key := "items[" + strconv.Itoa(i) + "]."
 		f.Add(key+"itemCode", validate.OptionalIMPA(&req.Items[i].ItemCode))
+		f.Add(key+"productUrl", validate.OptionalProductURL(&req.Items[i].ProductURL))
 		if given(it.Qty) {
 			f.Add(key+"qty", validate.NonNegative("Jumlah", it.Qty))
 		}

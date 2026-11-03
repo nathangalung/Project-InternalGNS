@@ -162,6 +162,9 @@ type CreateItem struct {
 	DueDate           *string `json:"dueDate,omitempty"` // YYYY-MM-DD
 	// IsAvailable false marks Tidak Ditawarkan
 	IsAvailable *bool `json:"isAvailable,omitempty"`
+	// ProductURL sets the vendor link's Link Produk; absent keeps it, blank
+	// clears it
+	ProductURL *string `json:"productUrl,omitempty"`
 }
 
 // Create quotation body.
@@ -244,6 +247,7 @@ type dbItem struct {
 	ShipDestination   *string `json:"ship_destination,omitempty"`
 	DueDate           *string `json:"due_date,omitempty"`
 	IsAvailable       *bool   `json:"is_available,omitempty"`
+	ProductURL        *string `json:"product_url,omitempty"`
 }
 
 // itemsToJSONB serializes items for fn_create_quotation.

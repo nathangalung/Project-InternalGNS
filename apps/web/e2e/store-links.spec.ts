@@ -127,6 +127,25 @@ async function storedLink(itemId: number, vendorId: number) {
 }
 
 test.describe("product link from the PO", () => {
+  test("Ubah PO takes the product link in the product dialog", async ({ page, seed }) => {
+    const { vendor, item, q } = await acceptedPo(seed)
+
+    await page.goto(`/purchase-orders/${q.id}/edit`)
+    await page.getByRole("button", { name: "Ubah produk 1" }).click()
+    const modal = page.getByRole("dialog", { name: "Ubah Produk PO" })
+    await modal.getByLabel("Link Produk").fill(link)
+    await modal.getByRole("button", { name: "Simpan Perubahan" }).click()
+    await expect(modal).toBeHidden()
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Simpan", exact: true }).click()
+    await expect(page).toHaveURL(new RegExp(`/purchase-orders/${q.id}$`))
+    await expectProductLink(page)
+
+    const stored = await storedLink(item.id, vendor.id)
+    expect([stored?.productUrl, stored?.costPrice]).toEqual([link, "60000.00"])
+  })
+
   test("Tambah Link Produk on a PO line sets the link at once and keeps harga beli", async ({
     page,
     seed,

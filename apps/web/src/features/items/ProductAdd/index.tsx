@@ -15,12 +15,14 @@ import * as vendorsApi from "@/features/vendors/api"
 import { useCreateVendor } from "@/features/vendors/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { errorMessage } from "@/lib/errors"
+import { toNum } from "@/lib/format"
 import { impaCodeError, normalizeImpa } from "@/lib/impa"
 import { lookupFailure } from "@/lib/lookup"
+import { moneyFromStored } from "@/lib/money-input"
 import { INLINE_LOOKUP } from "@/lib/query-client"
+import { productUrlError } from "@/lib/store-link"
 import { ui } from "@/lib/ui"
 import ProductCreateModal from "../ProductCreateModal"
-import StoreLinkModal from "../StoreLinkModal"
 import {
   type AutofillBase,
   applyUntouched,
@@ -37,7 +39,6 @@ import {
   type NewVendorForm,
   type ProductAddFormData,
   type ProductAddInitialData,
-  parseRp,
   type VendorOption,
 } from "./helpers"
 import IdentityCard from "./IdentityCard"
@@ -91,12 +92,13 @@ function formFrom(initialData: ProductAddInitialData): ProductAddFormData {
     jumlahProduk: String(initialData.jumlah),
     satuan: initialData.satuan,
     namaVendor: initialData.vendor,
-    hargaBeli: String(initialData.hargaBeli),
-    hargaJual: String(initialData.hargaJual),
+    hargaBeli: moneyFromStored(initialData.hargaBeli),
+    hargaJual: moneyFromStored(initialData.hargaJual),
     itemId: initialData.itemId,
     requestedItemId: initialData.requestedItemId,
     vendorProductId: initialData.vendorProductId,
     vendorId: initialData.vendorId,
+    productUrl: initialData.productUrl,
   }
 }
 
@@ -130,7 +132,6 @@ function ProductAddDialog({
   const [form, setForm] = useState<ProductAddFormData>(() =>
     initialData ? formFrom(initialData) : INITIAL_FORM,
   )
-  const [showStoreLink, setShowStoreLink] = useState(false)
   const [openDropdown, setOpenDropdown] = useState<DropdownKey | null>(null)
 
   const [initialPrices, setInitialPrices] = useState<{ beli: number | null; jual: number | null }>(
@@ -267,37 +268,34 @@ function ProductAddDialog({
   const productRequestOpen = openDropdown === "productRequest"
   const vendorOpen = openDropdown === "vendor"
 
-  const hargaBeliVal = parseRp(form.hargaBeli)
-  const profit = parseRp(form.hargaJual) - hargaBeliVal
+  const hargaBeliVal = toNum(form.hargaBeli)
+  const profit = toNum(form.hargaJual) - hargaBeliVal
   const profitPct = hargaBeliVal > 0 ? ((profit / hargaBeliVal) * 100).toFixed(2) : "0.00"
 
   const isRequestFilled = form.requestedNama.trim().length > 0
   const requestImpaError = impaCodeError(form.requestedKodeImpa)
   const isProductFilled = form.nama.trim().length > 0
   const isSatuanFilled = isProductFilled && form.satuan.trim().length > 0
-  const isJumlahFilled = isSatuanFilled && form.jumlahProduk.trim().length > 0
+  // A purchase-only edit keeps the product, unit and qty as stored, even a
+  // stored line with no unit, so the vendor and price never wait on them.
+  const isJumlahFilled = purchaseOnly || (isSatuanFilled && form.jumlahProduk.trim().length > 0)
   const exactVendor = vendorOptions.find((v) => v.nama === form.namaVendor)
   const isVendorFilled = isJumlahFilled && exactVendor !== undefined
-  const isHargaJualValid = !pricing || parseRp(form.hargaJual) > 0
+  const isHargaJualValid = !pricing || toNum(form.hargaJual) > 0
+  // The link shown is the typed one, else the vendor's stored one.
+  const linkUrl = form.productUrl ?? exactVendor?.storeUrl ?? ""
+  const linkValid = !storeLinks || !exactVendor || productUrlError(linkUrl) === null
   // A draft line may lack its vendor and prices, but a typed vendor must be
   // one of the options.
   const vendorTyped = form.namaVendor.trim().length > 0
   const isLineIncomplete = !exactVendor || !isHargaJualValid
   const canSubmit =
     requestImpaError === null &&
+    linkValid &&
     (allowIncomplete
       ? isRequestFilled && isJumlahFilled && (!vendorTyped || exactVendor !== undefined)
       : isRequestFilled && isVendorFilled && isHargaJualValid)
   const pricesUnlocked = allowIncomplete ? isJumlahFilled : isVendorFilled
-  // Only a vendor the product already links: a link alone would create one
-  // at harga beli 0.
-  const storeLinkTarget =
-    storeLinks &&
-    pickedItemId !== null &&
-    exactVendor?.vendorId !== undefined &&
-    exactVendor.vendorProductId !== undefined
-      ? { itemId: pickedItemId, vendorId: exactVendor.vendorId, vendor: exactVendor }
-      : null
 
   function handleChange(field: keyof ProductAddFormData, value: string) {
     // A typed request is no longer the catalog pick.
@@ -311,6 +309,11 @@ function ProductAddDialog({
       setForm((prev) => ({ ...prev, nama: value, kodeImpa: "" }))
       return
     }
+    // A link typed for one vendor is not another's.
+    if (field === "namaVendor") {
+      setForm((prev) => ({ ...prev, namaVendor: value, productUrl: undefined }))
+      return
+    }
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -321,8 +324,8 @@ function ProductAddDialog({
   function handlePreSubmit() {
     if (!canSubmit) return
 
-    const currentBeli = parseRp(form.hargaBeli)
-    const currentJual = parseRp(form.hargaJual)
+    const currentBeli = toNum(form.hargaBeli)
+    const currentJual = toNum(form.hargaJual)
 
     const isBeliChanged = initialPrices.beli !== null && currentBeli !== initialPrices.beli
     const isJualChanged =
@@ -337,9 +340,20 @@ function ProductAddDialog({
 
   function executeSubmit() {
     // The ids follow the vendor the name matches, not an earlier pick.
+    // Only a changed link travels; an absent one keeps the stored link.
+    const typed = form.productUrl?.trim()
+    const productUrl =
+      storeLinks && exactVendor && typed !== undefined && typed !== (exactVendor.storeUrl ?? "")
+        ? typed
+        : undefined
     const data = exactVendor
-      ? { ...form, vendorId: exactVendor.vendorId, vendorProductId: exactVendor.vendorProductId }
-      : { ...form, namaVendor: "", vendorId: undefined, vendorProductId: undefined }
+      ? {
+          ...form,
+          vendorId: exactVendor.vendorId,
+          vendorProductId: exactVendor.vendorProductId,
+          productUrl,
+        }
+      : { ...form, namaVendor: "", vendorId: undefined, vendorProductId: undefined, productUrl }
     onSuccess?.({ ...data, profit })
     setShowConfirm(false)
     onOpenChange(false)
@@ -359,8 +373,8 @@ function ProductAddDialog({
     ? vendorOptions.filter((v) => v.nama.toLowerCase().includes(vendorQuery))
     : vendorOptions
 
-  const currentBeli = parseRp(form.hargaBeli)
-  const currentJual = parseRp(form.hargaJual)
+  const currentBeli = toNum(form.hargaBeli)
+  const currentJual = toNum(form.hargaJual)
   const isBeliChanged = initialPrices.beli !== null && currentBeli !== initialPrices.beli
   const isJualChanged = pricing && initialPrices.jual !== null && currentJual !== initialPrices.jual
 
@@ -382,6 +396,7 @@ function ProductAddDialog({
       hargaBeli: v.harga > 0 ? String(v.harga) : prev.hargaBeli,
       vendorId: v.vendorId,
       vendorProductId: v.vendorProductId,
+      productUrl: undefined,
     }))
     if (v.harga > 0) setInitialPrices((prev) => ({ ...prev, beli: v.harga }))
     setOpenDropdown(null)
@@ -397,7 +412,7 @@ function ProductAddDialog({
   async function submitNewVendor() {
     const name = newVendorForm.nama.trim()
     if (!name || newVendorSaving) return
-    const harga = Number(newVendorForm.harga) || 0
+    const harga = toNum(newVendorForm.harga)
     setNewVendorError(null)
     setNewVendorSaving(true)
     try {
@@ -414,6 +429,7 @@ function ProductAddDialog({
         hargaBeli: harga > 0 ? String(harga) : prev.hargaBeli,
         vendorId: newVendor.vendorId,
         vendorProductId: undefined,
+        productUrl: undefined,
       }))
       if (harga > 0) setInitialPrices((prev) => ({ ...prev, beli: harga }))
       setShowVendorNew(false)
@@ -441,6 +457,7 @@ function ProductAddDialog({
       namaVendor: "",
       vendorId: undefined,
       vendorProductId: undefined,
+      productUrl: undefined,
       ...(unit ? { satuan: unit.code } : {}),
     }))
   }
@@ -585,20 +602,13 @@ function ProductAddDialog({
               setNewVendorError(null)
               setShowVendorNew(true)
             }}
-            onEditStoreLink={storeLinkTarget ? () => setShowStoreLink(true) : undefined}
+            linkUrl={linkUrl}
+            onLinkChange={
+              storeLinks ? (url) => setForm((prev) => ({ ...prev, productUrl: url })) : undefined
+            }
           />
         </Modal>
       </div>
-
-      {showStoreLink && storeLinkTarget && (
-        <StoreLinkModal
-          itemId={storeLinkTarget.itemId}
-          vendorId={storeLinkTarget.vendorId}
-          vendorName={storeLinkTarget.vendor.nama}
-          current={storeLinkTarget.vendor.storeUrl}
-          onClose={() => setShowStoreLink(false)}
-        />
-      )}
 
       <ProductCreateModal
         open={showProductNew}

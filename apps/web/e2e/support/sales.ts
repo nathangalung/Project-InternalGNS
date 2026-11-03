@@ -605,3 +605,16 @@ export function insertUnreachableContact(clientId: number, name: string): number
   )
   return Number(String(out).trim())
 }
+
+// PO lines without a unit.
+//
+// Every write path asks for a unit, but stored lines may lack one, so the
+// unit is cleared through psql.
+export function clearPoLineUnits(poId: number): void {
+  const dsn = process.env.DATABASE_URL
+  if (!dsn) throw new Error("DATABASE_URL must name the database the API under test uses")
+  execFileSync("psql", [dsn, "-X", "-q", "-v", "ON_ERROR_STOP=1", "-v", `po=${poId}`], {
+    input:
+      "UPDATE purchase_order_items SET unit_id = NULL WHERE po_id = :po AND item_type = 'product';\n",
+  })
+}

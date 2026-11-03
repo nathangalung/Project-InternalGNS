@@ -103,9 +103,12 @@ export function isoDay(v: unknown): string | undefined {
 
 // Rupiah amount as digits.
 //
-// Zero is no bound, as the list queries treat it.
+// Typed the Indonesian way: dots group thousands and a comma starts the
+// sen, which a whole-rupiah bound drops. Zero is no bound, as the list
+// queries treat it.
 export function amount(v: unknown): string | undefined {
-  const digits = trimmed(v)?.replace(/\D/g, "").replace(/^0+/, "")
+  const whole = trimmed(v)?.split(",")[0]
+  const digits = whole?.replace(/\D/g, "").replace(/^0+/, "")
   return digits ? digits : undefined
 }
 

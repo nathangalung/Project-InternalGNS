@@ -14,8 +14,9 @@
   BoldItalicFont = Plus Jakarta Sans Bold Italic,
 ]
 
-% A4 at every length; the content starts high.
-\usepackage[a4paper, includehead, includefoot, headheight=12pt, headsep=6pt, footskip=16pt, top=0.4cm, bottom=0.75cm, left=0.9cm, right=0.9cm]{geometry}
+% A4 at every length, one margin on all four sides. The running header
+% and the page count print inside it.
+\usepackage[a4paper, margin=0.75cm, includehead, includefoot, headheight=9.7pt, headsep=6pt, footskip=14pt]{geometry}
 \usepackage{graphicx}
 \usepackage{longtable}
 \usepackage{array}
@@ -38,11 +39,13 @@
 \newcommand{\DocHeadSize}{\fontsize{7}{9}\selectfont}
 \newcommand{\DocPartySize}{\footnotesize}
 \newcommand{\DocCellSize}{\footnotesize}
+% Fixed gaps, so nothing stretches.
 \newcommand{\DocTitle}[2]{%
-  \begin{center}
+  \par\vspace{8pt}%
+  {\centering
     {\Large\bfseries #1}\\[3pt]
-    {\fontsize{11}{13}\selectfont\bfseries #2}
-  \end{center}}
+    {\fontsize{11}{13}\selectfont\bfseries #2}\par}%
+  \vspace{4pt}}
 
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{2pt}
@@ -74,6 +77,8 @@
 
 \begin{document}
 \thispagestyle{firstpage}
+% Page 1 has no running header, so the letterhead takes its space.
+\vspace*{-\dimexpr\headheight+\headsep+\topskip+\parskip\relax}\nointerlineskip
 
 \noindent
 \begin{minipage}[t]{0.28\textwidth}
@@ -136,6 +141,8 @@
 \vspace{0.3cm}
 \setlength{\tabcolsep}{2pt}
 \setlength{\LTpre}{0pt}
+% The block after the table sets its own gap.
+\setlength{\LTpost}{0pt}
 % Flush with the text on both sides.
 \setlength{\LTleft}{0pt}
 \setlength{\LTright}{0pt}

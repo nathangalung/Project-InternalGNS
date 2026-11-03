@@ -90,3 +90,14 @@ The owner delegated these; each follows the rule the code already holds.
   ea is PCS, batang LGH, coil COIL, pail PAIL. Rows already in production
   keep their stored unit.
 - **Purchase-side shipping** stays unrecorded: not needed.
+
+## Fixed in v0.38.0
+
+- **`profit_pct` overflow** (listed in `architecture-audit.md` as latent).
+  The column was NUMERIC(7,4) on quotation and PO lines, so a line whose
+  harga jual was more than about 1001 times its harga beli could not be
+  saved ("Nilai angka di luar batas yang diizinkan"). Combined with the web
+  reading "400.000" as 400, every dotted harga beli hit it in production.
+  Migration 00119 widens both columns to NUMERIC(19,4), which holds every
+  ratio two NUMERIC(15,2) prices can make, and the historical import no
+  longer drops such a harga beli.

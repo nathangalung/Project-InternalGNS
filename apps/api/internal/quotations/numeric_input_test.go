@@ -10,6 +10,7 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/live"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/validate"
 )
 
 // Field messages for numeric input.
@@ -44,6 +45,7 @@ var lineCases = []lineCase{
 	{"cost NaN", func(it *quotations.CreateItem) { it.CostPrice = strPtr("NaN") }, "items[0].costPrice", costMsg},
 	{"cost Inf", func(it *quotations.CreateItem) { it.CostPrice = strPtr("-Inf") }, "items[0].costPrice", costMsg},
 	{"cost negative", func(it *quotations.CreateItem) { it.CostPrice = strPtr("-900000") }, "items[0].costPrice", costMsg},
+	{"product link script", func(it *quotations.CreateItem) { it.ProductURL = strPtr("javascript:alert(1)") }, "items[0].productUrl", validate.ProductURLMessage},
 }
 
 // termsCase spoils one header number.

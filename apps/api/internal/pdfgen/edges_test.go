@@ -13,15 +13,16 @@ import (
 // edgeDPI renders two pixels a point.
 const edgeDPI = 144
 
-// renderPage rasterises page one.
-func renderPage(t *testing.T, pdf string) image.Image {
+// renderPage rasterises one page.
+func renderPage(t *testing.T, pdf string, page int) image.Image {
 	t.Helper()
 	bin, err := exec.LookPath("pdftoppm")
 	if err != nil {
 		t.Skip("pdftoppm unavailable")
 	}
-	out := filepath.Join(filepath.Dir(pdf), "page")
-	if err := exec.Command(bin, "-r", strconv.Itoa(edgeDPI), "-gray", "-png", "-f", "1", "-l", "1", "-singlefile", pdf, out).Run(); err != nil {
+	n := strconv.Itoa(page)
+	out := filepath.Join(filepath.Dir(pdf), "page"+n)
+	if err := exec.Command(bin, "-r", strconv.Itoa(edgeDPI), "-gray", "-png", "-f", n, "-l", n, "-singlefile", pdf, out).Run(); err != nil {
 		t.Fatalf("pdftoppm: %v", err)
 	}
 	f, err := os.Open(out + ".png")
@@ -40,6 +41,23 @@ func renderPage(t *testing.T, pdf string) image.Image {
 func dark(img image.Image, x, y int) bool {
 	r, _, _, _ := img.At(x, y).RGBA()
 	return r < 0x8000
+}
+
+// inkBox bounds the printed marks.
+// It returns the first and last dark row and column, in points.
+func inkBox(img image.Image) (top, bottom, left, right float64) {
+	b := img.Bounds()
+	y0, y1, x0, x1 := b.Max.Y, -1, b.Max.X, -1
+	for y := b.Min.Y; y < b.Max.Y; y++ {
+		for x := b.Min.X; x < b.Max.X; x++ {
+			if dark(img, x, y) {
+				y0, y1 = min(y0, y), max(y1, y)
+				x0, x1 = min(x0, x), max(x1, x)
+			}
+		}
+	}
+	const px = float64(edgeDPI) / 72
+	return float64(y0) / px, float64(y1+1) / px, float64(x0) / px, float64(x1+1) / px
 }
 
 // tableBorders finds the outer rules.
@@ -98,7 +116,7 @@ func TestLatexExports_TableMeetsTextEdges(t *testing.T) {
 				textLeft = min(textLeft, w.xMin)
 				textRight = max(textRight, w.xMax)
 			}
-			img := renderPage(t, pdf)
+			img := renderPage(t, pdf, 1)
 			y0 := int(head.yMin*2) + 4
 			left, right := tableBorders(img, y0, y0+60)
 			if left < 0 {
