@@ -8,6 +8,7 @@
       <TrxCode>04</TrxCode>
       <AddInfo></AddInfo>
       <CustomDoc></CustomDoc>
+      <CustomDocMonthYear></CustomDocMonthYear>
       <RefDesc>INV-00001/GNS/XI/2026</RefDesc>
       <FacilityStamp></FacilityStamp>
       <SellerIDTKU>0987654321098765000000</SellerIDTKU>
@@ -22,7 +23,7 @@
       <ListOfGoodService>
         <GoodService>
           <Opt>A</Opt>
-          <Code>210101</Code>
+          <Code>000000</Code>
           <Name>Tali Tambat Polypropylene 24 mm</Name>
           <Unit>UM.0033</Unit>
           <Price>2400000</Price>
@@ -37,7 +38,7 @@
         </GoodService>
         <GoodService>
           <Opt>A</Opt>
-          <Code>190105</Code>
+          <Code>000000</Code>
           <Name>Sarung Tangan Kerja Katun</Name>
           <Unit>UM.0033</Unit>
           <Price>65000</Price>
@@ -52,7 +53,7 @@
         </GoodService>
         <GoodService>
           <Opt>A</Opt>
-          <Code>250201</Code>
+          <Code>000000</Code>
           <Name>Cat Anti Karat Merah 5 Liter</Name>
           <Unit>UM.0033</Unit>
           <Price>525000</Price>
@@ -67,7 +68,7 @@
         </GoodService>
         <GoodService>
           <Opt>A</Opt>
-          <Code>370612</Code>
+          <Code>000000</Code>
           <Name>Lampu Navigasi LED 24V</Name>
           <Unit>UM.0021</Unit>
           <Price>1690000</Price>
@@ -82,7 +83,7 @@
         </GoodService>
         <GoodService>
           <Opt>A</Opt>
-          <Code>350831</Code>
+          <Code>000000</Code>
           <Name>Kabel Listrik NYY 3 x 2,5 mm</Name>
           <Unit>UM.0013</Unit>
           <Price>24000</Price>
@@ -97,7 +98,7 @@
         </GoodService>
         <GoodService>
           <Opt>B</Opt>
-          <Code></Code>
+          <Code>000000</Code>
           <Name>SHIPPING - Gudang Pelabuhan Tanjung Priok, Jl. Pelabuhan Raya No. 12, Jakarta Utara</Name>
           <Unit>UM.0018</Unit>
           <Price>750000</Price>
