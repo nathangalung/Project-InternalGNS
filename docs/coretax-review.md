@@ -24,8 +24,6 @@ Template XML dan Converter Excel ke XML). The converter ships template
 - DJP added units UM.0034 to UM.0039 (Meter Kubik, Sentimeter Persegi,
   Drum, Karton, Kwh, Roll). Units mapped to UM.0033 still validate.
 
-The original findings follow.
-
 ## Original findings
 
 Findings from the export audit, with proposed diffs. The Coretax XLSX and XML go to the DJP importer, which cannot be

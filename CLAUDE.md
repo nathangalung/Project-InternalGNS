@@ -537,6 +537,13 @@ shows a missing one as Belum ada No. PO.
   DELIVERED); only a Pengganti, which copies the client as it is then,
   changes it. Coretax refuses an invoice without a valid NPWP with that
   Pengganti route.
+  Both Coretax exports follow DJP's converter v1.6 and its template
+  v1.6.1 (`invoices/coretax_djp_test.go`): the XML carries every element
+  of DJP's sample, `CustomDocMonthYear` included, and in the workbook each
+  DetailFaktur Baris names its parent Faktur row, both sheets end in an
+  `END` row, and DetailFaktur has DJP's 14 columns. Kode Barang Jasa is
+  always `000000`, never the IMPA code, since Coretax checks a filled code
+  against DJP's own reference.
   The same way it keeps its quotation's payment terms (`payment_terms`,
   trimmed, NULL when blank, 00110), which the PDF prints as PAYMENT TERMS
   and the detail shows as Syarat Pembayaran; an invoice without terms (its
