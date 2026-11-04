@@ -68,8 +68,8 @@ var longDocs = []struct {
 // Every page keeps the same 0.75 cm between its printed marks and all four
 // paper edges: the letterhead on page 1 and the running header after it at
 // the top, the page count at the bottom, the letterhead and table rules at
-// the sides. The logo is 4.45 cm wide and the number is set smaller than
-// the title above it.
+// the sides, on A4 portrait paper. The logo is 4.45 cm wide and the number
+// is set smaller than the title above it.
 func TestLatexExports_Margins(t *testing.T) {
 	for _, d := range longDocs {
 		t.Run(d.name, func(t *testing.T) {
@@ -82,6 +82,9 @@ func TestLatexExports_Margins(t *testing.T) {
 				t.Fatalf("pages = %d, want a running header on page 2", pages)
 			}
 			pdf := filepath.Join(dir, "doc.pdf")
+			if got := requireA4(t, pdf); got != pages {
+				t.Errorf("pdfinfo saw %d pages, xelatex wrote %d", got, pages)
+			}
 
 			for p := 1; p <= pages; p++ {
 				top, bottom, left, right := inkBox(renderPage(t, pdf, p))

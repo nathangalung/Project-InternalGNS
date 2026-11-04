@@ -1140,7 +1140,7 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    (`TestLatexExports_LetterheadCentredOnLogo`). The
    title is `\Large` and the number under it 11pt.
    `TestLatexExports_Margins` renders every page of a long document and
-   checks its ink against the margin on all four sides, the letterhead as
+   checks its A4 paper and its ink against the margin on all four sides, the letterhead as
    page 1's first line, the logo width, the number set smaller than the
    title and the table cells at 7.5pt (`\DocCellSize`), under the 8pt page
    count.
