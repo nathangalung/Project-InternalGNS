@@ -3,19 +3,51 @@ package pdfgen
 import (
 	"image"
 	"math"
+	"os/exec"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"testing"
 )
 
 // Page geometry in points.
 const (
-	cm     = 72 / 2.54
-	paperW = 595.28
-	paperH = 841.89
-	margin = 0.75 * cm
+	cm          = 72 / 2.54
+	paperW      = 595.28
+	paperH      = 841.89
+	margin      = 0.75 * cm
+	logoWidthPt = 4.45 * cm
 	// inkTol allows for the 144 dpi raster.
 	inkTol = 1.5
 )
+
+// logoWidth reads the first image.
+// pdfimages gives the pixel size and the ppi it was placed at, so the
+// printed width is pixels over ppi.
+func logoWidth(t *testing.T, pdf string) float64 {
+	t.Helper()
+	bin, err := exec.LookPath("pdfimages")
+	if err != nil {
+		t.Skip("pdfimages unavailable")
+	}
+	out, err := exec.Command(bin, "-list", "-f", "1", "-l", "1", pdf).Output()
+	if err != nil {
+		t.Fatalf("pdfimages: %v", err)
+	}
+	for _, ln := range strings.Split(string(out), "\n") {
+		f := strings.Fields(ln)
+		if len(f) < 13 || f[2] != "image" {
+			continue
+		}
+		px, _ := strconv.ParseFloat(f[3], 64)
+		ppi, _ := strconv.ParseFloat(f[12], 64)
+		if ppi > 0 {
+			return px / ppi * 72
+		}
+	}
+	t.Fatal("no image on page 1")
+	return 0
+}
 
 // near compares within a tolerance.
 func near(got, want, tol float64) bool {
@@ -36,7 +68,8 @@ var longDocs = []struct {
 // Every page keeps the same 0.75 cm between its printed marks and all four
 // paper edges: the letterhead on page 1 and the running header after it at
 // the top, the page count at the bottom, the letterhead and table rules at
-// the sides. The number is set smaller than the title above it.
+// the sides. The logo is 4.45 cm wide and the number is set smaller than
+// the title above it.
 func TestLatexExports_Margins(t *testing.T) {
 	for _, d := range longDocs {
 		t.Run(d.name, func(t *testing.T) {
@@ -81,6 +114,11 @@ func TestLatexExports_Margins(t *testing.T) {
 			// The word box carries the font's ascent, a little above the ink.
 			if first.yMin < margin-3 || first.yMin > margin {
 				t.Errorf("letterhead box starts at y=%.1f, want within 3 pt above %.1f", first.yMin, margin)
+			}
+
+			// Logo: its visible mark keeps 4.45 cm.
+			if w := logoWidth(t, pdf); !near(w, logoWidthPt, 1.5) {
+				t.Errorf("logo %.1f pt wide, want %.1f", w, logoWidthPt)
 			}
 
 			// Number: smaller than the title, which keeps its size.

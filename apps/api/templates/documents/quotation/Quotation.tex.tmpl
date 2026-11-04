@@ -35,10 +35,21 @@
 \hypersetup{colorlinks=true, urlcolor=blue, linkcolor=black}
 
 % Shared sizes, same in all three documents.
-\newsavebox{\DocAddrBox}
-\newsavebox{\DocContactBox}
-\newlength{\DocLogoHeight}
-\newcommand{\DocHeadSize}{\fontsize{7}{9}\selectfont}
+\newcommand{\DocLogoWidth}{4.45cm}
+\newcommand{\DocHeadSize}{\fontsize{8}{10}\selectfont}
+\newsavebox{\DocLogoBox}
+\newlength{\DocLineTop}
+% Letterhead side block, four lines.
+% #1 aligns it. The lines share one baseline step, the logo's height less
+% the first line's, over the three steps.
+\newcommand{\DocSideBlock}[5]{%
+  \begin{minipage}[t]{0.30\textwidth}
+  \vspace{0pt}
+  #1\DocHeadSize
+  \settoheight{\DocLineTop}{#2}%
+  \setlength{\baselineskip}{\dimexpr(\ht\DocLogoBox-\DocLineTop)/3\relax}%
+  #2\\#3\\#4\\#5\par\kern-\prevdepth
+  \end{minipage}}
 \newcommand{\DocPartySize}{\footnotesize}
 \newcommand{\DocCellSize}{\footnotesize}
 % Fixed gaps, so nothing stretches.
@@ -81,39 +92,23 @@
 \thispagestyle{firstpage}
 % Page 1 has no running header, so the letterhead takes its space.
 \vspace*{-\dimexpr\headheight+\headsep+\topskip+\parskip\relax}\nointerlineskip
-% Each side block ends on its last baseline, and the logo spans the
-% address block from its first line's top to that baseline.
-\sbox\DocAddrBox{\begin{minipage}[t]{0.28\textwidth}
-  \vspace{0pt}
-  {\DocHeadSize
-  Gedung Wirausaha Lt 1, Unit 104\\
-  Jl. HR. Rasuna Said Kav. C5\\
-  Kuningan, Setiabudi\\
-  Jakarta Selatan 12920\par
-  }\kern-\prevdepth
-\end{minipage}}%
-\sbox\DocContactBox{\begin{minipage}[t]{0.28\textwidth}
-  \vspace{0pt}
-  \raggedleft
-  {\DocHeadSize
-  Telp. +62 21-5099 6969 (ext. 1249)\\
-  WA. +62 811-980-982/+62 811-999-0991\\
-  Email: sales@globalsakti.com\\
-  Website: www.globalsakti.com\par
-  }\kern-\prevdepth
-\end{minipage}}%
-\setlength{\DocLogoHeight}{\dimexpr\ht\DocAddrBox+\dp\DocAddrBox\relax}%
+% The logo keeps its width, and each side block spaces its lines so its
+% first line's top and its last baseline meet the logo's top and bottom.
+\sbox\DocLogoBox{\includegraphics[width=\DocLogoWidth]{Logo_Vertical.png}}%
 \noindent
-\usebox\DocAddrBox
+\DocSideBlock{}{Gedung Wirausaha Lt 1, Unit 104}{Jl. HR. Rasuna Said Kav. C5}%
+  {Kuningan, Setiabudi}{Jakarta Selatan 12920}%
 \hfill
-\begin{minipage}[t]{0.40\textwidth}
+\begin{minipage}[t]{0.36\textwidth}
   \vspace{0pt}
   \centering
   % The asset has no transparent border.
-  \includegraphics[height=\DocLogoHeight]{Logo_Vertical.png}
+  \usebox\DocLogoBox
 \end{minipage}%
 \hfill
-\usebox\DocContactBox
+\DocSideBlock{\raggedleft}{Telp. +62 21-5099 6969 (ext. 1249)}%
+  {WA. +62 811-980-982/+62 811-999-0991}{Email: sales@globalsakti.com}%
+  {Website: www.globalsakti.com}
 
 \vspace{0.3cm}
 \noindent\rule{\textwidth}{0.8pt}
