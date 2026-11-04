@@ -37,7 +37,9 @@
 % Shared sizes, same in all three documents.
 \newsavebox{\DocAddrBox}
 \newsavebox{\DocContactBox}
-\newlength{\DocLogoHeight}
+\newsavebox{\DocLogoBox}
+\newlength{\DocHeadDrop}
+\newcommand{\DocLogoWidth}{4.45cm}
 \newcommand{\DocHeadSize}{\fontsize{7}{9}\selectfont}
 \newcommand{\DocPartySize}{\footnotesize}
 \newcommand{\DocCellSize}{\footnotesize}
@@ -81,8 +83,8 @@
 \thispagestyle{firstpage}
 % Page 1 has no running header, so the letterhead takes its space.
 \vspace*{-\dimexpr\headheight+\headsep+\topskip+\parskip\relax}\nointerlineskip
-% Each side block ends on its last baseline, and the logo spans the
-% address block from its first line's top to that baseline.
+% Each side block ends on its last baseline, so it spans its first
+% line's top to that baseline.
 \sbox\DocAddrBox{\begin{minipage}[t]{0.28\textwidth}
   \vspace{0pt}
   {\DocHeadSize
@@ -102,18 +104,21 @@
   Website: www.globalsakti.com\par
   }\kern-\prevdepth
 \end{minipage}}%
-\setlength{\DocLogoHeight}{\dimexpr\ht\DocAddrBox+\dp\DocAddrBox\relax}%
+\sbox\DocLogoBox{\includegraphics[width=\DocLogoWidth]{Logo_Vertical.png}}%
+% The logo holds the top margin. Each side block drops by half of what the
+% logo is taller, so its middle meets the logo's.
+\setlength{\DocHeadDrop}{\dimexpr(\ht\DocLogoBox-\ht\DocAddrBox-\dp\DocAddrBox)/2\relax}%
 \noindent
-\usebox\DocAddrBox
+\raisebox{-\DocHeadDrop}{\usebox\DocAddrBox}%
 \hfill
 \begin{minipage}[t]{0.40\textwidth}
   \vspace{0pt}
   \centering
   % The asset has no transparent border.
-  \includegraphics[height=\DocLogoHeight]{Logo_Vertical.png}
+  \usebox\DocLogoBox
 \end{minipage}%
 \hfill
-\usebox\DocContactBox
+\raisebox{-\DocHeadDrop}{\usebox\DocContactBox}
 
 \vspace{0.3cm}
 \noindent\rule{\textwidth}{0.8pt}

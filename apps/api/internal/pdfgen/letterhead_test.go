@@ -60,12 +60,12 @@ func inkRows(img image.Image, x0, x1, y0, y1 int) (top, bottom float64) {
 	return top, bottom
 }
 
-// Logo level with the letterhead.
-// The logo's top ink sits on the top of the first address and contact
-// lines, and its bottom ink on the baseline of the last ones, so the three
-// blocks start and end together. The baseline is read under words with no
-// descender: 12920 on the left, Website: on the right.
-func TestLatexExports_LogoLevelWithLetterhead(t *testing.T) {
+// Letterhead text centred on the logo.
+// Each side block, from its first line's top ink to its last baseline, has
+// its middle on the logo's, and both blocks start on one line. The baseline
+// is read under words with no descender: 12920 on the left, Website: on
+// the right.
+func TestLatexExports_LetterheadCentredOnLogo(t *testing.T) {
 	const px = float64(edgeDPI) / 72
 	for _, d := range longDocs {
 		t.Run(d.name, func(t *testing.T) {
@@ -91,17 +91,20 @@ func TestLatexExports_LogoLevelWithLetterhead(t *testing.T) {
 				_, b := inkRows(img, int(wd.xMin*px), int(wd.xMax*px), int(wd.yMin*px), int(wd.yMax*px)+1)
 				return b
 			}
+			if left < 0 || right < 0 || logo < 0 {
+				t.Fatalf("letterhead ink missing: left %.1f, logo %.1f, right %.1f", left, logo, right)
+			}
+			mid := (logo + logoBottom) / 2
 			for _, b := range []struct {
 				name      string
 				got, want float64
 			}{
-				{"left block top", left, logo},
-				{"right block top", right, logo},
-				{"left last baseline", baseline("12920"), logoBottom},
-				{"right last baseline", baseline("Website:"), logoBottom},
+				{"left block middle", (left + baseline("12920")) / 2, mid},
+				{"right block middle", (right + baseline("Website:")) / 2, mid},
+				{"right block top", right, left},
 			} {
-				if b.got < 0 || b.want < 0 || !near(b.got, b.want, inkTol) {
-					t.Errorf("%s at %.1f pt, logo edge at %.1f pt, want level", b.name, b.got, b.want)
+				if !near(b.got, b.want, inkTol) {
+					t.Errorf("%s at %.1f pt, want %.1f", b.name, b.got, b.want)
 				}
 			}
 		})

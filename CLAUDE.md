@@ -1133,14 +1133,16 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    1.0 cm on the delivery note), and the article default `\raggedbottom`
    puts the rest below the last line. `Logo_Vertical.png` is cropped to
    its visible mark (`TestLogoAsset_NoTransparentBorder`), and the logo is
-   as tall as the address block (`\DocLogoHeight`, measured from the
-   block, whose box ends on its last baseline), so its top and bottom ink
-   sit on the top of the first line and the baseline of the last line of
-   both side blocks (`TestLatexExports_LogoLevelWithLetterhead`). The
+   4.45 cm wide (`\DocLogoWidth`) at the top margin. The 7pt side blocks
+   are centred on it: each box ends on its last baseline and drops by half
+   of what the logo is taller (`\DocHeadDrop`), so the middle from its
+   first line's top to that baseline meets the logo's
+   (`TestLatexExports_LetterheadCentredOnLogo`). The
    title is `\Large` and the number under it 11pt.
    `TestLatexExports_Margins` renders every page of a long document and
    checks its ink against the margin on all four sides, the letterhead as
-   page 1's first line and the number set smaller than the title.
+   page 1's first line, the logo width and the number set smaller than
+   the title.
    `TestLatexExports_RunningHeader` keeps the header at the top margin and
    clear of the table on every later page and the page count as
    every page's lowest line, and `TestLatexExports_BlankAtBottom` holds a
