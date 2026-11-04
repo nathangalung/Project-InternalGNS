@@ -289,7 +289,13 @@ test("a cancelled invoice without a Pengganti offers one (INV-10)", async ({
   await confirm(page, "Terbitkan Invoice Pengganti", "Terbitkan Pengganti")
   await expect(page.getByText(/^Invoice pengganti .+ diterbitkan\.$/)).toBeVisible()
   await expect(statusBar(page).getByText(`Menggantikan ${invoice.invoiceNo}`)).toBeVisible()
-  await expect(page.getByRole("heading", { name: `Invoice ${invoice.invoiceNo}` })).toHaveCount(0)
+  // A Pengganti keeps the number it replaces with Rev.n.
+  await expect(
+    page.getByRole("heading", { name: `Invoice ${invoice.invoiceNo} Rev.1`, exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: `Invoice ${invoice.invoiceNo}`, exact: true }),
+  ).toHaveCount(0)
   await expectActions(page, ["Tandai Dikirim", "Batalkan Invoice"])
 })
 
