@@ -138,6 +138,14 @@ func TestLatexExports_Margins(t *testing.T) {
 			if ratio := th / (of.yMax - of.yMin); !near(ratio, 14.4/8, 0.05) {
 				t.Errorf("title to page count height ratio %.3f, want %.3f", ratio, 14.4/8)
 			}
+			// Table cells: 7.5 pt, a little under the count.
+			qty, ok := topmost(words, "Qty")
+			if !ok {
+				t.Fatal("table header not on page 1")
+			}
+			if ratio := (qty.yMax - qty.yMin) / (of.yMax - of.yMin); !near(ratio, 7.5/8, 0.02) {
+				t.Errorf("table cell to page count height ratio %.3f, want %.3f", ratio, 7.5/8)
+			}
 		})
 	}
 }

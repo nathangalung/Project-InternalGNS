@@ -1141,8 +1141,9 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    title is `\Large` and the number under it 11pt.
    `TestLatexExports_Margins` renders every page of a long document and
    checks its ink against the margin on all four sides, the letterhead as
-   page 1's first line, the logo width and the number set smaller than
-   the title.
+   page 1's first line, the logo width, the number set smaller than the
+   title and the table cells at 7.5pt (`\DocCellSize`), under the 8pt page
+   count.
    `TestLatexExports_RunningHeader` keeps the header at the top margin and
    clear of the table on every later page and the page count as
    every page's lowest line, and `TestLatexExports_BlankAtBottom` holds a
