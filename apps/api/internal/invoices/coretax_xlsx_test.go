@@ -3,7 +3,7 @@ package invoices
 import (
 	"bytes"
 	"fmt"
-	"os"
+	"slices"
 	"testing"
 	"time"
 
@@ -15,18 +15,7 @@ import (
 
 func sptr(s string) *string { return &s }
 
-// loadTemplate reads the bundled workbook.
-func loadTemplate(t *testing.T) []byte {
-	t.Helper()
-	b, err := os.ReadFile("../../templates/documents/coretax/coretax_export_2026.xlsx")
-	if err != nil {
-		t.Fatalf("read template: %v", err)
-	}
-	return b
-}
-
-func TestBuildCoretaxWorkbook_ClearsSampleAndFills(t *testing.T) {
-	tmpl := loadTemplate(t)
+func TestBuildCoretaxWorkbook_Fills(t *testing.T) {
 	settings := deps.CoretaxSettings{SellerTIN: "0626381321011000", SellerIDTKU: "0626381321011000000000"}
 
 	invs := []Invoice{
@@ -65,7 +54,7 @@ func TestBuildCoretaxWorkbook_ClearsSampleAndFills(t *testing.T) {
 			Address: sptr("Jakarta"), CountryCode: "IDN"},
 	}
 
-	out, err := buildCoretaxWorkbook(tmpl, settings, invs, itemsByID, clientsByID)
+	out, err := buildCoretaxWorkbook(settings, invs, itemsByID, clientsByID)
 	if err != nil {
 		t.Fatalf("build: %v", err)
 	}
@@ -76,24 +65,22 @@ func TestBuildCoretaxWorkbook_ClearsSampleAndFills(t *testing.T) {
 	}
 	defer func() { _ = f.Close() }()
 
-	// REF + Keterangan sheets must survive.
-	for _, s := range []string{"REF", "Keterangan"} {
-		if idx, _ := f.GetSheetIndex(s); idx < 0 {
-			t.Fatalf("sheet %s missing from output", s)
-		}
+	// Only the two sheets the converter reads.
+	if got, want := f.GetSheetList(), []string{coretaxSheetFaktur, coretaxSheetDetail}; !slices.Equal(got, want) {
+		t.Fatalf("sheets = %v, want %v", got, want)
 	}
 
 	fakturRows, _ := f.GetRows(coretaxSheetFaktur)
 	// Rows: 1 NPWP header, 2 blank, 3 header, then one row per invoice.
 	dataFaktur := 0
 	for i, row := range fakturRows {
-		if i < 3 || len(row) == 0 || row[0] == "" {
+		if i < 3 || len(row) == 0 || row[0] == "" || row[0] == coretaxEndMarker {
 			continue
 		}
 		dataFaktur++
 	}
 	if dataFaktur != len(invs) {
-		t.Fatalf("Faktur data rows = %d, want %d (sample rows leaked?)", dataFaktur, len(invs))
+		t.Fatalf("Faktur data rows = %d, want %d", dataFaktur, len(invs))
 	}
 
 	detailRows, _ := f.GetRows(coretaxSheetDetail)
@@ -101,7 +88,7 @@ func TestBuildCoretaxWorkbook_ClearsSampleAndFills(t *testing.T) {
 	for _, items := range itemsByID {
 		totalLines += len(items)
 	}
-	dataDetail := len(detailRows) - 1 // minus header
+	dataDetail := len(detailRows) - 2 // minus header and END
 	if dataDetail != totalLines {
 		t.Fatalf("DetailFaktur data rows = %d, want %d", dataDetail, totalLines)
 	}
@@ -120,10 +107,9 @@ func TestBuildCoretaxWorkbook_ClearsSampleAndFills(t *testing.T) {
 		t.Fatalf("NPWP header = %q, want %q", v, settings.SellerTIN)
 	}
 
-	// Last DetailFaktur row's invoice number must be one we exported.
-	lastInv := detailRows[len(detailRows)-1][14]
-	if lastInv != "INV-B/GNS/V/2026" {
-		t.Fatalf("last detail Nomor Invoice = %q, want exported invoice", lastInv)
+	// The last line belongs to the second faktur.
+	if last := detailRows[len(detailRows)-2][0]; last != "2" {
+		t.Fatalf("last detail Baris = %q, want 2", last)
 	}
 
 	// Spot-check first line's DPP (col I, index 8) and PPN (col L, index 11).
@@ -142,8 +128,7 @@ func TestBuildCoretaxWorkbook_ClearsSampleAndFills(t *testing.T) {
 }
 
 func TestBuildCoretaxWorkbook_EmptySellerTIN(t *testing.T) {
-	tmpl := loadTemplate(t)
-	out, err := buildCoretaxWorkbook(tmpl, deps.CoretaxSettings{}, nil, nil, nil)
+	out, err := buildCoretaxWorkbook(deps.CoretaxSettings{}, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("build with empty TIN: %v", err)
 	}
@@ -154,8 +139,43 @@ func TestBuildCoretaxWorkbook_EmptySellerTIN(t *testing.T) {
 	}
 	rows, _ := f.GetRows(coretaxSheetFaktur)
 	for i, row := range rows {
-		if i >= 3 && len(row) > 0 && row[0] != "" {
+		if i >= 3 && len(row) > 0 && row[0] != "" && row[0] != coretaxEndMarker {
 			t.Fatalf("expected no data rows, found %v", row)
+		}
+	}
+}
+
+// Columns fit their widest cell.
+// A column narrower than a date or a number shows ### in Excel, so every
+// written cell's text must fit its column.
+func TestBuildCoretaxWorkbook_ColumnsFitCells(t *testing.T) {
+	t.Parallel()
+	invs, items, buyers := djpFixture()
+	out, err := buildCoretaxWorkbook(djpSettings, invs, items, buyers)
+	if err != nil {
+		t.Fatalf("build: %v", err)
+	}
+	f, err := excelize.OpenReader(bytes.NewReader(out))
+	if err != nil {
+		t.Fatalf("reopen: %v", err)
+	}
+	defer func() { _ = f.Close() }()
+	for _, sheet := range []string{coretaxSheetFaktur, coretaxSheetDetail} {
+		rows, err := f.GetRows(sheet)
+		if err != nil {
+			t.Fatalf("%s rows: %v", sheet, err)
+		}
+		for r, row := range rows {
+			for c, v := range row {
+				if v == "" {
+					continue
+				}
+				col, _ := excelize.ColumnNumberToName(c + 1)
+				width, _ := f.GetColWidth(sheet, col)
+				if float64(len([]rune(v))) > width {
+					t.Errorf("%s %s%d %q is %d characters, column is %.0f wide", sheet, col, r+1, v, len([]rune(v)), width)
+				}
+			}
 		}
 	}
 }

@@ -250,25 +250,40 @@ renders exactly those moves; it keeps no transition map of its own. A refused
 move is a 422 with Indonesian detail text. Every move writes a row to that
 document's status history table.
 
-Quotation, invoice and delivery-note numbers are a running number per
-document type and per year that restarts at 00001 every year, five digits
-wide and growing past 99999, then the Roman month and year of the WIB issue
-date, the year the count belongs to: `Q-00011/GNS/X/2026`,
-`INV-00007/GNS/X/2026`, `DN-00007/GNS/X/2026`, and `Q-00001/GNS/I/2027`
-after the last quotation of 2026. `fn_next_doc_no(type)` takes the next
-value from the `doc_counters` row of that type and the year of
-`CURRENT_DATE` under its row lock, creating the row with the year's first
-number, so concurrent callers queue and a rolled-back document leaves no
-gap; it is never a SEQUENCE. Migration 00101 renumbered every number
-issued before it within its year, in order, and the notes that copy one;
-sorting a list by number orders by year first (`listq.DocNoOrder`). A
-revision keeps its base number with `Rev.n`, so its base's year, and a
-Pengganti draws a new invoice number. Numbers issued before 00098 keep their
-legacy format (year, client number and a yearly count). A re-imported
-document also keeps the number it was first issued under in `legacy_no`
-(quotations, invoices) or `legacy_dn_no` (the PO's original DO): only the
-import writes it (00099), the list searches match it as typed text but never
-as a period, and the detail pages show it muted as No. lama. A purchase order's
+Quotation and delivery-note numbers are a running number per document
+type and per year that restarts at 00001 every year, five digits wide and
+growing past 99999, then the Roman month and year of the WIB issue date,
+the year the count belongs to: `Q-00011/GNS/X/2026`, `DN-00007/GNS/X/2026`,
+and `Q-00001/GNS/I/2027` after the last quotation of 2026.
+`fn_next_doc_no(type)` takes the next value from the `doc_counters` row of
+that type (Q or DN) and the year of `CURRENT_DATE` under its row lock,
+creating the row with the year's first number, so concurrent callers queue
+and a rolled-back document leaves no gap; it is never a SEQUENCE. An
+invoice has no counter of its own (00120, `fn_next_doc_no('INV')` is
+refused): `fn_create_invoice` gives it its PO's delivery-note number with
+the note's month and year, so `DN-00071/GNS/X/2026` bills as
+`INV-00071/GNS/X/2026` whatever day the invoice is dated, and the PO, its
+note and its invoice share one number. A Pengganti keeps the number of the
+invoice it replaces with `Rev.n`, n counting the invoices of that PO before
+it (`INV-00071/GNS/X/2026 Rev.1`). A PO whose note is in an older format
+bills under a number drawn from the DN counter, so no later note repeats
+it, and a PO without a note is refused. A PO cancelled after its note was
+stamped leaves that number unbilled, so invoice numbers can skip one. One
+PO never carries two invoice numbers: `uq_invoices_po_id_base` allows one
+invoice without `Rev.n` per PO, and `uq_purchase_orders_delivery_note_number`
+one PO per note. Migration 00101 renumbered every number issued before it
+within its year, in order, and 00120 renumbered every invoice of a PO
+oldest first, after its note (after the PO's first invoice when the note
+has an older format), and refuses to run when two invoices would end on one
+number; both carried the notes that copy a number along. Sorting a list by number orders by year first
+(`listq.DocNoOrder`). A quotation revision keeps its base number with
+`Rev.n`, so its base's year. Numbers issued before 00098 keep their legacy
+format (year, client number and a yearly count). A document also keeps an
+earlier number in `legacy_no` (quotations, invoices) or `legacy_dn_no` (the
+PO's original DO): the import writes the number a re-imported document was
+first issued under (00099), and 00120 wrote the number an invoice carried
+before it where none was kept. The list searches match it as typed text but
+never as a period, and the detail pages show it muted as No. lama. A purchase order's
 number is the client's own PO number: accepting a quotation leaves
 `po_number` NULL until a user enters it (blank means none), ON_PROGRESS and
 DELIVERED require it (a `po_number` gap on the PO in the completeness gate,
@@ -375,8 +390,11 @@ shows a missing one as Belum ada No. PO.
   imported straight as sent, whose NULL to sent creation log carries the
   import time) prints its creation date. Its ATTN block prints the
   chosen contact's own email and phone, read by id even once that contact
-  is deactivated, and none when the quotation has no contact. Its DELIVERY
-  PLACE prints the shipping line's address, else the vessel.
+  is deactivated, and none when the quotation has no contact. The phone
+  prints with the dial code of the contact's country, its trunk 0 dropped
+  (`pdfgen.InternationalPhone`: `+62 81211112222`), and one typed with its
+  own + as typed. The letterhead writes the company's numbers the same way.
+  Its DELIVERY PLACE prints the shipping line's address, else the vessel.
   The list export (`GET /quotations/export.xlsx`) carries the stored
   breakdown with shipping in its own column: Total Produk, Diskon,
   Pengiriman (total minus total_produk), Sub Total, then PPN as text
@@ -537,6 +555,16 @@ shows a missing one as Belum ada No. PO.
   DELIVERED); only a Pengganti, which copies the client as it is then,
   changes it. Coretax refuses an invoice without a valid NPWP with that
   Pengganti route.
+  Both Coretax exports follow DJP's converter v1.6 and its template
+  v1.6.1 (`invoices/coretax_djp_test.go`): the XML carries every element
+  of DJP's sample, `CustomDocMonthYear` included, and in the workbook each
+  DetailFaktur Baris names its parent Faktur row, both sheets end in an
+  `END` row, and DetailFaktur has DJP's 14 columns. The workbook is built
+  from scratch with only those two sheets (no REF or Keterangan, no bundled
+  template), bold headers, and every column sized to its widest cell so
+  Excel never shows ###. Kode Barang Jasa is
+  always `000000`, never the IMPA code, since Coretax checks a filled code
+  against DJP's own reference.
   The same way it keeps its quotation's payment terms (`payment_terms`,
   trimmed, NULL when blank, 00110), which the PDF prints as PAYMENT TERMS
   and the detail shows as Syarat Pembayaran; an invoice without terms (its
@@ -1103,13 +1131,21 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    uses fixed gaps instead of `center`, `\LTpost` is 0pt so the terms or
    the acknowledgements follow the table by their own fixed gap (0.8 cm,
    1.0 cm on the delivery note), and the article default `\raggedbottom`
-   puts the rest below the last line. The logo is 5.2 cm wide
-   (`\DocLogoWidth`), the title `\Large` and the number under it 11pt.
+   puts the rest below the last line. `Logo_Vertical.png` is cropped to
+   its visible mark (`TestLogoAsset_NoTransparentBorder`), and the logo is
+   4.45 cm wide (`\DocLogoWidth`) at the top margin. The 7pt side blocks
+   are centred on it: each box ends on its last baseline and drops by half
+   of what the logo is taller (`\DocHeadDrop`), so the middle from its
+   first line's top to that baseline meets the logo's
+   (`TestLatexExports_LetterheadCentredOnLogo`). The
+   title is `\Large` and the number under it 11pt.
    `TestLatexExports_Margins` renders every page of a long document and
-   checks its ink against the margin on all four sides, the letterhead as
-   page 1's first line, the logo width and the number set smaller than the
-   title. `TestLatexExports_RunningHeader` keeps the header at the top
-   margin and clear of the table on every later page and the page count as
+   checks its A4 paper and its ink against the margin on all four sides, the letterhead as
+   page 1's first line, the logo width, the number set smaller than the
+   title and the table cells at 7.5pt (`\DocCellSize`), under the 8pt page
+   count.
+   `TestLatexExports_RunningHeader` keeps the header at the top margin and
+   clear of the table on every later page and the page count as
    every page's lowest line, and `TestLatexExports_BlankAtBottom` holds a
    one-page document to the top margin, the fixed gap after the table and
    the blank below its last line. The party block is a top-aligned `tabularx`

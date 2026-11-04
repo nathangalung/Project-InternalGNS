@@ -1,11 +1,37 @@
 # Coretax export review
 
-Findings from the export audit, with proposed diffs. Nothing here has been
-applied. The Coretax XLSX and XML go to the DJP importer, which cannot be
+## Status (November 2026)
+
+Checked against DJP's own files: `ConverterEfakturCoretax__v1.6.zip` and
+`Sample Faktur PK Template v.1.4.xml` from pajak.go.id (Prosedur: Unduh
+Template XML dan Converter Excel ke XML). The converter ships template
+`Sample Faktur PK Template v.1.6.1.xlsx`.
+
+- Finding 1 is applied. The v1.6.1 DetailFaktur has 14 columns and no
+  Nomor Invoice, and the converter finds rows by Baris, so the caveat below
+  is settled: the old output attached every second and later line to a
+  faktur that did not exist. The Nomor Invoice column is gone; the number
+  stays on Faktur as Referensi.
+- Also applied: both sheets end in an `END` row, which the converter reads
+  column A down to; the XML carries `CustomDocMonthYear` (added in template
+  v1.4) between `CustomDoc` and `RefDesc`; Kode Barang Jasa is always
+  `000000`, since Coretax checks a filled code against DJP's own reference
+  and the IMPA code is not one; empty optional Faktur cells stay unwritten.
+- Findings 4 and 5 were fixed earlier (the seller IDTKU guard, and
+  `fn_line_ppn` from the rounded DPP Nilai Lain in 00086).
+- Finding 2 stays open. Finding 3 stays as is: DJP's XML sample leaves
+  `BuyerDocumentNumber` empty for a TIN buyer.
+- DJP added units UM.0034 to UM.0039 (Meter Kubik, Sentimeter Persegi,
+  Drum, Karton, Kwh, Roll). Units mapped to UM.0033 still validate.
+
+## Original findings
+
+Findings from the export audit, with proposed diffs. The Coretax XLSX and XML go to the DJP importer, which cannot be
 tested from this repo, so validate against one real import before changing the
-format. The bundled template `apps/api/templates/documents/coretax/coretax_export_2026.xlsx`
-carries the DJP `Keterangan` (per-column spec) and `REF` (code list) sheets;
-the row citations below are from those sheets.
+format. The row citations below are from the `Keterangan` (per-column spec)
+and `REF` (code list) sheets of DJP's `Sample Faktur PK Template v.1.6.1.xlsx`.
+The export no longer bundles that template: it writes only the Faktur and
+DetailFaktur sheets the converter reads.
 
 Most of the export is already correct: the Opt remap (Barang to A, Jasa to B),
 the DPP Nilai Lain and 12 percent PPN mechanism (PMK-131/2024), the XLSX header

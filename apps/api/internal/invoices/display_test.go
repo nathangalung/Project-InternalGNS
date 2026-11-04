@@ -2,7 +2,8 @@ package invoices
 
 import "testing"
 
-// Coretax files the snapshot.
+// Coretax files the snapshot name.
+// The IMPA code stays off the faktur: Code is DJP's own reference.
 func TestBuildGoodService_PrintsSnapshot(t *testing.T) {
 	t.Parallel()
 	ptr := func(s string) *string { return &s }
@@ -16,13 +17,13 @@ func TestBuildGoodService_PrintsSnapshot(t *testing.T) {
 			name:     "snapshot name and code",
 			item:     InvoiceItem{ItemName: "BALL VALVE 2IN SS316", ItemCode: ptr("751201")},
 			wantName: "BALL VALVE 2IN SS316",
-			wantCode: "751201",
+			wantCode: "000000",
 		},
 		{
 			name:     "snapshot without a code",
 			item:     InvoiceItem{ItemName: "valve 2 inch pls check"},
 			wantName: "valve 2 inch pls check",
-			wantCode: "",
+			wantCode: "000000",
 		},
 	}
 	for _, tc := range cases {

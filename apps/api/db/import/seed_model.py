@@ -108,6 +108,13 @@ def yearly_numbers(prefix: str, days: Iterable[date]) -> list[tuple[int, str]]:
     return out
 
 
+def invoice_number(dn_number: str) -> str:
+    """The delivery note's number as INV, as fn_create_invoice."""
+    if not dn_number.startswith("DN-"):
+        raise SeedError(f"{dn_number!r} is not a delivery note number")
+    return "INV" + dn_number[2:]
+
+
 def revision_number(base: str, n: int) -> str:
     """Base number plus ' Rev.n', as fn_revise_quotation."""
     return f"{base} Rev.{n}"
@@ -479,7 +486,6 @@ class Invoice:
     buyer_npwp: str | None
     id: int = 0
     number: str = ""
-    seq: int = 0
     history: list[History] = field(default_factory=list)
     status: str = "sent"
     paid_at: datetime | None = None
@@ -1441,14 +1447,6 @@ class Builder:
                 po.notes.append(f"DO susulan: {extra['number']} ({extra['date']})")
         if len({inv.po.key for inv in self.invoices}) != len(self.invoices):
             raise SeedError("a PO has two invoices")
-        self.invoices.sort(key=lambda i: (i.invoice_date, natural_key(i.original), i.source))
-        line_id = 0
-        numbers = yearly_numbers("INV", (inv.invoice_date for inv in self.invoices))
-        for iid, (inv, (seq, number)) in enumerate(zip(self.invoices, numbers, strict=True), 1):
-            inv.id, inv.seq, inv.number = iid, seq, number
-            for ln in inv.lines:
-                line_id += 1
-                ln.id = line_id
         delivered = sorted(
             (po for po in self.pos if po.dn_date != date.min),
             key=lambda p: (p.dn_date, natural_key(p.dn_original), p.source),
@@ -1456,6 +1454,14 @@ class Builder:
         numbers = yearly_numbers("DN", (po.dn_date for po in delivered))
         for po, (seq, number) in zip(delivered, numbers, strict=True):
             po.dn_seq, po.dn_number = seq, number
+        # An invoice carries its delivery note's number, as fn_create_invoice.
+        self.invoices.sort(key=lambda i: (i.invoice_date, natural_key(i.original), i.source))
+        line_id = 0
+        for iid, inv in enumerate(self.invoices, 1):
+            inv.id, inv.number = iid, invoice_number(inv.po.dn_number)
+            for ln in inv.lines:
+                line_id += 1
+                ln.id = line_id
 
     def match_lines(self, doc: Doc, po: PurchaseOrder) -> list[POLine]:
         """Each printed invoice line's PO line, in order; zero PO lines may be skipped."""

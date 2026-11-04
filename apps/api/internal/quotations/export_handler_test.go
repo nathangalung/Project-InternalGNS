@@ -142,20 +142,21 @@ func TestQuotationExport_PDF_WriteFailureIsLogged(t *testing.T) {
 // ATTN describes one person.
 // The details are the chosen contact's own, even once it is deactivated;
 // without one, or when it is gone, none are printed, never another
-// person's.
+// person's. The phone carries its country's dial code.
 func TestExportHandler_ContactComm(t *testing.T) {
 	ctx, tx, d := createInTx(t)
-	contact := func(name, email, phone string, active bool) int64 {
+	contact := func(name, email, phone, country string, active bool) int64 {
 		var id int64
 		require.NoError(t, tx.QueryRow(ctx, `
 			INSERT INTO company_contacts
 			    (company_id, name, email, phone, country_code, is_active, created_by, updated_by)
-			VALUES ($1, $2, $3, $4, 'IDN', $5, $6, $6)
-			RETURNING id`, seedCompanyID, name, email, phone, active, seedUserID).Scan(&id))
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $7)
+			RETURNING id`, seedCompanyID, name, email, phone, country, active, seedUserID).Scan(&id))
 		return id
 	}
-	active := contact("Kontak PDF", "kontak@kapal.example", "081211112222", true)
-	inactive := contact("Kontak Lama", "lama@kapal.example", "081233334444", false)
+	active := contact("Kontak PDF", "kontak@kapal.example", "081211112222", "IDN", true)
+	inactive := contact("Kontak Lama", "lama@kapal.example", "081233334444", "IDN", false)
+	abroad := contact("Kontak Singapura", "sg@kapal.example", "912345678", "SGP", true)
 	unknown := int64(987654321)
 
 	cases := []struct {
@@ -165,8 +166,9 @@ func TestExportHandler_ContactComm(t *testing.T) {
 		wantPhone string
 	}{
 		{"no contact prints none", nil, "", ""},
-		{"chosen contact", &active, "kontak@kapal.example", "081211112222"},
-		{"deactivated contact keeps its details", &inactive, "lama@kapal.example", "081233334444"},
+		{"chosen contact", &active, "kontak@kapal.example", "+62 81211112222"},
+		{"deactivated contact keeps its details", &inactive, "lama@kapal.example", "+62 81233334444"},
+		{"foreign contact takes its own code", &abroad, "sg@kapal.example", "+65 912345678"},
 		{"missing contact prints none", &unknown, "", ""},
 	}
 	for _, c := range cases {

@@ -2,11 +2,12 @@ package invoices
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
+	"time"
+	"unicode/utf8"
 
 	"github.com/xuri/excelize/v2"
 
@@ -16,9 +17,6 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/listq"
 )
-
-// coretaxTemplateRel is the bundled workbook.
-const coretaxTemplateRel = "coretax/coretax_export_2026.xlsx"
 
 const (
 	coretaxSheetFaktur = "Faktur"
@@ -39,18 +37,16 @@ var coretaxDetailHeaders = []string{
 	"Baris", "Barang/Jasa", "Kode Barang Jasa", "Nama Barang/Jasa",
 	"Nama Satuan Ukur", "Harga Satuan", "Jumlah Barang Jasa", "Total Diskon",
 	"DPP", "DPP Nilai Lain", "Tarif PPN", "PPN", "Tarif PPnBM", "PPnBM",
-	"Nomor Invoice",
 }
 
+// coretaxEndMarker closes each sheet.
+// The DJP converter reads column A down to it.
+const coretaxEndMarker = "END"
+
 // ExportBulkXLSX serves GET /invoices/coretax.xlsx.
-// Every invoice matching the current list filter is rendered into the DJP
-// bulk-import template. The NPWP header may be blank when the seller TIN is
-// not configured.
+// Every invoice matching the current list filter is written in the layout
+// of the DJP bulk-import template, Faktur and DetailFaktur only.
 func (h *CoretaxHandler) ExportBulkXLSX(w http.ResponseWriter, r *http.Request) {
-	if h.templatesRoot == "" {
-		httperr.Render(w, httperr.ServiceUnavailable("templates root not configured"))
-		return
-	}
 	if h.settings.SellerTIN == "" || h.settings.SellerIDTKU == "" {
 		httperr.Render(w, httperr.ServiceUnavailable("coretax seller identifiers not configured"))
 		return
@@ -120,13 +116,7 @@ func (h *CoretaxHandler) ExportBulkXLSX(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	tmpl, err := os.ReadFile(filepath.Join(h.templatesRoot, coretaxTemplateRel))
-	if err != nil {
-		httperr.Render(w, httperr.Internal("coretax template unavailable"))
-		return
-	}
-
-	data, err := buildCoretaxWorkbook(tmpl, h.settings, invs, itemsByID, clientsByID)
+	data, err := buildCoretaxWorkbook(h.settings, invs, itemsByID, clientsByID)
 	if err != nil {
 		httperr.Render(w, httperr.Internal("coretax workbook build failed"))
 		return
@@ -151,59 +141,30 @@ func invalidBuyers(invs []Invoice, clientsByID map[int64]clients.Client) []strin
 	return out
 }
 
-// buildCoretaxWorkbook fills the DJP template.
+// buildCoretaxWorkbook writes the DJP layout.
 // It is a pure function (no DB/HTTP) so it can be unit-tested without
-// Postgres. It deletes the template's sample data sheets and recreates
-// Faktur/DetailFaktur from scratch, leaving the REF and Keterangan sheets
-// intact.
+// Postgres. The workbook holds only the two sheets the DJP converter reads,
+// with every column as wide as its widest cell, so no value shows as ###.
 func buildCoretaxWorkbook(
-	tmpl []byte,
 	settings deps.CoretaxSettings,
 	invs []Invoice,
 	itemsByID map[int64][]InvoiceItem,
 	clientsByID map[int64]clients.Client,
 ) ([]byte, error) {
-	f, err := excelize.OpenReader(bytes.NewReader(tmpl))
-	if err != nil {
-		return nil, fmt.Errorf("open template: %w", err)
-	}
+	f := excelize.NewFile()
 	defer func() { _ = f.Close() }()
-
-	// Drop the template's sample rows by recreating the two data sheets.
-	if err := resetSheet(f, coretaxSheetFaktur); err != nil {
-		return nil, err
-	}
-	if err := resetSheet(f, coretaxSheetDetail); err != nil {
-		return nil, err
-	}
-
-	// Every written cell sits mid-row.
-	middle := &excelize.Alignment{Vertical: "center"}
-	cellStyle, err := f.NewStyle(&excelize.Style{Alignment: middle})
+	s, err := newCoretaxSheets(f)
 	if err != nil {
 		return nil, err
 	}
-	dateStyle, err := f.NewStyle(&excelize.Style{NumFmt: 17, Alignment: middle}) // dd-mmm-yy
-	if err != nil {
-		return nil, err
-	}
+	faktur := newSheetWriter(f, coretaxSheetFaktur)
+	detail := newSheetWriter(f, coretaxSheetDetail)
 
 	// Faktur sheet: NPWP header, then column headers at row 3.
-	for cell, v := range map[string]string{"A1": "NPWP Penjual", "C1": settings.SellerTIN} {
-		_ = f.SetCellStr(coretaxSheetFaktur, cell, v)
-		_ = f.SetCellStyle(coretaxSheetFaktur, cell, cell, cellStyle)
-	}
-	for c, head := range coretaxFakturHeaders {
-		cell, _ := excelize.CoordinatesToCellName(c+1, 3)
-		_ = f.SetCellStr(coretaxSheetFaktur, cell, head)
-		_ = f.SetCellStyle(coretaxSheetFaktur, cell, cell, cellStyle)
-	}
+	faktur.row(1, []any{"NPWP Penjual", nil, settings.SellerTIN}, s.cell)
+	faktur.row(3, stringsToAny(coretaxFakturHeaders), s.head)
 	// DetailFaktur sheet: column headers at row 1.
-	for c, head := range coretaxDetailHeaders {
-		cell, _ := excelize.CoordinatesToCellName(c+1, 1)
-		_ = f.SetCellStr(coretaxSheetDetail, cell, head)
-		_ = f.SetCellStyle(coretaxSheetDetail, cell, cell, cellStyle)
-	}
+	detail.row(1, stringsToAny(coretaxDetailHeaders), s.head)
 
 	fakturRow := 4 // first data row on Faktur
 	detailRow := 2 // first data row on DetailFaktur
@@ -214,34 +175,36 @@ func buildCoretaxWorkbook(
 		if buyerDocNo == "" {
 			buyerDocNo = "-"
 		}
-		faktur := []any{
-			i + 1, nil, tx.TaxInvoiceOpt, tx.TrxCode, tx.AddInfo, tx.CustomDoc,
-			"", tx.RefDesc, tx.FacilityStamp, tx.SellerIDTKU, tx.BuyerTin,
+		// DetailFaktur rows name their faktur by this Baris.
+		baris := i + 1
+		// Keterangan Tambahan, the supporting document and Cap Fasilitas
+		// serve codes 07 and 08. The app records none, so they stay empty
+		// cells as in the DJP template.
+		faktur.row(fakturRow, []any{
+			strconv.Itoa(baris), nil, tx.TaxInvoiceOpt, tx.TrxCode, nil,
+			nil, nil, tx.RefDesc,
+			nil, tx.SellerIDTKU, tx.BuyerTin,
 			tx.BuyerDocument, tx.BuyerCountry, buyerDocNo, tx.BuyerName,
 			tx.BuyerAdress, tx.BuyerEmail, tx.BuyerIDTKU,
-		}
-		writeRow(f, coretaxSheetFaktur, fakturRow, faktur, cellStyle)
+		}, s.cell)
 		// Column B carries the real invoice date with a date number format.
-		dateCell, _ := excelize.CoordinatesToCellName(2, fakturRow)
-		_ = f.SetCellValue(coretaxSheetFaktur, dateCell, inv.InvoiceDate)
-		_ = f.SetCellStyle(coretaxSheetFaktur, dateCell, dateCell, dateStyle)
+		faktur.date(fakturRow, 2, inv.InvoiceDate, s.date)
 		fakturRow++
 
-		for j, g := range tx.ListOfGoodSrv {
-			code := g.Code
-			if code == "" {
-				code = "000000"
-			}
-			detail := []any{
-				j + 1, g.Opt, code, g.Name, g.Unit,
+		for _, g := range tx.ListOfGoodSrv {
+			detail.row(detailRow, []any{
+				baris, g.Opt, g.Code, g.Name, g.Unit,
 				num(g.Price), num(g.Qty), num(g.TotalDiscount), num(g.TaxBase),
 				num(g.OtherTaxBase), num(g.VATRate), num(g.VAT),
-				num(g.STLGRate), num(g.STLG), inv.InvoiceNo,
-			}
-			writeRow(f, coretaxSheetDetail, detailRow, detail, cellStyle)
+				num(g.STLGRate), num(g.STLG),
+			}, s.cell)
 			detailRow++
 		}
 	}
+	faktur.row(fakturRow, []any{coretaxEndMarker}, s.cell)
+	detail.row(detailRow, []any{coretaxEndMarker}, s.cell)
+	faktur.fitColumns()
+	detail.fitColumns()
 
 	var buf bytes.Buffer
 	if err := f.Write(&buf); err != nil {
@@ -250,31 +213,100 @@ func buildCoretaxWorkbook(
 	return buf.Bytes(), nil
 }
 
-// resetSheet recreates a sheet empty.
-// The DJP importer keys on sheet name, not position, so the recreated sheet
-// moving to the end of the tab order is harmless.
-func resetSheet(f *excelize.File, name string) error {
-	if err := f.DeleteSheet(name); err != nil {
-		return fmt.Errorf("delete sheet %s: %w", name, err)
+// coretaxStyles are the three cell styles.
+type coretaxStyles struct{ head, cell, date int }
+
+// newCoretaxSheets names both sheets and styles.
+// Every written cell sits mid-row and headers are bold. NumFmt 14 is the
+// DJP template's date format.
+func newCoretaxSheets(f *excelize.File) (coretaxStyles, error) {
+	middle := &excelize.Alignment{Vertical: "center"}
+	var s coretaxStyles
+	var errs [5]error
+	errs[0] = f.SetSheetName(f.GetSheetName(0), coretaxSheetFaktur)
+	_, errs[1] = f.NewSheet(coretaxSheetDetail)
+	s.head, errs[2] = f.NewStyle(&excelize.Style{Font: &excelize.Font{Bold: true}, Alignment: middle})
+	s.cell, errs[3] = f.NewStyle(&excelize.Style{Alignment: middle})
+	s.date, errs[4] = f.NewStyle(&excelize.Style{NumFmt: 14, Alignment: middle})
+	if err := errors.Join(errs[:]...); err != nil {
+		return s, fmt.Errorf("coretax sheets: %w", err)
 	}
-	if _, err := f.NewSheet(name); err != nil {
-		return fmt.Errorf("recreate sheet %s: %w", name, err)
-	}
-	return nil
+	return s, nil
 }
 
-// writeRow writes mixed row values.
-// Nil entries are skipped so the date cell can be set separately with its
-// own format.
-func writeRow(f *excelize.File, sheet string, row int, vals []any, style int) {
+// Column width bounds, in characters.
+const (
+	coretaxMinWidth = 8
+	coretaxMaxWidth = 80
+	// coretaxDateChars fits DD/MM/YYYY.
+	coretaxDateChars = 10
+)
+
+// sheetWriter tracks widest cells.
+type sheetWriter struct {
+	f     *excelize.File
+	sheet string
+	width map[int]int
+}
+
+func newSheetWriter(f *excelize.File, sheet string) *sheetWriter {
+	return &sheetWriter{f: f, sheet: sheet, width: map[int]int{}}
+}
+
+// row writes mixed row values.
+// Nil entries are skipped, so an optional field stays a truly empty cell.
+func (w *sheetWriter) row(row int, vals []any, style int) {
 	for c, v := range vals {
 		if v == nil {
 			continue
 		}
 		cell, _ := excelize.CoordinatesToCellName(c+1, row)
-		_ = f.SetCellValue(sheet, cell, v)
-		_ = f.SetCellStyle(sheet, cell, cell, style)
+		_ = w.f.SetCellValue(w.sheet, cell, v)
+		_ = w.f.SetCellStyle(w.sheet, cell, cell, style)
+		w.grow(c+1, utf8.RuneCountInString(cellText(v)))
 	}
+}
+
+// date writes one date cell.
+func (w *sheetWriter) date(row, col int, d time.Time, style int) {
+	cell, _ := excelize.CoordinatesToCellName(col, row)
+	_ = w.f.SetCellValue(w.sheet, cell, d)
+	_ = w.f.SetCellStyle(w.sheet, cell, cell, style)
+	w.grow(col, coretaxDateChars)
+}
+
+func (w *sheetWriter) grow(col, chars int) {
+	w.width[col] = max(w.width[col], chars)
+}
+
+// fitColumns sizes each written column.
+// Two characters of padding cover the bold header and Excel's cell margin.
+func (w *sheetWriter) fitColumns() {
+	for col, chars := range w.width {
+		name, _ := excelize.ColumnNumberToName(col)
+		width := float64(min(max(chars+2, coretaxMinWidth), coretaxMaxWidth))
+		_ = w.f.SetColWidth(w.sheet, name, name, width)
+	}
+}
+
+// cellText is the shown text.
+func cellText(v any) string {
+	switch x := v.(type) {
+	case string:
+		return x
+	case float64:
+		return strconv.FormatFloat(x, 'f', -1, 64)
+	default:
+		return fmt.Sprint(x)
+	}
+}
+
+func stringsToAny(ss []string) []any {
+	out := make([]any, len(ss))
+	for i, s := range ss {
+		out[i] = s
+	}
+	return out
 }
 
 // num yields a numeric cell.

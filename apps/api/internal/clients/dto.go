@@ -61,6 +61,7 @@ type Contact struct {
 	Phone       *string   `db:"phone"         json:"phone,omitempty"` // digits only
 	Title       *string   `db:"title"         json:"title,omitempty"`
 	CountryCode string    `db:"country_code"  json:"countryCode"` // dial code prefix
+	DialCode    string    `db:"dial_code"     json:"-"`           // printed before phone
 	IsActive    bool      `db:"is_active"     json:"isActive"`
 	CreatedAt   time.Time `db:"created_at"    json:"createdAt"`
 	UpdatedAt   time.Time `db:"updated_at"    json:"updatedAt"`

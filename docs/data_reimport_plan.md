@@ -8,7 +8,7 @@ documents, and clean the product master. Owner decisions, October 2026.
 
 | Topic | Decision |
 |---|---|
-| Quotation, invoice and delivery-note numbers | 5-digit running number per document type that restarts at 00001 every year (the year of the document's own WIB date, the one the number prints): `Q-00011/GNS/X/2026`, `INV-00007/GNS/X/2026`, `DN-00007/GNS/X/2026`, and `Q-00001/GNS/I/2027` after the last 2026 quotation (migration 00101; numbers issued earlier were renumbered within their year, in order). The Roman month and the year stay in the number, and search accepts `10/2026` or `X/2026` to find a month. |
+| Quotation, invoice and delivery-note numbers | 5-digit running number per document type that restarts at 00001 every year (the year of the document's own WIB date, the one the number prints): `Q-00011/GNS/X/2026`, `DN-00007/GNS/X/2026`, and `Q-00001/GNS/I/2027` after the last 2026 quotation (migration 00101; numbers issued earlier were renumbered within their year, in order). An invoice carries its PO's delivery-note number, month and year, `INV-00007/GNS/X/2026` for `DN-00007/GNS/X/2026`, and a Pengganti adds `Rev.n` (migration 00120, which renumbered every invoice after its note and kept the old number as `legacy_no` where none was kept). The Roman month and the year stay in the number, and search accepts `10/2026` or `X/2026` to find a month. |
 | Historical numbers | Renumbered by document date. The number each document was issued under is kept, searchable, in `quotations.legacy_no`, `invoices.legacy_no` and `purchase_orders.legacy_dn_no` (migration 00099). |
 | PO number | The client's own PO number. A PO created by accepting a quotation has no number until it is entered; Dalam Progres requires it. |
 | Client number lock | Removed: no document number embeds the client number any more. |
@@ -75,7 +75,7 @@ documents, and clean the product master. Owner decisions, October 2026.
 
 ## App changes
 
-- `fn_next_doc_no`: `TYPE-NNNNN/GNS/<Roman>/<YYYY>`, one sequence per type and year (00101).
+- `fn_next_doc_no`: `TYPE-NNNNN/GNS/<Roman>/<YYYY>`, one sequence per type and year (00101), Q and DN only since 00120; an invoice takes its delivery note's number.
 - PO number nullable until entered; the PO gate requires it.
 - Client number editable after use.
 - Search normalises `MM/YYYY` to the Roman form.
@@ -106,7 +106,7 @@ documents, and clean the product master. Owner decisions, October 2026.
 table plan rebuilds (users, refresh tokens, countries, units and goose
 state stay) and loads `apps/api/db/seeds/03_historical.sql` in the same
 transaction: an error anywhere rolls everything back. It refuses to run
-unless migration 00101 is applied. The seed itself refuses to load into
+unless migration 00120 is applied. The seed itself refuses to load into
 non-empty business tables, so a plain `make seed-dev` never doubles data.
 
 Data users entered in the app is carried over in the same transaction,

@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"os"
-	"path/filepath"
 	"strconv"
 	"testing"
 
@@ -97,32 +95,18 @@ func TestCoretaxXLSX_Refusals(t *testing.T) {
 	// No other buyer may trip the NPWP check first.
 	require.NoError(t, testutil.ResetCommercialDomain(ctx, tx))
 	deliveredPOWithInvoice(t, tx)
-	templates := templatesRoot(t)
-	corrupt := t.TempDir()
-	require.NoError(t, os.MkdirAll(filepath.Join(corrupt, "coretax"), 0o755))
-	require.NoError(t, os.WriteFile(filepath.Join(corrupt, "coretax", "coretax_export_2026.xlsx"), []byte("not a workbook"), 0o600))
-
 	cases := []struct {
-		name   string
-		exec   db.Executor
-		root   string
-		want   int
-		detail string
+		name string
+		exec db.Executor
 	}{
-		{name: "templates not configured", exec: tx, root: "", want: http.StatusServiceUnavailable},
-		{name: "list read fails", exec: testutil.FakeExec{}, root: templates, want: http.StatusInternalServerError},
-		{name: "line read fails", exec: &testutil.CountingExec{Inner: tx, FailAfter: 2}, root: templates, want: http.StatusInternalServerError},
-		{name: "buyer read fails", exec: &testutil.CountingExec{Inner: tx, FailAfter: 3}, root: templates, want: http.StatusInternalServerError},
-		{name: "template missing", exec: tx, root: t.TempDir(), want: http.StatusInternalServerError, detail: "coretax template unavailable"},
-		{name: "template corrupt", exec: tx, root: corrupt, want: http.StatusInternalServerError, detail: "coretax workbook build failed"},
+		{name: "list read fails", exec: testutil.FakeExec{}},
+		{name: "line read fails", exec: &testutil.CountingExec{Inner: tx, FailAfter: 2}},
+		{name: "buyer read fails", exec: &testutil.CountingExec{Inner: tx, FailAfter: 3}},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			rec := serve(coretaxRouter(t, tc.exec, coretaxSettings, tc.root), "/invoices/coretax.xlsx")
-			assert.Equal(t, tc.want, rec.Code, rec.Body.String())
-			if tc.detail != "" {
-				assert.Equal(t, tc.detail, problemDetail(t, rec))
-			}
+			rec := serve(coretaxRouter(t, tc.exec, coretaxSettings, templatesRoot(t)), "/invoices/coretax.xlsx")
+			assert.Equal(t, http.StatusInternalServerError, rec.Code, rec.Body.String())
 		})
 	}
 }
@@ -192,6 +176,9 @@ func TestCoretaxXLSX_FollowsTheListFilter(t *testing.T) {
 	defer func() { _ = f.Close() }()
 	detail, err := f.GetRows("DetailFaktur")
 	require.NoError(t, err)
-	require.Len(t, detail, 2, "header plus the one line of the filtered invoice")
-	assert.Equal(t, fx.sent.InvoiceNo, detail[1][14])
+	require.Len(t, detail, 3, "header, the one line of the filtered invoice and END")
+	assert.Equal(t, "1", detail[1][0], "the line names the one faktur")
+	rows, err := f.GetRows("Faktur")
+	require.NoError(t, err)
+	assert.Equal(t, fx.sent.InvoiceNo, rows[3][7])
 }

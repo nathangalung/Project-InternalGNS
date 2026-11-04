@@ -9,10 +9,12 @@ inside one transaction that is rolled back, so nothing is written:
 - every quotation's stored totals equal fn_recompute_quotation_totals;
 - every invoice's stored amounts equal invoices.json, and its lines sum
   to its header;
-- every document number has the new format, and a base number carries
-  its own document's month and year;
-- numbers restart at 00001 each year without gaps, and doc_counters
-  holds each type and year at its highest loaded number or above;
+- every document number has the new format, a quotation and a delivery
+  note carry their own document's month and year, and an invoice
+  carries its PO's delivery note number;
+- quotation and delivery note numbers restart at 00001 each year without
+  gaps, and doc_counters holds each type and year at its highest loaded
+  number or above;
 - a PO in ON_PROGRESS or DELIVERED without a PO number has a reason in
   pos.json, and every PO product line is priced above zero;
 - every offered line of an accepted quotation has its product and unit;
@@ -56,10 +58,9 @@ NUMBER_RE = {
 SEQS = """(
               SELECT m[1] AS t, m[3]::int AS y, m[2]::int AS s
               FROM (
-                SELECT regexp_match(no, '^(Q|INV|DN)-([0-9]+)/GNS/[IVX]+/([0-9]{4})') AS m
+                SELECT regexp_match(no, '^(Q|DN)-([0-9]+)/GNS/[IVX]+/([0-9]{4})') AS m
                 FROM (
                   SELECT quotation_no AS no FROM quotations
-                  UNION ALL SELECT invoice_no FROM invoices
                   UNION ALL SELECT delivery_note_number FROM purchase_orders
                 ) a
               ) b
@@ -172,11 +173,13 @@ def checks(model: Model) -> list[tuple[str, str]]:
             WHERE version = 1 AND quotation_no NOT LIKE '%' || {period(wib)}""",
         ),
         (
-            "invoice numbers have the new format",
+            "invoice numbers are their delivery note's",
             f"""
-            SELECT invoice_no FROM invoices
-            WHERE invoice_no !~ {lit(NUMBER_RE["INV"])}
-               OR invoice_no NOT LIKE '%' || {period("invoice_date")}""",
+            SELECT i.invoice_no || ' for ' || coalesce(p.delivery_note_number, 'no delivery note')
+            FROM invoices i
+            LEFT JOIN purchase_orders p ON p.id = i.po_id
+            WHERE i.invoice_no !~ {lit(NUMBER_RE["INV"])}
+               OR i.invoice_no IS DISTINCT FROM 'INV' || substr(p.delivery_note_number, 3)""",
         ),
         (
             "delivery-note numbers have the new format",

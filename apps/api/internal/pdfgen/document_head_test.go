@@ -22,24 +22,36 @@ func pdfText(t *testing.T, pdf string) string {
 	return string(out)
 }
 
-// pageSize reads pdfinfo's size line.
-func pageSize(t *testing.T, pdf string) string {
+// a4Page is pdfinfo's A4 portrait size.
+const a4Page = "595.28 x 841.89 pts (A4)"
+
+// requireA4 checks every page's paper.
+// pdfinfo prints one size line per page in its -f to -l range and stops at
+// the last page. It returns how many pages it saw.
+func requireA4(t *testing.T, pdf string) int {
 	t.Helper()
 	bin, err := exec.LookPath("pdfinfo")
 	if err != nil {
 		t.Skip("pdfinfo unavailable")
 	}
-	out, err := exec.Command(bin, pdf).Output()
+	out, err := exec.Command(bin, "-f", "1", "-l", "9999", pdf).Output()
 	if err != nil {
 		t.Fatalf("pdfinfo: %v", err)
 	}
+	pages := 0
 	for _, ln := range strings.Split(string(out), "\n") {
-		if strings.HasPrefix(ln, "Page size:") {
-			return ln
+		if !strings.HasPrefix(ln, "Page ") || !strings.Contains(ln, " size:") {
+			continue
+		}
+		pages++
+		if !strings.Contains(ln, a4Page) {
+			t.Errorf("paper: %s, want A4 portrait", ln)
 		}
 	}
-	t.Fatal("pdfinfo printed no page size")
-	return ""
+	if pages == 0 {
+		t.Fatal("pdfinfo printed no page size")
+	}
+	return pages
 }
 
 // Document heads print alike.
@@ -86,9 +98,7 @@ func TestLatexExports_DocumentHead(t *testing.T) {
 				}
 			}
 			pdf := filepath.Join(dir, "doc.pdf")
-			if size := pageSize(t, pdf); !strings.Contains(size, "595.28 x 841.89 pts (A4)") {
-				t.Errorf("paper: %s, want A4 portrait", size)
-			}
+			requireA4(t, pdf)
 			text := pdfText(t, pdf)
 			for _, w := range d.want {
 				if !strings.Contains(text, w) {

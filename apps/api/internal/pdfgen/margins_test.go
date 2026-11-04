@@ -16,7 +16,7 @@ const (
 	paperW      = 595.28
 	paperH      = 841.89
 	margin      = 0.75 * cm
-	logoWidthPt = 5.2 * cm
+	logoWidthPt = 4.45 * cm
 	// inkTol allows for the 144 dpi raster.
 	inkTol = 1.5
 )
@@ -68,8 +68,8 @@ var longDocs = []struct {
 // Every page keeps the same 0.75 cm between its printed marks and all four
 // paper edges: the letterhead on page 1 and the running header after it at
 // the top, the page count at the bottom, the letterhead and table rules at
-// the sides. The logo is 5.2 cm wide and the number is set smaller than
-// the title above it.
+// the sides, on A4 portrait paper. The logo is 4.45 cm wide and the number
+// is set smaller than the title above it.
 func TestLatexExports_Margins(t *testing.T) {
 	for _, d := range longDocs {
 		t.Run(d.name, func(t *testing.T) {
@@ -82,6 +82,9 @@ func TestLatexExports_Margins(t *testing.T) {
 				t.Fatalf("pages = %d, want a running header on page 2", pages)
 			}
 			pdf := filepath.Join(dir, "doc.pdf")
+			if got := requireA4(t, pdf); got != pages {
+				t.Errorf("pdfinfo saw %d pages, xelatex wrote %d", got, pages)
+			}
 
 			for p := 1; p <= pages; p++ {
 				top, bottom, left, right := inkBox(renderPage(t, pdf, p))
@@ -100,7 +103,7 @@ func TestLatexExports_Margins(t *testing.T) {
 				}
 			}
 
-			// Page 1 opens with the letterhead, with no header space above it.
+			// Page 1 opens with the letterhead. Its logo holds the top margin.
 			words := firstPageWords(t, pdf)
 			first := words[0]
 			for _, w := range words {
@@ -111,12 +114,8 @@ func TestLatexExports_Margins(t *testing.T) {
 			if first.text != "Gedung" && first.text != "Telp." {
 				t.Errorf("page 1 opens with %q, want the letterhead", first.text)
 			}
-			// The word box carries the font's ascent, a little above the ink.
-			if first.yMin < margin-3 || first.yMin > margin {
-				t.Errorf("letterhead box starts at y=%.1f, want within 3 pt above %.1f", first.yMin, margin)
-			}
 
-			// Logo: a little smaller than the old 6.6 cm.
+			// Logo: its visible mark keeps 4.45 cm.
 			if w := logoWidth(t, pdf); !near(w, logoWidthPt, 1.5) {
 				t.Errorf("logo %.1f pt wide, want %.1f", w, logoWidthPt)
 			}
@@ -141,6 +140,14 @@ func TestLatexExports_Margins(t *testing.T) {
 			}
 			if ratio := th / (of.yMax - of.yMin); !near(ratio, 14.4/8, 0.05) {
 				t.Errorf("title to page count height ratio %.3f, want %.3f", ratio, 14.4/8)
+			}
+			// Table cells: 7.5 pt, a little under the count.
+			qty, ok := topmost(words, "Qty")
+			if !ok {
+				t.Fatal("table header not on page 1")
+			}
+			if ratio := (qty.yMax - qty.yMin) / (of.yMax - of.yMin); !near(ratio, 7.5/8, 0.02) {
+				t.Errorf("table cell to page count height ratio %.3f, want %.3f", ratio, 7.5/8)
 			}
 		})
 	}

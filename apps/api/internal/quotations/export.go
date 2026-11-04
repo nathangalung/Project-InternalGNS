@@ -263,7 +263,8 @@ func (h *ExportHandler) unitsLookup(ctx context.Context) (map[int16]string, erro
 // contactComm reads the ATTN details.
 // They are the chosen contact's own, even once it is deactivated, so the
 // block always describes the one person it names. With no contact, or one
-// that is gone, none are printed rather than another person's.
+// that is gone, none are printed rather than another person's. The phone
+// prints with the dial code of the contact's country.
 func (h *ExportHandler) contactComm(ctx context.Context, d QuotationDetail) (string, string, error) {
 	if d.ContactID == nil {
 		return "", "", nil
@@ -275,7 +276,7 @@ func (h *ExportHandler) contactComm(ctx context.Context, d QuotationDetail) (str
 	if err != nil {
 		return "", "", err
 	}
-	return pdfgen.StrDeref(c.Email), pdfgen.StrDeref(c.Phone), nil
+	return pdfgen.StrDeref(c.Email), pdfgen.InternationalPhone(c.DialCode, pdfgen.StrDeref(c.Phone)), nil
 }
 
 // isPriced reports a positive price.

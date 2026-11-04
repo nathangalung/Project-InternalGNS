@@ -104,7 +104,7 @@ func TestBuildCoretaxWorkbook_LineBalances(t *testing.T) {
 	}}}
 	buyers := map[int64]clients.Client{10: {Name: "PT. Balance Buyer", NPWP: ptr("0000000000000000"), CountryCode: "IDN"}}
 
-	out, err := buildCoretaxWorkbook(loadTemplate(t), settings, invs, items, buyers)
+	out, err := buildCoretaxWorkbook(settings, invs, items, buyers)
 	if err != nil {
 		t.Fatalf("build: %v", err)
 	}
@@ -114,8 +114,8 @@ func TestBuildCoretaxWorkbook_LineBalances(t *testing.T) {
 	}
 	defer func() { _ = f.Close() }()
 	rows, err := f.GetRows(coretaxSheetDetail)
-	if err != nil || len(rows) != 2 {
-		t.Fatalf("detail rows = %d (%v), want header plus one line", len(rows), err)
+	if err != nil || len(rows) != 3 {
+		t.Fatalf("detail rows = %d (%v), want header, one line and END", len(rows), err)
 	}
 	// Columns F Harga Satuan, G Jumlah, H Total Diskon, I DPP.
 	line := rows[1]
