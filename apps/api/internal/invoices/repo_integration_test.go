@@ -26,7 +26,12 @@ const (
 // Drive quotation to delivered PO.
 func deliveredPOWithInvoice(t *testing.T, tx pgx.Tx) (int64, int64, int64) {
 	t.Helper()
-	return deliverQuotation(t, tx, quotations.CreateRequest{
+	return deliverQuotation(t, tx, oneLineQuotation())
+}
+
+// oneLineQuotation sells one product.
+func oneLineQuotation() quotations.CreateRequest {
+	return quotations.CreateRequest{
 		ValidityDays:    testutil.Validity(),
 		CompanyClientID: seedCompanyID,
 		DiscountPct:     "0",
@@ -36,12 +41,28 @@ func deliveredPOWithInvoice(t *testing.T, tx pgx.Tx) (int64, int64, int64) {
 			UnitID:        seedUnitID,
 			SellingPrice:  "100000",
 		}},
-	})
+	}
 }
 
 // deliverQuotation invoices any quotation.
 // It returns the quotation, PO and invoice ids.
 func deliverQuotation(t *testing.T, tx pgx.Tx, req quotations.CreateRequest) (int64, int64, int64) {
+	t.Helper()
+	ctx := context.Background()
+	qid, poID := uploadedPO(t, tx, req)
+	porepo := purchaseorders.NewRepo(tx, testutil.Store(t))
+	require.NoError(t, porepo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
+	require.NoError(t, porepo.ChangeStatus(ctx, poID, purchaseorders.StatusDelivered, seedUserID))
+
+	inv, err := invoices.NewRepo(tx, testutil.Store(t)).GetByQuotation(ctx, qid)
+	require.NoError(t, err)
+	return qid, poID, inv.ID
+}
+
+// uploadedPO accepts a quotation.
+// Its PO carries the file and the client's number, ready for ON_PROGRESS.
+// It returns the quotation and PO ids.
+func uploadedPO(t *testing.T, tx pgx.Tx, req quotations.CreateRequest) (int64, int64) {
 	t.Helper()
 	ctx := context.Background()
 	req.Items = testutil.OfferLines(t, ctx, tx, req.Items)
@@ -57,13 +78,7 @@ func deliverQuotation(t *testing.T, tx pgx.Tx, req quotations.CreateRequest) (in
 	po, err := porepo.GetByQuotation(ctx, qid)
 	require.NoError(t, err)
 	attachPOFile(ctx, t, porepo, po.ID)
-	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusOnProgress, seedUserID))
-	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusDelivered, seedUserID))
-
-	repo := invoices.NewRepo(tx, store)
-	inv, err := repo.GetByQuotation(ctx, qid)
-	require.NoError(t, err)
-	return qid, po.ID, inv.ID
+	return qid, po.ID
 }
 
 func TestRepo_GetByQuotation(t *testing.T) {

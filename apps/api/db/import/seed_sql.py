@@ -148,8 +148,8 @@ def guards(model: Model) -> str:
         "ORDER BY created_at, id LIMIT 1;\n\n"
         "DO $$\nBEGIN\n"
         "  IF NOT COALESCE((SELECT is_applied FROM goose_db_version\n"
-        "                   WHERE version_id = 101 ORDER BY id DESC LIMIT 1), FALSE) THEN\n"
-        "    RAISE EXCEPTION 'historical seed: migration 00101 is not applied';\n  END IF;\n"
+        "                   WHERE version_id = 120 ORDER BY id DESC LIMIT 1), FALSE) THEN\n"
+        "    RAISE EXCEPTION 'historical seed: migration 00120 is not applied';\n  END IF;\n"
         "  IF NOT EXISTS (SELECT 1 FROM seed_actor) THEN\n"
         "    RAISE EXCEPTION 'historical seed: no active superadmin to own the rows';\n"
         "  END IF;\n"
@@ -649,8 +649,8 @@ def invoices(model: Model) -> str:
 
 def year_tops(model: Model) -> dict[tuple[str, int], int]:
     """The highest loaded number per (type, year)."""
+    # An invoice carries its note's number, so INV has no counter.
     drawn = [("Q", q.date.year, q.seq) for q in model.quotations if q.version == 1]
-    drawn += [("INV", inv.invoice_date.year, inv.seq) for inv in model.invoices]
     drawn += [("DN", po.dn_date.year, po.dn_seq) for po in model.pos if po.dn_seq]
     tops: dict[tuple[str, int], int] = {}
     for kind, year, seq in drawn:

@@ -25,7 +25,8 @@ def test_every_check_is_one_insert_inside_a_rolled_back_transaction(
     assert "numbers restart at 00001 each year without gaps" in names
     assert "doc_counters at or above the highest number of each type and year" in names
     assert "every offered line past draft keeps its offer" in names
-    assert "('DN', 2026, 1),\n('INV', 2026, 1),\n('Q', 2026, 1)" in sql
+    assert "invoice numbers are their delivery note's" in names
+    assert "('DN', 2026, 1),\n('Q', 2026, 1)" in sql
     assert any(n.startswith("paid exactly where invoice_date is before") for n in names)
     assert "fn_expire_quotations" not in sql
     assert sql.startswith("BEGIN;") and sql.rstrip().endswith("ROLLBACK;")

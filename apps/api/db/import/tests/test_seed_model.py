@@ -142,6 +142,8 @@ def test_invoices_and_delivery_notes_restart_each_year() -> None:
         ("INV-00001/GNS/I/2026", 2),
         ("INV-00002/GNS/II/2026", 3),
     ]
+    for inv in model.invoices:
+        assert inv.number == "INV" + inv.po.dn_number[2:]
     assert sorted(po.dn_number for po in model.pos) == [
         "DN-00001/GNS/I/2026",
         "DN-00001/GNS/XII/2025",
@@ -154,6 +156,32 @@ def test_invoices_and_delivery_notes_restart_each_year() -> None:
     ]
 
 
+def test_an_invoice_takes_its_delivery_note_number() -> None:
+    """A note issued before another bills first, whatever the invoice dates."""
+    recs, pos, invs = [], [], []
+    for i, (billed, delivered) in enumerate(
+        [("2026-03-01", "2026-02-20"), ("2026-02-25", "2026-02-22")], 1
+    ):
+        rec = staged(f"q{i}.xlsx#S", f"Q-{i}/GNS/II/2026", "2026-02-01", [line(1, 1000)])
+        po = po_doc(
+            rec,
+            [{"no": 1, "qty": 1, "unit_price": 1000, "quote_row": 15}],
+            client_po_number=f"PO-{i}",
+        )
+        recs.append(rec)
+        pos.append(po)
+        invs.append(invoice_doc(po, f"{i}/INV", billed, do_date=delivered))
+    model = build(inputs(recs, pos, invs))
+    assert [(inv.original, inv.number) for inv in model.invoices] == [
+        ("2/INV", "INV-00002/GNS/II/2026"),
+        ("1/INV", "INV-00001/GNS/II/2026"),
+    ]
+    assert sorted(po.dn_number for po in model.pos) == [
+        "DN-00001/GNS/II/2026",
+        "DN-00002/GNS/II/2026",
+    ]
+
+
 def test_the_seed_sets_a_counter_per_type_and_year() -> None:
     sql = render(_two_years())
     assert "DELETE FROM doc_counters;" in sql
@@ -163,8 +191,6 @@ def test_the_seed_sets_a_counter_per_type_and_year() -> None:
     assert sorted(rows) == [
         ("DN", "2025", "1"),
         ("DN", "2026", "2"),
-        ("INV", "2025", "1"),
-        ("INV", "2026", "2"),
         ("Q", "2025", "1"),
         ("Q", "2026", "2"),
     ]

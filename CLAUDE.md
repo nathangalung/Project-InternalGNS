@@ -250,25 +250,37 @@ renders exactly those moves; it keeps no transition map of its own. A refused
 move is a 422 with Indonesian detail text. Every move writes a row to that
 document's status history table.
 
-Quotation, invoice and delivery-note numbers are a running number per
-document type and per year that restarts at 00001 every year, five digits
-wide and growing past 99999, then the Roman month and year of the WIB issue
-date, the year the count belongs to: `Q-00011/GNS/X/2026`,
-`INV-00007/GNS/X/2026`, `DN-00007/GNS/X/2026`, and `Q-00001/GNS/I/2027`
-after the last quotation of 2026. `fn_next_doc_no(type)` takes the next
-value from the `doc_counters` row of that type and the year of
-`CURRENT_DATE` under its row lock, creating the row with the year's first
-number, so concurrent callers queue and a rolled-back document leaves no
-gap; it is never a SEQUENCE. Migration 00101 renumbered every number
-issued before it within its year, in order, and the notes that copy one;
-sorting a list by number orders by year first (`listq.DocNoOrder`). A
-revision keeps its base number with `Rev.n`, so its base's year, and a
-Pengganti draws a new invoice number. Numbers issued before 00098 keep their
-legacy format (year, client number and a yearly count). A re-imported
-document also keeps the number it was first issued under in `legacy_no`
-(quotations, invoices) or `legacy_dn_no` (the PO's original DO): only the
-import writes it (00099), the list searches match it as typed text but never
-as a period, and the detail pages show it muted as No. lama. A purchase order's
+Quotation and delivery-note numbers are a running number per document
+type and per year that restarts at 00001 every year, five digits wide and
+growing past 99999, then the Roman month and year of the WIB issue date,
+the year the count belongs to: `Q-00011/GNS/X/2026`, `DN-00007/GNS/X/2026`,
+and `Q-00001/GNS/I/2027` after the last quotation of 2026.
+`fn_next_doc_no(type)` takes the next value from the `doc_counters` row of
+that type (Q or DN) and the year of `CURRENT_DATE` under its row lock,
+creating the row with the year's first number, so concurrent callers queue
+and a rolled-back document leaves no gap; it is never a SEQUENCE. An
+invoice has no counter of its own (00120, `fn_next_doc_no('INV')` is
+refused): `fn_create_invoice` gives it its PO's delivery-note number with
+the note's month and year, so `DN-00071/GNS/X/2026` bills as
+`INV-00071/GNS/X/2026` whatever day the invoice is dated, and the PO, its
+note and its invoice share one number. A Pengganti keeps the number of the
+invoice it replaces with `Rev.n`, n counting the invoices of that PO before
+it (`INV-00071/GNS/X/2026 Rev.1`). A PO whose note is in an older format
+bills under a number drawn from the DN counter, so no later note repeats
+it, and a PO without a note is refused. A PO cancelled after its note was
+stamped leaves that number unbilled, so invoice numbers can skip one.
+Migration 00101 renumbered every number issued before it within its year,
+in order, and 00120 renumbered every invoice of a PO with a current-format
+note after that note, oldest first; both carried the notes that copy a
+number along. Sorting a list by number orders by year first
+(`listq.DocNoOrder`). A quotation revision keeps its base number with
+`Rev.n`, so its base's year. Numbers issued before 00098 keep their legacy
+format (year, client number and a yearly count). A document also keeps an
+earlier number in `legacy_no` (quotations, invoices) or `legacy_dn_no` (the
+PO's original DO): the import writes the number a re-imported document was
+first issued under (00099), and 00120 wrote the number an invoice carried
+before it where none was kept. The list searches match it as typed text but
+never as a period, and the detail pages show it muted as No. lama. A purchase order's
 number is the client's own PO number: accepting a quotation leaves
 `po_number` NULL until a user enters it (blank means none), ON_PROGRESS and
 DELIVERED require it (a `po_number` gap on the PO in the completeness gate,

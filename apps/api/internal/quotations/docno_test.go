@@ -130,7 +130,7 @@ func TestNextDocNo_Format(t *testing.T) {
 	require.NoError(t, tx.QueryRow(ctx, `
 		SELECT fn_month_to_roman(EXTRACT(MONTH FROM CURRENT_DATE)::int),
 		       EXTRACT(YEAR FROM CURRENT_DATE)::text`).Scan(&roman, &year))
-	for _, docType := range []string{"Q", "INV", "DN"} {
+	for _, docType := range []string{"Q", "DN"} {
 		t.Run(docType, func(t *testing.T) {
 			no := nextDocNo(t, ctx, tx, docType)
 			m := docNo.FindStringSubmatch(no)
@@ -154,17 +154,15 @@ func TestMonthToRoman(t *testing.T) {
 }
 
 // One counter per type.
-// Drawing a quotation number never moves the invoice or delivery-note
-// counter, and the quotation counter only ever grows by one.
+// Drawing a quotation number never moves the delivery-note counter, and
+// the quotation counter only ever grows by one.
 func TestNextDocNo_CountersPerType(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
-	inv := seqOf(t, nextDocNo(t, ctx, tx, "INV"))
 	dn := seqOf(t, nextDocNo(t, ctx, tx, "DN"))
 	q1 := seqOf(t, nextDocNo(t, ctx, tx, "Q"))
 	q2 := seqOf(t, nextDocNo(t, ctx, tx, "Q"))
 
 	assert.Equal(t, q1+1, q2)
-	assert.Equal(t, inv+1, seqOf(t, nextDocNo(t, ctx, tx, "INV")))
 	assert.Equal(t, dn+1, seqOf(t, nextDocNo(t, ctx, tx, "DN")))
 }
 
@@ -204,7 +202,7 @@ func TestNextDocNo_NewYearStartsAtOne(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	year := thisYear(t, ctx, tx)
 	setCounter(t, ctx, tx, "Q", year-1, 777)
-	setCounter(t, ctx, tx, "INV", year, 41)
+	setCounter(t, ctx, tx, "DN", year, 41)
 	_, err := tx.Exec(ctx, `DELETE FROM doc_counters WHERE doc_type = 'Q' AND year = $1`, year)
 	require.NoError(t, err)
 
@@ -217,7 +215,7 @@ func TestNextDocNo_NewYearStartsAtOne(t *testing.T) {
 
 	assert.Equal(t, 2, counterOf(t, ctx, tx, "Q", year))
 	assert.Equal(t, 777, counterOf(t, ctx, tx, "Q", year-1), "last year's counter is untouched")
-	assert.Equal(t, 41, counterOf(t, ctx, tx, "INV", year), "the invoice counter is untouched")
+	assert.Equal(t, 41, counterOf(t, ctx, tx, "DN", year), "the delivery-note counter is untouched")
 }
 
 // The year's counter decides.
@@ -245,13 +243,18 @@ func TestNextDocNo_GrowsPastFiveDigits(t *testing.T) {
 	assert.Regexp(t, `^DN-100001/GNS/`, nextDocNo(t, ctx, tx, "DN"))
 }
 
-// Only Q, INV, DN numbered.
-// A PO carries the client's own number.
+// Only Q and DN numbered.
+// A PO carries the client's own number, and an invoice its delivery
+// note's, so neither draws one.
 func TestNextDocNo_UnknownType(t *testing.T) {
-	ctx, tx := testutil.BeginTx(t)
-	var no string
-	err := tx.QueryRow(ctx, `SELECT fn_next_doc_no('PO')`).Scan(&no)
-	require.ErrorContains(t, err, "unknown document type PO")
+	for _, docType := range []string{"PO", "INV"} {
+		t.Run(docType, func(t *testing.T) {
+			ctx, tx := testutil.BeginTx(t)
+			var no string
+			err := tx.QueryRow(ctx, `SELECT fn_next_doc_no($1)`, docType).Scan(&no)
+			require.ErrorContains(t, err, "unknown document type "+docType)
+		})
+	}
 }
 
 // A rollback returns the number.
@@ -263,13 +266,13 @@ func TestNextDocNo_RollbackLeavesNoGap(t *testing.T) {
 
 	first, err := pool.Begin(ctx)
 	require.NoError(t, err)
-	drawn := nextDocNo(t, ctx, first, "INV")
+	drawn := nextDocNo(t, ctx, first, "DN")
 	require.NoError(t, first.Rollback(ctx))
 
 	second, err := pool.Begin(ctx)
 	require.NoError(t, err)
 	defer func() { _ = second.Rollback(ctx) }()
-	assert.Equal(t, drawn, nextDocNo(t, ctx, second, "INV"))
+	assert.Equal(t, drawn, nextDocNo(t, ctx, second, "DN"))
 }
 
 // Concurrent callers queue.
@@ -322,13 +325,13 @@ func TestNextDocNo_FirstOfYearQueuesWithoutGap(t *testing.T) {
 	require.NoError(t, pool.QueryRow(ctx, `SELECT EXTRACT(YEAR FROM CURRENT_DATE)::int`).Scan(&year))
 	var saved *int
 	require.NoError(t, pool.QueryRow(ctx,
-		`SELECT (SELECT last_seq FROM doc_counters WHERE doc_type = 'INV' AND year = $1)`, year).Scan(&saved))
-	_, err := pool.Exec(ctx, `DELETE FROM doc_counters WHERE doc_type = 'INV' AND year = $1`, year)
+		`SELECT (SELECT last_seq FROM doc_counters WHERE doc_type = 'DN' AND year = $1)`, year).Scan(&saved))
+	_, err := pool.Exec(ctx, `DELETE FROM doc_counters WHERE doc_type = 'DN' AND year = $1`, year)
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		if saved != nil {
 			_, _ = pool.Exec(context.Background(), `
-				INSERT INTO doc_counters (doc_type, year, last_seq) VALUES ('INV', $1, $2)
+				INSERT INTO doc_counters (doc_type, year, last_seq) VALUES ('DN', $1, $2)
 				ON CONFLICT (doc_type, year) DO UPDATE
 				SET last_seq = GREATEST(doc_counters.last_seq, EXCLUDED.last_seq)`, year, *saved)
 		}
@@ -337,7 +340,7 @@ func TestNextDocNo_FirstOfYearQueuesWithoutGap(t *testing.T) {
 	first, err := pool.Begin(ctx)
 	require.NoError(t, err)
 	defer func() { _ = first.Rollback(ctx) }()
-	assert.Equal(t, 1, seqOf(t, nextDocNo(t, ctx, first, "INV")))
+	assert.Equal(t, 1, seqOf(t, nextDocNo(t, ctx, first, "DN")))
 
 	type drawn struct {
 		no  string
@@ -352,7 +355,7 @@ func TestNextDocNo_FirstOfYearQueuesWithoutGap(t *testing.T) {
 		}
 		defer func() { _ = tx.Rollback(ctx) }()
 		var no string
-		err = tx.QueryRow(ctx, `SELECT fn_next_doc_no('INV')`).Scan(&no)
+		err = tx.QueryRow(ctx, `SELECT fn_next_doc_no('DN')`).Scan(&no)
 		done <- drawn{no, err}
 	}()
 	select {

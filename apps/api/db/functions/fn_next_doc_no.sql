@@ -1,4 +1,4 @@
--- Canonical current body of fn_next_doc_no (deployed by migration 00101).
+-- Canonical current body of fn_next_doc_no (deployed by migration 00120).
 CREATE OR REPLACE FUNCTION public.fn_next_doc_no(p_doc_type character varying)
  RETURNS text
  LANGUAGE plpgsql
@@ -7,7 +7,7 @@ DECLARE
   v_year INTEGER := EXTRACT(YEAR FROM CURRENT_DATE)::INTEGER;
   v_seq  INTEGER;
 BEGIN
-  IF p_doc_type IS NULL OR p_doc_type NOT IN ('Q', 'INV', 'DN') THEN
+  IF p_doc_type IS NULL OR p_doc_type NOT IN ('Q', 'DN') THEN
     RAISE EXCEPTION 'unknown document type %', p_doc_type
       USING ERRCODE = 'invalid_parameter_value';
   END IF;

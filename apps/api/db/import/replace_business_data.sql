@@ -5,7 +5,8 @@
 -- Users, refresh tokens, countries, units and goose state are kept;
 -- doc_counters is set by the seed to the highest loaded number of each
 -- type and year.
--- Refuses to run unless migration 00101 is applied.
+-- Refuses to run unless migration 00120 is applied, since the seed numbers
+-- each invoice after its delivery note and writes no INV counter.
 --
 -- Data users entered in the app is carried over, matched by normalised
 -- name (case, spaces and punctuation ignored, a leading PT. or CV. and a
@@ -31,8 +32,8 @@ BEGIN;
 DO $$
 BEGIN
   IF NOT COALESCE((SELECT is_applied FROM goose_db_version
-                   WHERE version_id = 101 ORDER BY id DESC LIMIT 1), FALSE) THEN
-    RAISE EXCEPTION 'replace_business_data: migration 00101 is not applied; migrate first';
+                   WHERE version_id = 120 ORDER BY id DESC LIMIT 1), FALSE) THEN
+    RAISE EXCEPTION 'replace_business_data: migration 00120 is not applied; migrate first';
   END IF;
 END $$;
 

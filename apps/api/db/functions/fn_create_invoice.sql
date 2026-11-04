@@ -1,4 +1,4 @@
--- Canonical current body of fn_create_invoice (deployed by migration 00110).
+-- Canonical current body of fn_create_invoice (deployed by migration 00120).
 -- Snapshots a delivered PO's items into a draft invoice. Line tax figures are
 -- rounded per line; the header tax figures are the SUM of those per-line values
 -- so the invoice matches what is filed with DJP per line via e-faktur.
@@ -17,6 +17,9 @@ DECLARE
   v_replaces_id   BIGINT;
   v_ppn_on        BOOLEAN;
   v_terms         TEXT;
+  v_dn            TEXT;
+  v_base          TEXT;
+  v_prior         INTEGER;
 BEGIN
   -- A cancelled invoice is void, so only a live one makes this a no-op.
   SELECT id INTO v_inv_id FROM invoices
@@ -49,7 +52,28 @@ BEGIN
   SELECT COALESCE(SUM(subtotal), 0) INTO v_dpp
   FROM purchase_order_items WHERE po_id = p_po_id;
 
-  v_inv_no := fn_next_doc_no('INV');
+  -- An invoice carries its delivery note's number, month and year, so
+  -- DN-00071/GNS/X/2026 bills as INV-00071/GNS/X/2026. A Pengganti keeps
+  -- the number it replaces plus Rev.n, n counting the invoices before it.
+  IF v_replaces_id IS NOT NULL THEN
+    SELECT regexp_replace(invoice_no, ' Rev\.[0-9]+$', '') INTO v_base
+    FROM invoices WHERE id = v_replaces_id;
+    SELECT count(*) INTO v_prior FROM invoices WHERE po_id = p_po_id;
+    v_inv_no := v_base || ' Rev.' || v_prior;
+  ELSE
+    SELECT delivery_note_number INTO v_dn FROM purchase_orders WHERE id = p_po_id;
+    -- Both callers stamp the note before billing.
+    IF v_dn IS NULL THEN
+      RAISE EXCEPTION 'PO ini belum memiliki nomor surat jalan, sehingga invoice tidak dapat diterbitkan.'
+        USING ERRCODE = 'P0012';
+    END IF;
+    -- A note in an older format draws from the DN counter, so no
+    -- later note can bill under the same number.
+    IF v_dn !~ '^DN-[0-9]{5,}/GNS/[IVX]+/[0-9]{4}$' THEN
+      v_dn := fn_next_doc_no('DN');
+    END IF;
+    v_inv_no := 'INV' || substr(v_dn, 3);
+  END IF;
 
   -- The buyer and the terms are stored as they are now.
   INSERT INTO invoices (
