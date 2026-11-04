@@ -37,7 +37,9 @@
 \hypersetup{colorlinks=true, urlcolor=blue, linkcolor=black}
 
 % Shared sizes, same in all three documents.
-\newcommand{\DocLogoWidth}{5.2cm}
+\newsavebox{\DocAddrBox}
+\newsavebox{\DocContactBox}
+\newlength{\DocLogoHeight}
 \newcommand{\DocHeadSize}{\fontsize{7}{9}\selectfont}
 \newcommand{\DocPartySize}{\footnotesize}
 \newcommand{\DocCellSize}{\footnotesize}
@@ -87,26 +89,18 @@
 \thispagestyle{firstpage}
 % Page 1 has no running header, so the letterhead takes its space.
 \vspace*{-\dimexpr\headheight+\headsep+\topskip+\parskip\relax}\nointerlineskip
-
-\noindent
-\begin{minipage}[t]{0.28\textwidth}
+% Each side block ends on its last baseline, and the logo spans the
+% address block from its first line's top to that baseline.
+\sbox\DocAddrBox{\begin{minipage}[t]{0.28\textwidth}
   \vspace{0pt}
   {\DocHeadSize
   Gedung Wirausaha Lt 1, Unit 104\\
   Jl. HR. Rasuna Said Kav. C5\\
   Kuningan, Setiabudi\\
   Jakarta Selatan 12920\par
-  }
-\end{minipage}%
-\hfill
-\begin{minipage}[t]{0.40\textwidth}
-  \vspace{0pt}
-  \centering
-  % Trim padding so logo tops text.
-  \includegraphics[width=\DocLogoWidth,trim=0 0 0 29.28bp,clip]{Logo_Vertical.png}
-\end{minipage}%
-\hfill
-\begin{minipage}[t]{0.28\textwidth}
+  }\kern-\prevdepth
+\end{minipage}}%
+\sbox\DocContactBox{\begin{minipage}[t]{0.28\textwidth}
   \vspace{0pt}
   \raggedleft
   {\DocHeadSize
@@ -114,10 +108,22 @@
   WA. 0811-980-982/0811-999-0991\\
   Email: sales@globalsakti.com\\
   Website: www.globalsakti.com\par
-  }
-\end{minipage}
+  }\kern-\prevdepth
+\end{minipage}}%
+\setlength{\DocLogoHeight}{\dimexpr\ht\DocAddrBox+\dp\DocAddrBox\relax}%
+\noindent
+\usebox\DocAddrBox
+\hfill
+\begin{minipage}[t]{0.40\textwidth}
+  \vspace{0pt}
+  \centering
+  % The asset has no transparent border.
+  \includegraphics[height=\DocLogoHeight]{Logo_Vertical.png}
+\end{minipage}%
+\hfill
+\usebox\DocContactBox
 
-\vspace{0.2cm}
+\vspace{0.3cm}
 \noindent\rule{\textwidth}{0.8pt}
 
 \DocTitle{\underline{INVOICE}[[if .Cancelled]]\quad\textcolor{red}{DIBATALKAN}[[end]]}{[[.InvoiceNo]]}
