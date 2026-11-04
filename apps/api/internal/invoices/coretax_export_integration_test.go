@@ -28,7 +28,7 @@ func exportCoretaxXML(t *testing.T, tx pgx.Tx, invoiceID int64) *httptest.Respon
 	t.Helper()
 	store := testutil.Store(t)
 	h := invoices.NewCoretaxHandler(
-		invoices.NewRepo(tx, store), clients.NewRepo(tx, store), coretaxSettings, "")
+		invoices.NewRepo(tx, store), clients.NewRepo(tx, store), coretaxSettings)
 
 	req := httptest.NewRequest(http.MethodGet, "/invoices/"+strconv.FormatInt(invoiceID, 10)+"/coretax.xml", nil)
 	rctx := chi.NewRouteContext()

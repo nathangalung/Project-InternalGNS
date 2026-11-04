@@ -541,7 +541,10 @@ shows a missing one as Belum ada No. PO.
   v1.6.1 (`invoices/coretax_djp_test.go`): the XML carries every element
   of DJP's sample, `CustomDocMonthYear` included, and in the workbook each
   DetailFaktur Baris names its parent Faktur row, both sheets end in an
-  `END` row, and DetailFaktur has DJP's 14 columns. Kode Barang Jasa is
+  `END` row, and DetailFaktur has DJP's 14 columns. The workbook is built
+  from scratch with only those two sheets (no REF or Keterangan, no bundled
+  template), bold headers, and every column sized to its widest cell so
+  Excel never shows ###. Kode Barang Jasa is
   always `000000`, never the IMPA code, since Coretax checks a filled code
   against DJP's own reference.
   The same way it keeps its quotation's payment terms (`payment_terms`,

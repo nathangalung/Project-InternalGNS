@@ -24,7 +24,7 @@ func TestCoretaxExport_RequiresSellerConfig(t *testing.T) {
 	})
 	t.Run("xlsx export rejects a missing seller config", func(t *testing.T) {
 		t.Parallel()
-		h := &CoretaxHandler{templatesRoot: "x", settings: deps.CoretaxSettings{}}
+		h := &CoretaxHandler{settings: deps.CoretaxSettings{}}
 		rec := httptest.NewRecorder()
 		h.ExportBulkXLSX(rec, httptest.NewRequest(http.MethodGet, "/invoices/coretax.xlsx", nil))
 		if rec.Code != http.StatusServiceUnavailable {

@@ -108,7 +108,7 @@ func childNames(t *testing.T, body []byte, parent string) []string {
 func TestBuildCoretaxWorkbook_FollowsDJPTemplate(t *testing.T) {
 	t.Parallel()
 	invs, items, buyers := djpFixture()
-	out, err := buildCoretaxWorkbook(loadTemplate(t), djpSettings, invs, items, buyers)
+	out, err := buildCoretaxWorkbook(djpSettings, invs, items, buyers)
 	if err != nil {
 		t.Fatalf("build: %v", err)
 	}

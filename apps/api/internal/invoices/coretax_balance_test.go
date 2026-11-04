@@ -104,7 +104,7 @@ func TestBuildCoretaxWorkbook_LineBalances(t *testing.T) {
 	}}}
 	buyers := map[int64]clients.Client{10: {Name: "PT. Balance Buyer", NPWP: ptr("0000000000000000"), CountryCode: "IDN"}}
 
-	out, err := buildCoretaxWorkbook(loadTemplate(t), settings, invs, items, buyers)
+	out, err := buildCoretaxWorkbook(settings, invs, items, buyers)
 	if err != nil {
 		t.Fatalf("build: %v", err)
 	}

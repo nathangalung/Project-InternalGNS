@@ -60,7 +60,7 @@ func TestCoretaxBulkExport_SkipsCancelledInvoice(t *testing.T) {
 			inv, err := repo.GetByID(ctx, invID)
 			require.NoError(t, err)
 
-			h := invoices.NewCoretaxHandler(repo, clients.NewRepo(tx, store), coretaxSettings, "../../templates/documents")
+			h := invoices.NewCoretaxHandler(repo, clients.NewRepo(tx, store), coretaxSettings)
 			req := httptest.NewRequest(http.MethodGet, "/invoices/coretax.xlsx?q="+url.QueryEscape(inv.InvoiceNo), nil)
 			req = req.WithContext(context.Background())
 			rec := httptest.NewRecorder()

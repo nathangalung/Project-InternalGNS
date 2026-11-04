@@ -12,10 +12,9 @@ import (
 )
 
 // Written cells centre vertically.
-// Every cell the export writes sits on its row's middle; the date keeps its
-// number format, and the template's REF sheet keeps its own styles.
+// Every cell the export writes sits on its row's middle, the headers are
+// bold, and the date keeps its number format.
 func TestBuildCoretaxWorkbook_CellsCentred(t *testing.T) {
-	tmpl := loadTemplate(t)
 	settings := deps.CoretaxSettings{SellerTIN: "0626381321011000", SellerIDTKU: "0626381321011000000000"}
 	invs := []Invoice{{
 		ID: 1, InvoiceNo: "INV-A/GNS/V/2026", CompanyClientID: 10,
@@ -32,7 +31,7 @@ func TestBuildCoretaxWorkbook_CellsCentred(t *testing.T) {
 		Address: sptr("Jakarta"), CountryCode: "IDN",
 	}}
 
-	out, err := buildCoretaxWorkbook(tmpl, settings, invs, itemsByID, clientsByID)
+	out, err := buildCoretaxWorkbook(settings, invs, itemsByID, clientsByID)
 	if err != nil {
 		t.Fatalf("build: %v", err)
 	}
@@ -90,16 +89,14 @@ func TestBuildCoretaxWorkbook_CellsCentred(t *testing.T) {
 		t.Errorf("DetailFaktur I2 = %q, want 5800000", v)
 	}
 
-	orig, err := excelize.OpenReader(bytes.NewReader(tmpl))
-	if err != nil {
-		t.Fatalf("open template: %v", err)
-	}
-	defer func() { _ = orig.Close() }()
-	for _, cell := range []string{"A1", "B2"} {
-		before, _ := orig.GetCellStyle("REF", cell)
-		after, _ := f.GetCellStyle("REF", cell)
-		if before != after {
-			t.Errorf("REF %s style = %d, template has %d", cell, after, before)
+	for sheet, cells := range map[string][]string{coretaxSheetFaktur: {"A3", "R3"}, coretaxSheetDetail: {"A1", "N1"}} {
+		for _, cell := range cells {
+			if s := style(sheet, cell); s.Font == nil || !s.Font.Bold {
+				t.Errorf("%s %s header font = %+v, want bold", sheet, cell, s.Font)
+			}
 		}
+	}
+	if s := style(coretaxSheetFaktur, "A4"); s.Font != nil && s.Font.Bold {
+		t.Errorf("Faktur A4 is bold, want plain data")
 	}
 }

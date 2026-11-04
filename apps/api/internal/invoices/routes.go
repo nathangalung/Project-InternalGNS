@@ -77,7 +77,7 @@ func RoutesWithProofs(d deps.Deps, proofs ProofStore) chi.Router {
 	r.Get("/{id}/payment-proof/upload-url", assetproxy.Upload(proof))
 	r.Get("/{id}/payment-proof/download-url", assetproxy.Download(proof))
 
-	coretax := NewCoretaxHandler(repo, clientsRepo, d.Coretax, d.TemplatesRoot)
+	coretax := NewCoretaxHandler(repo, clientsRepo, d.Coretax)
 	r.Get("/coretax.xlsx", coretax.ExportBulkXLSX)
 	r.Get("/{id}/coretax.xml", coretax.Export)
 

@@ -734,7 +734,7 @@ func (s *scenarioState) coretaxServer() *httptest.Server {
 	store := testutil.Store(s.t)
 	h := invoices.NewCoretaxHandler(
 		invoices.NewRepo(pool, store), clients.NewRepo(pool, store),
-		deps.CoretaxSettings{SellerTIN: "9999999999999999", SellerIDTKU: "9999999999999999000000"}, "")
+		deps.CoretaxSettings{SellerTIN: "9999999999999999", SellerIDTKU: "9999999999999999000000"})
 	r := chi.NewRouter()
 	r.Get("/invoices/{id}/coretax.xml", h.Export)
 	srv := httptest.NewServer(r)

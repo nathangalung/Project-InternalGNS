@@ -25,14 +25,13 @@ import (
 // Field names use DJP's casing — including the literal `BuyerAdress` typo —
 // because the coretax importer does string-match validation.
 type CoretaxHandler struct {
-	repo          *Repo
-	clients       *clients.Repo
-	settings      deps.CoretaxSettings
-	templatesRoot string
+	repo     *Repo
+	clients  *clients.Repo
+	settings deps.CoretaxSettings
 }
 
-func NewCoretaxHandler(repo *Repo, c *clients.Repo, s deps.CoretaxSettings, templatesRoot string) *CoretaxHandler {
-	return &CoretaxHandler{repo: repo, clients: c, settings: s, templatesRoot: templatesRoot}
+func NewCoretaxHandler(repo *Repo, c *clients.Repo, s deps.CoretaxSettings) *CoretaxHandler {
+	return &CoretaxHandler{repo: repo, clients: c, settings: s}
 }
 
 // coretaxNoGoodsCode is DJP's catch-all code.

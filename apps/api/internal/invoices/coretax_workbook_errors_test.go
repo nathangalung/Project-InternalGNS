@@ -1,69 +1,11 @@
 package invoices
 
 import (
-	"bytes"
 	"reflect"
-	"strings"
 	"testing"
 
-	"github.com/xuri/excelize/v2"
-
 	"github.com/nathangalung/internalgns/apps/api/internal/clients"
-	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 )
-
-// Corrupt template is an error.
-func TestBuildCoretaxWorkbook_RefusesBadTemplate(t *testing.T) {
-	t.Parallel()
-	cases := []struct {
-		name    string
-		tmpl    []byte
-		wantErr string
-	}{
-		{name: "not a workbook", tmpl: []byte("not a workbook"), wantErr: "open template"},
-	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-			out, err := buildCoretaxWorkbook(tc.tmpl, deps.CoretaxSettings{}, nil, nil, nil)
-			if err == nil || !strings.Contains(err.Error(), tc.wantErr) {
-				t.Fatalf("err = %v, want one mentioning %q", err, tc.wantErr)
-			}
-			if out != nil {
-				t.Fatalf("got %d bytes alongside the error", len(out))
-			}
-		})
-	}
-}
-
-// Missing data sheets are recreated.
-func TestBuildCoretaxWorkbook_RecreatesMissingSheets(t *testing.T) {
-	t.Parallel()
-	blank := excelize.NewFile()
-	var tmpl bytes.Buffer
-	if err := blank.Write(&tmpl); err != nil {
-		t.Fatalf("write blank workbook: %v", err)
-	}
-	_ = blank.Close()
-
-	out, err := buildCoretaxWorkbook(tmpl.Bytes(), deps.CoretaxSettings{SellerTIN: "0626381321011000"}, nil, nil, nil)
-	if err != nil {
-		t.Fatalf("build: %v", err)
-	}
-	f, err := excelize.OpenReader(bytes.NewReader(out))
-	if err != nil {
-		t.Fatalf("reopen: %v", err)
-	}
-	defer func() { _ = f.Close() }()
-	for _, sheet := range []string{coretaxSheetFaktur, coretaxSheetDetail} {
-		if idx, _ := f.GetSheetIndex(sheet); idx < 0 {
-			t.Errorf("sheet %s missing", sheet)
-		}
-	}
-	if v, _ := f.GetCellValue(coretaxSheetDetail, "A1"); v != "Baris" {
-		t.Errorf("DetailFaktur A1 = %q, want the Baris header", v)
-	}
-}
 
 // invalidBuyers names each invoice.
 // Identity is checked as invoiced, drafts included: the buyer is fixed at
