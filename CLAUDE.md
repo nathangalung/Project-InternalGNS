@@ -390,8 +390,11 @@ shows a missing one as Belum ada No. PO.
   imported straight as sent, whose NULL to sent creation log carries the
   import time) prints its creation date. Its ATTN block prints the
   chosen contact's own email and phone, read by id even once that contact
-  is deactivated, and none when the quotation has no contact. Its DELIVERY
-  PLACE prints the shipping line's address, else the vessel.
+  is deactivated, and none when the quotation has no contact. The phone
+  prints with the dial code of the contact's country, its trunk 0 dropped
+  (`pdfgen.InternationalPhone`: `+62 81211112222`), and one typed with its
+  own + as typed. The letterhead writes the company's numbers the same way.
+  Its DELIVERY PLACE prints the shipping line's address, else the vessel.
   The list export (`GET /quotations/export.xlsx`) carries the stored
   breakdown with shipping in its own column: Total Produk, Diskon,
   Pengiriman (total minus total_produk), Sub Total, then PPN as text

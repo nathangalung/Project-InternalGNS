@@ -207,19 +207,21 @@ RETURNING id;
 SELECT * FROM fn_search_clients($1, $2, $3);
 
 -- name: clients.list_contacts
-SELECT id, company_id, name, email, phone, title, country_code,
-       is_active, created_at, updated_at
-FROM company_contacts
-WHERE company_id = $1 AND is_active = TRUE
-ORDER BY name;
+SELECT co.id, co.company_id, co.name, co.email, co.phone, co.title, co.country_code,
+       cn.dial_code, co.is_active, co.created_at, co.updated_at
+FROM company_contacts co
+JOIN countries cn ON cn.code = co.country_code
+WHERE co.company_id = $1 AND co.is_active = TRUE
+ORDER BY co.name;
 
 -- name: clients.get_contact
 -- One contact of the company, active or not: a document keeps the contact
 -- it chose after that contact is deactivated.
-SELECT id, company_id, name, email, phone, title, country_code,
-       is_active, created_at, updated_at
-FROM company_contacts
-WHERE company_id = $1 AND id = $2;
+SELECT co.id, co.company_id, co.name, co.email, co.phone, co.title, co.country_code,
+       cn.dial_code, co.is_active, co.created_at, co.updated_at
+FROM company_contacts co
+JOIN countries cn ON cn.code = co.country_code
+WHERE co.company_id = $1 AND co.id = $2;
 
 -- name: clients.create_contact
 -- A blank email or title is stored as NULL: two blank emails would otherwise
@@ -230,6 +232,7 @@ VALUES
     ($1, $2, NULLIF(BTRIM($3), ''), $4, NULLIF(BTRIM($5), ''),
      COALESCE(NULLIF($6, ''), 'IDN'), $7, $7)
 RETURNING id, company_id, name, email, phone, title, country_code,
+          (SELECT dial_code FROM countries WHERE code = country_code) AS dial_code,
           is_active, created_at, updated_at;
 
 -- name: clients.update_contact
@@ -244,6 +247,7 @@ UPDATE company_contacts
        updated_by = $10
  WHERE id = $2 AND company_id = $1 AND is_active = TRUE
 RETURNING id, company_id, name, email, phone, title, country_code,
+          (SELECT dial_code FROM countries WHERE code = country_code) AS dial_code,
           is_active, created_at, updated_at;
 
 -- name: clients.deactivate_contact
