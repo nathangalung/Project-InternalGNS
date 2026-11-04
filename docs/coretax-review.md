@@ -28,9 +28,10 @@ Template XML dan Converter Excel ke XML). The converter ships template
 
 Findings from the export audit, with proposed diffs. The Coretax XLSX and XML go to the DJP importer, which cannot be
 tested from this repo, so validate against one real import before changing the
-format. The bundled template `apps/api/templates/documents/coretax/coretax_export_2026.xlsx`
-carries the DJP `Keterangan` (per-column spec) and `REF` (code list) sheets;
-the row citations below are from those sheets.
+format. The row citations below are from the `Keterangan` (per-column spec)
+and `REF` (code list) sheets of DJP's `Sample Faktur PK Template v.1.6.1.xlsx`.
+The export no longer bundles that template: it writes only the Faktur and
+DetailFaktur sheets the converter reads.
 
 Most of the export is already correct: the Opt remap (Barang to A, Jasa to B),
 the DPP Nilai Lain and 12 percent PPN mechanism (PMK-131/2024), the XLSX header
