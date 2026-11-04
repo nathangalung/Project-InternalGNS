@@ -37,22 +37,10 @@
 \hypersetup{colorlinks=true, urlcolor=blue, linkcolor=black}
 
 % Shared sizes, same in all three documents.
-\newcommand{\DocLogoWidth}{4.45cm}
-\newsavebox{\DocLogoBox}
-\newlength{\DocHeadPt}
-% Letterhead side block, four lines.
-% #1 aligns it. Its type is sized, at the usual 1.25 leading, so the first
-% line's top and the last baseline span the logo: at 10pt that span is the
-% first line's height plus three 12.5pt steps.
-\newcommand{\DocSideBlock}[5]{%
-  \begin{minipage}[t]{0.35\textwidth}
-  \vspace{0pt}
-  #1\fontsize{10}{12.5}\selectfont
-  \settoheight{\DocHeadPt}{#2}%
-  \setlength{\DocHeadPt}{\numexpr\ht\DocLogoBox*655360/\dimexpr\DocHeadPt+37.5pt\relax\relax sp}%
-  \fontsize{\DocHeadPt}{1.25\DocHeadPt}\selectfont
-  #2\\#3\\#4\\#5\par\kern-\prevdepth
-  \end{minipage}}
+\newsavebox{\DocAddrBox}
+\newsavebox{\DocContactBox}
+\newlength{\DocLogoHeight}
+\newcommand{\DocHeadSize}{\fontsize{7}{9}\selectfont}
 \newcommand{\DocPartySize}{\footnotesize}
 \newcommand{\DocCellSize}{\footnotesize}
 \newcommand{\DocVoidSize}{\fontsize{80}{80}\selectfont}
@@ -101,23 +89,39 @@
 \thispagestyle{firstpage}
 % Page 1 has no running header, so the letterhead takes its space.
 \vspace*{-\dimexpr\headheight+\headsep+\topskip+\parskip\relax}\nointerlineskip
-% The logo keeps its width, and each side block sizes its type so its
-% first line's top and its last baseline meet the logo's top and bottom.
-\sbox\DocLogoBox{\includegraphics[width=\DocLogoWidth]{Logo_Vertical.png}}%
+% Each side block ends on its last baseline, and the logo spans the
+% address block from its first line's top to that baseline.
+\sbox\DocAddrBox{\begin{minipage}[t]{0.28\textwidth}
+  \vspace{0pt}
+  {\DocHeadSize
+  Gedung Wirausaha Lt 1, Unit 104\\
+  Jl. HR. Rasuna Said Kav. C5\\
+  Kuningan, Setiabudi\\
+  Jakarta Selatan 12920\par
+  }\kern-\prevdepth
+\end{minipage}}%
+\sbox\DocContactBox{\begin{minipage}[t]{0.28\textwidth}
+  \vspace{0pt}
+  \raggedleft
+  {\DocHeadSize
+  Telp. +62 21-5099 6969 (ext. 1249)\\
+  WA. +62 811-980-982/+62 811-999-0991\\
+  Email: sales@globalsakti.com\\
+  Website: www.globalsakti.com\par
+  }\kern-\prevdepth
+\end{minipage}}%
+\setlength{\DocLogoHeight}{\dimexpr\ht\DocAddrBox+\dp\DocAddrBox\relax}%
 \noindent
-\DocSideBlock{}{Gedung Wirausaha Lt 1, Unit 104}{Jl. HR. Rasuna Said Kav. C5}%
-  {Kuningan, Setiabudi}{Jakarta Selatan 12920}%
+\usebox\DocAddrBox
 \hfill
-\begin{minipage}[t]{\wd\DocLogoBox}
+\begin{minipage}[t]{0.40\textwidth}
   \vspace{0pt}
   \centering
   % The asset has no transparent border.
-  \usebox\DocLogoBox
+  \includegraphics[height=\DocLogoHeight]{Logo_Vertical.png}
 \end{minipage}%
 \hfill
-\DocSideBlock{\raggedleft}{Telp. +62 21-5099 6969 (ext. 1249)}%
-  {WA. +62 811-980-982/+62 811-999-0991}{Email: sales@globalsakti.com}%
-  {Website: www.globalsakti.com}
+\usebox\DocContactBox
 
 \vspace{0.3cm}
 \noindent\rule{\textwidth}{0.8pt}

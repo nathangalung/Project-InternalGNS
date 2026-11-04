@@ -1131,18 +1131,16 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    uses fixed gaps instead of `center`, `\LTpost` is 0pt so the terms or
    the acknowledgements follow the table by their own fixed gap (0.8 cm,
    1.0 cm on the delivery note), and the article default `\raggedbottom`
-   puts the rest below the last line. The logo is 4.45 cm wide
-   (`\DocLogoWidth`), and `Logo_Vertical.png` is cropped to its visible
-   mark (`TestLogoAsset_NoTransparentBorder`). The two side blocks
-   (`\DocSideBlock`) size their type, at the usual 1.25 leading, so the
-   first line's top and the last line's baseline meet the logo's top and
-   bottom ink, about 9.8pt
-   (`TestLatexExports_LogoLevelWithLetterhead`). The title is `\Large` and
-   the number under it 11pt.
+   puts the rest below the last line. `Logo_Vertical.png` is cropped to
+   its visible mark (`TestLogoAsset_NoTransparentBorder`), and the logo is
+   as tall as the address block (`\DocLogoHeight`, measured from the
+   block, whose box ends on its last baseline), so its top and bottom ink
+   sit on the top of the first line and the baseline of the last line of
+   both side blocks (`TestLatexExports_LogoLevelWithLetterhead`). The
+   title is `\Large` and the number under it 11pt.
    `TestLatexExports_Margins` renders every page of a long document and
    checks its ink against the margin on all four sides, the letterhead as
-   page 1's first line, the logo width and the number set smaller than
-   the title.
+   page 1's first line and the number set smaller than the title.
    `TestLatexExports_RunningHeader` keeps the header at the top margin and
    clear of the table on every later page and the page count as
    every page's lowest line, and `TestLatexExports_BlankAtBottom` holds a
