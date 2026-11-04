@@ -1134,9 +1134,9 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    puts the rest below the last line. The logo is 4.45 cm wide
    (`\DocLogoWidth`), and `Logo_Vertical.png` is cropped to its visible
    mark (`TestLogoAsset_NoTransparentBorder`). The two side blocks
-   (`\DocSideBlock`, 8pt) space their four lines so the first line's top
-   and the last line's baseline meet the logo's top and bottom ink: the
-   baseline step is the logo's height less the first line's, over three
+   (`\DocSideBlock`) size their type, at the usual 1.25 leading, so the
+   first line's top and the last line's baseline meet the logo's top and
+   bottom ink, about 9.8pt
    (`TestLatexExports_LogoLevelWithLetterhead`). The title is `\Large` and
    the number under it 11pt.
    `TestLatexExports_Margins` renders every page of a long document and
