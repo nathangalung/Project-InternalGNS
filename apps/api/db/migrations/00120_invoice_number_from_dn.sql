@@ -9,14 +9,17 @@
 -- INV counter, which fn_next_doc_no now refuses; a note in an older format
 -- draws from the DN counter, and a PO without a note is refused.
 --
--- Every invoice of a PO whose note has the current format is renumbered the
--- same way, oldest first: the first takes the note's number, each later one
--- Rev.1, Rev.2. An invoice whose number changes and has no legacy_no keeps
--- its old number there, so it still shows as No. lama and is found by
--- search. A status note or a document note that copies a renumbered number
--- follows it. Invoices without a PO, or whose PO has an older format note,
--- keep their numbers, and a new number one of them already holds stops the
--- migration. Take a backup first: the Down restores both functions only.
+-- Every invoice of a PO is renumbered the same way, oldest first: the first
+-- takes the note's number (its own number when the note has an older
+-- format), each later one Rev.1, Rev.2, so no PO keeps two numbers. An
+-- invoice whose number changes and has no legacy_no keeps its old number
+-- there, so it still shows as No. lama and is found by search. A status
+-- note or a document note that copies a renumbered number follows it.
+-- Invoices without a PO keep their numbers, and a new number one of them
+-- already holds stops the migration, and so do two POs that would reach
+-- one number. Unique indexes then keep one delivery note number per PO and
+-- one invoice without Rev.n per PO. Take a backup first: the Down restores
+-- both functions and drops the indexes only.
 
 -- +goose StatementBegin
 CREATE OR REPLACE FUNCTION public.fn_create_invoice(p_po_id bigint, p_user_id bigint)
@@ -208,44 +211,68 @@ $function$;
 COMMENT ON FUNCTION fn_next_doc_no(character varying) IS
   'Next number for Q or DN: {type}-{five or more digits}/GNS/{Roman month}/{YYYY} of the WIB date, from the doc_counters row of that type and year. An invoice takes its delivery note''s number.';
 
+-- One note per PO.
+-- An invoice now carries its note's number, so two POs must never share
+-- one; the counter always kept them apart, and the index makes it a rule.
+CREATE UNIQUE INDEX uq_purchase_orders_delivery_note_number
+  ON purchase_orders (delivery_note_number)
+  WHERE delivery_note_number IS NOT NULL;
+
 -- Old number to new.
 CREATE TEMP TABLE inv_renumber (
   id     BIGINT PRIMARY KEY,
   old_no TEXT NOT NULL UNIQUE,
-  new_no TEXT NOT NULL UNIQUE
+  new_no TEXT NOT NULL
 );
 
+-- One base per PO: the note's number when the note has the current
+-- format, else the PO's first invoice's own number.
 INSERT INTO inv_renumber (id, old_no, new_no)
 SELECT i.id, i.invoice_no,
-       'INV' || substr(p.delivery_note_number, 3)
+       CASE WHEN p.delivery_note_number ~ '^DN-[0-9]{5,}/GNS/[IVX]+/[0-9]{4}$'
+            THEN 'INV' || substr(p.delivery_note_number, 3)
+            ELSE regexp_replace(i.first_no, ' Rev\.[0-9]+$', '')
+       END
        || CASE WHEN i.n > 0 THEN ' Rev.' || i.n ELSE '' END
 FROM (
   SELECT id, po_id, invoice_no,
+         first_value(invoice_no) OVER (PARTITION BY po_id ORDER BY id) AS first_no,
          row_number() OVER (PARTITION BY po_id ORDER BY id) - 1 AS n
   FROM invoices
   WHERE po_id IS NOT NULL
 ) i
-JOIN purchase_orders p ON p.id = i.po_id
-WHERE p.delivery_note_number ~ '^DN-[0-9]{5,}/GNS/[IVX]+/[0-9]{4}$';
+JOIN purchase_orders p ON p.id = i.po_id;
 
-DELETE FROM inv_renumber WHERE new_no = old_no;
-
--- A kept number blocks its new owner.
+-- Two owners of one number stop it.
+-- Either two POs reach the same number (an older note's first invoice
+-- drawn from the INV counter against a current note), or an invoice
+-- without a PO already holds it. Both are named, and nothing changes.
 -- +goose StatementBegin
 DO $$
 DECLARE
   v_clash TEXT;
 BEGIN
+  SELECT string_agg(new_no || ' (' || olds || ')', ', ' ORDER BY new_no) INTO v_clash
+  FROM (
+    SELECT new_no, string_agg(old_no, ' and ' ORDER BY old_no) AS olds
+    FROM inv_renumber GROUP BY new_no HAVING count(*) > 1
+  ) d;
+  IF v_clash IS NOT NULL THEN
+    RAISE EXCEPTION 'invoices of different POs would share a number: %', v_clash;
+  END IF;
+
   SELECT string_agg(i.invoice_no, ', ' ORDER BY i.invoice_no) INTO v_clash
   FROM invoices i
   JOIN inv_renumber r ON r.new_no = i.invoice_no
   WHERE NOT EXISTS (SELECT 1 FROM inv_renumber k WHERE k.id = i.id);
   IF v_clash IS NOT NULL THEN
-    RAISE EXCEPTION 'invoice numbers already held by invoices that keep theirs: %', v_clash;
+    RAISE EXCEPTION 'invoice numbers already held by invoices without a PO: %', v_clash;
   END IF;
 END;
 $$;
 -- +goose StatementEnd
+
+DELETE FROM inv_renumber WHERE new_no = old_no;
 
 -- Copied numbers follow.
 -- A token counts only as a whole renumbered invoice number.
@@ -313,9 +340,18 @@ ALTER TABLE quotations ENABLE TRIGGER trg_quotations_updated_at;
 DROP FUNCTION pg_temp.renumbered(TEXT);
 DROP TABLE inv_renumber;
 
+-- One invoice number per PO.
+-- Only the first invoice of a PO goes without Rev.n, so a PO can never
+-- carry two base numbers.
+CREATE UNIQUE INDEX uq_invoices_po_id_base
+  ON invoices (po_id)
+  WHERE po_id IS NOT NULL AND invoice_no !~ ' Rev\.[0-9]+$';
+
 -- +goose Down
 -- The numbers stay as renumbered; the documented production rollback
 -- restores a snapshot instead (docs/deploy_vps.md).
+DROP INDEX IF EXISTS uq_invoices_po_id_base;
+DROP INDEX IF EXISTS uq_purchase_orders_delivery_note_number;
 
 -- +goose StatementBegin
 CREATE OR REPLACE FUNCTION public.fn_create_invoice(p_po_id bigint, p_user_id bigint)

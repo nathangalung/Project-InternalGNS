@@ -97,7 +97,10 @@ func ptr[T any](v T) *T { return &v }
 func TestMigration00101_RenumbersPerYear(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	f := docFixture{ctx: ctx, tx: tx, t: t}
-	_, err := tx.Exec(ctx, downSQL(t, yearlyMigration))
+	// 00120 refuses a Pengganti under its own number, which 00101 met.
+	_, err := tx.Exec(ctx, downSQL(t, invoiceFromDNMigration))
+	require.NoError(t, err)
+	_, err = tx.Exec(ctx, downSQL(t, yearlyMigration))
 	require.NoError(t, err)
 
 	// One running number across 2031 and 2032, inserted out of order.

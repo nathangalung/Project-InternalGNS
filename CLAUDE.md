@@ -268,11 +268,14 @@ invoice it replaces with `Rev.n`, n counting the invoices of that PO before
 it (`INV-00071/GNS/X/2026 Rev.1`). A PO whose note is in an older format
 bills under a number drawn from the DN counter, so no later note repeats
 it, and a PO without a note is refused. A PO cancelled after its note was
-stamped leaves that number unbilled, so invoice numbers can skip one.
-Migration 00101 renumbered every number issued before it within its year,
-in order, and 00120 renumbered every invoice of a PO with a current-format
-note after that note, oldest first; both carried the notes that copy a
-number along. Sorting a list by number orders by year first
+stamped leaves that number unbilled, so invoice numbers can skip one. One
+PO never carries two invoice numbers: `uq_invoices_po_id_base` allows one
+invoice without `Rev.n` per PO, and `uq_purchase_orders_delivery_note_number`
+one PO per note. Migration 00101 renumbered every number issued before it
+within its year, in order, and 00120 renumbered every invoice of a PO
+oldest first, after its note (after the PO's first invoice when the note
+has an older format), and refuses to run when two invoices would end on one
+number; both carried the notes that copy a number along. Sorting a list by number orders by year first
 (`listq.DocNoOrder`). A quotation revision keeps its base number with
 `Rev.n`, so its base's year. Numbers issued before 00098 keep their legacy
 format (year, client number and a yearly count). A document also keeps an
