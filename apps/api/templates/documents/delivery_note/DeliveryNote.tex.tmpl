@@ -2,6 +2,10 @@
 % Compile: xelatex DeliveryNote.tex
 % Mirrors PO content. No prices. Lists product, qty and a note per row.
 
+% Computer Modern scales to any size, so \underline in the 13pt title
+% loads its math fonts without a size substitution.
+\RequirePackage{fix-cm}
+
 % Portrait: two signature blocks need the height.
 \documentclass[a4paper]{article}
 

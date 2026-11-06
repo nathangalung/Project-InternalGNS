@@ -4,6 +4,10 @@
 
 % Same layout and summary rows as the quotation.
 
+% Computer Modern scales to any size, so \underline in the 13pt title
+% loads its math fonts without a size substitution.
+\RequirePackage{fix-cm}
+
 % Portrait like the delivery note, so all three print alike.
 \documentclass[a4paper]{article}
 
