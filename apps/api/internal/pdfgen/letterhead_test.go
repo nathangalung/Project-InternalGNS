@@ -110,3 +110,64 @@ func TestLatexExports_LetterheadCentredOnLogo(t *testing.T) {
 		})
 	}
 }
+
+// ruleBelow finds the letterhead rule.
+// It is the first row from y0 down dark across most of the text width, and
+// it returns that row and the first one after it.
+func ruleBelow(img image.Image, y0 int) (top, end int) {
+	b := img.Bounds()
+	full := func(y int) bool {
+		n := 0
+		for x := b.Min.X; x < b.Max.X; x++ {
+			if dark(img, x, y) {
+				n++
+			}
+		}
+		return float64(n) > 0.9*(paperW-2*margin)*edgeDPI/72
+	}
+	for y := max(y0, b.Min.Y); y < b.Max.Y; y++ {
+		if full(y) {
+			end = y
+			for end < b.Max.Y && full(end) {
+				end++
+			}
+			return y, end
+		}
+	}
+	return -1, -1
+}
+
+// Rule sits nearer the logo.
+// The rule under the letterhead is closer to the logo above it than to the
+// title below it, so it closes the letterhead instead of opening the title.
+func TestLatexExports_RuleNearLogo(t *testing.T) {
+	const px = float64(edgeDPI) / 72
+	for _, d := range longDocs {
+		t.Run(d.name, func(t *testing.T) {
+			log, dir := compileDir(t, d.tmpl, d.data)
+			if !producedOutput(log) {
+				t.Skip("xelatex produced no output")
+			}
+			img := renderPage(t, filepath.Join(dir, "doc.pdf"), 1)
+			w := img.Bounds().Dx()
+			bandPt := 3 * cm * px
+			band := int(bandPt) // letterhead band
+			_, logoBottom := inkRows(img, w*36/100, w*64/100, 0, band)
+			if logoBottom < 0 {
+				t.Fatal("logo ink missing")
+			}
+			rule, end := ruleBelow(img, int(logoBottom*px))
+			if rule < 0 {
+				t.Fatal("no rule under the letterhead")
+			}
+			title, _ := inkRows(img, 0, w, end, img.Bounds().Max.Y)
+			above := float64(rule)/px - logoBottom
+			below := title - float64(end)/px
+			t.Logf("logo to rule %.1f pt, rule to title %.1f pt", above, below)
+			// A clear step, not a tie.
+			if above+3 > below {
+				t.Errorf("logo to rule %.1f pt, rule to title %.1f pt, want the rule nearer the logo", above, below)
+			}
+		})
+	}
+}

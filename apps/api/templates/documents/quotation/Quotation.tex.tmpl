@@ -45,10 +45,10 @@
 \newcommand{\DocCellSize}{\fontsize{7.5}{9}\selectfont}
 % Fixed gaps, so nothing stretches.
 \newcommand{\DocTitle}[2]{%
-  \par\vspace{8pt}%
+  \par\vspace{11pt}%
   {\centering
-    {\Large\bfseries #1}\\[3pt]
-    {\fontsize{11}{13}\selectfont\bfseries #2}\par}%
+    {\fontsize{13}{16}\selectfont\bfseries #1}\\[3pt]
+    {\fontsize{10}{12}\selectfont\bfseries #2}\par}%
   \vspace{4pt}}
 
 \setlength{\parindent}{0pt}
@@ -58,10 +58,10 @@
 \hbadness=2000
 
 % Whole words only; English patterns would split Indonesian names.
-% m columns centre every row.
-\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash\DocCellSize\hyphenpenalty=10000}m{#1}}
-\newcolumntype{C}[1]{>{\centering\arraybackslash\DocCellSize}m{#1}}
-\newcolumntype{R}[1]{>{\RaggedLeft\arraybackslash\DocCellSize}m{#1}}
+% p columns start every cell on the row's first line.
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash\DocCellSize\hyphenpenalty=10000}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash\DocCellSize}p{#1}}
+\newcolumntype{R}[1]{>{\RaggedLeft\arraybackslash\DocCellSize}p{#1}}
 \renewcommand{\arraystretch}{1.2}
 
 \fancypagestyle{firstpage}{%
@@ -120,7 +120,8 @@
 \hfill
 \raisebox{-\DocHeadDrop}{\usebox\DocContactBox}
 
-\vspace{0.3cm}
+% The rule closes the letterhead, nearer the logo than the title.
+\vspace{0.1cm}
 \noindent\rule{\textwidth}{0.8pt}
 
 \DocTitle{\underline{QUOTATION}}{[[.QuotationNo]]}

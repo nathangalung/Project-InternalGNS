@@ -18,10 +18,10 @@ func wrappedItem(long string) map[string]any {
 	}
 }
 
-// Table cells centre vertically.
-// When one text cell wraps, every one-line cell of the row sits on the
-// wrapped block's vertical midpoint instead of its first line.
-func TestLatexExports_TableCellsCentred(t *testing.T) {
+// Table cells align at the top.
+// When one text cell wraps, every one-line cell of the row prints on the
+// wrapped block's first line, so the rows read evenly.
+func TestLatexExports_TableCellsTop(t *testing.T) {
 	const short = "Lifebuoy ring SOLAS approved with self igniting light and smoke signal complete with bracket"
 	const long = short + " and retro reflective tape, orange, 720 mm, packed with its own spare light"
 	docs := []struct {
@@ -69,8 +69,6 @@ func TestLatexExports_TableCellsCentred(t *testing.T) {
 			if len(lines) < 3 {
 				t.Fatalf("wrapped cell prints %d lines, want at least 3", len(lines))
 			}
-			mid := (top + bottom) / 2
-
 			const tol = 1.5 // points
 			for _, s := range d.single {
 				var cell pdfWord
@@ -85,8 +83,8 @@ func TestLatexExports_TableCellsCentred(t *testing.T) {
 					t.Errorf("cell %q not found in the row", s)
 					continue
 				}
-				if got := (cell.yMin + cell.yMax) / 2; math.Abs(got-mid) > tol {
-					t.Errorf("cell %q centred at y=%.1f, wrapped block at y=%.1f (%.1f to %.1f)", s, got, mid, top, bottom)
+				if math.Abs(cell.yMin-top) > tol {
+					t.Errorf("cell %q starts at y=%.1f, wrapped block at y=%.1f", s, cell.yMin, top)
 				}
 			}
 		})
