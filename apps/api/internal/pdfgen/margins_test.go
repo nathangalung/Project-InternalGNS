@@ -133,13 +133,13 @@ func TestLatexExports_Margins(t *testing.T) {
 			if ratio := nh / th; ratio > 0.8 {
 				t.Errorf("number %.1f pt tall, title %.1f pt, ratio %.3f, want at most 0.8", nh, th, ratio)
 			}
-			// Box heights scale with size: \Large is 14.4 pt, the count 8 pt.
+			// Box heights scale with size: the title is 13 pt, the count 8 pt.
 			of, ok := lowest(words, "of")
 			if !ok {
 				t.Fatal("page count not on page 1")
 			}
-			if ratio := th / (of.yMax - of.yMin); !near(ratio, 14.4/8, 0.05) {
-				t.Errorf("title to page count height ratio %.3f, want %.3f", ratio, 14.4/8)
+			if ratio := th / (of.yMax - of.yMin); !near(ratio, 13.0/8, 0.05) {
+				t.Errorf("title to page count height ratio %.3f, want %.3f", ratio, 13.0/8)
 			}
 			// Table cells: 7.5 pt, a little under the count.
 			qty, ok := topmost(words, "Qty")
