@@ -91,6 +91,16 @@ describe("invoices api", () => {
       },
     ],
     [
+      "descriptions guard the row version",
+      () => api.updateDescriptions(4, [{ lineId: 9, description: "Warna abu abu" }], 2),
+      {
+        path: "/invoices/4/descriptions",
+        method: "PATCH",
+        body: { lines: [{ lineId: 9, description: "Warna abu abu" }] },
+        headers: { "If-Match": "2" },
+      },
+    ],
+    [
       "proof upload",
       () => api.presignPaymentProofUpload(4, "bukti.pdf"),
       { path: "/invoices/4/payment-proof/upload-url?fileName=bukti.pdf" },

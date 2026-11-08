@@ -16,6 +16,7 @@ import {
   useInvoices,
   useMarkInvoicePaid,
   useReplaceInvoice,
+  useSaveInvoiceDescriptions,
   useSendInvoice,
   useUpdateInvoiceDates,
   useUploadInvoiceAttachment,
@@ -299,5 +300,41 @@ describe("useUploadInvoiceAttachment", () => {
     const { result } = renderQueryHook(() => useUploadInvoiceAttachment())
     await settle(() => result.current.mutateAsync({ id: 4, file: pdf() }))
     expect(toast.error).toHaveBeenCalledWith("Invoice sudah dibayar.")
+  })
+})
+
+describe("useSaveInvoiceDescriptions", () => {
+  const vars = { id: 4, lines: [{ lineId: 9, description: "Warna abu abu" }], rowVersion: 2 }
+  const invViews = [invDetail, invList]
+
+  it("saves with the row version, refreshes the invoice and never toasts", async () => {
+    m.updateDescriptions.mockResolvedValue({ rowVersion: 3 })
+    const { qc, result } = renderQueryHook(() => useSaveInvoiceDescriptions())
+    seed(qc, invViews)
+    await settle(() => result.current.mutateAsync(vars))
+    expect(m.updateDescriptions).toHaveBeenCalledWith(4, vars.lines, 2)
+    expect(invalidated(qc, invViews)).toEqual(invViews)
+    expect(toast.success).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ["a stale version", problem(409, { code: "version_conflict" })],
+    ["a filed invoice", problem(409, { detail: "Sudah lunas." })],
+  ])("reloads the invoice on %s", async (_, body) => {
+    m.updateDescriptions.mockRejectedValue(new ApiError(409, body, "Conflict"))
+    const { qc, result } = renderQueryHook(() => useSaveInvoiceDescriptions())
+    seed(qc, invViews)
+    await settle(() => result.current.mutateAsync(vars))
+    await until(() => expect(invalidated(qc, invViews)).toEqual(invViews))
+    expect(toast.error).not.toHaveBeenCalled()
+  })
+
+  it("leaves the page as it is on a field refusal", async () => {
+    m.updateDescriptions.mockRejectedValue(new ApiError(422, null, "Terlalu panjang."))
+    const { qc, result } = renderQueryHook(() => useSaveInvoiceDescriptions())
+    seed(qc, invViews)
+    await settle(() => result.current.mutateAsync(vars))
+    expect(invalidated(qc, invViews)).toEqual([])
+    expect(toast.error).not.toHaveBeenCalled()
   })
 })
