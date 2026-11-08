@@ -331,6 +331,7 @@ SELECT ii.id,
        ii.ppn_rate::text        AS ppn_rate,
        ii.ppn_amount::text      AS ppn_amount,
        ii.ship_destination,
+       ii.description,
        ii.goods_or_service
 FROM invoice_items ii
 LEFT JOIN units u ON u.id = ii.unit_id
@@ -360,6 +361,7 @@ SELECT ii.id,
        ii.ppn_rate::text        AS ppn_rate,
        ii.ppn_amount::text      AS ppn_amount,
        ii.ship_destination,
+       ii.description,
        ii.goods_or_service
 FROM invoice_items ii
 LEFT JOIN units u ON u.id = ii.unit_id
@@ -397,3 +399,8 @@ LEFT JOIN LATERAL (
     LIMIT 1
 ) ct ON TRUE
 WHERE inv.id = ANY($1::bigint[]);
+
+-- name: invoices.update_descriptions
+-- $1 invoice, $2 If-Match, $3 [{lineId, description}], $4 user. Returns the
+-- new row_version; the function refuses a filed invoice and a foreign line.
+SELECT fn_update_invoice_descriptions($1::bigint, $2::int, $3::jsonb, $4::bigint);

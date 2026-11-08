@@ -137,7 +137,7 @@ func (h *ExportHandler) buildData(det InvoiceDetail, items []InvoiceItem) export
 			Qty:         pdfgen.FormatQty(it.Qty),
 			Unit:        pdfgen.LatexEscape(unit),
 			Name:        pdfgen.ProductLabel(it.ItemName, it.ItemCode),
-			Description: pdfgen.LatexAddress(pdfgen.StrDeref(it.ShipDestination), pdfgen.CellKeep),
+			Description: pdfgen.LatexAddress(lineDescription(it), pdfgen.CellKeep),
 			UnitPrice:   pdfgen.FormatIDRCents(gross),
 			Amount:      pdfgen.FormatIDRCents(amt),
 		})
@@ -183,4 +183,14 @@ func (h *ExportHandler) buildData(det InvoiceDetail, items []InvoiceItem) export
 		DateLine:          pdfgen.JakartaDateLine(det.InvoiceDate.In(tz.Jakarta())),
 		SignerName:        pdfgen.LatexEscape(h.settings.SignerName),
 	}
+}
+
+// lineDescription is the Description cell.
+// A saved description wins, an empty one included; until one is saved the
+// line prints its destination.
+func lineDescription(it InvoiceItem) string {
+	if it.Description != nil {
+		return *it.Description
+	}
+	return pdfgen.StrDeref(it.ShipDestination)
 }

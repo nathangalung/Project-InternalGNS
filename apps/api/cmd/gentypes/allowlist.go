@@ -153,6 +153,9 @@ var allowlist = []pkg{
 		{Go: "ChangeStatusRequest", TS: "ChangeInvoiceStatusInput", Input: true},
 		{Go: "UpdateDatesRequest", TS: "UpdateInvoiceDatesInput", Input: true},
 		{Go: "DatesUpdatedResponse", TS: "InvoiceDatesSaved"},
+		{Go: "UpdateDescriptionsRequest", TS: "UpdateInvoiceDescriptionsInput", Input: true},
+		{Go: "LineDescription", TS: "InvoiceLineDescriptionInput", Input: true},
+		{Go: "DescriptionsUpdatedResponse", TS: "InvoiceDescriptionsSaved"},
 	}},
 	{"internal/dashboard", []entry{
 		{Go: "Summary", TS: "DashboardSummary"},

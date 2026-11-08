@@ -66,6 +66,7 @@ func RoutesWithProofs(d deps.Deps, proofs ProofStore) chi.Router {
 	finInput := rolegate.Deny(roles.FinanceInput)
 	r.With(finInput).Post("/{id}/replacement", h.Replace)
 	r.With(finInput).Patch("/{id}/dates", h.UpdateDates)
+	r.With(finInput).Patch("/{id}/descriptions", h.UpdateDescriptions)
 
 	attachment := attachmentAsset(d.Storage, d.Objects, repo)
 	r.With(finInput).Get("/{id}/attachment/upload-url", assetproxy.Upload(attachment))

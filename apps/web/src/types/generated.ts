@@ -295,6 +295,11 @@ export type InvoiceDatesSaved = {
 };
 
 // From invoices/dto.go
+export type InvoiceDescriptionsSaved = {
+    rowVersion: number;
+};
+
+// From invoices/dto.go
 export type InvoiceDetail = InvoiceBackendRow & {
     vesselName?: string;
     poNumber?: string;
@@ -336,7 +341,14 @@ export type InvoiceItemRow = {
     ppnRate?: string;
     ppnAmount?: string;
     shipDestination?: string;
+    description?: string;
     goodsOrService?: string;
+};
+
+// From invoices/dto.go
+export type InvoiceLineDescriptionInput = {
+    lineId: number;
+    description: string;
 };
 
 // From invoices/dto.go
@@ -1117,6 +1129,11 @@ export type UpdateContactInput = {
 export type UpdateInvoiceDatesInput = {
     invoiceDate?: string;
     dueDate?: string;
+};
+
+// From invoices/dto.go
+export type UpdateInvoiceDescriptionsInput = {
+    lines: InvoiceLineDescriptionInput[];
 };
 
 // From items/dto.go
