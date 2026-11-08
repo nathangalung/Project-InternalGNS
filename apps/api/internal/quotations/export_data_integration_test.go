@@ -94,8 +94,9 @@ func TestBuildExportData_ReconcilesWithStoredQuotation(t *testing.T) {
 	require.Len(t, got.Items, 4)
 	assert.False(t, got.Items[1].HasOffer, "the unpriced line prints as No Offer")
 	assert.True(t, got.Items[2].HasOffer, "the priced unmatched line is quoted")
-	assert.True(t, strings.HasPrefix(got.Items[0].Offer, pdfgen.LatexEscape(offeredName)),
-		"offer %q must name the catalog item %q", got.Items[0].Offer, offeredName)
+	// The offer names the catalog item, its frozen IMPA code first.
+	require.NotNil(t, d.Items[0].OfferedImpa)
+	assert.Equal(t, *d.Items[0].OfferedImpa+"~- "+pdfgen.LatexEscape(offeredName), got.Items[0].Offer)
 	assert.Equal(t, "KABEL NYM 3x2.5", got.Items[2].Offer)
 }
 
