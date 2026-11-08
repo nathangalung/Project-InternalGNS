@@ -145,6 +145,10 @@ func TestHandler_UpdateDescriptions_Refusals(t *testing.T) {
 	}{
 		{name: "no If-Match", body: func(l, _ int64) any { return ok(l) }, code: http.StatusBadRequest},
 		{name: "stale If-Match", ifMatch: "stale", body: func(l, _ int64) any { return ok(l) }, code: http.StatusConflict},
+		{name: "malformed If-Match", ifMatch: "bad", body: func(l, _ int64) any { return ok(l) }, code: http.StatusBadRequest},
+		{name: "no line id", ifMatch: "current", body: func(_, _ int64) any {
+			return lines(invoices.LineDescription{LineID: 0, Description: "Isi"})
+		}, code: http.StatusUnprocessableEntity, field: "lines[0].lineId"},
 		{name: "empty list", ifMatch: "current", body: func(_, _ int64) any { return lines() },
 			code: http.StatusUnprocessableEntity, field: "lines"},
 		{name: "line sent twice", ifMatch: "current", body: func(l, _ int64) any {
@@ -180,7 +184,7 @@ func TestHandler_UpdateDescriptions_Refusals(t *testing.T) {
 			}
 			line := invoiceLines(t, tx, invID)[0].ID
 			v := strconv.Itoa(int(invoiceVersion(t, tx, invID)))
-			ifMatch := map[string]string{"": "", "current": v, "stale": v + "5"}[tc.ifMatch]
+			ifMatch := map[string]string{"": "", "current": v, "stale": v + "5", "bad": "abc"}[tc.ifMatch]
 			target := invID
 			if tc.id != nil {
 				target = tc.id(invID)
@@ -194,6 +198,28 @@ func TestHandler_UpdateDescriptions_Refusals(t *testing.T) {
 			if tc.detail != "" {
 				assert.Equal(t, tc.detail, e.Detail)
 			}
+		})
+	}
+}
+
+// Requests refused before the invoice.
+// A bad id or an unreadable body never reaches the database.
+func TestHandler_UpdateDescriptions_BadRequest(t *testing.T) {
+	_, tx := testutil.BeginTx(t)
+	srv := assetServer(t, tx)
+	for _, tc := range []struct{ name, path, body string }{
+		{"id not a number", "/invoices/abc/descriptions", `{"lines":[]}`},
+		{"body not JSON", "/invoices/1/descriptions", `{`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPatch, srv.URL+tc.path, strings.NewReader(tc.body))
+			require.NoError(t, err)
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("If-Match", "1")
+			res, err := srv.Client().Do(req)
+			require.NoError(t, err)
+			defer res.Body.Close()
+			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 		})
 	}
 }
