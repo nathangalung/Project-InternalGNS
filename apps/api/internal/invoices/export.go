@@ -136,7 +136,7 @@ func (h *ExportHandler) buildData(det InvoiceDetail, items []InvoiceItem) export
 			No:          i + 1,
 			Qty:         pdfgen.FormatQty(it.Qty),
 			Unit:        pdfgen.LatexEscape(unit),
-			Name:        pdfgen.LatexBreakable(it.ItemName),
+			Name:        pdfgen.ProductLabel(it.ItemName, it.ItemCode),
 			Description: pdfgen.LatexAddress(pdfgen.StrDeref(it.ShipDestination), pdfgen.CellKeep),
 			UnitPrice:   pdfgen.FormatIDRCents(gross),
 			Amount:      pdfgen.FormatIDRCents(amt),

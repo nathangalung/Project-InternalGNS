@@ -177,7 +177,7 @@ func buildExportData(
 			No:        len(items) + 1,
 			Qty:       pdfgen.FormatQty(it.Qty),
 			Unit:      pdfgen.LatexEscape(unitCode),
-			Request:   withCode(it.RequestedName, it.RequestedImpa),
+			Request:   pdfgen.ProductLabel(it.RequestedName, it.RequestedImpa),
 			Offer:     offerText(it),
 			HasOffer:  shipping || (it.IsAvailable && isPriced(it.SellingPrice)),
 			UnitPrice: pdfgen.FormatIDRCents(it.SellingPrice),
@@ -233,19 +233,9 @@ func buildExportData(
 // offerText names the supplied item.
 func offerText(it QuotationItem) string {
 	if it.OfferedName != nil && *it.OfferedName != "" {
-		return withCode(*it.OfferedName, it.OfferedImpa)
+		return pdfgen.ProductLabel(*it.OfferedName, it.OfferedImpa)
 	}
-	return withCode(it.RequestedName, nil)
-}
-
-// withCode appends the IMPA code.
-// Both parts may wrap, since table cells are narrow.
-func withCode(name string, code *string) string {
-	out := pdfgen.LatexBreakable(name)
-	if code != nil && *code != "" {
-		out += " (" + pdfgen.LatexBreakable(*code) + ")"
-	}
-	return out
+	return pdfgen.ProductLabel(it.RequestedName, nil)
 }
 
 func (h *ExportHandler) unitsLookup(ctx context.Context) (map[int16]string, error) {

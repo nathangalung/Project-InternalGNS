@@ -201,11 +201,11 @@ func TestBuildExportData_OfferShowsOfferedItem(t *testing.T) {
 
 	got := buildExportData(d, qUnits, "", "", "Director", exportNow)
 
-	wantOffer := `LAMP LED 12W (100W) 220V E-27, COOL WHITE (790269)`
+	wantOffer := `790269~- LAMP LED 12W (100W) 220V E-27, COOL WHITE`
 	if got.Items[0].Offer != wantOffer {
 		t.Errorf("Offer = %q, want %q", got.Items[0].Offer, wantOffer)
 	}
-	if got.Items[0].Request != "LAMPU LED 12W (790268)" {
+	if got.Items[0].Request != "790268~- LAMPU LED 12W" {
 		t.Errorf("Request = %q, want the client request text", got.Items[0].Request)
 	}
 	if got.Items[1].Offer != "KABEL NYM 3x2.5" {

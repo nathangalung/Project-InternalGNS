@@ -160,7 +160,7 @@ func TestQuotationPDF_PrintsStoredTotals(t *testing.T) {
 					t.Errorf("printed PDF has a %q row", never)
 				}
 			}
-			if !strings.Contains(flat, "TEKIRO PUNCHING TOOL SET") || !strings.Contains(flat, "(613802)") {
+			if !strings.Contains(flat, "613802 - TEKIRO PUNCHING TOOL SET") {
 				t.Error("the offer column must name the catalog item that is supplied")
 			}
 			if tc.onePage && pages != 1 {
@@ -199,7 +199,7 @@ func TestQuotationPDF_WithoutPPN(t *testing.T) {
 // A short quotation stays on one A4 sheet, wrapped lines included.
 func TestQuotationPDF_OneSheetFitsFiveLines(t *testing.T) {
 	const longRequest = "MARINE RADIO HANDHELD VHF INTRINSICALLY SAFE WITH SPARE BATTERY AND CHARGER"
-	const longOffer = "ENTEL HT844 VHF PORTABLE RADIO, ATEX CERTIFIED, LI-ION 2500MAH BATTERY (370021)"
+	const longOffer = "370021~- ENTEL HT844 VHF PORTABLE RADIO, ATEX CERTIFIED, LI-ION 2500MAH BATTERY"
 	cases := []struct {
 		name  string
 		lines int

@@ -122,9 +122,12 @@ func TestPageCount(t *testing.T) {
 	}
 }
 
+// Two sample lines.
+// The first carries IMPA codes as ProductLabel prints them, the second
+// none.
 func sampleItems(n int) []map[string]any {
 	base := []map[string]any{
-		{"Qty": "5", "Unit": "PCS", "Request": "Marine radio handheld VHF intrinsically safe", "HasOffer": true, "Offer": "Entel HT840 VHF portable, USTC certified", "UnitPrice": "Rp9.040.000", "Amount": "Rp45.200.000", "Name": "Marine Radio Handheld", "Description": "Entel HT840 VHF portable", "Note": "MV Global Star, Tanjung Priok"},
+		{"Qty": "5", "Unit": "PCS", "Request": "370021~- Marine radio handheld VHF intrinsically safe", "HasOffer": true, "Offer": "370022~- Entel HT840 VHF portable, USTC certified", "UnitPrice": "Rp9.040.000", "Amount": "Rp45.200.000", "Name": "370022~- Marine Radio Handheld", "Description": "Entel HT840 VHF portable", "Note": "MV Global Star, Tanjung Priok"},
 		{"Qty": "2", "Unit": "SET", "Request": "Fire hose coupling", "HasOffer": false, "Offer": "", "UnitPrice": "Rp1.500.000", "Amount": "Rp3.000.000", "Name": "Fire Hose Coupling", "Description": "Aluminum, 2.5 inch", "Note": "MV Global Star"},
 	}
 	out := make([]map[string]any, 0, n)

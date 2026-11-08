@@ -192,6 +192,16 @@ func LatexEscape(s string) string {
 	return r.Replace(s)
 }
 
+// ProductLabel names a product cell.
+// A line with an IMPA code prints it first, "790269 - Lampu", the code tied
+// to its hyphen; one without prints its name only. The name may wrap.
+func ProductLabel(name string, code *string) string {
+	if code == nil || *code == "" {
+		return LatexBreakable(name)
+	}
+	return LatexBreakable(*code) + "~- " + LatexBreakable(name)
+}
+
 // breakRun caps unbroken tokens.
 // Twenty characters fit the narrowest table cell at the table font size.
 const breakRun = 20
