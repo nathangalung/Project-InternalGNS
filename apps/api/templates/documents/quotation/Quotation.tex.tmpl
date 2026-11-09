@@ -166,18 +166,22 @@
 \newlength{\QNcol}\setlength{\QNcol}{0.6cm}
 \newlength{\QQcol}\setlength{\QQcol}{0.8cm}
 \newlength{\QUcol}\setlength{\QUcol}{0.9cm}
-\newlength{\QMcol}\setlength{\QMcol}{2.5cm}
+\newlength{\QCcol}\setlength{\QCcol}{1.1cm}
+% Wide enough for Rp999.999.999,99 and a ten digit whole amount.
+\newlength{\QMcol}\setlength{\QMcol}{2.3cm}
 % Request and offer share what is left, so the table spans the text width.
-\newlength{\QFlex}\setlength{\QFlex}{\dimexpr\textwidth-\QNcol-\QQcol-\QUcol-2\QMcol-14\tabcolsep-8\arrayrulewidth\relax}
-\newlength{\QLcol}\setlength{\QLcol}{0.48\QFlex}
+% The offer carries its code too, so it takes the larger share.
+\newlength{\QFlex}\setlength{\QFlex}{\dimexpr\textwidth-\QNcol-\QQcol-\QUcol-\QCcol-2\QMcol-16\tabcolsep-9\arrayrulewidth\relax}
+\newlength{\QLcol}\setlength{\QLcol}{0.42\QFlex}
 \newlength{\QDcol}\setlength{\QDcol}{\dimexpr\QFlex-\QLcol\relax}
 
-\begin{longtable}{|C{\QNcol}|C{\QQcol}|C{\QUcol}|L{\QLcol}|L{\QDcol}|R{\QMcol}|R{\QMcol}|}
+\begin{longtable}{|C{\QNcol}|C{\QQcol}|C{\QUcol}|C{\QCcol}|L{\QLcol}|L{\QDcol}|R{\QMcol}|R{\QMcol}|}
 \hline
 \multicolumn{1}{|c|}{\DocCellSize\bfseries No.} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Qty} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Unit} &
-\multicolumn{1}{c|}{\DocCellSize\bfseries Request} &
+\multicolumn{1}{C{\QCcol}|}{\bfseries Request Code} &
+\multicolumn{1}{c|}{\DocCellSize\bfseries Request Item} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Offer Description} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Unit Price} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Amount} \\
@@ -188,7 +192,8 @@
 \multicolumn{1}{|c|}{\DocCellSize\bfseries No.} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Qty} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Unit} &
-\multicolumn{1}{c|}{\DocCellSize\bfseries Request} &
+\multicolumn{1}{C{\QCcol}|}{\bfseries Request Code} &
+\multicolumn{1}{c|}{\DocCellSize\bfseries Request Item} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Offer Description} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Unit Price} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Amount} \\
@@ -203,6 +208,7 @@
 
 [[range .Items]]
 [[.No]] & [[.Qty]] & [[.Unit]] &
+  [[if .RequestCode]][[.RequestCode]][[else]]\textcolor[gray]{0.5}{-}[[end]] &
   [[.Request]] &
   [[if .HasOffer]][[.Offer]][[else]]\textcolor[gray]{0.5}{No Offer}[[end]] &
   [[if .HasOffer]][[.UnitPrice]][[else]]\hspace*{\fill}\textcolor[gray]{0.5}{-}[[end]] &
@@ -211,18 +217,18 @@
 [[end]]
 
 % Same rows as the invoice. Shipping is a line, so Total has it.
-\multicolumn{5}{|r|}{\DocCellSize Total} &
+\multicolumn{6}{|r|}{\DocCellSize Total} &
   \multicolumn{2}{r|}{\DocCellSize [[.Total]]} \\
-[[if .HasDiscount]]\multicolumn{5}{|r|}{\DocCellSize Diskon Produk [[.DiscountPct]]\%} &
+[[if .HasDiscount]]\multicolumn{6}{|r|}{\DocCellSize Diskon Produk [[.DiscountPct]]\%} &
   \multicolumn{2}{r|}{\DocCellSize -[[.TotalDiscount]]} \\
-[[end]]\multicolumn{5}{|r|}{\DocCellSize Sub Total} &
+[[end]]\multicolumn{6}{|r|}{\DocCellSize Sub Total} &
   \multicolumn{2}{r|}{\DocCellSize [[.Subtotal]]} \\
-[[if .WithPPN]]\multicolumn{5}{|r|}{\DocCellSize DPP Nilai Lain} &
+[[if .WithPPN]]\multicolumn{6}{|r|}{\DocCellSize DPP Nilai Lain} &
   \multicolumn{2}{r|}{\DocCellSize [[.DPP]]} \\
-\multicolumn{5}{|r|}{\DocCellSize PPN 12\%} &
+\multicolumn{6}{|r|}{\DocCellSize PPN 12\%} &
   \multicolumn{2}{r|}{\DocCellSize [[.PPN]]} \\
 [[end]]\hline
-\multicolumn{5}{|r|}{\DocCellSize\bfseries Grand Total} &
+\multicolumn{6}{|r|}{\DocCellSize\bfseries Grand Total} &
   \multicolumn{2}{r|}{\DocCellSize\bfseries [[.GrandTotal]]} \\
 \hline
 

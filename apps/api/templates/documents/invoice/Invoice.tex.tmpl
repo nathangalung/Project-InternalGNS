@@ -175,7 +175,8 @@
 \newlength{\INcol}\setlength{\INcol}{0.6cm}
 \newlength{\IQcol}\setlength{\IQcol}{0.8cm}
 \newlength{\IUcol}\setlength{\IUcol}{0.9cm}
-\newlength{\IMcol}\setlength{\IMcol}{2.5cm}
+% Wide enough for Rp999.999.999,99 and a ten digit whole amount.
+\newlength{\IMcol}\setlength{\IMcol}{2.3cm}
 % Item and description share what is left, so the table spans the text width.
 \newlength{\IFlex}\setlength{\IFlex}{\dimexpr\textwidth-\INcol-\IQcol-\IUcol-2\IMcol-14\tabcolsep-8\arrayrulewidth\relax}
 \newlength{\ILcol}\setlength{\ILcol}{0.48\IFlex}

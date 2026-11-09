@@ -762,11 +762,15 @@ has a typed Kode IMPA Request beside Nama Produk Request, and a read-only
 Kode IMPA Offer (the picked product's) beside the Nama Produk Offer search,
 which still takes a code or a name. Lists, the request and offer cells
 (`RequestOffer`) and the pickers show the code apart from the name, a
-missing one as "-" (`impaLabel`, display only). Every PDF product cell (the
-quotation's request and offer, the delivery note and the invoice) prints
-the code first, then the name, `790269 - Lampu` (`pdfgen.ProductLabel`):
-the code is tied to its hyphen, so a wrap moves only the name, and a line
-without a code prints its name alone.
+missing one as "-" (`impaLabel`, display only). The quotation PDF prints
+the request in two columns, Request Code and Request Item (a request
+without a code prints a grey "-"). Every other PDF product cell (the
+quotation's offer, the delivery note and the invoice) prints the code
+first, then the name, `790269 - Lampu` (`pdfgen.ProductLabel`): the code
+is tied to its hyphen, so a wrap moves only the name, and a line without
+a code prints its name alone. The quotation and invoice money columns are
+2.3 cm, wide enough for Rp999.999.999,99 and a ten digit whole amount,
+which the layout fixtures carry.
 
 ## Units
 

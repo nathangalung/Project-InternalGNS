@@ -34,10 +34,13 @@ func NewExportHandler(repo *Repo, c *clients.Repo, u *units.Repo, r *pdfgen.Rend
 }
 
 type exportItem struct {
-	No        int
-	Qty       string
-	Unit      string
-	Request   string
+	No   int
+	Qty  string
+	Unit string
+	// The request's IMPA code has its own column, its name the next one.
+	RequestCode string
+	Request     string
+	// The offer prints its code first, as the note and invoice do.
 	Offer     string
 	HasOffer  bool
 	UnitPrice string
@@ -174,14 +177,15 @@ func buildExportData(
 		}
 
 		items = append(items, exportItem{
-			No:        len(items) + 1,
-			Qty:       pdfgen.FormatQty(it.Qty),
-			Unit:      pdfgen.LatexEscape(unitCode),
-			Request:   pdfgen.ProductLabel(it.RequestedName, it.RequestedImpa),
-			Offer:     offerText(it),
-			HasOffer:  shipping || (it.IsAvailable && isPriced(it.SellingPrice)),
-			UnitPrice: pdfgen.FormatIDRCents(it.SellingPrice),
-			Amount:    pdfgen.FormatIDRCents(it.TotalSelling),
+			No:          len(items) + 1,
+			Qty:         pdfgen.FormatQty(it.Qty),
+			Unit:        pdfgen.LatexEscape(unitCode),
+			RequestCode: pdfgen.LatexBreakable(pdfgen.StrDeref(it.RequestedImpa)),
+			Request:     pdfgen.LatexBreakable(it.RequestedName),
+			Offer:       offerText(it),
+			HasOffer:    shipping || (it.IsAvailable && isPriced(it.SellingPrice)),
+			UnitPrice:   pdfgen.FormatIDRCents(it.SellingPrice),
+			Amount:      pdfgen.FormatIDRCents(it.TotalSelling),
 		})
 	}
 

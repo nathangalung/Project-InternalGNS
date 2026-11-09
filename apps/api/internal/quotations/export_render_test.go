@@ -93,6 +93,7 @@ func sampleExport(productLines int) exportData {
 	items := make([]QuotationItem, 0, productLines+1)
 	for i := 0; i < productLines; i++ {
 		it := productLine(int16(i+1), "PUNCHING TOOL SET DIES & TABLE", "2.00", "1000.50", "2001.00")
+		it.RequestedImpa = qStr("613801")
 		it.OfferedName = qStr("TEKIRO PUNCHING TOOL SET 6-38MM")
 		it.OfferedImpa = qStr("613802")
 		items = append(items, it)
@@ -162,6 +163,9 @@ func TestQuotationPDF_PrintsStoredTotals(t *testing.T) {
 			}
 			if !strings.Contains(flat, "613802 - TEKIRO PUNCHING TOOL SET") {
 				t.Error("the offer column must name the catalog item that is supplied")
+			}
+			if !strings.Contains(flat, "613801 PUNCHING TOOL SET") {
+				t.Error("the request code must print in its own column before the request")
 			}
 			if tc.onePage && pages != 1 {
 				t.Errorf("pages = %d, want 1", pages)
