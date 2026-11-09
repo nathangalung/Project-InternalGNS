@@ -17,7 +17,7 @@ Feature: Unit master
     And unit "PAIL" is "Pail" with Coretax code "UM.0033"
     And unit "DRUM" is "Drum" with Coretax code "UM.0033"
     And unit "PCS" is also written "PIECES"
-    And unit "TIN" is also written "KALENG"
+    And unit "TIN" is also written "TINS"
     And unit "CAN" is "Can" with Coretax code "UM.0033"
     And unit "CAN" is also written "CANS"
     And unit "LBR" is also written "SHEET"

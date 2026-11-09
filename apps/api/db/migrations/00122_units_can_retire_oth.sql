@@ -1,7 +1,8 @@
 -- +goose Up
 -- 00122 CAN AND A RETIRED OTH
 -- CAN becomes a unit of its own beside TIN: a can is printed as CAN, and
--- CANS names it too. KALENG stays with TIN, since it means either.
+-- CANS names it too. KALENG means either, so like MT and LB it names
+-- neither and the user picks CAN or TIN.
 --
 -- OTH (Lainnya) is retired, not deleted. Filed documents keep printing it
 -- (a sent quotation, a PO, an invoice and Coretax read the row as filed),
@@ -19,7 +20,7 @@ UPDATE units SET is_active = FALSE WHERE code = 'OTH';
 -- CAN moves off TIN before the code exists, since an alias never equals a code.
 DELETE FROM unit_aliases a
 USING units u
-WHERE u.id = a.unit_id AND u.code = 'TIN' AND a.alias IN ('CAN', 'CANS');
+WHERE u.id = a.unit_id AND u.code = 'TIN' AND a.alias IN ('CAN', 'CANS', 'KALENG');
 
 INSERT INTO units (code, name, coretax_code)
 SELECT 'CAN', 'Can', 'UM.0033'
@@ -885,7 +886,7 @@ $function$;
 
 DROP FUNCTION IF EXISTS public.fn_refuse_retired_unit(smallint, smallint, text);
 
--- CAN goes back to being a spelling of TIN. A used CAN keeps its row.
+-- CAN and KALENG go back to being spellings of TIN. A used CAN keeps its row.
 DELETE FROM unit_aliases WHERE alias = 'CANS';
 DELETE FROM units u
 WHERE u.code = 'CAN'
@@ -893,6 +894,9 @@ WHERE u.code = 'CAN'
   AND NOT EXISTS (SELECT 1 FROM quotation_items WHERE unit_id = u.id)
   AND NOT EXISTS (SELECT 1 FROM purchase_order_items WHERE unit_id = u.id)
   AND NOT EXISTS (SELECT 1 FROM invoice_items WHERE unit_id = u.id);
+INSERT INTO unit_aliases (alias, unit_id)
+SELECT 'KALENG', u.id FROM units u WHERE u.code = 'TIN'
+ON CONFLICT (alias) DO NOTHING;
 INSERT INTO unit_aliases (alias, unit_id)
 SELECT v.alias, u.id
 FROM (VALUES ('CAN'), ('CANS')) v(alias)

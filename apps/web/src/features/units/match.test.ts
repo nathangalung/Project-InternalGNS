@@ -19,8 +19,8 @@ const units: UnitRow[] = [
   { id: 5, code: "M2", isActive: true, name: "Meter Persegi", aliases: [] },
   { id: 6, code: "MTR", isActive: true, name: "Meter", aliases: ["METER"] },
   { id: 7, code: "LAP", isActive: true, name: "Laporan", aliases: [] },
-  { id: 8, code: "RLS", isActive: true, name: "Rolls", aliases: ["ROLL"] },
-  { id: 9, code: "TIN", isActive: true, name: "Tin", aliases: ["KALENG"] },
+  { id: 8, code: "RLS", isActive: true, name: "Rolls", aliases: ["GULUNG", "ROLL"] },
+  { id: 9, code: "TIN", isActive: true, name: "Tin", aliases: ["TINS"] },
   { id: 10, code: "CAN", isActive: true, name: "Can", aliases: ["CANS"] },
   { id: 11, code: "OTH", isActive: false, name: "Lainnya", aliases: [] },
 ]
@@ -47,7 +47,7 @@ describe("resolveUnit", () => {
     ["an alias", "Pieces", "PCS"],
     ["a short alias", "EA", "PCS"],
     ["an alias in lower case", "roll", "RLS"],
-    ["an Indonesian alias", "kaleng", "TIN"],
+    ["an Indonesian alias", "gulung", "RLS"],
   ])("finds %s", (_, text, code) => {
     expect(resolveUnit(index, text)?.code).toBe(code)
   })
@@ -92,7 +92,7 @@ describe("matchUnits", () => {
     ["name", "piece", ["PCS"]],
     ["unnamed unit by code", "set", ["SET"]],
     ["trimmed", " pc ", ["PCS", "PCT"]],
-    ["alias", "kaleng", ["TIN"]],
+    ["alias", "gulung", ["RLS"]],
     ["alias with a dot", "roll.", ["RLS"]],
     ["alias part", "piec", ["PCS"]],
   ])("%s", (_, query, codes) => {
@@ -124,7 +124,7 @@ describe("unitOption", () => {
     ["a code hit", units[0], "pcs", "PCS - Piece"],
     ["a name hit", units[0], "piece", "PCS - Piece"],
     ["an alias hit", units[0], "ea", "PCS - Piece (EA)"],
-    ["an alias part", units[8], "kal", "TIN - Tin (KALENG)"],
+    ["an alias part", units[7], "gul", "RLS - Rolls (GULUNG)"],
     ["no query", units[0], "", "PCS - Piece"],
     ["an unnamed unit", units[2], "x", "SET"],
   ])("labels %s", (_, unit, query, label) => {

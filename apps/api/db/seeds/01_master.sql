@@ -106,7 +106,7 @@ FROM (VALUES
   ('G', 'GR'), ('GRAM', 'GR'),
   ('L', 'LTR'), ('LT', 'LTR'), ('LITER', 'LTR'), ('LITRE', 'LTR'), ('LITERS', 'LTR'),
   ('METER', 'MTR'), ('METRE', 'MTR'), ('METERS', 'MTR'), ('MTRS', 'MTR'), ('M', 'MTR'),
-  ('KALENG', 'TIN'), ('TINS', 'TIN'), ('CANS', 'CAN'),
+  ('TINS', 'TIN'), ('CANS', 'CAN'),
   ('TUBE', 'TUB'), ('TUBES', 'TUB'),
   ('PACK', 'PKT'), ('PACKS', 'PKT'), ('PAX', 'PKT'), ('PAC', 'PKT'), ('PCK', 'PKT'),
   ('PK', 'PKT'), ('PAK', 'PKT'), ('PACKET', 'PKT'), ('PACKETS', 'PKT'), ('BUNGKUS', 'PKT'),

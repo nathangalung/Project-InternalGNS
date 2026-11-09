@@ -62,8 +62,8 @@ func refusedAsRetired(t *testing.T, err error, column string) {
 
 // CAN apart, OTH retired.
 // Down then Up over rows that name OTH: a product default and a draft line
-// are cleared, a sent line keeps what the client received, and CAN and
-// CANS resolve to the new unit while KALENG stays on TIN.
+// are cleared, a sent line keeps what the client received, CAN and CANS
+// resolve to the new unit, and KALENG, which means either, names neither.
 func TestMigration00122_CanAndRetiredOTH(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	draft, _ := quotationWithLine(ctx, t, tx, "Migrasi 00122 draft", false)
@@ -99,11 +99,14 @@ func TestMigration00122_CanAndRetiredOTH(t *testing.T) {
 		SELECT code || '=' || name || '/' || coretax_code || '/' || is_active::TEXT
 		FROM units WHERE code = 'CAN'`).Scan(&can))
 	assert.Equal(t, "CAN=Can/UM.0033/true", can)
-	for text, code := range map[string]string{"cans": "CAN", "Kaleng": "TIN", "tins": "TIN"} {
+	for text, code := range map[string]string{"cans": "CAN", "tins": "TIN", "Kaleng": ""} {
 		var got string
-		require.NoError(t, tx.QueryRow(ctx, `
+		err := tx.QueryRow(ctx, `
 			SELECT u.code FROM unit_aliases a JOIN units u ON u.id = a.unit_id
-			WHERE a.alias = fn_unit_text($1)`, text).Scan(&got), text)
+			WHERE a.alias = fn_unit_text($1)`, text).Scan(&got)
+		if !errors.Is(err, pgx.ErrNoRows) {
+			require.NoError(t, err, text)
+		}
 		assert.Equal(t, code, got, text)
 	}
 }

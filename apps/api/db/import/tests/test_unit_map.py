@@ -32,7 +32,7 @@ from unit_map import IMPORT_OVERRIDES, map_unit, seed_vocabulary
         ("C/L", "COIL", True),
         ("rol", "RLS", True),
         ("Roll", "RLS", True),
-        ("kaleng", "TIN", True),
+        ("kaleng", "OTH", False),  # CAN or TIN, the user picks
         ("Can", "CAN", True),
         ("cans", "CAN", True),
         ("Tins", "TIN", True),

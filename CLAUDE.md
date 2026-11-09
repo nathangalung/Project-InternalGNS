@@ -781,11 +781,12 @@ ship-supply units map to UM.0033 and are named by the long form of their
 code (TIN Tin, PKT Packet, RLS Rolls), one name with no slash. Every other
 way a unit is written is an alias in `unit_aliases` (migrations 00109,
 00111, 00118 and 00122):
-PC, PIECES and EA for PCS, CANS for CAN, KALENG for TIN, SHEET and LEMBAR
+PC, PIECES and EA for PCS, CANS for CAN, TINS for TIN, SHEET and LEMBAR
 for LBR, PACK for PKT. An alias is stored normalised by `fn_unit_text` (upper case, one
 space between words, no trailing dot), and triggers refuse an alias equal
 to a code and a code equal to an alias, so one text names one unit; an
-ambiguous text (MT is Metrik Ton, LB is also the pound) stays out.
+ambiguous text (MT is Metrik Ton, LB is also the pound, KALENG is a can or
+a tin) stays out.
 `GET /units` lists each unit's `aliases`, and the web resolves typed and
 imported unit text through one helper (`features/units/match`:
 `unitIndex`, `resolveUnit`, the same normalisation), used by the wizard
@@ -805,7 +806,8 @@ books), SCT Sachet and STRP Strip (a strip of tablets), so the import maps
 vol, sachet and strip to them instead of OTH.
 
 Migration 00122 made CAN Can a unit of its own beside TIN (CAN and CANS
-left TIN, KALENG stayed, since it means either), and retired OTH
+left TIN, and KALENG left too, since it means either, so the user picks;
+a rebuilt historical seed maps it to the OTH fallback), and retired OTH
 (`units.is_active` false). A retired unit is never deleted: what was
 filed with it (a sent quotation, a PO, an invoice, Coretax) keeps it and
 prints it, and `GET /units` still lists it with `isActive` false so a

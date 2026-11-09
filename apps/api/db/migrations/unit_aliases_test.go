@@ -31,9 +31,11 @@ const newUnitsMigration = "00118_units_vol_sachet_strip.sql"
 const canMigration = "00122_units_can_retire_oth.sql"
 
 // What 00122 does to the alias list.
-// CAN and CANS leave TIN, and CANS names the new CAN.
+// CAN, CANS and KALENG leave TIN, and CANS names the new CAN.
 func withCan(pairs []string) []string {
-	out := slices.DeleteFunc(pairs, func(p string) bool { return p == "CAN=TIN" || p == "CANS=TIN" })
+	out := slices.DeleteFunc(pairs, func(p string) bool {
+		return p == "CAN=TIN" || p == "CANS=TIN" || p == "KALENG=TIN"
+	})
 	return append(out, "CANS=CAN")
 }
 
