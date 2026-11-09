@@ -11,6 +11,7 @@ import {
   useLineRecommendation,
 } from "@/features/items/hooks"
 import { useUnits } from "@/features/units/hooks"
+import { unitChoices } from "@/features/units/match"
 import * as vendorsApi from "@/features/vendors/api"
 import { useCreateVendor } from "@/features/vendors/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
@@ -157,7 +158,7 @@ function ProductAddDialog({
   const [copyMessage, setCopyMessage] = useState<{ text: string; ok: boolean } | null>(null)
 
   const { data: units } = useUnits()
-  const satuanOptions = useMemo(() => (units ?? []).map((u) => u.code), [units])
+  const satuanOptions = useMemo(() => unitChoices(units, form.satuan), [units, form.satuan])
 
   // One box searches by name or code; the request may be a code alone.
   const productQueryRaw = form.nama.trim()

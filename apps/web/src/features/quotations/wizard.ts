@@ -171,11 +171,13 @@ export function productFields(data: ProductAddFormData): Omit<ProductItem, "id" 
 
 // Why a line's unit fails.
 // Null when the unit is a known code or alias (PC, EA and ROLL name PCS,
-// PCS and RLS). A line with any other unit cannot be saved until a known
-// unit is picked for it.
+// PCS and RLS). A line with any other unit, or a retired one, cannot be
+// saved until a current unit is picked for it.
 export function unitIssue(satuan: string, unitByText: UnitIndex): string | null {
   // Same lookup as the submit, so a passing line always sends a unit id.
-  if (resolveUnit(unitByText, satuan)) return null
+  const unit = resolveUnit(unitByText, satuan)
+  if (unit?.isActive) return null
+  if (unit) return `Satuan ${unit.code} sudah tidak dipakai.`
   const code = satuan.trim()
   return code ? `Satuan "${code}" tidak dikenal.` : "Satuan belum diisi."
 }

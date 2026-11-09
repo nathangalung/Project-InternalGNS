@@ -9,4 +9,6 @@ type Unit struct {
 	Name        *string  `db:"name"         json:"name,omitempty"`
 	CoretaxCode *string  `db:"coretax_code" json:"coretaxCode,omitempty"`
 	Aliases     []string `db:"aliases"      json:"aliases"`
+	// A retired unit stays for what was filed with it, never picked again.
+	IsActive bool `db:"is_active" json:"isActive"`
 }

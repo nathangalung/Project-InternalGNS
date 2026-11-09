@@ -101,8 +101,8 @@ describe("importedLines", () => {
 
   it("prints the unit code an RFQ unit resolves to", () => {
     const index = unitIndex([
-      { id: 1, code: "PCS", aliases: ["EA", "PIECES"] },
-      { id: 2, code: "RLS", aliases: ["ROLL"] },
+      { id: 1, code: "PCS", isActive: true, aliases: ["EA", "PIECES"] },
+      { id: 2, code: "RLS", isActive: true, aliases: ["ROLL"] },
     ])
     const units = ["pcs.", "Pieces", "EA", "roll", "drum"]
     const lines = importedLines(

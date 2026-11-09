@@ -35,8 +35,8 @@ const line = (over: Partial<PurchaseOrderItemRow>): PurchaseOrderItemRow => ({
 })
 
 const units = unitIndex([
-  { id: 1, code: "PCS", aliases: ["PIECES"] },
-  { id: 2, code: "MTR", aliases: ["METER"] },
+  { id: 1, code: "PCS", isActive: true, aliases: ["PIECES"] },
+  { id: 2, code: "MTR", isActive: true, aliases: ["METER"] },
 ])
 
 describe("poItemsToProducts", () => {

@@ -4,6 +4,7 @@ import {
   matchUnits,
   normalizeUnitText,
   resolveUnit,
+  unitChoices,
   unitCode,
   unitIndex,
   unitLabel,
@@ -11,15 +12,17 @@ import {
 } from "./match"
 
 const units: UnitRow[] = [
-  { id: 1, code: "PCS", name: "Piece", aliases: ["EA", "PC", "PIECES"] },
-  { id: 2, code: "KG", name: "Kilogram", aliases: ["KGS"] },
-  { id: 3, code: "SET", aliases: [] },
-  { id: 4, code: "PCT", name: "Persen", aliases: [] },
-  { id: 5, code: "M2", name: "Meter Persegi", aliases: [] },
-  { id: 6, code: "MTR", name: "Meter", aliases: ["METER"] },
-  { id: 7, code: "LAP", name: "Laporan", aliases: [] },
-  { id: 8, code: "RLS", name: "Rolls", aliases: ["ROLL"] },
-  { id: 9, code: "TIN", name: "Tin", aliases: ["CAN", "KALENG"] },
+  { id: 1, code: "PCS", isActive: true, name: "Piece", aliases: ["EA", "PC", "PIECES"] },
+  { id: 2, code: "KG", isActive: true, name: "Kilogram", aliases: ["KGS"] },
+  { id: 3, code: "SET", isActive: true, aliases: [] },
+  { id: 4, code: "PCT", isActive: true, name: "Persen", aliases: [] },
+  { id: 5, code: "M2", isActive: true, name: "Meter Persegi", aliases: [] },
+  { id: 6, code: "MTR", isActive: true, name: "Meter", aliases: ["METER"] },
+  { id: 7, code: "LAP", isActive: true, name: "Laporan", aliases: [] },
+  { id: 8, code: "RLS", isActive: true, name: "Rolls", aliases: ["ROLL"] },
+  { id: 9, code: "TIN", isActive: true, name: "Tin", aliases: ["KALENG"] },
+  { id: 10, code: "CAN", isActive: true, name: "Can", aliases: ["CANS"] },
+  { id: 11, code: "OTH", isActive: false, name: "Lainnya", aliases: [] },
 ]
 
 describe("normalizeUnitText", () => {
@@ -59,8 +62,8 @@ describe("resolveUnit", () => {
 
   it("lets a code win over an alias", () => {
     const clash = unitIndex([
-      { id: 1, code: "PCS", aliases: ["SET"] },
-      { id: 2, code: "SET", aliases: [] },
+      { id: 1, code: "PCS", isActive: true, aliases: ["SET"] },
+      { id: 2, code: "SET", isActive: true, aliases: [] },
     ])
     expect(resolveUnit(clash, "set")?.id).toBe(2)
   })
@@ -97,7 +100,7 @@ describe("matchUnits", () => {
   })
 
   it("puts an exact code or alias first", () => {
-    expect(matchUnits(units, "can").map((u) => u.code)).toEqual(["TIN"])
+    expect(matchUnits(units, "can").map((u) => u.code)).toEqual(["CAN"])
     expect(matchUnits(units, "meter").map((u) => u.code)).toEqual(["MTR", "M2"])
   })
 
@@ -126,5 +129,30 @@ describe("unitOption", () => {
     ["an unnamed unit", units[2], "x", "SET"],
   ])("labels %s", (_, unit, query, label) => {
     expect(unitOption(unit, query)).toBe(label)
+  })
+})
+
+describe("retired units", () => {
+  it("are never offered by the picker", () => {
+    expect(matchUnits(units, "oth")).toEqual([])
+    expect(matchUnits(units, "lainnya")).toEqual([])
+  })
+
+  it("still resolve, so a stored line keeps its code", () => {
+    expect(resolveUnit(unitIndex(units), "OTH")?.id).toBe(11)
+  })
+
+  it.each([
+    ["no unit kept", "", false],
+    ["a current unit kept", "PCS", false],
+    ["the retired unit kept", "OTH", true],
+  ])("a select offers them only when %s", (_name, kept, offered) => {
+    const codes = unitChoices(units, kept)
+    expect(codes).toContain("CAN")
+    expect(codes.includes("OTH")).toBe(offered)
+  })
+
+  it("reads no list as none", () => {
+    expect(unitChoices(undefined, "PCS")).toEqual([])
   })
 })

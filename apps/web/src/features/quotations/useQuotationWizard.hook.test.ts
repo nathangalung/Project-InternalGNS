@@ -6,7 +6,7 @@ import { problem } from "@/test/problem"
 import { renderHook } from "@/test/renderHook"
 import { useQuotationWizard } from "./useQuotationWizard"
 
-const UNITS = [{ id: 1, code: "PCS", aliases: ["PIECES"] }]
+const UNITS = [{ id: 1, code: "PCS", isActive: true, aliases: ["PIECES"] }]
 
 const FORM: ProductAddFormData = {
   requestedKodeImpa: "",

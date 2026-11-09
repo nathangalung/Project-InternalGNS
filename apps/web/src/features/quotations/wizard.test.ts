@@ -221,9 +221,10 @@ describe("upsertProduct", () => {
 
 describe("units", () => {
   const index = unitIndex([
-    { id: 1, code: "PCS", aliases: ["EA", "PC", "PIECES"] },
-    { id: 2, code: "SET", aliases: [] },
-    { id: 3, code: "RLS", aliases: ["ROLL"] },
+    { id: 1, code: "PCS", isActive: true, aliases: ["EA", "PC", "PIECES"] },
+    { id: 2, code: "SET", isActive: true, aliases: [] },
+    { id: 3, code: "RLS", isActive: true, aliases: ["ROLL"] },
+    { id: 4, code: "OTH", isActive: false, aliases: [] },
   ])
 
   it("counts lines whose unit is not a known code or alias, whatever its case", () => {
@@ -247,6 +248,7 @@ describe("units", () => {
     ["an alias in lower case", "roll", null],
     ["an unknown unit", "drum", 'Satuan "drum" tidak dikenal.'],
     ["a blank unit", "  ", "Satuan belum diisi."],
+    ["a retired unit", "oth", "Satuan OTH sudah tidak dipakai."],
   ])("explains %s", (_name, satuan, want) => {
     expect(unitIssue(satuan, index)).toBe(want)
   })

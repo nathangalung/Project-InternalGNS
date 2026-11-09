@@ -780,9 +780,9 @@ to 33 carry the DJP Coretax names and codes UM.0001 to UM.0033; the
 ship-supply units map to UM.0033 and are named by the long form of their
 code (TIN Tin, PKT Packet, RLS Rolls), one name with no slash. Every other
 way a unit is written is an alias in `unit_aliases` (migrations 00109,
-00111 and 00118):
-PC, PIECES and EA for PCS, CAN for TIN, SHEET and LEMBAR for LBR, PACK for
-PKT. An alias is stored normalised by `fn_unit_text` (upper case, one
+00111, 00118 and 00122):
+PC, PIECES and EA for PCS, CANS for CAN, KALENG for TIN, SHEET and LEMBAR
+for LBR, PACK for PKT. An alias is stored normalised by `fn_unit_text` (upper case, one
 space between words, no trailing dot), and triggers refuse an alias equal
 to a code and a code equal to an alias, so one text names one unit; an
 ambiguous text (MT is Metrik Ton, LB is also the pound) stays out.
@@ -803,6 +803,25 @@ OTH (AMP in the old files is an ampoule, never Ampere). Migration 00118
 added VOL Volume (a volume of a publication: tide tables, almanacs, log
 books), SCT Sachet and STRP Strip (a strip of tablets), so the import maps
 vol, sachet and strip to them instead of OTH.
+
+Migration 00122 made CAN Can a unit of its own beside TIN (CAN and CANS
+left TIN, KALENG stayed, since it means either), and retired OTH
+(`units.is_active` false). A retired unit is never deleted: what was
+filed with it (a sent quotation, a PO, an invoice, Coretax) keeps it and
+prints it, and `GET /units` still lists it with `isActive` false so a
+stored line shows its code. Nothing picks it again:
+`fn_refuse_retired_unit` refuses it (P0014, "Satuan OTH sudah tidak
+dipakai. Pilih satuan lain.") in `fn_prepare_quotation_lines`, so every
+draft save, in `fn_update_po_items` unless the line keeps the unit its
+`id` already had, and as a product default (`items.create`,
+`items.update`, a 422 on `defaultUnitId`, a product keeping it allowed).
+`fn_revise_quotation` copies it as no unit, so the revision asks for one
+before it is sent, while accepting a sent quotation and issuing its
+invoice copy it as filed. 00122 cleared it from product defaults and
+draft lines. The web picker (`matchUnits`) never offers it, a select
+shows it only on the line that keeps it (`unitChoices`), and the wizard
+check names it (`unitIssue`). The import keeps OTH as its fallback, since
+it rebuilds the history that carries it.
 
 ## Kas Lain
 

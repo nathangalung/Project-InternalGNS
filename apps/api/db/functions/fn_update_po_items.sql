@@ -1,4 +1,4 @@
--- Canonical current body of fn_update_po_items (deployed by migration 00117).
+-- Canonical current body of fn_update_po_items (deployed by migration 00122).
 CREATE OR REPLACE FUNCTION public.fn_update_po_items(p_po_id bigint, p_user_id bigint, p_discount_pct numeric, p_notes text, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb)
  RETURNS void
  LANGUAGE plpgsql
@@ -14,6 +14,7 @@ DECLARE
   v_stored      BIGINT[];
   v_old_costs   JSONB;
   v_old_notes   JSONB;
+  v_old_units   JSONB;
   v_cost        NUMERIC;
   it            JSONB;
 BEGIN
@@ -106,6 +107,11 @@ BEGIN
   FROM purchase_order_items
   WHERE po_id = p_po_id AND dn_note IS NOT NULL;
 
+  -- Units, kept by line id: a line may keep a retired one.
+  SELECT COALESCE(jsonb_object_agg(id::TEXT, unit_id), '{}') INTO v_old_units
+  FROM purchase_order_items
+  WHERE po_id = p_po_id AND unit_id IS NOT NULL;
+
   DELETE FROM purchase_order_items WHERE po_id = p_po_id;
 
   FOR it IN SELECT * FROM jsonb_array_elements(p_items)
@@ -144,6 +150,10 @@ BEGIN
        WHERE id = v_link
          AND product_url IS DISTINCT FROM NULLIF(BTRIM(it->>'productUrl'), '');
     END IF;
+
+    -- A line keeps its stored unit, retired or not, but picks no retired one.
+    PERFORM fn_refuse_retired_unit(
+      NULLIF(it->>'unitId','')::SMALLINT, (v_old_units->>(it->>'id'))::SMALLINT, NULL);
 
     INSERT INTO purchase_order_items (
       po_id, quotation_item_id, line_number, item_type,

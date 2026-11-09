@@ -61,11 +61,19 @@ function exact(unit: UnitRow, q: string): boolean {
 // Code, name or alias, case-insensitive, first five, the unit the query
 // names exactly first. A blank query matches none: the picker only opens
 // once something is typed.
+// A retired unit is never offered.
 export function matchUnits(units: readonly UnitRow[], query: string, limit = 5): UnitRow[] {
   const q = normalizeUnitText(query)
   if (!q) return []
-  const hits = units.filter((u) => matches(u, q))
+  const hits = units.filter((u) => u.isActive && matches(u, q))
   return [...hits.filter((u) => exact(u, q)), ...hits.filter((u) => !exact(u, q))].slice(0, limit)
+}
+
+// Codes a select offers.
+// Every current unit, plus the one a stored line already has, so a line
+// that keeps a retired unit still shows it.
+export function unitChoices(units: readonly UnitRow[] | undefined, kept: string): string[] {
+  return (units ?? []).filter((u) => u.isActive || u.code === kept).map((u) => u.code)
 }
 
 // Picker row label.

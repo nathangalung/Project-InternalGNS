@@ -108,6 +108,18 @@ func (s *scenarioState) unitNotListed(code string) error {
 	return nil
 }
 
+// A retired unit is listed, marked so.
+func (s *scenarioState) unitRetired(code string) error {
+	u, err := s.find(code)
+	if err != nil {
+		return err
+	}
+	if u.IsActive {
+		return fmt.Errorf("unit %s is still active", code)
+	}
+	return nil
+}
+
 func (s *scenarioState) unitAlsoWritten(code, alias string) error {
 	u, err := s.find(code)
 	if err != nil {
@@ -152,6 +164,7 @@ func TestUnitsFeatures(t *testing.T) {
 			sc.Step(`^unit "([^"]+)" is "([^"]+)" with Coretax code "([^"]+)"$`, s.unitIs)
 			sc.Step(`^unit "([^"]+)" is listed$`, s.unitListed)
 			sc.Step(`^unit "([^"]+)" is not listed$`, s.unitNotListed)
+			sc.Step(`^unit "([^"]+)" is listed but retired$`, s.unitRetired)
 			sc.Step(`^unit "([^"]+)" is also written "([^"]+)"$`, s.unitAlsoWritten)
 			sc.Step(`^no alias equals a unit code$`, s.noAliasIsACode)
 		},
