@@ -763,7 +763,7 @@ Kode IMPA Offer (the picked product's) beside the Nama Produk Offer search,
 which still takes a code or a name. Lists, the request and offer cells
 (`RequestOffer`) and the pickers show the code apart from the name, a
 missing one as "-" (`impaLabel`, display only). The quotation PDF prints
-the request in two columns, Request IMPA Code and Request Item (a request
+the request in two columns, IMPA Code and Request Item (a request
 without a code prints a grey "-"). Every other PDF product cell (the
 quotation's offer, the delivery note and the invoice) prints the code
 first, then the name, `790269 - Lampu` (`pdfgen.ProductLabel`): the code
