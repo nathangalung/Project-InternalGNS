@@ -77,7 +77,8 @@ func badBoxes(log string) (over, under, warn int) {
 			over++
 		case strings.HasPrefix(ln, "Underfull \\hbox"), strings.HasPrefix(ln, "Underfull \\vbox"):
 			under++
-		case strings.Contains(ln, "LaTeX Warning"), strings.Contains(ln, "Package") && strings.Contains(ln, "Warning"):
+		// Any warning, font substitutions included, as the download tests read.
+		case strings.Contains(ln, "Warning"):
 			warn++
 		}
 	}

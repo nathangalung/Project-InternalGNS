@@ -1109,9 +1109,10 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    the letterhead, party block, table rules and signature start and end on
    the same two lines; `TestLatexExports_TableMeetsTextEdges` renders the
    page and checks the outer rules against the text edges. Text cells do
-   not hyphenate. Every item table cell is centred vertically in its row
-   (`m` columns, while the party and terms blocks stay top-aligned), and
-   `TestLatexExports_TableCellsCentred` holds it. The quotation prints
+   not hyphenate. Every item table cell starts on its row's first line
+   (`p` columns, like the party and terms blocks), so a row whose text
+   wraps keeps its other cells at the top, and
+   `TestLatexExports_TableCellsTop` holds it. The quotation prints
    `PDF_QUOTATION_SIGNER_NAME` under the scanned `Signature.jpg`; the
    invoice prints `PDF_SIGNER_NAME` over blank space, signed by hand.
    No printed text carries a dash, a minus or a semicolon (the font's
@@ -1138,7 +1139,10 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    of what the logo is taller (`\DocHeadDrop`), so the middle from its
    first line's top to that baseline meets the logo's
    (`TestLatexExports_LetterheadCentredOnLogo`). The
-   title is `\Large` and the number under it 11pt.
+   title is 13pt and the number under it 10pt, still well above the 8pt
+   party block. The rule under the letterhead sits nearer the logo than
+   the title (0.1 cm above it, 11pt below it in `\DocTitle`), so it closes
+   the letterhead (`TestLatexExports_RuleNearLogo`).
    `TestLatexExports_Margins` renders every page of a long document and
    checks its A4 paper and its ink against the margin on all four sides, the letterhead as
    page 1's first line, the logo width, the number set smaller than the
