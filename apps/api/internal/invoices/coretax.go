@@ -132,8 +132,8 @@ func (h *CoretaxHandler) Export(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if refused := invalidBuyers([]Invoice{inv}, map[int64]clients.Client{inv.CompanyClientID: client}); len(refused) > 0 {
-		httperr.Render(w, httperr.UnprocessableDetail(buyerIdentityMessage(refused), nil))
+	if refused := refusedBuyers([]Invoice{inv}, map[int64]clients.Client{inv.CompanyClientID: client}).message(); refused != "" {
+		httperr.Render(w, httperr.UnprocessableDetail(refused, nil))
 		return
 	}
 
@@ -313,12 +313,49 @@ func invoiceBuyer(inv Invoice, c clients.Client) clients.Client {
 	return c
 }
 
-// buyerIdentityMessage words the refusal toast.
-// Every invoice keeps the buyer it was created with, so the fix is the
-// client's NPWP and then a Pengganti, which copies the client again.
-func buyerIdentityMessage(invoiceNos []string) string {
-	return "Ekspor Coretax butuh NPWP 16 digit untuk pembeli Indonesia. " +
-		"Lengkapi NPWP klien, lalu batalkan dan terbitkan ulang invoice berikut: " + strings.Join(invoiceNos, ", ") + "."
+// tkuMismatch checks the TKU.
+// The TKU is read live from the client while the NPWP is the invoice's, so
+// a client NPWP changed after issue leaves a TKU DJP will not match to it.
+func tkuMismatch(c clients.Client) bool {
+	tin, ok := validate.NPWP(strings.TrimSpace(strDeref(c.NPWP)))
+	tku := strings.Map(func(r rune) rune {
+		if r >= '0' && r <= '9' {
+			return r
+		}
+		return -1
+	}, strDeref(c.TkuID))
+	return ok && tku != "" && !strings.HasPrefix(tku, tin)
+}
+
+// buyerRefusal lists refused invoices.
+type buyerRefusal struct {
+	// Open, no 16 digit NPWP
+	missing []string
+	// Open, TKU not on the invoiced NPWP
+	mismatch []string
+	// Paid, either problem, past fixing
+	paid []string
+}
+
+// message words the refusal toast.
+// Every invoice keeps the buyer it was created with, so an open one is
+// fixed on the client and then by a Pengganti, which copies the client
+// again. A paid one can no longer be cancelled, so it is named to leave out.
+func (b buyerRefusal) message() string {
+	var parts []string
+	if len(b.missing) > 0 {
+		parts = append(parts, "Ekspor Coretax butuh NPWP 16 digit untuk pembeli Indonesia. "+
+			"Lengkapi NPWP klien, lalu batalkan dan terbitkan ulang invoice berikut: "+strings.Join(b.missing, ", ")+".")
+	}
+	if len(b.mismatch) > 0 {
+		parts = append(parts, "NPWP klien berubah setelah invoice terbit, jadi ID TKU klien tidak cocok dengan NPWP di invoice. "+
+			"Batalkan lalu terbitkan Pengganti untuk invoice berikut: "+strings.Join(b.mismatch, ", ")+".")
+	}
+	if len(b.paid) > 0 {
+		parts = append(parts, "Invoice lunas berikut tidak menyimpan NPWP pembeli yang cocok untuk Coretax dan tidak dapat diubah lagi: "+
+			strings.Join(b.paid, ", ")+". Pilih periode ekspor yang tidak memuatnya.")
+	}
+	return strings.Join(parts, " ")
 }
 
 func strDeref(p *string) string {

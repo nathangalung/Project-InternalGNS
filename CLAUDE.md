@@ -553,8 +553,13 @@ shows a missing one as Belum ada No. PO.
   Coretax read those. A client edit never restates an invoice, draft
   included (the PO gate already required a valid NPWP and address at
   DELIVERED); only a Pengganti, which copies the client as it is then,
-  changes it. Coretax refuses an invoice without a valid NPWP with that
-  Pengganti route.
+  changes it. Coretax refuses an open invoice without a valid NPWP with
+  that Pengganti route, and one whose client TKU (read live) does not start
+  with the invoiced NPWP, since the client's NPWP changed after issue and
+  DJP would not match the two (`refusedBuyers`, `tkuMismatch`). A paid
+  invoice with either problem can no longer be cancelled, so the refusal
+  names it to leave out of the export period instead; the bulk workbook
+  refuses as one, naming every invoice.
   Each invoice line keeps its own Description (`invoice_items.description`,
   00121, up to 500 characters), the invoice's counterpart of the delivery
   note's row notes: NULL means never saved and the line prints its

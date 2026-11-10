@@ -111,8 +111,8 @@ func (h *CoretaxHandler) ExportBulkXLSX(w http.ResponseWriter, r *http.Request) 
 
 	// One refusal for the whole workbook: a half-filed bulk import is worse
 	// than none, and the operator fixes every client in one pass.
-	if refused := invalidBuyers(invs, clientsByID); len(refused) > 0 {
-		httperr.Render(w, httperr.UnprocessableDetail(buyerIdentityMessage(refused), nil))
+	if refused := refusedBuyers(invs, clientsByID).message(); refused != "" {
+		httperr.Render(w, httperr.UnprocessableDetail(refused, nil))
 		return
 	}
 
@@ -124,18 +124,27 @@ func (h *CoretaxHandler) ExportBulkXLSX(w http.ResponseWriter, r *http.Request) 
 	httpx.WriteXLSX(w, "coretax-export", data)
 }
 
-// invalidBuyers names each refused invoice.
+// refusedBuyers sorts each refused invoice.
 // Each invoice is checked as invoiced, drafts included, since the buyer is
-// fixed when the invoice is created.
-func invalidBuyers(invs []Invoice, clientsByID map[int64]clients.Client) []string {
-	out := []string{}
+// fixed when the invoice is created. An open one is fixed by a Pengganti, a
+// paid one cannot be.
+func refusedBuyers(invs []Invoice, clientsByID map[int64]clients.Client) buyerRefusal {
+	var out buyerRefusal
 	for _, inv := range invs {
 		c, ok := clientsByID[inv.CompanyClientID]
 		if !ok {
 			continue
 		}
-		if validateBuyerIdentity(invoiceBuyer(inv, c)) != nil {
-			out = append(out, inv.InvoiceNo)
+		buyer := invoiceBuyer(inv, c)
+		missing := validateBuyerIdentity(buyer) != nil
+		switch {
+		case !missing && !tkuMismatch(buyer):
+		case inv.Status == StatusPaid:
+			out.paid = append(out.paid, inv.InvoiceNo)
+		case missing:
+			out.missing = append(out.missing, inv.InvoiceNo)
+		default:
+			out.mismatch = append(out.mismatch, inv.InvoiceNo)
 		}
 	}
 	return out
