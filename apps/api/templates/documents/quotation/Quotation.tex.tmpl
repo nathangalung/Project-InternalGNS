@@ -166,21 +166,24 @@
 \newlength{\QNcol}\setlength{\QNcol}{0.6cm}
 \newlength{\QQcol}\setlength{\QQcol}{0.8cm}
 \newlength{\QUcol}\setlength{\QUcol}{0.9cm}
-\newlength{\QCcol}\setlength{\QCcol}{1.45cm}
-% Wide enough for Rp999.999.999,99 and a ten digit whole amount.
-\newlength{\QMcol}\setlength{\QMcol}{2.3cm}
-% Request and offer share what is left, so the table spans the text width.
-% The offer carries its code too, so it takes the larger share.
-\newlength{\QFlex}\setlength{\QFlex}{\dimexpr\textwidth-\QNcol-\QQcol-\QUcol-\QCcol-2\QMcol-16\tabcolsep-9\arrayrulewidth\relax}
-\newlength{\QLcol}\setlength{\QLcol}{0.42\QFlex}
+% Six digits.
+\newlength{\QCcol}\setlength{\QCcol}{1.0cm}
+% Whole rupiah: a unit price up to Rp999.999.999.
+\newlength{\QPcol}\setlength{\QPcol}{2.0cm}
+% Whole rupiah: an amount up to Rp9.999.999.999.
+\newlength{\QMcol}\setlength{\QMcol}{2.2cm}
+% Request and offer share what is left equally, so the table spans the
+% text width.
+\newlength{\QFlex}\setlength{\QFlex}{\dimexpr\textwidth-\QNcol-\QQcol-\QUcol-\QCcol-\QPcol-\QMcol-16\tabcolsep-9\arrayrulewidth\relax}
+\newlength{\QLcol}\setlength{\QLcol}{0.5\QFlex}
 \newlength{\QDcol}\setlength{\QDcol}{\dimexpr\QFlex-\QLcol\relax}
 
-\begin{longtable}{|C{\QNcol}|C{\QQcol}|C{\QUcol}|C{\QCcol}|L{\QLcol}|L{\QDcol}|R{\QMcol}|R{\QMcol}|}
+\begin{longtable}{|C{\QNcol}|C{\QQcol}|C{\QUcol}|C{\QCcol}|L{\QLcol}|L{\QDcol}|R{\QPcol}|R{\QMcol}|}
 \hline
 \multicolumn{1}{|c|}{\DocCellSize\bfseries No.} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Qty} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Unit} &
-\multicolumn{1}{C{\QCcol}|}{\bfseries IMPA Code} &
+\multicolumn{1}{C{\QCcol}|}{\bfseries IMPA} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Request Item} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Offer Description} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Unit Price} &
@@ -192,7 +195,7 @@
 \multicolumn{1}{|c|}{\DocCellSize\bfseries No.} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Qty} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Unit} &
-\multicolumn{1}{C{\QCcol}|}{\bfseries IMPA Code} &
+\multicolumn{1}{C{\QCcol}|}{\bfseries IMPA} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Request Item} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Offer Description} &
 \multicolumn{1}{c|}{\DocCellSize\bfseries Unit Price} &
