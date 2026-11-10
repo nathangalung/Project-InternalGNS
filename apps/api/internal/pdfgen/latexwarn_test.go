@@ -150,45 +150,42 @@ const (
 	partyAddress = "Gedung Wisma 46 Kota BNI Lt. 12, Jl. Jend. Sudirman Kav. 1, Karet Tengsin, Tanah Abang, Jakarta Pusat 10220"
 )
 
-func quotationData(items []map[string]any) map[string]any {
-	// The widest whole amounts the money columns hold.
-	withSen := make([]map[string]any, 0, len(items))
+// widestMoney sets the money cells.
+// Prices and amounts are whole rupiah, so the widest a line prints is a
+// nine digit unit price and a ten digit amount, which the columns hold.
+func widestMoney(items []map[string]any) []map[string]any {
+	out := make([]map[string]any, 0, len(items))
 	for _, it := range items {
 		c := map[string]any{}
 		for k, v := range it {
 			c[k] = v
 		}
 		c["UnitPrice"], c["Amount"] = "Rp999.999.999", "Rp9.999.999.999"
-		withSen = append(withSen, c)
+		out = append(out, c)
 	}
+	return out
+}
+
+func quotationData(items []map[string]any) map[string]any {
+	rows := widestMoney(items)
 	return map[string]any{
 		"CompanyName": partyName, "AttnName": "Bapak Riza Chair",
 		"AttnEmail": "riza.chair@example.com", "AttnPhone": "0811-000-000",
 		"QuotationNo": "Q-26400393/GNS/IV/2026", "ClientRefNo": "V-26-2401-035-D", "DateLine": "Jakarta, 30 April 2026",
-		"Items": withSen, "Total": "Rp45.200.000", "HasDiscount": true, "DiscountPct": "5", "TotalDiscount": "Rp2.260.000",
+		"Items": rows, "Total": "Rp45.200.000", "HasDiscount": true, "DiscountPct": "5", "TotalDiscount": "Rp2.260.000",
 		"Subtotal": "Rp42.940.000", "WithPPN": true, "DPP": "Rp39.361.667", "PPN": "Rp4.723.400", "GrandTotal": "Rp47.663.400",
 		"DeliveryPlace": "Jakarta Selatan", "DeliveryTime": "5 hari kerja", "Payment": "30 hari", "Validity": "14 hari", "SignerName": "Director",
 	}
 }
 
 func invoiceData(items []map[string]any) map[string]any {
-	// The invoice prints the sen, so its fixture carries them at the widest
-	// the money columns hold.
-	withSen := make([]map[string]any, 0, len(items))
-	for _, it := range items {
-		c := map[string]any{}
-		for k, v := range it {
-			c[k] = v
-		}
-		c["UnitPrice"], c["Amount"] = "Rp99.999.999,25", "Rp999.999.999,25"
-		withSen = append(withSen, c)
-	}
+	rows := widestMoney(items)
 	return map[string]any{
 		"CompanyName": partyName, "CompanyNPWP": "01.234.567.8-901.000",
 		"CompanyAddress": partyAddress, "InvoiceNo": "INV-26400393/GNS/IV/2026",
 		"PONo": "PO-778/2026", "PODate": "20 April 2026", "InvoiceDate": "30 April 2026", "DueDate": "30 May 2026",
-		"Items": withSen, "Total": "Rp48.200.002,25", "HasDiscount": true, "Diskon": "Rp2.410.000,11", "DiscountPct": "5", "Subtotal": "Rp45.790.002,14", "WithPPN": true,
-		"DPPNilaiLain": "Rp41.974.168,63", "PPN": "Rp5.036.900,24", "GrandTotal": "Rp50.826.902,38", "PaymentTerms": "Payment in Advance (Before Delivery)",
+		"Items": rows, "Total": "Rp48.200.000", "HasDiscount": true, "Diskon": "Rp2.410.000", "DiscountPct": "5", "Subtotal": "Rp45.790.000", "WithPPN": true,
+		"DPPNilaiLain": "Rp41.974.167", "PPN": "Rp5.036.900", "GrandTotal": "Rp50.826.900", "PaymentTerms": "Payment in Advance (Before Delivery)",
 		"BankName": "Bank Mandiri", "BankAccountNo": "123-00-4567890", "BankAccountName": "PT Global Niaga Sakti", "DateLine": "Jakarta, 30 April 2026", "SignerName": "Director",
 	}
 }
