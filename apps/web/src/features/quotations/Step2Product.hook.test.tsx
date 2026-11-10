@@ -44,7 +44,7 @@ const base = {
   summaryPpn: 0,
   summaryGrandTotal: 0,
   onImportProducts: vi.fn(),
-  unitByText: unitIndex([{ id: 1, code: "PCS", aliases: [] }]),
+  unitByText: unitIndex([{ id: 1, code: "PCS", isActive: true, aliases: [] }]),
 }
 
 function alerts(): string[] {

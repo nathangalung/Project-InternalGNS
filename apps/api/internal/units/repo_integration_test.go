@@ -34,7 +34,8 @@ func TestRepo_ListAll(t *testing.T) {
 		{"PCS", "PIECES"},
 		{"PCS", "EA"},
 		{"RLS", "ROLL"},
-		{"TIN", "CAN"},
+		{"TIN", "TINS"},
+		{"CAN", "CANS"},
 		{"LBR", "SHEET"},
 		{"PKT", "PACK"},
 		{"PAIL", "EMBER"},
@@ -46,4 +47,10 @@ func TestRepo_ListAll(t *testing.T) {
 		})
 	}
 	assert.Empty(t, byCode["MMBTU"].Aliases)
+	assert.NotContains(t, byCode["TIN"].Aliases, "CAN", "CAN is a unit of its own")
+	for _, u := range rows {
+		assert.NotContains(t, u.Aliases, "KALENG", "KALENG means CAN or TIN, so it names neither")
+	}
+	assert.True(t, byCode["CAN"].IsActive)
+	assert.False(t, byCode["OTH"].IsActive, "OTH is retired, still listed for what was filed with it")
 }

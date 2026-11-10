@@ -1102,6 +1102,7 @@ export type UnitRow = {
     name?: string;
     coretaxCode?: string;
     aliases: string[];
+    isActive: boolean;
 };
 
 // From clients/dto.go

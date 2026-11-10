@@ -1,4 +1,4 @@
--- Canonical current body of fn_prepare_quotation_lines (deployed by migration 00117).
+-- Canonical current body of fn_prepare_quotation_lines (deployed by migration 00122).
 CREATE OR REPLACE FUNCTION public.fn_prepare_quotation_lines(p_items jsonb, p_user_id bigint)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -50,6 +50,8 @@ BEGIN
          AND item_id = NULLIF(v_item->>'offered_item_id', '')::BIGINT
          AND product_url IS DISTINCT FROM NULLIF(BTRIM(v_item->>'product_url'), '');
     END IF;
+    -- A retired unit is never picked again.
+    PERFORM fn_refuse_retired_unit(NULLIF(v_item->>'unit_id', '')::SMALLINT, NULL, NULL);
     v_out := v_out || jsonb_build_array(v_item - 'vendor_id' - 'product_url');
   END LOOP;
   RETURN v_out;

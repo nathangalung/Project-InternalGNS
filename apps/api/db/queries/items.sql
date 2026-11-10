@@ -18,12 +18,16 @@ WHERE id = $1;
 -- name: items.create
 -- IMPA codes are stored trimmed and upper-cased, so the import lookup and
 -- the one-active-owner index agree on what counts as the same code.
+-- A retired unit is refused as the default (00122).
+WITH unit_ok AS (SELECT fn_refuse_retired_unit($3::SMALLINT, NULL, 'defaultUnitId'))
 INSERT INTO items (name, impa_code, default_unit_id, description, is_active, created_by, updated_by)
-VALUES ($1, NULLIF(UPPER(BTRIM($2)), ''), $3, $4, COALESCE($5, TRUE), $6, $6)
+SELECT $1, NULLIF(UPPER(BTRIM($2)), ''), $3::SMALLINT, $4, COALESCE($5::BOOLEAN, TRUE), $6::BIGINT, $6::BIGINT
+FROM unit_ok
 RETURNING id, name, impa_code, default_unit_id, description,
           is_active, created_at, updated_at, image_object_key;
 
 -- name: items.update
+-- A product keeps a retired default it has, but picks no other (00122).
 UPDATE items
    SET name             = $2,
        impa_code        = NULLIF(UPPER(BTRIM($3)), ''),
@@ -32,6 +36,8 @@ UPDATE items
        is_active        = $6,
        updated_by       = $7,
        updated_at       = NOW()
+  FROM (SELECT fn_refuse_retired_unit(
+          $4::SMALLINT, (SELECT default_unit_id FROM items WHERE id = $1), 'defaultUnitId')) unit_ok
  WHERE id = $1
 RETURNING id, name, impa_code, default_unit_id, description,
           is_active, created_at, updated_at, image_object_key;

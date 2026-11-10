@@ -33,12 +33,16 @@ func SeedMasterIfMissing(ctx context.Context, pool *pgxpool.Pool) error {
 		   ('BTL','Bottle','UM.0033'),('PRS','Pairs','UM.0033'),('RLS','Rolls','UM.0033'),
 		   ('SPL','Spool','UM.0033'),('LGH','Length','UM.0033'),('COIL','Coil','UM.0033'),
 		   ('PAIL','Pail','UM.0033'),('DRUM','Drum','UM.0033'),
-		   ('VOL','Volume','UM.0033'),('SCT','Sachet','UM.0033'),('STRP','Strip','UM.0033')
+		   ('VOL','Volume','UM.0033'),('SCT','Sachet','UM.0033'),('STRP','Strip','UM.0033'),
+		   ('CAN','Can','UM.0033')
 		 ON CONFLICT (code) DO NOTHING`,
+
+		// OTH is retired (00122).
+		`UPDATE units SET is_active = FALSE WHERE code = 'OTH' AND is_active`,
 
 		`SELECT setval('units_id_seq', GREATEST(40, (SELECT COALESCE(MAX(id), 1) FROM units)), true)`,
 
-		// Same list as migrations 00109, 00111 and 00118, kept in step by their test.
+		// Same list as migrations 00109, 00111, 00118 and 00122, kept in step by their test.
 		`INSERT INTO unit_aliases (alias, unit_id)
 		 SELECT v.alias, u.id
 		 FROM (VALUES
@@ -52,7 +56,7 @@ func SeedMasterIfMissing(ctx context.Context, pool *pgxpool.Pool) error {
 		   ('KGS','KG'),('KILO','KG'),('KILOGRAM','KG'),('G','GR'),('GRAM','GR'),
 		   ('L','LTR'),('LT','LTR'),('LITER','LTR'),('LITRE','LTR'),('LITERS','LTR'),
 		   ('METER','MTR'),('METRE','MTR'),('METERS','MTR'),('MTRS','MTR'),('M','MTR'),
-		   ('CAN','TIN'),('CANS','TIN'),('KALENG','TIN'),('TINS','TIN'),
+		   ('TINS','TIN'),('CANS','CAN'),
 		   ('TUBE','TUB'),('TUBES','TUB'),
 		   ('PACK','PKT'),('PACKS','PKT'),('PAX','PKT'),('PAC','PKT'),('PCK','PKT'),
 		   ('PK','PKT'),('PAK','PKT'),('PACKET','PKT'),('PACKETS','PKT'),('BUNGKUS','PKT'),

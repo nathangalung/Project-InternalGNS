@@ -17,8 +17,14 @@ Feature: Unit master
     And unit "PAIL" is "Pail" with Coretax code "UM.0033"
     And unit "DRUM" is "Drum" with Coretax code "UM.0033"
     And unit "PCS" is also written "PIECES"
-    And unit "TIN" is also written "CAN"
+    And unit "TIN" is also written "TINS"
+    And unit "CAN" is "Can" with Coretax code "UM.0033"
+    And unit "CAN" is also written "CANS"
     And unit "LBR" is also written "SHEET"
     And unit "PKT" is also written "PACK"
     And unit "PACK" is not listed
     And no alias equals a unit code
+
+  Scenario: A retired unit stays listed for what was filed with it
+    When the user lists units
+    Then unit "OTH" is listed but retired

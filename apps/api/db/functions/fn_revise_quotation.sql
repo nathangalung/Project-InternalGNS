@@ -1,4 +1,4 @@
--- Canonical current body of fn_revise_quotation (deployed by migration 00107).
+-- Canonical current body of fn_revise_quotation (deployed by migration 00122).
 CREATE OR REPLACE FUNCTION public.fn_revise_quotation(p_quotation_id bigint, p_user_id bigint, p_note text DEFAULT NULL::text)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -70,6 +70,7 @@ BEGIN
   PERFORM set_config('gns.learn_match', 'off', true);
 
   -- Vendor cost sync stays off: the copy quotes no new price.
+  -- A retired unit is left out, so the revision asks for a current one.
   INSERT INTO quotation_items (
     quotation_id, line_number, item_type,
     requested_item_id, requested_impa, requested_name,
@@ -81,10 +82,11 @@ BEGIN
   SELECT v_new_id, qi.line_number, qi.item_type,
          qi.requested_item_id, qi.requested_impa, qi.requested_name,
          qi.offered_item_id, qi.vendor_product_id,
-         qi.qty, qi.unit_id, qi.selling_price, qi.cost_price, qi.discount_pct,
+         qi.qty, u.id, qi.selling_price, qi.cost_price, qi.discount_pct,
          qi.is_available, qi.ship_destination, qi.due_date, qi.shipping_days,
          FALSE, nr.id, p_user_id, p_user_id
   FROM quotation_items qi
+  LEFT JOIN units u ON u.id = qi.unit_id AND u.is_active
   LEFT JOIN quotation_item_requests orr ON orr.id = qi.request_id
   LEFT JOIN quotation_item_requests nr
          ON nr.quotation_id = v_new_id AND nr.line_no = orr.line_no

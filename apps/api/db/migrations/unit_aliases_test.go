@@ -27,6 +27,26 @@ const importAliasesMigration = "00111_unit_aliases_import.sql"
 // Volume, Sachet and Strip with their spellings.
 const newUnitsMigration = "00118_units_vol_sachet_strip.sql"
 
+// CAN apart from TIN, OTH retired.
+const canMigration = "00122_units_can_retire_oth.sql"
+
+// What 00122 does to the alias list.
+// CAN, CANS and KALENG leave TIN, and CANS names the new CAN.
+func withCan(pairs []string) []string {
+	out := slices.DeleteFunc(pairs, func(p string) bool {
+		return p == "CAN=TIN" || p == "CANS=TIN" || p == "KALENG=TIN"
+	})
+	return append(out, "CANS=CAN")
+}
+
+// beforeCan undoes 00122.
+// A test that reruns an older alias migration needs CAN back as an alias.
+func beforeCan(ctx context.Context, t *testing.T, tx pgx.Tx) {
+	t.Helper()
+	_, err := tx.Exec(ctx, downSQL(t, canMigration))
+	require.NoError(t, err)
+}
+
 // unitID reads one unit by code.
 func unitID(ctx context.Context, t *testing.T, tx pgx.Tx, code string) int16 {
 	t.Helper()
@@ -40,6 +60,7 @@ func unitID(ctx context.Context, t *testing.T, tx pgx.Tx, code string) int16 {
 // code it printed.
 func TestMigration00109_FoldsPackIntoPKT(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
+	beforeCan(ctx, t, tx)
 	qid, err := quotations.NewRepo(tx, testutil.Store(t)).Create(ctx, quotations.CreateRequest{
 		ValidityDays:    testutil.Validity(),
 		CompanyClientID: 1,
@@ -119,6 +140,7 @@ func TestMigration00109_FoldsPackIntoPKT(t *testing.T) {
 // Ship-supply names and the new units.
 func TestMigration00109_NamesAndNewUnits(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
+	beforeCan(ctx, t, tx)
 	// The names before the cleanup.
 	_, err := tx.Exec(ctx, `
 		UPDATE units u SET name = v.name
@@ -217,11 +239,12 @@ func aliasPairs(t *testing.T, sql string) []string {
 }
 
 // Seed and migration agree.
-// The master seed and the test seed carry the migration's aliases, so a
+// The master seed and the test seed carry the migrations' aliases, so a
 // fresh database resolves what production resolves.
 func TestMigration00109_SeedsCarryAliases(t *testing.T) {
 	want := append(aliasPairs(t, upSQL(t, unitAliasesMigration)), aliasPairs(t, upSQL(t, importAliasesMigration))...)
 	want = append(want, aliasPairs(t, upSQL(t, newUnitsMigration))...)
+	want = withCan(want)
 	sort.Strings(want)
 	require.NotEmpty(t, want)
 
