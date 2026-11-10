@@ -109,7 +109,11 @@ type InvoiceItem struct {
 	PpnRate         *string `db:"ppn_rate"           json:"ppnRate,omitempty"`
 	PpnAmount       *string `db:"ppn_amount"         json:"ppnAmount,omitempty"`
 	ShipDestination *string `db:"ship_destination"   json:"shipDestination,omitempty"`
-	GoodsOrService  *string `db:"goods_or_service"   json:"goodsOrService,omitempty"`
+	// Description cell on the PDF.
+	// Nil until a save, so the line prints its destination. An empty one
+	// prints nothing.
+	Description    *string `db:"description"        json:"description,omitempty"`
+	GoodsOrService *string `db:"goods_or_service"   json:"goodsOrService,omitempty"`
 }
 
 // Invoice list KPI aggregates.
@@ -168,5 +172,23 @@ type ListResult struct {
 
 // DatesUpdatedResponse carries the new version.
 type DatesUpdatedResponse struct {
+	RowVersion int32 `json:"rowVersion"`
+}
+
+// UpdateDescriptionsRequest saves line descriptions.
+// Only the lines sent change.
+type UpdateDescriptionsRequest struct {
+	Lines []LineDescription `json:"lines"`
+}
+
+// LineDescription is one line's text.
+// An empty description clears the line, which then prints nothing.
+type LineDescription struct {
+	LineID      int64  `json:"lineId"`
+	Description string `json:"description"`
+}
+
+// DescriptionsUpdatedResponse carries the new version.
+type DescriptionsUpdatedResponse struct {
 	RowVersion int32 `json:"rowVersion"`
 }

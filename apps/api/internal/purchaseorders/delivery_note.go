@@ -165,7 +165,7 @@ func deliveryNoteItems(items []PurchaseOrderItem, address string) []dnItem {
 			No:   len(out) + 1,
 			Qty:  pdfgen.FormatQty(it.Qty),
 			Unit: pdfgen.LatexEscape(unit),
-			Name: pdfgen.LatexBreakable(it.ItemName),
+			Name: pdfgen.ProductLabel(it.ItemName, it.ItemCode),
 			Note: pdfgen.LatexAddress(note, pdfgen.CellKeep),
 		})
 	}

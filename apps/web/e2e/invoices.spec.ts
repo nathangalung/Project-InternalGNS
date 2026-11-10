@@ -54,6 +54,26 @@ async function openInvoice(page: Page, inv: Pick<SeedInvoice, "quotationId" | "i
   await expect(page.getByRole("heading", { name: `Invoice ${inv.invoiceNo}` })).toBeVisible()
 }
 
+// Stand in for the rendered PDF.
+//
+// Headless Chromium has no save dialog, so the anchor fallback runs. The CI
+// browser job has no xelatex; the pdf layout job renders the real file. The
+// real request still runs, so the API's own CORS headers stay.
+async function stubInvoicePdf(page: Page, invoiceId: number): Promise<void> {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "showSaveFilePicker", { value: undefined })
+  })
+  await page.route(`**/api/v1/invoices/${invoiceId}/pdf`, async (route) => {
+    const response = await route.fetch()
+    await route.fulfill({
+      response,
+      status: 200,
+      contentType: "application/pdf",
+      body: "%PDF-1.7\n%%EOF\n",
+    })
+  })
+}
+
 // Confirm the open step's dialog.
 async function confirm(page: Page, title: string, submit: string) {
   const dialog = page.getByRole("dialog", { name: title })
@@ -301,21 +321,7 @@ test("a cancelled invoice without a Pengganti offers one (INV-10)", async ({
 
 // The void copy stays printable.
 test("a cancelled invoice still downloads its PDF", async ({ page, admin, invoice }) => {
-  // Headless Chromium has no save dialog; take the anchor fallback.
-  await page.addInitScript(() => {
-    Object.defineProperty(window, "showSaveFilePicker", { value: undefined })
-  })
-  // The CI browser job has no xelatex; the pdf layout job renders the
-  // DIBATALKAN copy. Keep the API's own headers so CORS still holds.
-  await page.route(`**/api/v1/invoices/${invoice.id}/pdf`, async (route) => {
-    const response = await route.fetch()
-    await route.fulfill({
-      response,
-      status: 200,
-      contentType: "application/pdf",
-      body: "%PDF-1.7\n%%EOF\n",
-    })
-  })
+  await stubInvoicePdf(page, invoice.id)
   await setInvoiceStatus(admin, invoice.id, "cancelled", "Dibatalkan lewat API")
   await openInvoice(page, invoice)
   const download = page.waitForEvent("download")
@@ -384,5 +390,78 @@ test.describe("in a browser west of Jakarta", () => {
     const row = page.getByRole("row").filter({ hasText: invoice.invoiceNo })
     await expect(row).toContainText(printed(issued))
     await expect(row).toContainText(printed(due))
+  })
+})
+
+// Line descriptions before the PDF.
+test.describe("invoice descriptions", () => {
+  const destination = "Jl. Pelabuhan Raya No. 12, Tanjung Priok, Jakarta Utara"
+
+  async function savedDescriptions(admin: string, id: number) {
+    const res = await call(`/invoices/${id}/items`, { token: admin })
+    return ((await res.json()) as { description?: string }[]).map((l) => l.description)
+  }
+
+  test("a description saved before the download stays for the reprint", async ({
+    page,
+    admin,
+    invoice,
+  }) => {
+    await stubInvoicePdf(page, invoice.id)
+    await openInvoice(page, invoice)
+    await page.getByRole("button", { name: "Unduh PDF" }).click()
+    const dialog = page.getByRole("dialog", { name: "Unduh Invoice" })
+    const texts = dialog.getByRole("textbox")
+    await expect(texts).toHaveCount(1)
+    await expect(texts.nth(0)).toHaveValue(destination)
+    await expect(dialog.getByRole("button", { name: "Unduh", exact: true })).toBeVisible()
+
+    await texts.nth(0).fill("Warna oranye, panjang 50 m")
+    const download = page.waitForEvent("download")
+    await dialog.getByRole("button", { name: "Simpan dan Unduh" }).click()
+    expect((await download).suggestedFilename()).toMatch(/\.pdf$/)
+    await expect(dialog).toBeHidden()
+    expect(await savedDescriptions(admin, invoice.id)).toEqual(["Warna oranye, panjang 50 m"])
+
+    // The reprint shows the saved text and saves nothing.
+    await page.getByRole("button", { name: "Unduh PDF" }).click()
+    await expect(texts.nth(0)).toHaveValue("Warna oranye, panjang 50 m")
+    const again = page.waitForEvent("download")
+    await dialog.getByRole("button", { name: "Unduh", exact: true }).click()
+    await again
+    await expect(dialog).toBeHidden()
+
+    // A cleared description prints nothing, never the destination.
+    await page.getByRole("button", { name: "Unduh PDF" }).click()
+    await texts.nth(0).fill("")
+    const cleared = page.waitForEvent("download")
+    await dialog.getByRole("button", { name: "Simpan dan Unduh" }).click()
+    await cleared
+    await expect(dialog).toBeHidden()
+    expect(await savedDescriptions(admin, invoice.id)).toEqual([""])
+  })
+
+  test("a paid invoice downloads as filed, with no dialog", async ({ page, admin, invoice }) => {
+    await stubInvoicePdf(page, invoice.id)
+    await setInvoiceStatus(admin, invoice.id, "sent")
+    await setInvoiceStatus(admin, invoice.id, "paid")
+    await openInvoice(page, invoice)
+    const download = page.waitForEvent("download")
+    await page.getByRole("button", { name: "Unduh PDF" }).click()
+    await download
+    await expect(page.getByRole("dialog", { name: "Unduh Invoice" })).toHaveCount(0)
+  })
+
+  test.describe("as finance input", () => {
+    test.use({ session: "finance_input" })
+
+    test("the PDF downloads with no dialog", async ({ page, invoice }) => {
+      await stubInvoicePdf(page, invoice.id)
+      await openInvoice(page, invoice)
+      const download = page.waitForEvent("download")
+      await page.getByRole("button", { name: "Unduh PDF" }).click()
+      await download
+      await expect(page.getByRole("dialog", { name: "Unduh Invoice" })).toHaveCount(0)
+    })
   })
 })

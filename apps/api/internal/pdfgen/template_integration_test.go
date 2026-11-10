@@ -95,10 +95,11 @@ func TestRealTemplate_Invoice(t *testing.T) {
 
 func TestRealTemplate_Quotation(t *testing.T) {
 	type item struct {
-		No                        int
-		Qty, Unit, Request, Offer string
-		HasOffer                  bool
-		UnitPrice, Amount         string
+		No                     int
+		Qty, Unit, RequestCode string
+		Request, Offer         string
+		HasOffer               bool
+		UnitPrice, Amount      string
 	}
 	data := struct {
 		QuotationNo, ClientRefNo, CompanyName                      string
@@ -118,7 +119,7 @@ func TestRealTemplate_Quotation(t *testing.T) {
 		AttnEmail:     "budi@test",
 		AttnPhone:     "0811",
 		DateLine:      "Jakarta, 1 January 2026",
-		Items:         []item{{No: 1, Qty: "1", Unit: "PCS", Request: "Foo", Offer: "Bar", HasOffer: true, UnitPrice: "Rp100", Amount: "Rp100"}},
+		Items:         []item{{No: 1, Qty: "1", Unit: "PCS", RequestCode: "190105", Request: "Foo", Offer: "Bar", HasOffer: true, UnitPrice: "Rp100", Amount: "Rp100"}},
 		Total:         "Rp100",
 		DiscountPct:   "0",
 		TotalDiscount: "Rp0",

@@ -122,9 +122,12 @@ func TestPageCount(t *testing.T) {
 	}
 }
 
+// Two sample lines.
+// The first carries IMPA codes as the templates print them, the second
+// none.
 func sampleItems(n int) []map[string]any {
 	base := []map[string]any{
-		{"Qty": "5", "Unit": "PCS", "Request": "Marine radio handheld VHF intrinsically safe", "HasOffer": true, "Offer": "Entel HT840 VHF portable, USTC certified", "UnitPrice": "Rp9.040.000", "Amount": "Rp45.200.000", "Name": "Marine Radio Handheld", "Description": "Entel HT840 VHF portable", "Note": "MV Global Star, Tanjung Priok"},
+		{"Qty": "5", "Unit": "PCS", "RequestCode": "370021", "Request": "Marine radio handheld VHF intrinsically safe", "HasOffer": true, "Offer": "370022~- Entel HT840 VHF portable, USTC certified", "UnitPrice": "Rp9.040.000", "Amount": "Rp45.200.000", "Name": "370022~- Marine Radio Handheld", "Description": "Entel HT840 VHF portable", "Note": "MV Global Star, Tanjung Priok"},
 		{"Qty": "2", "Unit": "SET", "Request": "Fire hose coupling", "HasOffer": false, "Offer": "", "UnitPrice": "Rp1.500.000", "Amount": "Rp3.000.000", "Name": "Fire Hose Coupling", "Description": "Aluminum, 2.5 inch", "Note": "MV Global Star"},
 	}
 	out := make([]map[string]any, 0, n)
@@ -148,14 +151,14 @@ const (
 )
 
 func quotationData(items []map[string]any) map[string]any {
-	// Whole rupiah at the widest a real quotation line reaches.
+	// The widest whole amounts the money columns hold.
 	withSen := make([]map[string]any, 0, len(items))
 	for _, it := range items {
 		c := map[string]any{}
 		for k, v := range it {
 			c[k] = v
 		}
-		c["UnitPrice"], c["Amount"] = "Rp9.040.000", "Rp45.200.000"
+		c["UnitPrice"], c["Amount"] = "Rp999.999.999", "Rp9.999.999.999"
 		withSen = append(withSen, c)
 	}
 	return map[string]any{
@@ -169,14 +172,15 @@ func quotationData(items []map[string]any) map[string]any {
 }
 
 func invoiceData(items []map[string]any) map[string]any {
-	// The invoice prints the sen, so its fixture carries them at full width.
+	// The invoice prints the sen, so its fixture carries them at the widest
+	// the money columns hold.
 	withSen := make([]map[string]any, 0, len(items))
 	for _, it := range items {
 		c := map[string]any{}
 		for k, v := range it {
 			c[k] = v
 		}
-		c["UnitPrice"], c["Amount"] = "Rp9.040.000,25", "Rp45.200.001,25"
+		c["UnitPrice"], c["Amount"] = "Rp99.999.999,25", "Rp999.999.999,25"
 		withSen = append(withSen, c)
 	}
 	return map[string]any{

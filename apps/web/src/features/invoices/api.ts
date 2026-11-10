@@ -10,8 +10,10 @@ import type {
   InvoiceBackendRow,
   InvoiceBackendStatus,
   InvoiceDatesSaved,
+  InvoiceDescriptionsSaved,
   InvoiceDetail,
   InvoiceItemRow,
+  InvoiceLineDescriptionInput,
   InvoiceSummary,
   ObjectKeyInput,
   PresignDownload,
@@ -102,6 +104,20 @@ export async function updateDates(
     path: `/invoices/${id}/dates`,
     method: "PATCH",
     body: input,
+    headers: { "If-Match": String(rowVersion) },
+  })
+}
+
+// Line descriptions, saved under If-Match.
+export async function updateDescriptions(
+  id: number,
+  lines: InvoiceLineDescriptionInput[],
+  rowVersion: number,
+): Promise<InvoiceDescriptionsSaved> {
+  return apiRequest<InvoiceDescriptionsSaved>({
+    path: `/invoices/${id}/descriptions`,
+    method: "PATCH",
+    body: { lines },
     headers: { "If-Match": String(rowVersion) },
   })
 }

@@ -29,6 +29,8 @@ import {
 } from "../hooks"
 import ActionModal, { type ActionModalKind } from "./ActionModal"
 import DatesCard from "./DatesCard"
+import DescriptionModal from "./DescriptionModal"
+import { descriptionsEditable } from "./description"
 import FileCard from "./FileCard"
 import Header from "./Header"
 import HistoryCard from "./HistoryCard"
@@ -74,6 +76,7 @@ export default function InvoiceDetail({ inv }: InvoiceDetailProps) {
   // Finance input records payment only
   const manages = managesInvoices(useMe().data?.role)
   const [modal, setModal] = useState<ActionModalKind | null>(null)
+  const [showDescriptions, setShowDescriptions] = useState(false)
 
   const status = invoiceDisplayStatus(inv)
   const actions = useMemo(() => invoiceActions(inv.allowedTransitions), [inv.allowedTransitions])
@@ -126,6 +129,16 @@ export default function InvoiceDetail({ inv }: InvoiceDetailProps) {
     }
   }
 
+  function downloadInvoicePdf() {
+    return downloadPdf(`/invoices/${inv.id}/pdf`, `${safeFileName(inv.invoiceNo)}.pdf`)
+  }
+
+  // Superadmin and the finance head type descriptions first, others download.
+  function startPdf() {
+    if (manages && descriptionsEditable(inv.status) && invItems) setShowDescriptions(true)
+    else void runDownload(downloadInvoicePdf, "Gagal mengunduh PDF invoice.")
+  }
+
   async function handleProofDownload() {
     try {
       const { downloadUrl } = await invApi.presignPaymentProofDownload(inv.id)
@@ -146,16 +159,7 @@ export default function InvoiceDetail({ inv }: InvoiceDetailProps) {
 
   return (
     <div className={ui.pageContent}>
-      <Header
-        inv={inv}
-        status={status}
-        onDownloadPdf={() =>
-          void runDownload(
-            () => downloadPdf(`/invoices/${inv.id}/pdf`, `${safeFileName(inv.invoiceNo)}.pdf`),
-            "Gagal mengunduh PDF invoice.",
-          )
-        }
-      />
+      <Header inv={inv} status={status} onDownloadPdf={startPdf} />
       <StatusBar
         inv={inv}
         status={status}
@@ -211,6 +215,16 @@ export default function InvoiceDetail({ inv }: InvoiceDetailProps) {
         grandTotal={grandTotal}
       />
       <HistoryCard items={history} onDownloadProof={() => void handleProofDownload()} />
+
+      {showDescriptions && invItems && (
+        <DescriptionModal
+          invoiceId={inv.id}
+          rowVersion={inv.rowVersion}
+          items={invItems}
+          onDownload={downloadInvoicePdf}
+          onClose={() => setShowDescriptions(false)}
+        />
+      )}
 
       {modal && offered && (
         <ActionModal

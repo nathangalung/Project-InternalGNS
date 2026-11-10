@@ -6,11 +6,13 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 import * as invApi from "@/features/invoices/api"
+import { ApiError } from "@/lib/api-client"
 import { errorMessage, isVersionConflict } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
 import { uploadWithFreshKey } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
 import { validateAsset } from "@/lib/upload-validation"
+import type { InvoiceLineDescriptionInput } from "@/types/api"
 import type { UpdateInvoiceDatesInput } from "./types"
 
 export function useInvoices(params: invApi.ListParams = {}) {
@@ -204,5 +206,29 @@ export function useInvoiceAttachmentDownloadUrl(id: number | undefined, objectKe
         ? () => invApi.presignAttachmentDownload(id)
         : skipToken,
     staleTime: 4 * 60 * 1000,
+  })
+}
+
+// Saves line descriptions.
+//
+// The dialog shows every refusal itself, so this hook never toasts. A
+// stale version or a filed invoice reloads the page's invoice and lines.
+export function useSaveInvoiceDescriptions() {
+  const qc = useQueryClient()
+  const reload = () => qc.invalidateQueries({ queryKey: queryKeys.invoices.all })
+  return useMutation({
+    mutationFn: ({
+      id,
+      lines,
+      rowVersion,
+    }: {
+      id: number
+      lines: InvoiceLineDescriptionInput[]
+      rowVersion: number
+    }) => invApi.updateDescriptions(id, lines, rowVersion),
+    onSuccess: reload,
+    onError: async (err) => {
+      if (err instanceof ApiError && err.status === 409) await reload()
+    },
   })
 }

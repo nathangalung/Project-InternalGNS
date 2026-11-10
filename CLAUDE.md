@@ -555,6 +555,21 @@ shows a missing one as Belum ada No. PO.
   DELIVERED); only a Pengganti, which copies the client as it is then,
   changes it. Coretax refuses an invoice without a valid NPWP with that
   Pengganti route.
+  Each invoice line keeps its own Description (`invoice_items.description`,
+  00121, up to 500 characters), the invoice's counterpart of the delivery
+  note's row notes: NULL means never saved and the line prints its
+  destination, a saved text replaces it, and an empty one prints nothing.
+  `PATCH /invoices/{id}/descriptions` saves `{lines: [{lineId,
+  description}]}` (`fn_update_invoice_descriptions`): If-Match is required,
+  only the lines sent change, each `lineId` must be a line of this invoice
+  (else a 422), and a paid or cancelled invoice is a 409, since it prints
+  as filed, like its dates. Superadmin and the finance head write it;
+  finance input is denied, as for dates. On the invoice detail, Unduh PDF
+  opens `DescriptionModal` for them while the invoice is open (each line
+  with its saved text or destination, Simpan dan Unduh saves every line
+  once any changed, Unduh with no change only downloads); everyone else,
+  and a filed invoice, downloads directly. A Pengganti starts with none.
+  Coretax and the amounts never read it.
   Both Coretax exports follow DJP's converter v1.6 and its template
   v1.6.1 (`invoices/coretax_djp_test.go`): the XML carries every element
   of DJP's sample, `CustomDocMonthYear` included, and in the workbook each
@@ -747,8 +762,15 @@ has a typed Kode IMPA Request beside Nama Produk Request, and a read-only
 Kode IMPA Offer (the picked product's) beside the Nama Produk Offer search,
 which still takes a code or a name. Lists, the request and offer cells
 (`RequestOffer`) and the pickers show the code apart from the name, a
-missing one as "-" (`impaLabel`, display only). The PDFs print the name,
-then the code in brackets.
+missing one as "-" (`impaLabel`, display only). The quotation PDF prints
+the request in two columns, IMPA Code and Request Item (a request
+without a code prints a grey "-"). Every other PDF product cell (the
+quotation's offer, the delivery note and the invoice) prints the code
+first, then the name, `790269 - Lampu` (`pdfgen.ProductLabel`): the code
+is tied to its hyphen, so a wrap moves only the name, and a line without
+a code prints its name alone. The quotation and invoice money columns are
+2.3 cm, wide enough for Rp999.999.999,99 and a ten digit whole amount,
+which the layout fixtures carry.
 
 ## Units
 
@@ -1140,9 +1162,12 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    first line's top to that baseline meets the logo's
    (`TestLatexExports_LetterheadCentredOnLogo`). The
    title is 13pt and the number under it 10pt, still well above the 8pt
-   party block. The rule under the letterhead sits nearer the logo than
-   the title (0.1 cm above it, 11pt below it in `\DocTitle`), so it closes
-   the letterhead (`TestLatexExports_RuleNearLogo`).
+   party block. Each template loads `fix-cm` before `\documentclass`, so
+   the underlined 13pt title scales its math fonts with no font warning,
+   which `TestLatexExports_Clean` counts. The rule under the letterhead
+   sits nearer the logo than the title (0.1 cm above it, 11pt below it
+   in `\DocTitle`), so it closes the letterhead
+   (`TestLatexExports_RuleNearLogo`).
    `TestLatexExports_Margins` renders every page of a long document and
    checks its A4 paper and its ink against the margin on all four sides, the letterhead as
    page 1's first line, the logo width, the number set smaller than the

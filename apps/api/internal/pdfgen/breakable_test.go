@@ -44,3 +44,29 @@ func TestLatexExports_LongTokenWraps(t *testing.T) {
 		t.Errorf("overfull=%d underfull=%d warnings=%d, want all 0", over, under, warn)
 	}
 }
+
+// Product cells lead with IMPA.
+// A line with a code prints "code - name", one without its name only, and
+// the code keeps its hyphen on its own line.
+func TestProductLabel(t *testing.T) {
+	code, blank := "790269", ""
+	long := strings.Repeat("A", breakRun+1)
+	cases := []struct {
+		name, in string
+		code     *string
+		want     string
+	}{
+		{"code leads", "Lampu LED 12W", &code, `790269~- Lampu LED 12W`},
+		{"no code", "Lampu LED 12W", nil, `Lampu LED 12W`},
+		{"blank code", "Lampu LED 12W", &blank, `Lampu LED 12W`},
+		{"name escaped", "Tali_Tambang", &code, `790269~- Tali\_Tambang`},
+		{"long name breaks", long, &code, `790269~- ` + LatexBreakable(long)},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := ProductLabel(c.in, c.code); got != c.want {
+				t.Errorf("ProductLabel(%q) = %q, want %q", c.in, got, c.want)
+			}
+		})
+	}
+}

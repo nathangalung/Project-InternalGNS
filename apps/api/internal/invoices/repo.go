@@ -2,6 +2,7 @@ package invoices
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -285,6 +286,31 @@ func (r *Repo) confirmOverdue(ctx context.Context, id int64) error {
 		return ErrOverdueDerived
 	}
 	return nil
+}
+
+// UpdateDescriptions saves line texts.
+// It returns the new row_version. The handler refuses a request without
+// If-Match, so ifMatch nil, which skips the guard, comes only from seeding
+// callers. A missing invoice is ErrNotFound and a stale ifMatch
+// ErrVersionMismatch; a filed invoice or a foreign line passes through as
+// the function's raise.
+func (r *Repo) UpdateDescriptions(
+	ctx context.Context, id int64, lines []LineDescription, actorID int64, ifMatch *int32,
+) (int32, error) {
+	payload, err := json.Marshal(lines)
+	if err != nil {
+		return 0, err
+	}
+	var v int32
+	err = r.db.QueryRow(ctx, r.store.Get("invoices.update_descriptions"), id, ifMatch, payload, actorID).Scan(&v)
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == db.SQLStateVersionMismatch {
+		return 0, ErrVersionMismatch
+	}
+	if err != nil {
+		return 0, classifyPgErr(err)
+	}
+	return v, nil
 }
 
 // classifyPgErr maps ERRCODEs to errors.

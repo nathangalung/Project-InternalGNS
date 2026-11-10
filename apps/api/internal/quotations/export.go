@@ -34,10 +34,13 @@ func NewExportHandler(repo *Repo, c *clients.Repo, u *units.Repo, r *pdfgen.Rend
 }
 
 type exportItem struct {
-	No        int
-	Qty       string
-	Unit      string
-	Request   string
+	No   int
+	Qty  string
+	Unit string
+	// The request's IMPA code has its own column, its name the next one.
+	RequestCode string
+	Request     string
+	// The offer prints its code first, as the note and invoice do.
 	Offer     string
 	HasOffer  bool
 	UnitPrice string
@@ -174,14 +177,15 @@ func buildExportData(
 		}
 
 		items = append(items, exportItem{
-			No:        len(items) + 1,
-			Qty:       pdfgen.FormatQty(it.Qty),
-			Unit:      pdfgen.LatexEscape(unitCode),
-			Request:   withCode(it.RequestedName, it.RequestedImpa),
-			Offer:     offerText(it),
-			HasOffer:  shipping || (it.IsAvailable && isPriced(it.SellingPrice)),
-			UnitPrice: pdfgen.FormatIDRCents(it.SellingPrice),
-			Amount:    pdfgen.FormatIDRCents(it.TotalSelling),
+			No:          len(items) + 1,
+			Qty:         pdfgen.FormatQty(it.Qty),
+			Unit:        pdfgen.LatexEscape(unitCode),
+			RequestCode: pdfgen.LatexBreakable(pdfgen.StrDeref(it.RequestedImpa)),
+			Request:     pdfgen.LatexBreakable(it.RequestedName),
+			Offer:       offerText(it),
+			HasOffer:    shipping || (it.IsAvailable && isPriced(it.SellingPrice)),
+			UnitPrice:   pdfgen.FormatIDRCents(it.SellingPrice),
+			Amount:      pdfgen.FormatIDRCents(it.TotalSelling),
 		})
 	}
 
@@ -233,19 +237,9 @@ func buildExportData(
 // offerText names the supplied item.
 func offerText(it QuotationItem) string {
 	if it.OfferedName != nil && *it.OfferedName != "" {
-		return withCode(*it.OfferedName, it.OfferedImpa)
+		return pdfgen.ProductLabel(*it.OfferedName, it.OfferedImpa)
 	}
-	return withCode(it.RequestedName, nil)
-}
-
-// withCode appends the IMPA code.
-// Both parts may wrap, since table cells are narrow.
-func withCode(name string, code *string) string {
-	out := pdfgen.LatexBreakable(name)
-	if code != nil && *code != "" {
-		out += " (" + pdfgen.LatexBreakable(*code) + ")"
-	}
-	return out
+	return pdfgen.ProductLabel(it.RequestedName, nil)
 }
 
 func (h *ExportHandler) unitsLookup(ctx context.Context) (map[int16]string, error) {

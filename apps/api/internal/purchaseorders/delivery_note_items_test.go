@@ -16,6 +16,11 @@ func shippingTo(addr *string) PurchaseOrderItem {
 	return PurchaseOrderItem{ItemType: "shipping", ItemName: "Pengiriman", Qty: "1.00", ShipDestination: addr}
 }
 
+func withCode(it PurchaseOrderItem, code string) PurchaseOrderItem {
+	it.ItemCode = &code
+	return it
+}
+
 func withNote(it PurchaseOrderItem, note string) PurchaseOrderItem {
 	it.DnNote = &note
 	return it
@@ -127,6 +132,14 @@ func TestDeliveryNoteItems(t *testing.T) {
 			"missing unit prints blank",
 			[]PurchaseOrderItem{dnLine("Lampu", "3", nil, nil)},
 			[]dnItem{{No: 1, Qty: "3", Unit: "", Name: "Lampu"}},
+		},
+		{
+			"an IMPA code leads the name",
+			[]PurchaseOrderItem{withCode(dnLine("Lampu", "3", &pcs, nil), "790269"), dnLine("Kabel", "1", &pcs, nil)},
+			[]dnItem{
+				{No: 1, Qty: "3", Unit: "PCS", Name: "790269~- Lampu"},
+				{No: 2, Qty: "1", Unit: "PCS", Name: "Kabel"},
+			},
 		},
 		{
 			"numbering skips the shipping charge",
