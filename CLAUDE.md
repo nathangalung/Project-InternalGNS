@@ -559,7 +559,10 @@ shows a missing one as Belum ada No. PO.
   DJP would not match the two (`refusedBuyers`, `tkuMismatch`). A paid
   invoice with either problem can no longer be cancelled, so the refusal
   names it to leave out of the export period instead; the bulk workbook
-  refuses as one, naming every invoice.
+  refuses as one, naming every invoice. Migration 00123 gave a paid
+  invoice imported without a buyer NPWP its client's NPWP where that
+  client is certainly the buyer (Indonesian, 16 digits, the same name, and
+  no invoice of it storing another NPWP); the rest keep none.
   Each invoice line keeps its own Description (`invoice_items.description`,
   00121, up to 500 characters), the invoice's counterpart of the delivery
   note's row notes: NULL means never saved and the line prints its
