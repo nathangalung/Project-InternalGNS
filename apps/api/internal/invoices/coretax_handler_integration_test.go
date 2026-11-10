@@ -3,6 +3,7 @@ package invoices_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -133,6 +134,38 @@ func TestCoretaxXLSX_RefusesInvoicesWithoutNPWP(t *testing.T) {
 			"Lengkapi NPWP klien, "+
 			"lalu batalkan dan terbitkan ulang invoice berikut: "+numbers+".",
 		problemDetail(t, rec))
+}
+
+// A TKU on another NPWP is refused.
+// The client's NPWP changed after issue: an open invoice goes through a
+// Pengganti, a paid one is named to leave out.
+func TestCoretaxXML_RefusesTKUOfAnotherNPWP(t *testing.T) {
+	cases := []struct {
+		name, status, want string
+	}{
+		{"open", "sent", "NPWP klien berubah setelah invoice terbit, jadi ID TKU klien tidak cocok dengan NPWP di invoice. " +
+			"Batalkan lalu terbitkan Pengganti untuk invoice berikut: %s."},
+		{"paid", "paid", "Invoice lunas berikut tidak menyimpan NPWP pembeli yang cocok untuk Coretax dan tidak dapat diubah lagi: " +
+			"%s. Pilih periode ekspor yang tidak memuatnya."},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, tx := testutil.BeginTx(t)
+			_, _, invID := deliveredPOWithInvoice(t, tx)
+			var number string
+			require.NoError(t, tx.QueryRow(ctx, `
+				UPDATE invoices SET status = $2::TEXT, paid_at = CASE WHEN $2::TEXT = 'paid' THEN NOW() END
+				WHERE id = $1 RETURNING invoice_no`, invID, tc.status).Scan(&number))
+			_, err := tx.Exec(ctx, `
+				UPDATE company_client SET tku_id = '9999999999999999000000'
+				WHERE id = (SELECT company_client_id FROM invoices WHERE id = $1)`, invID)
+			require.NoError(t, err)
+
+			rec := serve(coretaxRouter(t, tx, coretaxSettings, ""), "/invoices/"+strconv.FormatInt(invID, 10)+"/coretax.xml")
+			require.Equal(t, http.StatusUnprocessableEntity, rec.Code, rec.Body.String())
+			assert.Equal(t, fmt.Sprintf(tc.want, number), problemDetail(t, rec))
+		})
+	}
 }
 
 // Line-less invoices are skipped.
