@@ -10,6 +10,7 @@ import {
   downloadXlsx,
   downloadXml,
   fetchObjectUrl,
+  LINK_BLOB_TTL_MS,
   nullOn404,
   postForm,
   saveBlob,
@@ -255,29 +256,44 @@ describe("buildQuery", () => {
   })
 })
 
-type SavedFile = { name: string; types: unknown; written: Blob[]; closed: boolean }
+type SavedFile = {
+  name: string
+  types: unknown
+  written: Blob[]
+  closed: boolean
+  removed: boolean
+}
 
 // File System Access API stand-in.
-function stubPicker(fail?: Error) {
+// `fail` refuses the dialog, `writeFail` the write; `order` logs the dialog.
+function stubPicker(fail?: Error, writeFail?: Error, order: string[] = []) {
   const saved: SavedFile[] = []
   const picker = vi.fn(async (opts: { suggestedName: string; types?: unknown }) => {
+    order.push("dialog")
     if (fail) throw fail
     const file: SavedFile = {
       name: opts.suggestedName,
       types: opts.types,
       written: [],
       closed: false,
+      removed: false,
     }
     saved.push(file)
     return {
-      createWritable: async () => ({
-        write: async (b: Blob) => {
-          file.written.push(b)
-        },
-        close: async () => {
-          file.closed = true
-        },
-      }),
+      createWritable: async () => {
+        if (writeFail) throw writeFail
+        return {
+          write: async (b: Blob) => {
+            file.written.push(b)
+          },
+          close: async () => {
+            file.closed = true
+          },
+        }
+      },
+      remove: async () => {
+        file.removed = true
+      },
     }
   })
   Object.defineProperty(window, "showSaveFilePicker", { value: picker, configurable: true })
@@ -342,6 +358,70 @@ describe("downloads", () => {
     expect(Object.keys(types[0].accept)).toEqual([mime])
   })
 
+  it("opens the dialog before fetching, while the click still counts", async () => {
+    const order: string[] = []
+    stubPicker(undefined, undefined, order)
+    serve(() => {
+      order.push("fetch")
+      return new Response("isi")
+    })
+    await downloadPdf("/invoices/1/pdf", "a.pdf")
+    expect(order).toEqual(["dialog", "fetch"])
+  })
+
+  it("fetches nothing when the dialog is cancelled", async () => {
+    stubPicker(new DOMException("cancelled", "AbortError"))
+    const calls = serve(() => new Response("isi"))
+    await downloadPdf("/invoices/1/pdf", "a.pdf")
+    expect(calls).toEqual([])
+  })
+
+  it("removes the picked file when the download is refused", async () => {
+    const saved = stubPicker()
+    serve(() =>
+      json(
+        { type: "about:blank", title: "Unprocessable", status: 422, detail: "Ditolak." },
+        { status: 422 },
+      ),
+    )
+    await expect(downloadXml("/invoices/1/coretax.xml", "f.xml")).rejects.toMatchObject({
+      status: 422,
+    })
+    expect(saved[0].removed).toBe(true)
+    expect(saved[0].written).toEqual([])
+  })
+
+  it("still reports a refusal when the picked file cannot be removed", async () => {
+    Object.defineProperty(window, "showSaveFilePicker", {
+      configurable: true,
+      value: async () => ({
+        createWritable: async () => ({}),
+        remove: async () => {
+          throw new DOMException("busy", "NoModificationAllowedError")
+        },
+      }),
+    })
+    serve(() => new Response("gagal", { status: 500 }))
+    await expect(downloadPdf("/x", "a.pdf")).rejects.toMatchObject({ status: 500 })
+  })
+
+  it("still reports a refusal when the browser cannot remove a picked file", async () => {
+    Object.defineProperty(window, "showSaveFilePicker", {
+      configurable: true,
+      value: async () => ({ createWritable: async () => ({}) }),
+    })
+    serve(() => new Response("gagal", { status: 500 }))
+    await expect(downloadPdf("/x", "a.pdf")).rejects.toMatchObject({ status: 500 })
+  })
+
+  it("falls back to a link when the dialog is refused for a lapsed click", async () => {
+    stubPicker(new DOMException("no gesture", "SecurityError"))
+    const { clicks } = spyAnchor()
+    serve(() => new Response("isi"))
+    await downloadPdf("/quotations/1/pdf", "q.pdf")
+    expect(clicks).toEqual([{ href: "blob:gns/1", download: "q.pdf" }])
+  })
+
   it("surfaces a 409 detail written for the user", async () => {
     stubPicker()
     serve(() =>
@@ -387,15 +467,25 @@ describe("saveBlob", () => {
     expect(clicks).toEqual([{ href: "blob:gns/1", download: "a.pdf" }])
   })
 
-  it("downloads through a link without the picker and revokes it later", async () => {
+  it("keeps a link download's blob while the save dialog is open", async () => {
     vi.useFakeTimers()
     const { clicks, revoke } = spyAnchor()
     await saveBlob(new Blob(["x"]), "rekap.xlsx")
     expect(clicks).toEqual([{ href: "blob:gns/1", download: "rekap.xlsx" }])
     expect(document.querySelector("a")).toBeNull()
+    // A reader browsing to a folder and renaming takes far longer than a second.
+    vi.advanceTimersByTime(60_000)
     expect(revoke).not.toHaveBeenCalled()
-    vi.advanceTimersByTime(1000)
+    vi.advanceTimersByTime(LINK_BLOB_TTL_MS - 60_000)
     expect(revoke).toHaveBeenCalledWith("blob:gns/1")
+  })
+
+  it("falls back to a link when the picked file cannot be written", async () => {
+    const saved = stubPicker(undefined, new DOMException("blocked", "NotAllowedError"))
+    const { clicks } = spyAnchor()
+    await saveBlob(new Blob(["x"]), "a.pdf")
+    expect(saved).toHaveLength(1)
+    expect(clicks).toEqual([{ href: "blob:gns/1", download: "a.pdf" }])
   })
 })
 
