@@ -277,19 +277,29 @@ function pickerForFilename(filename: string): PickerType {
   return PICKER_ANY
 }
 
-// Fetch a binary, then save.
+// Ask where, then fetch and save.
 //
-// Fetches the endpoint as a blob and, when supported, lets the user pick the
-// directory and edit the filename.
+// The save dialog opens first, while the click still counts as a user
+// gesture: Chrome refuses it once that lapses, about five seconds, and a PDF
+// render can take longer. A cancelled dialog fetches nothing, and a failed
+// fetch removes the empty file the dialog created.
 async function downloadBinary(
   path: string,
   filename: string,
   pickerType: PickerType,
 ): Promise<void> {
-  const res = await fetchAuthed(path, { method: "GET" })
-  if (!res.ok) throw await transferFailure(res, "download")
-  const blob = await res.blob()
-  await saveBlob(blob, filename, pickerType)
+  const target = await chooseTarget(filename, pickerType)
+  if (target.kind === "cancelled") return
+  let blob: Blob
+  try {
+    const res = await fetchAuthed(path, { method: "GET" })
+    if (!res.ok) throw await transferFailure(res, "download")
+    blob = await res.blob()
+  } catch (err) {
+    await discardTarget(target)
+    throw err
+  }
+  await writeTarget(target, blob, filename)
 }
 
 export const downloadPdf = (path: string, filename: string) =>
@@ -325,32 +335,63 @@ export async function fetchObjectUrl(path: string): Promise<string> {
   return URL.createObjectURL(blob)
 }
 
-// Save a blob locally.
+// Where a download goes.
+// A picked file, a plain link download, or nothing when the dialog is
+// cancelled.
+type SaveTarget =
+  | { kind: "picked"; handle: FileSystemFileHandle }
+  | { kind: "link" }
+  | { kind: "cancelled" }
+
+type SavePicker = (opts: {
+  suggestedName: string
+  types?: PickerType[]
+}) => Promise<FileSystemFileHandle>
+
+// Open the save dialog.
 //
-// Uses the File System Access API where supported, else an anchor fallback.
-export async function saveBlob(
-  blob: Blob,
-  filename: string,
-  pickerType: PickerType = PICKER_PDF,
-): Promise<void> {
-  const w = window as unknown as {
-    showSaveFilePicker?: (opts: {
-      suggestedName: string
-      types?: PickerType[]
-    }) => Promise<FileSystemFileHandle>
+// Uses the File System Access API where supported. A refusal other than a
+// cancel, such as a lapsed gesture, falls back to a link download.
+async function chooseTarget(filename: string, pickerType: PickerType): Promise<SaveTarget> {
+  const picker = (window as unknown as { showSaveFilePicker?: SavePicker }).showSaveFilePicker
+  if (typeof picker !== "function") return { kind: "link" }
+  try {
+    const handle = await picker.call(window, { suggestedName: filename, types: [pickerType] })
+    return { kind: "picked", handle }
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") return { kind: "cancelled" }
+    return { kind: "link" }
   }
-  if (typeof w.showSaveFilePicker === "function") {
+}
+
+// Remove a picked, unwritten file.
+async function discardTarget(target: SaveTarget): Promise<void> {
+  if (target.kind !== "picked") return
+  const handle = target.handle as FileSystemFileHandle & { remove?: () => Promise<void> }
+  try {
+    await handle.remove?.()
+  } catch {
+    // The empty file stays; the failure itself is reported.
+  }
+}
+
+// How long a link download's blob lives.
+// A browser that asks where to save reads the blob only once the reader
+// confirms the dialog, so it must outlive browsing to a folder and renaming.
+export const LINK_BLOB_TTL_MS = 10 * 60 * 1000
+
+// Write the blob out.
+// A picked file that cannot be written falls back to a link download.
+async function writeTarget(target: SaveTarget, blob: Blob, filename: string): Promise<void> {
+  if (target.kind === "cancelled") return
+  if (target.kind === "picked") {
     try {
-      const handle = await w.showSaveFilePicker({
-        suggestedName: filename,
-        types: [pickerType],
-      })
-      const writable = await handle.createWritable()
+      const writable = await target.handle.createWritable()
       await writable.write(blob)
       await writable.close()
       return
-    } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") return
+    } catch {
+      // Fall through to the link.
     }
   }
   const url = URL.createObjectURL(blob)
@@ -360,5 +401,16 @@ export async function saveBlob(
   document.body.appendChild(a)
   a.click()
   a.remove()
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
+  setTimeout(() => URL.revokeObjectURL(url), LINK_BLOB_TTL_MS)
+}
+
+// Save a blob locally.
+//
+// For a blob already in hand: the dialog where supported, else a link.
+export async function saveBlob(
+  blob: Blob,
+  filename: string,
+  pickerType: PickerType = PICKER_PDF,
+): Promise<void> {
+  await writeTarget(await chooseTarget(filename, pickerType), blob, filename)
 }

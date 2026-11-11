@@ -332,6 +332,51 @@ test("a cancelled invoice still downloads its PDF", async ({ page, admin, invoic
   expect((await readFile(await file.path())).subarray(0, 5).toString()).toBe("%PDF-")
 })
 
+// The save dialog comes first.
+// It opens on the click itself, before the PDF is fetched: a browser refuses
+// it once the click lapses (about five seconds in Chrome), and a PDF render
+// can take longer.
+test("the save dialog opens before the PDF is fetched", async ({ page, admin, invoice }) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as { __save?: { bytes: string } }
+    Object.defineProperty(window, "showSaveFilePicker", {
+      configurable: true,
+      value: async () => {
+        const save = { bytes: "" }
+        w.__save = save
+        return {
+          createWritable: async () => ({
+            write: async (b: Blob) => {
+              save.bytes += await b.text()
+            },
+            close: async () => {},
+          }),
+          remove: async () => {},
+        }
+      },
+    })
+  })
+  const saved = () =>
+    page.evaluate(() => (window as unknown as { __save?: { bytes: string } }).__save)
+  let dialogFirst: boolean | undefined
+  await page.route(`**/api/v1/invoices/${invoice.id}/pdf`, async (route) => {
+    dialogFirst = (await saved()) !== undefined
+    const response = await route.fetch()
+    await route.fulfill({
+      response,
+      status: 200,
+      contentType: "application/pdf",
+      body: "%PDF-1.7\n",
+    })
+  })
+  await setInvoiceStatus(admin, invoice.id, "cancelled", "Dibatalkan lewat API")
+  await openInvoice(page, invoice)
+  await page.getByRole("button", { name: "Unduh PDF" }).click()
+  // The real render behind the route can be slow.
+  await expect.poll(async () => (await saved())?.bytes ?? "", { timeout: 30_000 }).toContain("%PDF")
+  expect(dialogFirst).toBe(true)
+})
+
 // Only Dibatalkan lists it.
 test("the Dibatalkan filter finds a cancelled invoice and opens it", async ({
   page,
