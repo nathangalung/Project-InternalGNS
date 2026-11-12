@@ -456,8 +456,19 @@ shows a missing one as Belum ada No. PO.
   DELIVERED, so no Rp 0 invoice is issued. A qty 0 line stays allowed, but
   ON_PROGRESS and DELIVERED need one product line with a quantity. Both
   moves also pass the completeness gate (the client's PO number, client,
-  vendor and shipping-address data), a 422 `po_incomplete`; delivery runs it
-  again, since ON_PROGRESS edits and client edits can reopen a gap. The
+  vendor and shipping-address data, and the lines: a product line with no
+  harga jual is named by its place and name, and every quantity at zero or
+  no product line at all is keyed by the PO), a 422 `po_incomplete`;
+  delivery runs it again, since ON_PROGRESS edits and client edits can
+  reopen a gap. `fn_change_po_status` keeps the line rules as its
+  backstop. `GET /purchase-orders/{id}/readiness` runs the same gate
+  without moving, for UPLOADED and ON_PROGRESS only (empty otherwise), so
+  the PO detail shows the heads what blocks the next move before they try
+  it, with Lihat dan Lengkapi opening the same Data Belum Lengkap dialog.
+  Its links open the fix: Isi No. PO, the client or vendor page, Ganti
+  Narahubung, and Ubah PO at the step or line (`?step=2` for the shipping
+  address, `?step=1&line=<id>` for a line, read tolerantly by the edit
+  route). The
   gate and the move run in one transaction (`Repo.GatedTransition`): the PO
   row is locked first, so the gate judges the status the move starts from,
   and the gate's client read holds the client row `FOR SHARE`, so a client

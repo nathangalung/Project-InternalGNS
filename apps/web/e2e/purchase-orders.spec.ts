@@ -324,6 +324,35 @@ test.describe("purchase order status", () => {
     expect((await seed.poByQuotation(q.id)).status).toBe("UPLOADED")
   })
 
+  test("the detail names what blocks Dalam Progres before it is tried", async ({ page, seed }) => {
+    const client = await seed.client({ complete: false })
+    const { q, po } = await acceptedPo(seed, { client })
+    await seed.attachPoFile(po)
+
+    await page.goto(`/purchase-orders/${q.id}`)
+    const notice = page
+      .getByRole("status")
+      .filter({ hasText: "PO belum bisa diubah ke Dalam Progres." })
+    await expect(notice).toBeVisible()
+    await expect(notice).toContainText(`Data klien ${client.name} belum lengkap: NPWP`)
+    await notice.getByRole("button", { name: "Lihat dan Lengkapi" }).click()
+    const modal = page.getByRole("dialog", { name: "Data Belum Lengkap" })
+    await expect(modal.getByRole("link", { name: client.name })).toHaveAttribute(
+      "href",
+      `/clients/${client.id}`,
+    )
+    expect((await seed.poByQuotation(q.id)).status).toBe("UPLOADED")
+  })
+
+  test("Ubah PO opens the line it is pointed at", async ({ page, seed }) => {
+    const { q, po } = await acceptedPo(seed)
+    const [line] = (
+      await api<{ id: number; itemType: string }[]>("GET", `/purchase-orders/${po.id}/items`)
+    ).filter((l) => l.itemType === "product")
+    await page.goto(`/purchase-orders/${q.id}/edit?step=1&line=${line.id}`)
+    await expect(page.getByRole("dialog", { name: "Ubah Produk PO" })).toBeVisible()
+  })
+
   test("Dalam Progres asks for the client's PO number and its link opens the form", async ({
     page,
     seed,
@@ -811,10 +840,10 @@ test.describe("purchase order address gaps", () => {
       `/clients/${client.id}`,
     )
     await expect(modal.getByRole("listitem").getByText("Alamat", { exact: true })).toBeVisible()
-    // One address for the whole PO, set on the PO editor.
+    // One address for the whole PO, set on the PO editor's shipping step.
     await expect(modal.getByRole("link", { name: "Ubah PO", exact: true })).toHaveAttribute(
       "href",
-      `/purchase-orders/${qid}/edit`,
+      `/purchase-orders/${qid}/edit?step=2`,
     )
     await expect(
       modal.getByRole("listitem").getByText("Alamat Pengiriman", { exact: true }),
@@ -848,8 +877,8 @@ test.describe("purchase order address gaps", () => {
     await page.goto(`/purchase-orders/${qid}`)
     await choosePoStatus(page, "PO Diunggah", "Dalam Progres")
     await modal.getByRole("link", { name: "Ubah PO", exact: true }).click()
-    await expect(page).toHaveURL(new RegExp(`/purchase-orders/${qid}/edit$`))
-    await page.getByRole("button", { name: "Lanjut" }).click()
+    // The link opens the shipping step.
+    await expect(page).toHaveURL(new RegExp(`/purchase-orders/${qid}/edit\\?step=2$`))
     const days = page.getByLabel("Waktu Pengiriman (Hari) *")
     const cost = page.getByLabel("Biaya Pengiriman *")
     await expect(days).toHaveValue("5")
