@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { unitIndex } from "@/features/units/match"
-import { byRole, mount, unmount } from "@/test/dom"
+import { button, byRole, click, mount, unmount } from "@/test/dom"
 import { PO_QTY_ERROR, QTY_ERROR } from "./lines"
 import Step2Product from "./Step2Product"
 import type { ProductItem } from "./wizard"
@@ -56,7 +56,7 @@ afterEach(unmount)
 describe("Step2Product qty", () => {
   it("flags a qty 0 quotation line", async () => {
     await mount(<Step2Product {...base} products={[line(0)]} />)
-    expect(alerts()).toEqual([`${QTY_ERROR} Ubah produk ini sebelum menyimpan.`])
+    expect(alerts()).toEqual([`${QTY_ERROR} Ubah Produk`])
   })
 
   // A PO line may stay at qty 0.
@@ -65,9 +65,26 @@ describe("Step2Product qty", () => {
     expect(alerts()).toEqual([])
   })
 
+  it("opens the flagged line from its alert", async () => {
+    const editProduct = vi.fn()
+    const flagged = line(0)
+    await mount(<Step2Product {...base} products={[flagged]} editProduct={editProduct} />)
+    await click(button("Ubah Produk"))
+    expect(editProduct).toHaveBeenCalledWith(flagged)
+  })
+
+  it("names an unknown unit and opens its line", async () => {
+    const editProduct = vi.fn()
+    const flagged = { ...line(1), satuan: "drum" }
+    await mount(<Step2Product {...base} products={[flagged]} editProduct={editProduct} />)
+    expect(alerts()).toEqual(['Satuan "drum" tidak dikenal. Ubah Produk'])
+    await click(button("Ubah Produk"))
+    expect(editProduct).toHaveBeenCalledWith(flagged)
+  })
+
   it("still flags a negative PO line", async () => {
     await mount(<Step2Product {...base} products={[line(-1)]} allowZeroQty />)
-    expect(alerts()).toEqual([`${PO_QTY_ERROR} Ubah produk ini sebelum menyimpan.`])
+    expect(alerts()).toEqual([`${PO_QTY_ERROR} Ubah Produk`])
   })
 })
 

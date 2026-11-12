@@ -3,9 +3,10 @@ import PageButtons from "@/components/shared/PageButtons"
 import { optionalCls } from "@/features/clients/ClientAdd/helpers"
 import { formatAddress } from "@/lib/format"
 import { clampPage, pageCount } from "@/lib/pagination"
-import { ui } from "@/lib/ui"
+import { entityLink, ui } from "@/lib/ui"
 import { isValidAddress, optionalAddressError } from "@/lib/validation"
-import { requestDiffers, requestedCode } from "./lines"
+import LineProblemList from "./LineProblemList"
+import { type LineProblem, requestDiffers, requestedCode } from "./lines"
 import { discountLabel } from "./QuotationDetail/helpers"
 import RequestOffer from "./RequestOffer"
 import type { Client } from "./Step1Client"
@@ -45,12 +46,14 @@ type Step4SummaryProps = {
   withPPN?: boolean
   summaryProfit: number
   summaryGrandTotal: number
-  // Lines with qty not above zero
-  invalidQtyCount?: number
-  // Lines with an unknown unit
-  unknownUnitCount?: number
+  // Lines a save refuses
+  linesToFix?: LineProblem[]
   // Lines not ready to send
-  incompleteCount?: number
+  linesToComplete?: LineProblem[]
+  // Back to the product step
+  onGoToProducts?: () => void
+  // Create needs a product
+  requireProducts?: boolean
   // Another user holds the header
   readOnly?: boolean
   // False for a role that sets no harga jual: no selling figure shows
@@ -161,6 +164,24 @@ function TermsCard({
   )
 }
 
+// Notice line with a link
+function NoticeHead({ text, go }: { text: string; go?: () => void }) {
+  return (
+    <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+      <span>{text}</span>
+      {go && (
+        <button
+          type="button"
+          onClick={go}
+          className={`cursor-pointer border-0 bg-transparent p-0 text-xs font-semibold ${entityLink()}`}
+        >
+          Ke Langkah Produk
+        </button>
+      )}
+    </div>
+  )
+}
+
 export default function Step4Summary({
   terms,
   currentClient,
@@ -180,9 +201,10 @@ export default function Step4Summary({
   withPPN = true,
   summaryProfit,
   summaryGrandTotal,
-  invalidQtyCount = 0,
-  unknownUnitCount = 0,
-  incompleteCount = 0,
+  linesToFix = [],
+  linesToComplete = [],
+  onGoToProducts,
+  requireProducts = false,
   readOnly = false,
   pricing = true,
 }: Step4SummaryProps) {
@@ -197,7 +219,8 @@ export default function Step4Summary({
 
   const hasContent = products.length > 0 || isValidAddress(shippingAddress)
   const addressError = optionalAddressError(shippingAddress)
-  const hasNotices = invalidQtyCount > 0 || incompleteCount > 0 || unknownUnitCount > 0
+  const noProducts = requireProducts && products.length === 0
+  const hasNotices = linesToFix.length > 0 || linesToComplete.length > 0 || noProducts
 
   return (
     <div className={qe.stepContent}>
@@ -205,22 +228,30 @@ export default function Step4Summary({
         <div>
           {terms && <RefCard terms={terms} id={id} readOnly={readOnly} />}
           {terms && <TermsCard terms={terms} id={id} readOnly={readOnly} />}
-          {invalidQtyCount > 0 && (
+          {noProducts && (
             <div role="alert" className={`${alertBox} mt-2.5`}>
-              {invalidQtyCount} produk memiliki jumlah 0 atau kurang. Perbaiki di langkah Produk
-              sebelum menyimpan.
+              <NoticeHead
+                text="Tambahkan minimal satu produk sebelum membuat penawaran."
+                go={onGoToProducts}
+              />
             </div>
           )}
-          {incompleteCount > 0 && (
+          {linesToFix.length > 0 && (
+            <div role="alert" className={`${alertBox} mt-2.5`}>
+              <NoticeHead
+                text={`${linesToFix.length} produk perlu diperbaiki sebelum disimpan.`}
+                go={onGoToProducts}
+              />
+              <LineProblemList lines={linesToFix} />
+            </div>
+          )}
+          {linesToComplete.length > 0 && (
             <div role="status" className={`${noticeBox} mt-2.5`}>
-              {incompleteCount} produk belum lengkap (vendor atau harga). Quotation tetap tersimpan
-              sebagai Draf. Lengkapi sebelum dikirim.
-            </div>
-          )}
-          {unknownUnitCount > 0 && (
-            <div role="alert" className={`${alertBox} mt-2.5`}>
-              {unknownUnitCount} produk memiliki satuan yang tidak dikenal. Pilih satuannya di
-              langkah Produk sebelum menyimpan.
+              <NoticeHead
+                text={`${linesToComplete.length} produk belum lengkap. Quotation tetap tersimpan sebagai Draf, tetapi harus dilengkapi sebelum dikirim.`}
+                go={onGoToProducts}
+              />
+              <LineProblemList lines={linesToComplete} />
             </div>
           )}
           {terms && !termsFilled(terms) && (
@@ -315,7 +346,7 @@ export default function Step4Summary({
       <div>
         <h2 className={`${qe.sectionTitle} mb-3`}>Ringkasan Penawaran</h2>
 
-        {!hasContent && (
+        {!hasContent && !requireProducts && (
           <div className={`${alertBox} mb-5`}>
             Isi minimal satu produk atau informasi pengiriman sebelum menyimpan.
           </div>

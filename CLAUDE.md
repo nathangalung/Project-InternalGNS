@@ -345,9 +345,15 @@ shows a missing one as Belum ada No. PO.
   request and the offer side by side at one size (`RequestOffer`, in the
   wizard cards, the summary and the detail table), and an offer that is not
   what was asked turns orange. A line's Belum lengkap badge opens its editor,
-  and a draft's detail page counts the lines the send rule refuses
-  (`incompleteLines`, mirroring `fn_change_quotation_status`) with a
-  Lengkapi Sekarang button to the editor.
+  and a draft's detail page lists the lines the send rule refuses
+  (`storedLineGaps`, mirroring `fn_change_quotation_status`), each by its
+  place, name and what it lacks (`LineProblemList`, the first five then a
+  count), with Lengkapi opening that line's editor: the edit route takes
+  `?step=` and `?line=` (`QuotationEdit` `startStep`, `startLine`), read
+  tolerantly. The wizard's summary step names the lines a save refuses
+  (`linesToFix`: qty, unit) and the lines not ready to send
+  (`linesToComplete`) the same way, with Ke Langkah Produk, and the product
+  step's qty and unit alerts open their line.
   Revisi is not a manual move: Buat Revisi (`POST /quotations/{id}/revise`,
   offered when `canRevise`, i.e. from sent) clones a new draft version with
   `parent_id` and a `Rev.n` number and moves the original to revision.

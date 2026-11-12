@@ -7,7 +7,7 @@ import type { UnitIndex } from "@/features/units/match"
 import { errorMessage } from "@/lib/errors"
 import { formatPercent } from "@/lib/format"
 import { clampPage, pageCount } from "@/lib/pagination"
-import { ui } from "@/lib/ui"
+import { entityLink, ui } from "@/lib/ui"
 import { parseRfq } from "./api"
 import { importedLines, importSummary } from "./import"
 import { lineGaps, qtyIssue, requestDiffers, requestedCode } from "./lines"
@@ -77,6 +77,20 @@ type Step2ProductProps = {
   pricing?: boolean
   // Lines are edited in place only: no add, import or delete
   fixedLines?: boolean
+}
+
+// Opens the line editor
+function FixButton({ onClick, disabled }: { onClick: () => void; disabled: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`cursor-pointer border-0 bg-transparent p-0 text-xs font-semibold disabled:cursor-default ${entityLink()}`}
+    >
+      Ubah Produk
+    </button>
+  )
 }
 
 export default function Step2Product({
@@ -456,7 +470,8 @@ export default function Step2Product({
                           </div>
                           {qtyError && (
                             <span role="alert" className="text-xs text-[#DC2626]">
-                              {qtyError} Ubah produk ini sebelum menyimpan.
+                              {qtyError}{" "}
+                              <FixButton onClick={() => openEditor(p)} disabled={Boolean(editor)} />
                             </span>
                           )}
                         </div>
@@ -469,7 +484,8 @@ export default function Step2Product({
                           </div>
                           {unitError && (
                             <span role="alert" className="text-xs text-[#DC2626]">
-                              {unitError} Pilih satuan lewat tombol edit sebelum menyimpan.
+                              {unitError}{" "}
+                              <FixButton onClick={() => openEditor(p)} disabled={Boolean(editor)} />
                             </span>
                           )}
                         </div>

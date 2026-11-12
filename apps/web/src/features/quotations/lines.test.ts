@@ -4,10 +4,12 @@ import { problem } from "@/test/problem"
 import type { ProblemDetail } from "@/types/api"
 import {
   countInvalidQty,
+  describeLine,
   incompleteLines,
   isLineComplete,
   isValidQty,
   lineGaps,
+  linesToComplete,
   PO_QTY_ERROR,
   parseQty,
   QTY_ERROR,
@@ -17,6 +19,7 @@ import {
   requestDiffers,
   requestedCode,
   type StoredLine,
+  storedLineGaps,
 } from "./lines"
 import type { ProductItem } from "./wizard"
 
@@ -187,6 +190,19 @@ describe("line completeness", () => {
     expect(isLineComplete(line)).toBe(want.length === 0)
   })
 
+  it("lists the lines not ready to send by place and name", () => {
+    const lines = [
+      base,
+      { ...base, id: 2, nama: "", requestedNama: "Kabel", vendorProductId: undefined },
+      { ...base, id: 3, nama: "", requestedNama: "", hargaBeli: 0 },
+      { ...base, id: 4, noOffer: true, hargaBeli: 0 },
+    ]
+    expect(linesToComplete(lines)).toEqual([
+      { id: 2, position: 2, name: "Kabel", problems: ["vendor"] },
+      { id: 3, position: 3, name: "Tanpa nama", problems: ["harga beli"] },
+    ])
+  })
+
   it("leaves harga jual to a head for a role that sets no price", () => {
     const line = { ...base, hargaJual: 0 }
     expect(lineGaps(line, false)).toEqual([])
@@ -197,6 +213,8 @@ describe("line completeness", () => {
 
 describe("incompleteLines", () => {
   const done: StoredLine = {
+    id: 7,
+    requestedName: "Tali Tambang",
     itemType: "product",
     isAvailable: true,
     offeredItemId: 1,
@@ -225,5 +243,51 @@ describe("incompleteLines", () => {
     },
   ])("$name", ({ line, want }) => {
     expect(incompleteLines([line])).toBe(want)
+  })
+})
+
+describe("storedLineGaps", () => {
+  const done: StoredLine = {
+    id: 1,
+    requestedName: "Tali Tambang",
+    itemType: "product",
+    isAvailable: true,
+    offeredItemId: 1,
+    unitId: 2,
+    vendorProductId: 3,
+    costPrice: "1000",
+    sellingPrice: "1500",
+  }
+
+  it("names each line by its place and shown name, with every gap", () => {
+    const items: StoredLine[] = [
+      { ...done, id: 10, itemType: "shipping" },
+      { ...done, id: 11 },
+      { ...done, id: 12, isAvailable: false, sellingPrice: "0" },
+      {
+        ...done,
+        id: 13,
+        offeredName: "Cat Kapal Merah",
+        unitId: undefined,
+        vendorProductId: undefined,
+        costPrice: undefined,
+      },
+      { ...done, id: 14, requestedName: "Kabel NYM", offeredItemId: undefined, sellingPrice: "0" },
+    ]
+    expect(storedLineGaps(items)).toEqual([
+      {
+        id: 13,
+        position: 3,
+        name: "Cat Kapal Merah",
+        problems: ["satuan", "vendor", "harga beli"],
+      },
+      { id: 14, position: 4, name: "Kabel NYM", problems: ["produk", "harga jual"] },
+    ])
+  })
+
+  it("reads as a sentence part", () => {
+    expect(
+      describeLine({ id: 1, position: 2, name: "Tali Tambat", problems: ["vendor", "harga beli"] }),
+    ).toBe("Produk 2 (Tali Tambat): vendor, harga beli")
   })
 })

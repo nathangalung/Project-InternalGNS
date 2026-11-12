@@ -1,4 +1,5 @@
 import { QueryClientProvider } from "@tanstack/react-query"
+import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import * as clientsApi from "@/features/clients/api"
 import { ApiError } from "@/lib/api-client"
@@ -8,6 +9,11 @@ import ContactModal from "./ContactModal"
 
 vi.mock("@/features/clients/api")
 vi.mock("@/features/quotations/api")
+vi.mock("@/components/shared/EntityLink", () => ({
+  default: ({ id, children }: { id?: number; children: ReactNode }) => (
+    <a href={`/clients/${id}`}>{children}</a>
+  ),
+}))
 
 const m = vi.mocked(clientsApi)
 const EMPTY = "Klien ini belum memiliki narahubung aktif."
@@ -45,5 +51,8 @@ describe("ContactModal", () => {
     m.listContacts.mockResolvedValueOnce([])
     await open()
     expect(document.body.textContent).toContain(EMPTY)
+    const link = document.querySelector("a")
+    expect(link?.textContent).toBe("halaman klien")
+    expect(link?.getAttribute("href")).toBe("/clients/7")
   })
 })

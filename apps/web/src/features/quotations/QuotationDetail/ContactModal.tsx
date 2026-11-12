@@ -1,4 +1,5 @@
 import { useState } from "react"
+import EntityLink from "@/components/shared/EntityLink"
 import LoadError from "@/components/shared/LoadError"
 import Modal from "@/components/shared/Modal"
 import { useClientContacts } from "@/features/clients/hooks"
@@ -77,8 +78,11 @@ export default function ContactModal({
           <p className="text-sm text-[#4A4455]">Memuat narahubung…</p>
         ) : active.length === 0 ? (
           <p className="text-sm leading-6 text-[#4A4455]">
-            Klien ini belum memiliki narahubung aktif. Tambahkan narahubung di data klien terlebih
-            dahulu.
+            Klien ini belum memiliki narahubung aktif. Tambahkan narahubung di{" "}
+            <EntityLink kind="client" id={companyId}>
+              halaman klien
+            </EntityLink>{" "}
+            terlebih dahulu.
           </p>
         ) : (
           <div className="flex flex-col gap-2">

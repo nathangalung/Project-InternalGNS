@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { mount, type, unmount } from "@/test/dom"
+import { button, click, mount, type, unmount } from "@/test/dom"
 import Step4Summary from "./Step4Summary"
 
 const totals = {
@@ -55,9 +55,47 @@ describe("Step4Summary terms", () => {
   })
 
   it("still lists line problems without terms", async () => {
-    await mount(<Step4Summary {...base} unknownUnitCount={2} />)
+    const fix = [{ id: 4, position: 2, name: "Tali Tambat", problems: ["satuan"] }]
+    await mount(<Step4Summary {...base} linesToFix={fix} />)
     expect(text()).not.toContain("Tenggat Waktu Penawaran")
-    expect(text()).toContain("2 produk memiliki satuan yang tidak dikenal")
+    expect(text()).toContain("1 produk perlu diperbaiki sebelum disimpan.")
+    expect(text()).toContain("Produk 2 (Tali Tambat): satuan")
+  })
+})
+
+describe("Step4Summary line notices", () => {
+  const unsent = [
+    { id: 5, position: 1, name: "Cat Kapal", problems: ["vendor", "harga beli"] },
+    { id: 6, position: 3, name: "Kabel NYM", problems: ["harga jual"] },
+  ]
+
+  it("names each unfinished line and leads back to the product step", async () => {
+    const go = vi.fn()
+    await mount(<Step4Summary {...base} linesToComplete={unsent} onGoToProducts={go} />)
+    expect(text()).toContain("2 produk belum lengkap.")
+    expect(text()).toContain("Produk 1 (Cat Kapal): vendor, harga beli")
+    expect(text()).toContain("Produk 3 (Kabel NYM): harga jual")
+    await click(button("Ke Langkah Produk"))
+    expect(go).toHaveBeenCalledTimes(1)
+  })
+
+  it("names a few lines and counts the rest", async () => {
+    const many = Array.from({ length: 7 }, (_, i) => ({
+      id: i + 1,
+      position: i + 1,
+      name: `Barang ${i + 1}`,
+      problems: ["vendor"],
+    }))
+    await mount(<Step4Summary {...base} linesToComplete={many} />)
+    expect(text()).toContain("Produk 5 (Barang 5): vendor")
+    expect(text()).not.toContain("Produk 6 (Barang 6)")
+    expect(text()).toContain("dan 2 produk lainnya.")
+  })
+
+  it("asks a new quotation for a product", async () => {
+    await mount(<Step4Summary {...base} requireProducts />)
+    expect(text()).toContain("Tambahkan minimal satu produk sebelum membuat penawaran.")
+    expect(text()).not.toContain("Isi minimal satu produk atau informasi pengiriman")
   })
 })
 

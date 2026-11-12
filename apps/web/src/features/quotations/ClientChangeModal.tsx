@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import EntityLink from "@/components/shared/EntityLink"
 import Modal from "@/components/shared/Modal"
 import { ui } from "@/lib/ui"
 import Step1Client from "./Step1Client"
@@ -116,7 +117,11 @@ export default function ClientChangeModal({
         {!contactsPending && contacts.length === 0 && (
           <p className="m-0 text-[13px] text-[#B45309]">
             Klien ini belum punya narahubung aktif. Klien tetap dapat dipilih, lalu tambahkan
-            narahubungnya di halaman klien.
+            narahubungnya di{" "}
+            <EntityLink kind="client" id={Number(selectedClient) || undefined}>
+              halaman klien
+            </EntityLink>
+            .
           </p>
         )}
       </div>

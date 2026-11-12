@@ -723,11 +723,14 @@ test.describe("quotation wizard import and requests", () => {
       .getByRole("button", { name: "Batal" })
       .click()
     await expectStatus(page, "Draf")
-    // The page says what blocks Dikirim and opens the editor to fix it.
+    // The page names the line and opens its editor.
     const notice = page.getByRole("status").filter({ hasText: "1 produk belum lengkap." })
     await expect(notice).toBeVisible()
-    await notice.getByRole("button", { name: "Lengkapi Sekarang" }).click()
-    await expect(page).toHaveURL(new RegExp(`/quotations/${q.id}/edit$`))
+    await expect(notice).toContainText(/Produk 1 \(.+\): produk, .*vendor, harga beli, harga jual/)
+    const [line] = (await seed.getQuotation(q.id)).items.filter((l) => l.itemType === "product")
+    await notice.getByRole("button", { name: "Lengkapi produk 1" }).click()
+    await expect(page).toHaveURL(new RegExp(`/quotations/${q.id}/edit\\?step=2&line=${line.id}$`))
+    await expect(page.getByRole("dialog", { name: "Ubah Produk Quotation" })).toBeVisible()
   })
 
   // Picking a product fills it in.

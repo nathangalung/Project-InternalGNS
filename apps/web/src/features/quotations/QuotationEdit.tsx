@@ -45,6 +45,10 @@ import { qe, stepLabel, stepNum, stepPill } from "./wizard-styles"
 
 type QuotationEditProps = {
   quotationId: string
+  // Step to open first
+  startStep?: number
+  // Line to open first
+  startLine?: number
 }
 
 // Who else holds the header
@@ -60,7 +64,7 @@ const ignore = () => undefined
 // another user holds is shown read-only with their name. The page follows
 // the stored draft through the change stream; Simpan saves the header and
 // the contact, then returns to the detail page.
-export default function QuotationEdit({ quotationId }: QuotationEditProps) {
+export default function QuotationEdit({ quotationId, startStep, startLine }: QuotationEditProps) {
   const { data: unitsData } = useUnits()
   // A role that sets no harga jual sees and sends none
   const pricing = setsPrices(useMe().data?.role)
@@ -105,9 +109,8 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     gates: { isAlamatOk, isWaktuFilled, isTenggatWaktuFilled },
     summary,
     unitByText,
-    unknownUnits,
-    invalidQty,
-    incompleteLines,
+    fixLines,
+    unsentLines,
     seed,
     syncFromServer,
   } = useQuotationWizard(unitsData, pricing)
@@ -189,6 +192,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
   // them; read through a ref so that releasing the header does not resync
   // from a load older than the save.
   const hydrated = useRef(false)
+  const [seeded, setSeeded] = useState(false)
   const holdsHeaderRef = useRef(holdsHeader)
   holdsHeaderRef.current = holdsHeader
   useEffect(() => {
@@ -196,6 +200,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     if (!hydrated.current) {
       hydrated.current = true
       seed(toSeed(detail))
+      setSeeded(true)
       return
     }
     syncFromServer(toSeed(detail), !holdsHeaderRef.current)
@@ -257,6 +262,17 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     setEditingProduct(p)
     setShowProductAdd(true)
   }
+
+  // Open the requested line once.
+  const started = useRef(false)
+  useEffect(() => {
+    if (started.current || !seeded) return
+    started.current = true
+    if (startLine === undefined && startStep === undefined) return
+    setStep(startLine === undefined ? (startStep ?? 1) : 2)
+    const line = products.find((p) => p.id === startLine)
+    if (line) void openLine(line)
+  })
 
   // The line being saved keeps its claim until the save lands.
   const savingLine = useRef<number | null>(null)
@@ -634,9 +650,9 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
             withPPN={ppnEnabled}
             summaryProfit={summaryProfit}
             summaryGrandTotal={summaryGrandTotal}
-            invalidQtyCount={invalidQty}
-            unknownUnitCount={unknownUnits}
-            incompleteCount={incompleteLines}
+            linesToFix={fixLines}
+            linesToComplete={unsentLines}
+            onGoToProducts={() => setStep(2)}
             readOnly={!holdsHeader}
           />
         )}

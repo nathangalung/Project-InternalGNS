@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { ProductAddFormData } from "@/features/items/ProductAdd/helpers"
 import { unitIndex } from "@/features/units/match"
 import type { UnitRow } from "@/types/api"
-import { countInvalidQty, isLineComplete, qtyErrorIndexes, qtyErrorsById } from "./lines"
+import { countInvalidQty, linesToComplete, qtyErrorIndexes, qtyErrorsById } from "./lines"
 import {
   countUnknownUnits,
+  linesToFix,
   type ProductItem,
   upsertProduct,
   type WizardSeed,
@@ -183,8 +184,9 @@ export function useQuotationWizard(units: UnitRow[] | undefined, pricing = true)
     unknownUnits,
     unitsOk: unknownUnits === 0,
     invalidQty: countInvalidQty(products),
-    // Lines not yet ready to be sent
-    incompleteLines: products.filter((p) => !isLineComplete(p, pricing)).length,
+    // Named lines for the summary
+    fixLines: linesToFix(products, unitByText),
+    unsentLines: linesToComplete(products, pricing),
     // Server errors apply to the lines they were raised for.
     qtyErrors: qtyFail?.lines === products ? qtyFail.byId : {},
     recordQtyFailure,
