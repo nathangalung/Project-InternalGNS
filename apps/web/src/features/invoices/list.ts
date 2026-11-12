@@ -78,6 +78,7 @@ export function rowFromBackend(inv: InvoiceBackendRow): InvoiceRow {
     total: formatRupiah(totalNumber),
     totalNumber,
     status: invoiceDisplayStatus(inv),
+    ppnEnabled: inv.ppnEnabled,
   }
 }
 
@@ -89,7 +90,7 @@ export function detailSearch(row: InvoiceRow): { invoiceId?: number } {
   return row.status === "DIBATALKAN" ? { invoiceId: row.id } : {}
 }
 
-// Coretax refuses cancelled invoices.
+// Only a live taxed invoice files
 export function canExportCoretax(row: InvoiceRow): boolean {
-  return row.status !== "DIBATALKAN"
+  return row.status !== "DIBATALKAN" && row.ppnEnabled
 }

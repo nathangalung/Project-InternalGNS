@@ -15,8 +15,10 @@ import { formatDate, formatNumber, PENDING_FIGURE } from "@/lib/format"
 import { emptyListText } from "@/lib/list-empty"
 import { ui } from "@/lib/ui"
 import { useListScreen, usePageWithin } from "@/lib/useListScreen"
+import type { CoretaxRefusal } from "@/types/api"
 import * as invoicesApi from "./api"
-import { runDownload, safeFileName } from "./download"
+import CoretaxRefusalModal from "./CoretaxRefusalModal"
+import { runCoretaxDownload, runDownload, safeFileName } from "./download"
 import { useInvoiceSummary, useInvoices } from "./hooks"
 import InvoiceFilter from "./InvoiceFilter"
 import { canExportCoretax, detailSearch, invoiceListParams, rowFromBackend } from "./list"
@@ -32,6 +34,7 @@ type InvoiceListProps = {
 export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
   const trail = useTrailState()
   const [showFilter, setShowFilter] = useState(false)
+  const [refused, setRefused] = useState<CoretaxRefusal[] | null>(null)
 
   const list = useListScreen(invoiceListSchema, "/invoices")
   const { debouncedSearch, filters: activeFilters, itemsPerPage, startIndex } = list
@@ -138,9 +141,10 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
               type="button"
               className={`${ui.btnOutline} w-[180px]`}
               onClick={() =>
-                runDownload(
+                runCoretaxDownload(
                   () => invoicesApi.exportCoretaxXlsx(queryParams),
                   "Gagal mengekspor Coretax.",
+                  setRefused,
                 )
               }
             >
@@ -307,13 +311,14 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
                               aria-label={`Unduh Coretax XML ${row.invoiceNo}`}
                               className={ui.iconAction}
                               onClick={() =>
-                                runDownload(
+                                runCoretaxDownload(
                                   () =>
                                     downloadXml(
                                       `/invoices/${row.id}/coretax.xml`,
                                       `${safeFileName(row.invoiceNo)}.coretax.xml`,
                                     ),
                                   "Gagal mengunduh XML Coretax.",
+                                  setRefused,
                                 )
                               }
                             >
@@ -363,6 +368,7 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
           onApply={list.applyFilters}
         />
       )}
+      {refused && <CoretaxRefusalModal refused={refused} onClose={() => setRefused(null)} />}
     </>
   )
 }

@@ -324,6 +324,9 @@ jobs:
       MINIO_ENDPOINT: 127.0.0.1:9000
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
+      # Invented seller, so the Coretax exports answer
+      CORETAX_SELLER_TIN: "0987654321098765"
+      CORETAX_SELLER_IDTKU: "0987654321098765000000"
       E2E_BASE_URL: http://127.0.0.1:4173
       E2E_API_URL: http://127.0.0.1:8080/api/v1
       E2E_ADMIN_EMAIL: admin@globalsakti.com

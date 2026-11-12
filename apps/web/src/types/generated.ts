@@ -168,6 +168,24 @@ export type ContactRow = {
     updatedAt: string;
 };
 
+// From invoices/coretax.go
+export type CoretaxRefusal = {
+    invoiceId: number;
+    quotationId: number;
+    invoiceNo: string;
+    clientId: number;
+    clientName: string;
+    reason: CoretaxRefusalReason;
+};
+
+// From invoices/coretax.go
+export type CoretaxRefusalProblem = ProblemDetail & {
+    refused: CoretaxRefusal[];
+};
+
+// From invoices/coretax.go
+export type CoretaxRefusalReason = "npwp_missing" | "paid" | "tku_mismatch";
+
 // From countries/dto.go
 export type CountryRow = {
     code: string;

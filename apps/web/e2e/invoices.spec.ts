@@ -6,6 +6,7 @@ import {
   createClient,
   deactivateClient,
   deliveredInvoice,
+  moveClientNpwp,
   patchInvoiceDates,
   type SeedClient,
   type SeedInvoice,
@@ -375,6 +376,34 @@ test("the save dialog opens before the PDF is fetched", async ({ page, admin, in
   // The real render behind the route can be slow.
   await expect.poll(async () => (await saved())?.bytes ?? "", { timeout: 30_000 }).toContain("%PDF")
   expect(dialogFirst).toBe(true)
+})
+
+// A Coretax refusal lists its invoices.
+test("a Coretax refusal names the invoice and links to it", async ({
+  page,
+  admin,
+  client,
+  invoice,
+}) => {
+  await moveClientNpwp(admin, client.id, "0999888777666555")
+  // No native save dialog in a headless run.
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "showSaveFilePicker", { value: undefined })
+  })
+  await page.goto("/invoices")
+  await page.getByPlaceholder("Cari invoice, klien, atau nomor...").fill(client.name)
+  const row = page.getByRole("row").filter({ hasText: invoice.invoiceNo })
+  await row.getByRole("button", { name: `Unduh Coretax XML ${invoice.invoiceNo}` }).click()
+
+  const dialog = page.getByRole("dialog", { name: "Ekspor Coretax Ditolak" })
+  await expect(dialog).toBeVisible()
+  await expect(dialog.getByRole("heading", { name: "NPWP Klien Berubah" })).toBeVisible()
+  await expect(dialog.getByRole("link", { name: invoice.invoiceNo })).toHaveAttribute(
+    "href",
+    `/invoices/${invoice.quotationId}`,
+  )
+  await dialog.getByRole("button", { name: "Mengerti" }).click()
+  await expect(dialog).toBeHidden()
 })
 
 // Only Dibatalkan lists it.

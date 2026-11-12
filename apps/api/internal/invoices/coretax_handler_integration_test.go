@@ -142,11 +142,12 @@ func TestCoretaxXLSX_RefusesInvoicesWithoutNPWP(t *testing.T) {
 func TestCoretaxXML_RefusesTKUOfAnotherNPWP(t *testing.T) {
 	cases := []struct {
 		name, status, want string
+		reason             invoices.RefusalReason
 	}{
 		{"open", "sent", "NPWP klien berubah setelah invoice terbit, jadi ID TKU klien tidak cocok dengan NPWP di invoice. " +
-			"Batalkan lalu terbitkan Pengganti untuk invoice berikut: %s."},
+			"Batalkan lalu terbitkan Pengganti untuk invoice berikut: %s.", invoices.ReasonTkuMismatch},
 		{"paid", "paid", "Invoice lunas berikut tidak menyimpan NPWP pembeli yang cocok untuk Coretax dan tidak dapat diubah lagi: " +
-			"%s. Pilih periode ekspor yang tidak memuatnya."},
+			"%s. Pilih periode ekspor yang tidak memuatnya.", invoices.ReasonPaid},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -164,6 +165,13 @@ func TestCoretaxXML_RefusesTKUOfAnotherNPWP(t *testing.T) {
 			rec := serve(coretaxRouter(t, tx, coretaxSettings, ""), "/invoices/"+strconv.FormatInt(invID, 10)+"/coretax.xml")
 			require.Equal(t, http.StatusUnprocessableEntity, rec.Code, rec.Body.String())
 			assert.Equal(t, fmt.Sprintf(tc.want, number), problemDetail(t, rec))
+			var p invoices.CoretaxRefusalProblem
+			require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &p))
+			assert.Equal(t, invoices.CoretaxRefusedCode, p.Code)
+			require.Len(t, p.Refused, 1)
+			assert.Equal(t, invID, p.Refused[0].InvoiceID)
+			assert.Equal(t, number, p.Refused[0].InvoiceNo)
+			assert.Equal(t, tc.reason, p.Refused[0].Reason)
 		})
 	}
 }
