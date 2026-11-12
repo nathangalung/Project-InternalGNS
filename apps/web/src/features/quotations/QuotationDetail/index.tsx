@@ -5,6 +5,8 @@ import { useMe } from "@/features/auth/hooks"
 import { getCompanyInitials } from "@/features/clients/helpers"
 import StoreLinkModal from "@/features/items/StoreLinkModal"
 import { downloadQuotationPdf } from "@/features/quotations/hooks"
+import LineProblemList from "@/features/quotations/LineProblemList"
+import type { LineProblem } from "@/features/quotations/lines"
 import type { ProductRow, QuotationData } from "@/features/quotations/types"
 import { canWriteCatalog, exportsQuotation, writesQuotation } from "@/lib/rbac"
 import { ui } from "@/lib/ui"
@@ -32,9 +34,10 @@ type QuotationDetailProps = {
   canRevise: boolean
   // The chosen narahubung
   contactId?: number
-  // Offered lines the send rule refuses
-  incomplete?: number
-  onEdit: () => void
+  // Lines the send refuses
+  gaps?: LineProblem[]
+  // Editor, at a line
+  onEdit: (lineId?: number) => void
 }
 
 // Quotation detail orchestrator.
@@ -45,7 +48,7 @@ export default function QuotationDetail({
   transitions,
   canRevise,
   contactId,
-  incomplete = 0,
+  gaps = [],
   onEdit,
 }: QuotationDetailProps) {
   const { data: me } = useMe()
@@ -78,7 +81,7 @@ export default function QuotationDetail({
         createdAt={q.createdAt}
         version={q.version}
         status={q.status}
-        onEdit={isEditable(status) && writesQuotation(me?.role) ? onEdit : undefined}
+        onEdit={isEditable(status) && writesQuotation(me?.role) ? () => onEdit() : undefined}
         onDownload={
           exportsQuotation(me?.role) ? () => downloadQuotationPdf(id, quotationNo) : undefined
         }
@@ -103,18 +106,25 @@ export default function QuotationDetail({
         onPick={setPicked}
         onRevise={() => setRevising(true)}
       />
-      {/* What blocks Dikirim, with the way to fix it. */}
-      {isEditable(status) && writesQuotation(me?.role) && incomplete > 0 && (
+      {/* What blocks Dikirim */}
+      {isEditable(status) && writesQuotation(me?.role) && gaps.length > 0 && (
         <div
           role="status"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[rgba(245,158,11,0.4)] bg-[rgba(245,158,11,0.06)] px-5 py-3.5"
+          className="rounded-lg border border-[rgba(245,158,11,0.4)] bg-[rgba(245,158,11,0.06)] px-5 py-3.5 text-[#92400E]"
         >
-          <span className="text-sm font-medium text-[#92400E]">
-            {incomplete} produk belum lengkap. Isi vendor dan harganya dulu sebelum dikirim.
-          </span>
-          <button type="button" onClick={onEdit} className={`${ui.btnPrimary} px-4`}>
-            Lengkapi Sekarang
-          </button>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="text-sm font-medium">
+              {gaps.length} produk belum lengkap. Isi yang kurang sebelum quotation dikirim.
+            </span>
+            <button
+              type="button"
+              onClick={() => onEdit(gaps[0].id)}
+              className={`${ui.btnPrimary} px-4`}
+            >
+              Lengkapi Sekarang
+            </button>
+          </div>
+          <LineProblemList lines={gaps} onOpen={(line) => onEdit(line.id)} />
         </div>
       )}
       <ClientSummaryCard

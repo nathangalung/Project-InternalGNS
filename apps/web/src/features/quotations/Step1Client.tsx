@@ -87,7 +87,7 @@ export default function Step1Client({
       {heading && (
         <div className={qe.sectionHeader}>
           <div>
-            <h2 className={qe.sectionTitle}>Pilih Klien Strategis</h2>
+            <h2 className={qe.sectionTitle}>Pilih Klien</h2>
             <p className={qe.sectionDesc}>
               {lockClient
                 ? "Ganti Klien bila quotation ini untuk perusahaan lain. Narahubung masih dapat diubah."

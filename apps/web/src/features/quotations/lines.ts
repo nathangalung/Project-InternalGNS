@@ -106,9 +106,31 @@ export function isLineComplete(p: ProductItem, pricing = true): boolean {
   return lineGaps(p, pricing).length === 0
 }
 
+// A line short of data
+export type LineProblem = {
+  id: number
+  position: number
+  name: string
+  problems: string[]
+}
+
+// A wizard line's shown name.
+function wizardName(p: ProductItem): string {
+  return p.nama || p.requestedNama || "Tanpa nama"
+}
+
+// Lines not ready to send
+export function linesToComplete(products: ProductItem[], pricing = true): LineProblem[] {
+  return products.flatMap((p, i) => {
+    const problems = lineGaps(p, pricing)
+    return problems.length > 0 ? [{ id: p.id, position: i + 1, name: wizardName(p), problems }] : []
+  })
+}
+
 // Stored line, as the send rule reads it.
 export type StoredLine = Pick<
   QuotationItemRow,
+  | "id"
   | "itemType"
   | "isAvailable"
   | "offeredItemId"
@@ -116,21 +138,39 @@ export type StoredLine = Pick<
   | "vendorProductId"
   | "costPrice"
   | "sellingPrice"
+  | "requestedName"
+  | "offeredName"
 >
 
-// Offered lines the send rule refuses.
-// Mirrors fn_change_quotation_status: a product, a unit, a linked vendor,
-// harga beli and harga jual above zero. Tidak Ditawarkan lines never count,
-// and a harga jual hidden from the viewer is not theirs to fill.
+// Stored lines the send refuses
+export function storedLineGaps(items: StoredLine[]): LineProblem[] {
+  const out: LineProblem[] = []
+  let position = 0
+  for (const it of items) {
+    if (it.itemType !== "product") continue
+    position += 1
+    if (!it.isAvailable) continue
+    const problems: string[] = []
+    if (it.offeredItemId === undefined) problems.push("produk")
+    if (it.unitId === undefined) problems.push("satuan")
+    if (it.vendorProductId === undefined) problems.push("vendor")
+    if (!(Number(it.costPrice ?? 0) > 0)) problems.push("harga beli")
+    if (it.sellingPrice !== undefined && !(Number(it.sellingPrice) > 0)) {
+      problems.push("harga jual")
+    }
+    if (problems.length > 0) {
+      out.push({ id: it.id, position, name: it.offeredName || it.requestedName, problems })
+    }
+  }
+  return out
+}
+
+// Count of refused lines
 export function incompleteLines(items: StoredLine[]): number {
-  return items.filter(
-    (it) =>
-      it.itemType === "product" &&
-      it.isAvailable &&
-      (it.offeredItemId === undefined ||
-        it.unitId === undefined ||
-        it.vendorProductId === undefined ||
-        !(Number(it.costPrice ?? 0) > 0) ||
-        (it.sellingPrice !== undefined && !(Number(it.sellingPrice) > 0))),
-  ).length
+  return storedLineGaps(items).length
+}
+
+// One line as text
+export function describeLine(p: LineProblem): string {
+  return `Produk ${p.position} (${p.name}): ${p.problems.join(", ")}`
 }

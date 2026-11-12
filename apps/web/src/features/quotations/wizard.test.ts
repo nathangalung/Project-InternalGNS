@@ -4,6 +4,7 @@ import { unitIndex } from "@/features/units/match"
 import type { QuotationDetail } from "@/types/api"
 import {
   countUnknownUnits,
+  linesToFix,
   type ProductItem,
   seedFromDetail,
   unitIssue,
@@ -251,6 +252,21 @@ describe("units", () => {
     ["a retired unit", "oth", "Satuan OTH sudah tidak dipakai."],
   ])("explains %s", (_name, satuan, want) => {
     expect(unitIssue(satuan, index)).toBe(want)
+  })
+
+  it("lists the lines a save refuses by place and name", () => {
+    const lines = [
+      product(1, { satuan: "pcs", jumlah: 2 }),
+      product(2, { satuan: "drum" }),
+      product(3, { satuan: "PCS", jumlah: 0 }),
+      product(4, { satuan: "oth", jumlah: 0 }),
+    ]
+    expect(linesToFix(lines, index)).toEqual([
+      { id: 2, position: 2, name: "Barang 2", problems: ["satuan"] },
+      { id: 3, position: 3, name: "Barang 3", problems: ["jumlah"] },
+      { id: 4, position: 4, name: "Barang 4", problems: ["jumlah", "satuan"] },
+    ])
+    expect(linesToFix([product(5, { satuan: "PCS", jumlah: 0 })], index, true)).toEqual([])
   })
 })
 

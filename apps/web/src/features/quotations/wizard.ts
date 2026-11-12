@@ -5,7 +5,7 @@ import { normalizeImpa } from "@/lib/impa"
 import { isValidAddress, optionalAddressError } from "@/lib/validation"
 import type { QuotationDetail } from "@/types/api"
 import { toWizardProduct } from "./adapters"
-import { parseQty } from "./lines"
+import { type LineProblem, parseQty, qtyIssue } from "./lines"
 
 // One wizard product line.
 export type ProductItem = {
@@ -185,6 +185,23 @@ export function unitIssue(satuan: string, unitByText: UnitIndex): string | null 
 // Lines with an unknown unit.
 export function countUnknownUnits(products: ProductItem[], unitByText: UnitIndex): number {
   return products.filter((p) => unitIssue(p.satuan, unitByText) !== null).length
+}
+
+// Lines a save refuses
+export function linesToFix(
+  products: ProductItem[],
+  unitByText: UnitIndex,
+  allowZeroQty = false,
+): LineProblem[] {
+  return products.flatMap((p, i) => {
+    const problems: string[] = []
+    if (qtyIssue(p.jumlah, allowZeroQty)) problems.push("jumlah")
+    if (unitIssue(p.satuan, unitByText) !== null) problems.push("satuan")
+    if (problems.length === 0) return []
+    return [
+      { id: p.id, position: i + 1, name: p.nama || p.requestedNama || "Tanpa nama", problems },
+    ]
+  })
 }
 
 // Values the wizard edits.

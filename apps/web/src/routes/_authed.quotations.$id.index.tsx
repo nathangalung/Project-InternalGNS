@@ -7,7 +7,7 @@ import { clientCardInfo, documentContact } from "@/features/clients/clientCard"
 import { useClient } from "@/features/clients/hooks"
 import { toQuotationData } from "@/features/quotations/adapters"
 import { useQuotation } from "@/features/quotations/hooks"
-import { incompleteLines } from "@/features/quotations/lines"
+import { storedLineGaps } from "@/features/quotations/lines"
 import QuotationDetail from "@/features/quotations/QuotationDetail"
 import { useUnits } from "@/features/units/hooks"
 import { useTrailState } from "@/hooks/useNavTrail"
@@ -70,8 +70,16 @@ function QuotationDetailRoute() {
       transitions={detail.allowedTransitions ?? []}
       canRevise={detail.canRevise === true}
       contactId={detail.contactId}
-      incomplete={incompleteLines(detail.items)}
-      onEdit={() => void navigate({ to: "/quotations/$id/edit", params: { id }, state })}
+      gaps={storedLineGaps(detail.items)}
+      onEdit={(line) =>
+        void navigate({
+          to: "/quotations/$id/edit",
+          params: { id },
+          // Open that line's editor
+          search: line === undefined ? {} : { step: 2, line },
+          state,
+        })
+      }
     />
   )
 }

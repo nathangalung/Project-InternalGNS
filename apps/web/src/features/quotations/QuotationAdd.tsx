@@ -57,7 +57,8 @@ export default function QuotationAdd() {
     setProducts,
     deleteProduct,
     toggleNoOffer,
-    incompleteLines,
+    fixLines,
+    unsentLines,
     saveProduct,
     prodPageSize,
     setProdPageSize,
@@ -81,7 +82,6 @@ export default function QuotationAdd() {
     summary,
     unitByText,
     unitsOk,
-    unknownUnits,
     invalidQty,
     qtyErrors,
     recordQtyFailure,
@@ -333,9 +333,10 @@ export default function QuotationAdd() {
             withPPN={ppnEnabled}
             summaryProfit={summaryProfit}
             summaryGrandTotal={summaryGrandTotal}
-            invalidQtyCount={invalidQty}
-            unknownUnitCount={unknownUnits}
-            incompleteCount={incompleteLines}
+            linesToFix={fixLines}
+            linesToComplete={unsentLines}
+            onGoToProducts={() => setStep(2)}
+            requireProducts
           />
         )}
       </div>

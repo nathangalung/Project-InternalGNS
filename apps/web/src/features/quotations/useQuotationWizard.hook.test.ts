@@ -280,12 +280,12 @@ describe("no-offer lines", () => {
     const { result } = wizard()
     act(() => result.current.saveProduct(FORM))
     const id = result.current.products[0].id
-    expect(result.current.incompleteLines).toBe(1)
+    expect(result.current.unsentLines).toHaveLength(1)
 
     act(() => result.current.toggleNoOffer(id))
     expect(result.current.products[0].noOffer).toBe(true)
     expect(result.current.summary.total).toBe(0)
-    expect(result.current.incompleteLines).toBe(0)
+    expect(result.current.unsentLines).toEqual([])
 
     act(() => result.current.toggleNoOffer(id))
     expect(result.current.products[0].noOffer).toBe(false)
