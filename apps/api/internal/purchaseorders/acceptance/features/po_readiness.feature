@@ -26,7 +26,7 @@ Feature: PO readiness before work starts
     When the user tries to transition the PO to "ON_PROGRESS"
     Then the gate lists exactly these gaps:
       | klien      | client_address   | belum lengkap: Alamat         |
-      | vendor     | vendor_location  | belum lengkap: Lokasi         |
+      | vendor     | vendor_location  | belum lengkap: Alamat         |
       | pengiriman | shipping_address | Alamat pengiriman belum diisi |
 
   Scenario: Each filled address clears its gap until work can start
@@ -35,7 +35,7 @@ Feature: PO readiness before work starts
     When the user fills the client address
     And the user tries to transition the PO to "ON_PROGRESS"
     Then the gate lists exactly these gaps:
-      | vendor     | vendor_location  | belum lengkap: Lokasi         |
+      | vendor     | vendor_location  | belum lengkap: Alamat         |
       | pengiriman | shipping_address | Alamat pengiriman belum diisi |
     When the user fills the vendor location
     And the user tries to transition the PO to "ON_PROGRESS"

@@ -301,14 +301,14 @@ func TestHandler_OnProgressGate_FillsAddresses(t *testing.T) {
 
 	refused(map[string]string{
 		clientKey: "Data klien PT Tanpa Alamat belum lengkap: Alamat",
-		vendorKey: "Data vendor CV Tanpa Lokasi belum lengkap: Lokasi",
+		vendorKey: "Data vendor CV Tanpa Lokasi belum lengkap: Alamat",
 		shipKey:   "Alamat pengiriman belum diisi",
 	})
 
 	_, err = tx.Exec(ctx, `UPDATE company_client SET address = 'Jl. Pelabuhan No. 1, Jakarta Utara' WHERE id = $1`, clientID)
 	require.NoError(t, err)
 	refused(map[string]string{
-		vendorKey: "Data vendor CV Tanpa Lokasi belum lengkap: Lokasi",
+		vendorKey: "Data vendor CV Tanpa Lokasi belum lengkap: Alamat",
 		shipKey:   "Alamat pengiriman belum diisi",
 	})
 

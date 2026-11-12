@@ -162,7 +162,7 @@ func missingClientFields(c ClientCompleteness) []CompletenessGap {
 func missingVendorFields(v VendorCompleteness) []CompletenessGap {
 	var missing []CompletenessGap
 	if !filled(v.Location) {
-		missing = append(missing, CompletenessGap{GapVendorLocation, "Lokasi"})
+		missing = append(missing, CompletenessGap{GapVendorLocation, "Alamat"})
 	}
 	if !filled(v.ContactEmail) && !filled(v.ContactPhone) {
 		missing = append(missing, CompletenessGap{GapVendorReach, "Email atau Nomor Telepon"})

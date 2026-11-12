@@ -318,7 +318,7 @@ test.describe("purchase order status", () => {
       `/vendors/${vendor.id}`,
     )
     await expect(modal.getByRole("listitem").getByText("NPWP", { exact: true })).toBeVisible()
-    await expect(modal.getByRole("listitem").getByText("Lokasi", { exact: true })).toBeVisible()
+    await expect(modal.getByRole("listitem").getByText("Alamat", { exact: true })).toBeVisible()
     await modal.getByRole("button", { name: "Mengerti" }).click()
     await expect(modal).toBeHidden()
     expect((await seed.poByQuotation(q.id)).status).toBe("UPLOADED")

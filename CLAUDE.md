@@ -637,7 +637,10 @@ entity, id and name, since the row is gone. The logo object stays for
 already decide who may: the client writers (all but finance input) and the
 catalog writers (superadmin and both operational roles), mirrored by
 `editsClients` and `canWriteCatalog` on the detail pages, whose
-`PermanentDelete` dialog shows any refusal inline.
+`PermanentDelete` dialog shows any refusal inline, and a refusal for a
+record in use adds where to deactivate it instead (`deactivateHint`: the
+Status Klien or Status Vendor switch, then Simpan). The PO gate names a
+vendor's missing address "Alamat", the word its form uses.
 
 A client's NPWP follows one rule, `validate.ClientNPWP`, mirrored by
 `optionalNpwpError` in the web: an Indonesian client (country IDN or blank)

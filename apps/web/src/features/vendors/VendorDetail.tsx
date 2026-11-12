@@ -251,6 +251,7 @@ export default function VendorDetail({ vendor }: VendorDetailProps) {
                 noun="vendor"
                 name={vendor.name}
                 along="tautan produknya"
+                deactivateHint="Untuk menonaktifkan, matikan Status Vendor di halaman ini, lalu Simpan."
                 onDelete={async () => {
                   await removeVendor.mutateAsync(vendor.id)
                   nav.back()
@@ -513,7 +514,8 @@ export default function VendorDetail({ vendor }: VendorDetailProps) {
                   id={statusHintId}
                   className="mt-1 text-xs font-normal leading-4 text-[#4A4455]"
                 >
-                  Menonaktifkan vendor mencegah penggunaan dalam transaksi procurement berikutnya.
+                  Vendor nonaktif tidak dapat dipilih untuk quotation dan PO baru. Data yang sudah
+                  ada tidak berubah.
                 </div>
               </div>
               <button

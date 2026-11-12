@@ -352,6 +352,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                 noun="klien"
                 name={client.name}
                 along="narahubungnya"
+                deactivateHint="Untuk menonaktifkan, matikan Status Klien di halaman ini, lalu Simpan."
                 onDelete={async () => {
                   await removeClient.mutateAsync(client.id)
                   nav.back()
