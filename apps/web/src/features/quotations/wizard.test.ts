@@ -267,6 +267,15 @@ describe("units", () => {
       { id: 4, position: 4, name: "Barang 4", problems: ["jumlah", "satuan"] },
     ])
     expect(linesToFix([product(5, { satuan: "PCS", jumlah: 0 })], index, true)).toEqual([])
+    expect(
+      linesToFix(
+        [
+          product(6, { nama: "", requestedNama: "Kabel", satuan: "drum" }),
+          product(7, { nama: "", requestedNama: "", satuan: "drum" }),
+        ],
+        index,
+      ).map((l) => l.name),
+    ).toEqual(["Kabel", "Tanpa nama"])
   })
 })
 
