@@ -1,4 +1,5 @@
 import type { ProductAddFormData } from "@/features/items/ProductAdd/helpers"
+import { type LineProblem, qtyIssue } from "@/features/quotations/lines"
 import type { ProductRow, ShippingRow } from "@/features/quotations/types"
 import { nextLineId, type ProductItem, productFields } from "@/features/quotations/wizard"
 import { resolveUnit, type UnitIndex } from "@/features/units/match"
@@ -205,18 +206,73 @@ export function lineToInput(line: PoEditLine, unitByText: UnitIndex): PoItemInpu
   }
 }
 
-// Edited lines lacking known unit.
+// A line's unit refused.
 //
-// A stored line with no unit may stay that way; an edited or new line must
-// name a unit the catalogue knows.
-export function linesMissingUnit(lines: PoEditLine[], unitByText: UnitIndex): string[] {
-  return lines
-    .filter((l) => !l.source || l.touched)
-    .filter((l) => {
-      if (l.source && l.source.unitId === undefined && l.satuan.trim() === "") return false
-      return unitIdOf(l, unitByText) === undefined
-    })
-    .map((l) => l.nama || l.requestedNama)
+// An untouched line goes back as stored, and a stored line may keep no
+// unit or the retired one it has. An edited or new line names a current
+// unit the catalogue knows (fn_update_po_items).
+function unitRefused(line: PoEditLine, unitByText: UnitIndex): boolean {
+  const s = line.source
+  if (s && !line.touched) return false
+  if (s && s.unitId === undefined && line.satuan.trim() === "") return false
+  const id = unitIdOf(line, unitByText)
+  if (id === undefined) return true
+  if (id === s?.unitId) return false
+  return resolveUnit(unitByText, line.satuan)?.isActive === false
+}
+
+// Lines a PO save refuses
+//
+// Mirrors fn_update_po_items: a name, a quantity of 0 or more, a known
+// unit, and harga jual above 0 for a role that sets it.
+export function poLinesToFix(
+  lines: PoEditLine[],
+  unitByText: UnitIndex,
+  pricing: boolean,
+): LineProblem[] {
+  return lines.flatMap((l, i) => {
+    const name = (l.nama || l.requestedNama).trim()
+    const problems: string[] = []
+    if (name === "") problems.push("nama produk")
+    if (qtyIssue(l.jumlah, true)) problems.push("jumlah")
+    if (unitRefused(l, unitByText)) problems.push("satuan")
+    if (pricing && !(l.hargaJual > 0)) problems.push("harga jual")
+    if (problems.length === 0) return []
+    return [{ id: l.id, position: i + 1, name: name || "Tanpa nama", problems }]
+  })
+}
+
+// A PO save notice
+export type PoSaveNotice = {
+  text: string
+  // Step that fixes it
+  step?: number
+}
+
+const ADDRESS_NOTICE = "Alamat pengiriman wajib diisi karena ada produk tanpa alamat tujuan."
+
+// What else a save refuses.
+//
+// Past the gate the address its lines rely on, and on a reopened DELIVERED
+// PO one product line with a quantity. Only the heads fill the address.
+export function poSaveNotices(
+  status: PurchaseOrderRow["status"],
+  lines: PoEditLine[],
+  shippingAddress: string,
+  pricing: boolean,
+): PoSaveNotice[] {
+  const out: PoSaveNotice[] = []
+  if (status === "DELIVERED" && lines.length > 0 && !lines.some((l) => l.jumlah > 0)) {
+    out.push({ text: "Jumlah semua produk masih 0. Isi jumlah minimal satu produk.", step: 1 })
+  }
+  if (poNeedsAddress(status, lines) && shippingAddress.trim() === "") {
+    out.push(
+      pricing
+        ? { text: ADDRESS_NOTICE, step: 2 }
+        : { text: `${ADDRESS_NOTICE} Minta Kepala Operasional atau Super Admin mengisinya.` },
+    )
+  }
+  return out
 }
 
 // Lines the PO address covers.

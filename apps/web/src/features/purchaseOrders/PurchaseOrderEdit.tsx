@@ -6,10 +6,9 @@ import { fromClientRow } from "@/features/clients/helpers"
 import { useClient } from "@/features/clients/hooks"
 import ProductAdd from "@/features/items/ProductAdd"
 import DiscountModal from "@/features/quotations/DiscountModal"
-import { countInvalidQty, PO_QTY_ERROR } from "@/features/quotations/lines"
 import Step2Product from "@/features/quotations/Step2Product"
 import Step3Shipping from "@/features/quotations/Step3Shipping"
-import Step4Summary from "@/features/quotations/Step4Summary"
+import Step4Summary, { type SummaryNotice } from "@/features/quotations/Step4Summary"
 import { wizardGates, wizardSummary } from "@/features/quotations/wizard"
 import { useUnits } from "@/features/units/hooks"
 import { unitIndex } from "@/features/units/match"
@@ -18,17 +17,17 @@ import { isVersionConflict } from "@/lib/errors"
 import { formatNumber as formatRp, toNum } from "@/lib/format"
 import { listCrumb, pageCrumb } from "@/lib/nav-trail"
 import { canWriteCatalog, setsPrices } from "@/lib/rbac"
-import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import type { PoUpdateItemsInput, PurchaseOrderItemRow, PurchaseOrderRow } from "@/types/api"
 import {
-  linesMissingUnit,
   lineToInput,
   loadFailureMessage,
   type PoEditLine,
   poCrumbLabel,
   poLinesToEdit,
+  poLinesToFix,
   poNeedsAddress,
+  poSaveNotices,
   upsertPoLine,
 } from "./adapters"
 import { usePoItems, usePurchaseOrderByQuotation, useUpdatePoItems } from "./hooks"
@@ -191,6 +190,25 @@ export default function PurchaseOrderEdit({ po, startStep, startLine }: Purchase
     addressRequired,
   })
 
+  // Why Simpan stays disabled
+  const fixLines = poLinesToFix(products, unitByText, pricing)
+  const saveNotices: SummaryNotice[] = poSaveNotices(
+    po.status,
+    products,
+    shippingAddress,
+    pricing,
+  ).map((n) => ({
+    text: n.text,
+    go: n.step === undefined ? undefined : () => setStep(n.step ?? 1),
+    goLabel: n.step === 2 ? "Ke Langkah Pengiriman" : undefined,
+  }))
+  const blocked =
+    !hasContent ||
+    !isAlamatOk ||
+    products.length === 0 ||
+    fixLines.length > 0 ||
+    saveNotices.length > 0
+
   const currentClient = clientRow ? fromClientRow(clientRow) : undefined
   const editingProduct = products.find((p) => p.id === editingId) ?? null
 
@@ -208,16 +226,8 @@ export default function PurchaseOrderEdit({ po, startStep, startLine }: Purchase
   } = wizardSummary(products, discountPct, shippingCost, po.ppnEnabled)
 
   async function handleSave() {
-    const missing = linesMissingUnit(products, unitByText)
-    if (missing.length > 0) {
-      toast.error(`Satuan belum dikenali untuk: ${missing.join(", ")}.`)
-      return
-    }
-    // Qty 0 stays allowed; a negative one is refused.
-    if (countInvalidQty(products, true) > 0) {
-      toast.error(`${PO_QTY_ERROR} Ubah produk yang ditandai sebelum menyimpan.`)
-      return
-    }
+    // The summary names each reason
+    if (blocked) return
     const shipDays = Number(shippingTime)
     const input: PoUpdateItemsInput = {
       discountPct: String(discountPct),
@@ -282,7 +292,7 @@ export default function PurchaseOrderEdit({ po, startStep, startLine }: Purchase
               <button
                 type="button"
                 className={`${ui.btnPrimary} w-[148px] max-sm:w-auto`}
-                disabled={!hydrated || !hasContent || !isAlamatOk || updateMutation.isPending}
+                disabled={!hydrated || blocked || updateMutation.isPending}
                 onClick={() => void handleSave()}
               >
                 {updateMutation.isPending ? "Menyimpan..." : "Simpan"}
@@ -417,6 +427,10 @@ export default function PurchaseOrderEdit({ po, startStep, startLine }: Purchase
                 withPPN={po.ppnEnabled}
                 summaryProfit={summaryProfit}
                 summaryGrandTotal={summaryGrandTotal}
+                linesToFix={fixLines}
+                notices={saveNotices}
+                noProductsText="Tambahkan minimal satu produk sebelum menyimpan PO."
+                onGoToProducts={() => setStep(1)}
               />
             )}
           </>

@@ -474,7 +474,11 @@ shows a missing one as Belum ada No. PO.
   Its links open the fix: Isi No. PO, the client or vendor page, Ganti
   Narahubung, and Ubah PO at the step or line (`?step=2` for the shipping
   address, `?step=1&line=<id>` for a line, read tolerantly by the edit
-  route). The
+  route). Ubah PO's summary step never leaves Simpan disabled without a
+  reason: it names the lines a save refuses (`poLinesToFix`: nama
+  produk, jumlah, satuan, harga jual) and what else `fn_update_po_items`
+  would refuse (`poSaveNotices`: the address past the gate, a quantity
+  on a reopened delivered PO), each with a link to its step. The
   gate and the move run in one transaction (`Repo.GatedTransition`): the PO
   row is locked first, so the gate judges the status the move starts from,
   and the gate's client read holds the client row `FOR SHARE`, so a client

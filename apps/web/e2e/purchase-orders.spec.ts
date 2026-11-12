@@ -921,6 +921,12 @@ test.describe("purchase order address gaps", () => {
     await required.fill("")
     await page.getByRole("button", { name: "Lanjut" }).click()
     await expect(page.getByRole("button", { name: "Simpan", exact: true })).toBeDisabled()
+    // The summary says why and leads back.
+    await expect(
+      page.getByText("Alamat pengiriman wajib diisi karena ada produk tanpa alamat tujuan."),
+    ).toBeVisible()
+    await page.getByRole("button", { name: "Ke Langkah Pengiriman" }).click()
+    await expect(page.getByLabel("Alamat Lengkap *")).toBeVisible()
   })
 
   test("Ubah PO saves new days on a PO without an address", async ({ page, seed }) => {

@@ -5,7 +5,6 @@ import { formatRupiah } from "@/lib/format"
 import type { PurchaseOrderItemRow, PurchaseOrderRow } from "@/types/api"
 import {
   detailsChanged,
-  linesMissingUnit,
   linesNeedAddress,
   lineToInput,
   loadFailureMessage,
@@ -15,8 +14,10 @@ import {
   poItemsToProducts,
   poItemsToShipping,
   poLinesToEdit,
+  poLinesToFix,
   poNeedsAddress,
   poRowFromBackend,
+  poSaveNotices,
   upsertPoLine,
 } from "./adapters"
 
@@ -37,6 +38,7 @@ const line = (over: Partial<PurchaseOrderItemRow>): PurchaseOrderItemRow => ({
 const units = unitIndex([
   { id: 1, code: "PCS", isActive: true, aliases: ["PIECES"] },
   { id: 2, code: "MTR", isActive: true, aliases: ["METER"] },
+  { id: 3, code: "OTH", isActive: false, aliases: [] },
 ])
 
 describe("poItemsToProducts", () => {
@@ -328,30 +330,87 @@ describe("upsertPoLine", () => {
   })
 })
 
-describe("linesMissingUnit", () => {
+describe("poLinesToFix", () => {
   const [legacy] = poLinesToEdit([line({ id: 1, itemName: "Legacy" })], () => "")
   const [known] = poLinesToEdit(
     [line({ id: 2, itemName: "Known", unitCode: "PCS", unitId: 1 })],
     () => "",
   )
+  const [retired] = poLinesToEdit(
+    [line({ id: 4, itemName: "Lama", unitCode: "OTH", unitId: 3 })],
+    () => "",
+  )
+  const fix = (lines: PoEditLine[], pricing = true) => poLinesToFix(lines, units, pricing)
 
   it("lets an untouched or unit-less stored line pass", () => {
-    expect(linesMissingUnit([legacy, { ...legacy, touched: true }, known], units)).toEqual([])
+    expect(fix([legacy, { ...legacy, touched: true }, known])).toEqual([])
   })
 
-  it("flags an edited line with an unknown unit", () => {
-    expect(linesMissingUnit([{ ...known, satuan: "BOX", touched: true }], units)).toEqual(["Known"])
+  it("names an edited line with an unknown unit by its place", () => {
+    expect(fix([known, { ...known, id: 5, satuan: "BOX", touched: true }])).toEqual([
+      { id: 5, position: 2, name: "Known", problems: ["satuan"] },
+    ])
   })
 
   it("takes a unit alias as its unit", () => {
     const edited = { ...known, satuan: "meter.", touched: true }
-    expect(linesMissingUnit([edited], units)).toEqual([])
+    expect(fix([edited])).toEqual([])
     expect(lineToInput(edited, units).unitId).toBe(2)
   })
 
   it("flags a new line with no unit", () => {
     const fresh = { ...known, source: undefined, satuan: "" }
-    expect(linesMissingUnit([fresh], units)).toEqual(["Known"])
+    expect(fix([fresh])).toEqual([{ id: 2, position: 1, name: "Known", problems: ["satuan"] }])
+  })
+
+  it("lets a line keep its retired unit but refuses picking one", () => {
+    expect(fix([{ ...retired, touched: true }])).toEqual([])
+    const picked = { ...known, satuan: "OTH", touched: true }
+    expect(fix([picked])).toEqual([{ id: 2, position: 1, name: "Known", problems: ["satuan"] }])
+  })
+
+  it("lists every gap the save refuses", () => {
+    const bad = { ...known, nama: "", requestedNama: "", jumlah: -1, hargaJual: 0, touched: true }
+    expect(fix([bad])).toEqual([
+      { id: 2, position: 1, name: "Tanpa nama", problems: ["nama produk", "jumlah", "harga jual"] },
+    ])
+  })
+
+  it("keeps a zero quantity", () => {
+    expect(fix([{ ...known, jumlah: 0, touched: true }])).toEqual([])
+  })
+
+  it("leaves harga jual to the heads", () => {
+    expect(fix([{ ...known, hargaJual: 0, touched: true }], false)).toEqual([])
+  })
+})
+
+describe("poSaveNotices", () => {
+  const [bare] = poLinesToEdit([line({ id: 1 })], () => "")
+  const [own] = poLinesToEdit([line({ id: 2, shipDestination: "Gudang B" })], () => "")
+  const ADDRESS = "Alamat pengiriman wajib diisi karena ada produk tanpa alamat tujuan."
+
+  it("asks nothing before the gate", () => {
+    expect(poSaveNotices("UPLOADED", [bare], "", true)).toEqual([])
+  })
+
+  it("asks for the address past the gate", () => {
+    expect(poSaveNotices("ON_PROGRESS", [bare], " ", true)).toEqual([{ text: ADDRESS, step: 2 }])
+    expect(poSaveNotices("ON_PROGRESS", [bare], "Jl. Laut 1, Jakarta", true)).toEqual([])
+    expect(poSaveNotices("ON_PROGRESS", [own], "", true)).toEqual([])
+  })
+
+  it("sends a role that cannot fill it to a head", () => {
+    expect(poSaveNotices("ON_PROGRESS", [bare], "", false)).toEqual([
+      { text: `${ADDRESS} Minta Kepala Operasional atau Super Admin mengisinya.` },
+    ])
+  })
+
+  it("keeps a quantity on a reopened delivered PO", () => {
+    expect(poSaveNotices("DELIVERED", [{ ...own, jumlah: 0 }], "", true)).toEqual([
+      { text: "Jumlah semua produk masih 0. Isi jumlah minimal satu produk.", step: 1 },
+    ])
+    expect(poSaveNotices("ON_PROGRESS", [{ ...own, jumlah: 0 }], "", true)).toEqual([])
   })
 })
 
@@ -484,7 +543,9 @@ describe("wizard lines without an offered name", () => {
   })
 
   it("names the line by its request when the unit is missing", () => {
-    expect(linesMissingUnit([nameless], units)).toEqual(["Tali"])
+    expect(poLinesToFix([nameless], units, true)).toEqual([
+      { id: 3, position: 1, name: "Tali", problems: ["satuan"] },
+    ])
   })
 })
 
