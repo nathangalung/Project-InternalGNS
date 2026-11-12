@@ -81,7 +81,7 @@ test.describe("as the finance head", () => {
     expect((await readFile(await file.path())).subarray(0, 2).toString()).toBe("PK")
 
     await row.getByRole("button", { name: /^Hapus/ }).click()
-    const confirm = page.getByRole("dialog", { name: "Hapus catatan kas?" })
+    const confirm = page.getByRole("dialog", { name: "Hapus Catatan Kas?" })
     await confirm.getByRole("button", { name: "Hapus" }).click()
     await expect(confirm).toBeHidden()
     // The empty row quotes the search, so look for it, not for the note.

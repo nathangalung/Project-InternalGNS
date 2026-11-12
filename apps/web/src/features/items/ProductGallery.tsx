@@ -201,7 +201,7 @@ export default function ProductGallery({ product, canWrite }: ProductGalleryProp
 
       {confirming && (
         <Modal
-          title="Hapus foto produk?"
+          title="Hapus Foto Produk?"
           onClose={() => setConfirming(false)}
           footer={
             <>

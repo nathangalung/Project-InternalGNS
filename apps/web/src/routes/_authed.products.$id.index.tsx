@@ -22,7 +22,7 @@ function ProductDetailRoute() {
     }
     return (
       <NotFoundState
-        title="Produk tidak ditemukan"
+        title="Produk Tidak Ditemukan"
         size="page"
         backTo={{ to: "/products", label: "Kembali ke Katalog Produk" }}
       />

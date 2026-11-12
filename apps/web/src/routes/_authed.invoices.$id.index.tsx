@@ -49,7 +49,7 @@ function InvoiceDetailRoute() {
   if (!inv || inv.quotationId !== quotationId) {
     return (
       <NotFoundState
-        title="Invoice tidak ditemukan"
+        title="Invoice Tidak Ditemukan"
         size="page"
         backTo={{ to: "/invoices", label: "Kembali ke Daftar Invoice" }}
       />

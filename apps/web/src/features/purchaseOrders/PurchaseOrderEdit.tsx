@@ -276,7 +276,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
 
         {loadFailed ? (
           <StateMessage
-            title="Halaman ubah PO belum dapat dibuka"
+            title="Halaman Ubah PO Belum Dapat Dibuka"
             action={
               <button
                 type="button"

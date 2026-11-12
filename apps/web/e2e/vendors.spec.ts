@@ -84,7 +84,7 @@ test("Hapus Permanen deletes an unused vendor and keeps its product", async ({ p
   const item = await seed.item({ vendor })
   await page.goto(`/vendors/${vendor.id}`)
   await page.getByRole("button", { name: "Hapus Permanen" }).click()
-  const dialog = page.getByRole("dialog", { name: "Hapus vendor permanen?" })
+  const dialog = page.getByRole("dialog", { name: "Hapus Vendor Permanen?" })
   await expect(dialog).toContainText(vendor.name)
   await expect(dialog).toContainText("tidak dapat dibatalkan")
   await dialog.getByRole("button", { name: "Hapus Permanen" }).click()
@@ -106,7 +106,7 @@ test("Hapus Permanen keeps a quoted vendor and says why", async ({ page, seed })
   await seed.quotation({ client: await seed.client(), lines: [{ item, qty: 1, price: 150_000 }] })
   await page.goto(`/vendors/${vendor.id}`)
   await page.getByRole("button", { name: "Hapus Permanen" }).click()
-  const dialog = page.getByRole("dialog", { name: "Hapus vendor permanen?" })
+  const dialog = page.getByRole("dialog", { name: "Hapus Vendor Permanen?" })
   await dialog.getByRole("button", { name: "Hapus Permanen" }).click()
 
   await expect(dialog.getByRole("alert")).toHaveText(

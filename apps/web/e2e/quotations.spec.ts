@@ -790,7 +790,7 @@ test.describe("quotation wizard import and requests", () => {
 
     await row.getByRole("button", { name: "Hapus" }).click()
     await page
-      .getByRole("dialog", { name: "Hapus permintaan ini?" })
+      .getByRole("dialog", { name: "Hapus Permintaan Ini?" })
       .getByRole("button", { name: "Hapus Permintaan" })
       .click()
     await expect(row).toHaveCount(0)
@@ -861,7 +861,7 @@ test.describe("quotation status", () => {
     await expect(next.getByRole("menuitem")).toHaveText(["Disetujui", "Ditolak"])
 
     await page.goto(`/quotations/${q.id}/edit`)
-    await expect(page.getByText("Quotation tidak dapat diubah")).toBeVisible()
+    await expect(page.getByText("Quotation Tidak Dapat Diubah")).toBeVisible()
     await expect(page.getByText("Gunakan Buat Revisi di halaman detail")).toBeVisible()
   })
 

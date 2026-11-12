@@ -1292,7 +1292,11 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
   Four tests hold it: `src/lib/copy-guard.test.ts` (web source),
   `httperr.TestCopy_NoSemicolonOrDash` (Go strings), `db/functions`
   `TestLiterals_NoSemicolonOrDash` (function literals) and
-  `TestLatexExports_DocumentHead` (printed text). One word per thing: Ubah
+  `TestLatexExports_DocumentHead` (printed text). Titles, headings, dialog
+  titles and table headers capitalise every word but the conjunctions and
+  short prepositions (dan, atau, serta, di, ke, dari, untuk, dengan, yang),
+  as "Hapus Produk Ini dari Quotation?", and table cells sit vertically
+  centred (`ui.td`, `align-middle`). One word per thing: Ubah
   (not Edit), Unggah, berkas, narahubung for the person, Riwayat, Jumlah and
   Satuan, Email. Field messages join as sentences (`joinFieldMessages`, the
   same rule as `httperr.Unprocessable`).

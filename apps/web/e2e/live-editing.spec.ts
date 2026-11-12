@@ -243,7 +243,7 @@ test.describe("live quotation editing", () => {
     await expect(product).toBeHidden()
     await expect(page.getByText("Satuan belum diisi.")).toHaveCount(0)
     // Deleting is saved at once, so it asks first.
-    const ask = page.getByRole("dialog", { name: "Hapus produk ini dari quotation?" })
+    const ask = page.getByRole("dialog", { name: "Hapus Produk Ini dari Quotation?" })
     await page.getByRole("button", { name: "Hapus produk 1" }).click()
     await ask.getByRole("button", { name: "Batal" }).click()
     await expect(ask).toBeHidden()
@@ -273,7 +273,7 @@ test.describe("live quotation editing", () => {
     await expect(page.getByText("Menampilkan 6-6 dari 6 produk")).toBeVisible()
     await page.getByRole("button", { name: "Hapus produk 6" }).click()
     await page
-      .getByRole("dialog", { name: "Hapus produk ini dari quotation?" })
+      .getByRole("dialog", { name: "Hapus Produk Ini dari Quotation?" })
       .getByRole("button", { name: "Hapus Produk" })
       .click()
 

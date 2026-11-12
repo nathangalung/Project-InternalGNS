@@ -47,7 +47,7 @@ export default function PermanentDelete({ noun, name, along, onDelete }: Permane
       </button>
       {open && (
         <Modal
-          title={`Hapus ${noun} permanen?`}
+          title={`Hapus ${noun.charAt(0).toUpperCase()}${noun.slice(1)} Permanen?`}
           onClose={close}
           className="max-w-[min(480px,92vw)]!"
           footer={

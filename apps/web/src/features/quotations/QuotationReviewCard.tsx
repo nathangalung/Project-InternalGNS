@@ -403,7 +403,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
       )}
       {pendingDelete !== null && (
         <Modal
-          title="Hapus permintaan ini?"
+          title="Hapus Permintaan Ini?"
           onClose={() => setPendingDelete(null)}
           className="max-w-[min(440px,92vw)]!"
           footer={
