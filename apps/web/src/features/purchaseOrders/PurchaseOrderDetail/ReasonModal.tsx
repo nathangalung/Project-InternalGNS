@@ -23,7 +23,7 @@ export default function ReasonModal({
 
   return (
     <Modal
-      title={`Ubah status menjadi ${statusLabel}`}
+      title={`Ubah Status Menjadi ${statusLabel}`}
       onClose={onClose}
       footer={
         <>

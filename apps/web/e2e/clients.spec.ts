@@ -104,7 +104,7 @@ test("Hapus Permanen deletes an unused client and returns to the list", async ({
   const client = await seed.client()
   await page.goto(`/clients/${client.id}`)
   await page.getByRole("button", { name: "Hapus Permanen" }).click()
-  const dialog = page.getByRole("dialog", { name: "Hapus klien permanen?" })
+  const dialog = page.getByRole("dialog", { name: "Hapus Klien Permanen?" })
   await expect(dialog).toContainText(client.name)
   await expect(dialog).toContainText("tidak dapat dibatalkan")
   await dialog.getByRole("button", { name: "Hapus Permanen" }).click()
@@ -126,7 +126,7 @@ test("Hapus Permanen keeps a quoted client and says why", async ({ page, seed })
   await seed.quotation({ client, lines: [{ item, qty: 1, price: 150_000 }] })
   await page.goto(`/clients/${client.id}`)
   await page.getByRole("button", { name: "Hapus Permanen" }).click()
-  const dialog = page.getByRole("dialog", { name: "Hapus klien permanen?" })
+  const dialog = page.getByRole("dialog", { name: "Hapus Klien Permanen?" })
   await dialog.getByRole("button", { name: "Hapus Permanen" }).click()
 
   await expect(dialog.getByRole("alert")).toHaveText(

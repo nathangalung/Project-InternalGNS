@@ -12,7 +12,7 @@ export default function RouteErrorFallback({ error, reset }: RouteErrorFallbackP
   const { message, detail } = errorCopy(error, import.meta.env.DEV)
   return (
     <StateMessage
-      title="Terjadi kesalahan"
+      title="Terjadi Kesalahan"
       size="page"
       action={
         reset && (

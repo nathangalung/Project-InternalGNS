@@ -421,7 +421,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
   if (!hasNumericQuotationId || (!detail && !isDetailPending)) {
     return (
       <NotFoundState
-        title="Quotation tidak ditemukan"
+        title="Quotation Tidak Ditemukan"
         backTo={{ to: "/quotations", label: "Kembali ke Daftar Quotation" }}
       />
     )
@@ -430,7 +430,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
   if (!editable) {
     return (
       <StateMessage
-        title="Quotation tidak dapat diubah"
+        title="Quotation Tidak Dapat Diubah"
         action={
           <Link
             to="/quotations/$id"
@@ -670,7 +670,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
       )}
       {pendingDelete !== null && (
         <Modal
-          title="Hapus produk ini dari quotation?"
+          title="Hapus Produk Ini dari Quotation?"
           onClose={() => setPendingDelete(null)}
           className="max-w-[min(440px,92vw)]!"
           footer={

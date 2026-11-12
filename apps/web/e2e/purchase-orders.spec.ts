@@ -238,7 +238,7 @@ test.describe("purchase order file", () => {
     expect((await seed.poByQuotation(q.id)).status).toBe("UPLOADED")
 
     await page.getByRole("button", { name: "Hapus Berkas" }).click()
-    const confirm = page.getByRole("dialog", { name: "Hapus berkas PO?" })
+    const confirm = page.getByRole("dialog", { name: "Hapus Berkas PO?" })
     await confirm.getByRole("button", { name: "Hapus Berkas" }).click()
     await expect(confirm).toBeHidden()
     await expect(page.getByText("Belum ada berkas PO yang diunggah")).toBeVisible()
@@ -464,7 +464,7 @@ test.describe("purchase order status", () => {
     await expect(page.getByRole("button", { name: "Hapus Berkas" })).toHaveCount(0)
     await expect(page.getByRole("button", { name: "Ubah Detail" })).toBeVisible()
     await page.goto(`/purchase-orders/${q.id}/edit`)
-    await expect(page.getByText("Purchase Order tidak dapat diubah")).toBeVisible()
+    await expect(page.getByText("Purchase Order Tidak Dapat Diubah")).toBeVisible()
   })
 
   test("Dibatalkan needs a reason and locks the PO", async ({ page, seed }) => {
@@ -478,7 +478,7 @@ test.describe("purchase order status", () => {
     await page.getByRole("menuitemradio", { name: "Dibatalkan", exact: true }).click()
     await page.getByRole("button", { name: "Simpan Data" }).click()
 
-    const modal = page.getByRole("dialog", { name: "Ubah status menjadi Dibatalkan" })
+    const modal = page.getByRole("dialog", { name: "Ubah Status Menjadi Dibatalkan" })
     const save = modal.getByRole("button", { name: "Simpan", exact: true })
     await expect(save).toBeDisabled()
     await modal.getByLabel(/Alasan/).fill(reason)
@@ -495,7 +495,7 @@ test.describe("purchase order status", () => {
     await expect(page.getByText(reason)).toBeVisible()
 
     await page.goto(`/purchase-orders/${q.id}/edit`)
-    await expect(page.getByText("Purchase Order tidak dapat diubah")).toBeVisible()
+    await expect(page.getByText("Purchase Order Tidak Dapat Diubah")).toBeVisible()
   })
 })
 
@@ -538,7 +538,7 @@ test.describe("purchase order after invoicing", () => {
     await page.goto(`/purchase-orders/${q.id}`)
     await expect(edit).toBeDisabled()
     await page.goto(`/purchase-orders/${q.id}/edit`)
-    await expect(page.getByText("Purchase Order tidak dapat diubah")).toBeVisible()
+    await expect(page.getByText("Purchase Order Tidak Dapat Diubah")).toBeVisible()
   })
 
   test("the UI cancel lets Ubah PO correct what the Pengganti bills", async ({ page, seed }) => {

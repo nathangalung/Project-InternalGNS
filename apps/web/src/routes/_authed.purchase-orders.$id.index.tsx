@@ -55,7 +55,7 @@ function PurchaseOrderDetailRoute() {
     }
     return (
       <NotFoundState
-        title="Purchase Order tidak ditemukan"
+        title="Purchase Order Tidak Ditemukan"
         size="page"
         backTo={{ to: "/purchase-orders", label: "Kembali ke Daftar Purchase Order" }}
       />

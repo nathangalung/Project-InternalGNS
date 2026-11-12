@@ -22,7 +22,7 @@ function UserDetailRoute() {
     }
     return (
       <NotFoundState
-        title="Pengguna tidak ditemukan"
+        title="Pengguna Tidak Ditemukan"
         size="page"
         backTo={{ to: "/users", label: "Kembali ke Daftar Pengguna" }}
       />

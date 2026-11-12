@@ -14,7 +14,7 @@ export type BackPath =
   | "/users"
 
 type NotFoundStateProps = {
-  // e.g. "Klien tidak ditemukan"
+  // e.g. "Klien Tidak Ditemukan"
   title: string
   description?: string
   backTo?: { to: BackPath; label: string }

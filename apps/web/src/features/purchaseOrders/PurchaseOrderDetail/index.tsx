@@ -371,7 +371,7 @@ export default function PurchaseOrderDetail({ po, clientInfo, onEdit }: Purchase
 
       {confirmRemove && (
         <Modal
-          title="Hapus berkas PO?"
+          title="Hapus Berkas PO?"
           onClose={() => setConfirmRemove(false)}
           footer={
             <>

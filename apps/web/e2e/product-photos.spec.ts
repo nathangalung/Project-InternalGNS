@@ -117,7 +117,7 @@ test("product photos are added, swiped, made the cover and removed", async ({ pa
   await page.goto(`/products/${item.id}`)
   for (const left of [1, 0]) {
     await page.getByRole("button", { name: "Hapus Foto" }).click()
-    const confirm = page.getByRole("dialog", { name: "Hapus foto produk?" })
+    const confirm = page.getByRole("dialog", { name: "Hapus Foto Produk?" })
     await confirm.getByRole("button", { name: "Hapus Foto" }).click()
     await expect(confirm).toBeHidden()
     await expect.poll(async () => (await photos(item.id)()).length).toBe(left)

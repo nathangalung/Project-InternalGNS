@@ -134,11 +134,11 @@ for (const [name, fail] of [
           }),
     )
     await page.goto("/")
-    await expect(page.getByText("Terjadi kesalahan")).toBeVisible()
+    await expect(page.getByText("Terjadi Kesalahan")).toBeVisible()
     // Long enough for the old loop to spin several times.
     await page.waitForTimeout(3_000)
     expect(refreshes).toHaveLength(1)
     await expect(page).not.toHaveURL(/\/login$/)
-    await expect(page.getByText("Terjadi kesalahan")).toBeVisible()
+    await expect(page.getByText("Terjadi Kesalahan")).toBeVisible()
   })
 }

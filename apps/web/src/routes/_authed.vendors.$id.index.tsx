@@ -26,7 +26,7 @@ function VendorDetailRoute() {
     }
     return (
       <NotFoundState
-        title="Vendor tidak ditemukan"
+        title="Vendor Tidak Ditemukan"
         size="page"
         backTo={{ to: "/vendors", label: "Kembali ke Daftar Vendor" }}
       />

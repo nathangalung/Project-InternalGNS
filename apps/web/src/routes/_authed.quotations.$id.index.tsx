@@ -55,7 +55,7 @@ function QuotationDetailRoute() {
   if (!detail || !quotation) {
     return (
       <NotFoundState
-        title="Quotation tidak ditemukan"
+        title="Quotation Tidak Ditemukan"
         backTo={{ to: "/quotations", label: "Kembali ke Daftar Quotation" }}
       />
     )

@@ -970,7 +970,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
 
       {pendingDeleteId !== null && (
         <Modal
-          title="Nonaktifkan narahubung ini?"
+          title="Nonaktifkan Narahubung Ini?"
           onClose={() => setPendingDeleteId(null)}
           className="max-w-[min(440px,92vw)]!"
           footer={

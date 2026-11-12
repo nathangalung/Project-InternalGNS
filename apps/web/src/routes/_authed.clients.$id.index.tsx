@@ -22,7 +22,7 @@ function ClientDetailRoute() {
     }
     return (
       <NotFoundState
-        title="Klien tidak ditemukan"
+        title="Klien Tidak Ditemukan"
         size="page"
         backTo={{ to: "/clients", label: "Kembali ke Daftar Klien" }}
       />

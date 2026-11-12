@@ -37,7 +37,7 @@ function PurchaseOrderEditRoute() {
     }
     return (
       <NotFoundState
-        title="Purchase Order tidak ditemukan"
+        title="Purchase Order Tidak Ditemukan"
         size="page"
         backTo={{ to: "/purchase-orders", label: "Kembali ke Daftar Purchase Order" }}
       />
@@ -48,7 +48,7 @@ function PurchaseOrderEditRoute() {
   if (lockReason) {
     return (
       <NotFoundState
-        title="Purchase Order tidak dapat diubah"
+        title="Purchase Order Tidak Dapat Diubah"
         description={lockReason}
         size="page"
         backTo={{ to: "/purchase-orders", label: "Kembali ke Daftar Purchase Order" }}

@@ -219,7 +219,7 @@ export default function CashEntryList() {
 
       {deleting && (
         <Modal
-          title="Hapus catatan kas?"
+          title="Hapus Catatan Kas?"
           onClose={() => setDeleting(null)}
           footer={
             <>
