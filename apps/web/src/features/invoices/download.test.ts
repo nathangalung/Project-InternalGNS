@@ -2,7 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { ApiError } from "@/lib/api-client"
 import { toast } from "@/lib/toast"
 import { problem } from "@/test/problem"
-import { runDownload, safeFileName, transferErrorMessage } from "./download"
+import type { ProblemDetail } from "@/types/api"
+import {
+  coretaxRefusals,
+  runCoretaxDownload,
+  runDownload,
+  safeFileName,
+  transferErrorMessage,
+} from "./download"
 
 vi.mock("@/lib/toast", () => ({ toast: { error: vi.fn() } }))
 
@@ -64,5 +71,57 @@ describe("runDownload", () => {
   it("toasts the fallback for an English failure", async () => {
     await runDownload(() => Promise.reject(new Error("Bad Gateway")), "Gagal mengunduh invoice.")
     expect(toast.error).toHaveBeenCalledWith("Gagal mengunduh invoice.")
+  })
+})
+
+describe("Coretax refusals", () => {
+  const row = {
+    invoiceId: 4,
+    quotationId: 104,
+    invoiceNo: "INV-4",
+    clientId: 9,
+    clientName: "PT Laut",
+    reason: "paid",
+  } as const
+  const refusal = (refused: unknown) =>
+    new ApiError(
+      422,
+      {
+        ...problem(422, { detail: "Ditolak.", code: "coretax_refused" }),
+        refused,
+      } as ProblemDetail,
+      "Unprocessable",
+    )
+
+  it.each<[string, unknown, unknown]>([
+    ["reads the rows", refusal([row]), [row]],
+    ["needs rows", refusal([]), null],
+    ["needs a list", refusal("x"), null],
+    ["needs its code", new ApiError(422, problem(422, { detail: "x" }), "x"), null],
+    ["needs a 422", new ApiError(409, problem(409, { code: "coretax_refused" }), "x"), null],
+    ["ignores other errors", new Error("boom"), null],
+  ])("%s", (_name, err, want) => {
+    expect(coretaxRefusals(err)).toEqual(want)
+  })
+
+  it("hands the rows over instead of a toast", async () => {
+    const onRefused = vi.fn()
+    await runCoretaxDownload(() => Promise.reject(refusal([row])), "Gagal.", onRefused)
+    expect(onRefused).toHaveBeenCalledWith([row])
+    expect(toast.error).not.toHaveBeenCalled()
+  })
+
+  it("toasts any other failure", async () => {
+    const onRefused = vi.fn()
+    await runCoretaxDownload(() => Promise.reject(new Error("Bad Gateway")), "Gagal.", onRefused)
+    expect(onRefused).not.toHaveBeenCalled()
+    expect(toast.error).toHaveBeenCalledWith("Gagal.")
+  })
+
+  it("stays quiet when the export succeeds", async () => {
+    const onRefused = vi.fn()
+    await runCoretaxDownload(async () => {}, "Gagal.", onRefused)
+    expect(onRefused).not.toHaveBeenCalled()
+    expect(toast.error).not.toHaveBeenCalled()
   })
 })

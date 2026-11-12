@@ -16,6 +16,8 @@ export type InvoiceRow = {
   total: string // formatted Rp
   totalNumber: number
   status: InvoiceDisplayStatus
+  // A faktur needs PPN
+  ppnEnabled: boolean
 }
 
 export const INVOICE_LABEL: Record<InvoiceDisplayStatus, string> = {

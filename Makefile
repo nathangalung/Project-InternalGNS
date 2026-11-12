@@ -268,7 +268,8 @@ e2e-csp: deps-up ## Playwright suite under the enforcing production CSP
 	cd $(API_DIR) && go build -o bin/api-csp ./cmd/api
 	@set -a; if [ -f $(API_DIR)/.env ]; then . $(API_DIR)/.env; fi; set +a; \
 	export DATABASE_URL=postgres://gns_app:gns_app@localhost:5432/gns_csp_test?sslmode=disable \
-	  HTTP_ADDR=:8091 CORS_ALLOWED_ORIGINS=http://localhost:4173; \
+	  HTTP_ADDR=:8091 CORS_ALLOWED_ORIGINS=http://localhost:4173 \
+	  CORETAX_SELLER_TIN=0987654321098765 CORETAX_SELLER_IDTKU=0987654321098765000000; \
 	cd $(API_DIR) && ./bin/api-csp -bootstrap >/dev/null && \
 	PGCLIENTENCODING=UTF8 psql "$$DATABASE_URL" -q -v ON_ERROR_STOP=1 < db/seeds/01_master.sql >/dev/null && \
 	{ ./bin/api-csp > bin/api-csp.log 2>&1 & pid=$$!; trap 'kill $$pid' EXIT; \

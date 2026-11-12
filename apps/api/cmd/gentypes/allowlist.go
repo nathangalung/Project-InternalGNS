@@ -157,6 +157,9 @@ var allowlist = []pkg{
 		{Go: "UpdateDescriptionsRequest", TS: "UpdateInvoiceDescriptionsInput", Input: true},
 		{Go: "LineDescription", TS: "InvoiceLineDescriptionInput", Input: true},
 		{Go: "DescriptionsUpdatedResponse", TS: "InvoiceDescriptionsSaved"},
+		{Go: "CoretaxRefusal", TS: "CoretaxRefusal"},
+		{Go: "RefusalReason", TS: "CoretaxRefusalReason"},
+		{Go: "CoretaxRefusalProblem", TS: "CoretaxRefusalProblem"},
 	}},
 	{"internal/dashboard", []entry{
 		{Go: "Summary", TS: "DashboardSummary"},

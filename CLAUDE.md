@@ -570,7 +570,13 @@ shows a missing one as Belum ada No. PO.
   DJP would not match the two (`refusedBuyers`, `tkuMismatch`). A paid
   invoice with either problem can no longer be cancelled, so the refusal
   names it to leave out of the export period instead; the bulk workbook
-  refuses as one, naming every invoice. Migration 00123 gave a paid
+  refuses as one, naming every invoice. The refusal is a 422 with `code:
+  "coretax_refused"` and a `refused` row per invoice (invoice, quotation,
+  client and reason: `npwp_missing`, `tku_mismatch`, `paid`) beside the
+  joined `detail`, and the invoice list shows it in `CoretaxRefusalModal`,
+  grouped by reason with each fix and links to the invoice (and the client
+  for a missing NPWP). The list offers no Coretax XML for a cancelled or
+  untaxed invoice (`canExportCoretax`). Migration 00123 gave a paid
   invoice imported without a buyer NPWP its client's NPWP where that
   client is certainly the buyer (Indonesian, 16 digits, the same name, and
   no invoice of it storing another NPWP); the rest keep none.
@@ -1091,7 +1097,8 @@ and every chip removes only its own filter.
   so every test fails on a violation its browser reports. `make e2e-csp` (and
   the CI e2e job) builds the SPA against a separate API origin, serves `dist`
   with that policy, and runs the whole suite against the throwaway
-  `gns_csp_test`; `e2e/csp.spec.ts` proves the header is live, and that a
+  `gns_csp_test` with an invented Coretax seller, so the exports answer;
+  `e2e/csp.spec.ts` proves the header is live, and that a
   `blob:` frame loads while a frame from another origin is refused. A new
   dependency that injects an inline `<style>` or loads from another host
   fails there: fix the cause, never add `unsafe-inline` or `unsafe-eval`.

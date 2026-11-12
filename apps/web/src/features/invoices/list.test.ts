@@ -18,6 +18,7 @@ function invoice(over: Partial<InvoiceBackendRow> = {}): InvoiceBackendRow {
     status,
     effectiveStatus: status,
     rowVersion: 1,
+    ppnEnabled: true,
     createdAt: "2026-09-01T03:00:00Z",
     ...over,
   } as InvoiceBackendRow
@@ -101,6 +102,7 @@ describe("rowFromBackend", () => {
       total: "Rp2.000.000",
       totalNumber: 2000000,
       status: "DIKIRIM",
+      ppnEnabled: true,
     })
   })
 
@@ -141,6 +143,10 @@ describe("detailSearch", () => {
 
 describe("canExportCoretax", () => {
   // Coretax refuses cancelled invoices.
+  it("offers no XML for an invoice without PPN", () => {
+    expect(canExportCoretax(rowFromBackend(invoice({ ppnEnabled: false })))).toBe(false)
+  })
+
   it("offers the XML for every row but a cancelled one", () => {
     expect(canExportCoretax(rowFromBackend(invoice({ status: "cancelled" })))).toBe(false)
     for (const status of ["draft", "sent", "paid", "overdue"] as const) {

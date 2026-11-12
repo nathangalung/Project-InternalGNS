@@ -72,6 +72,13 @@ export async function deactivateClient(token: string, id: number): Promise<void>
   await send(token, "PUT", `/clients/${id}`, { ...c, isActive: false })
 }
 
+// Move the client to another NPWP
+// Its TKU follows the new NPWP, as a real change would.
+export async function moveClientNpwp(token: string, id: number, npwp: string): Promise<void> {
+  const c = await json<Record<string, unknown>>(call(`/clients/${id}`, { token }), `get ${id}`)
+  await send(token, "PUT", `/clients/${id}`, { ...c, npwp, tkuId: `${npwp}000000` })
+}
+
 export type SeedInvoice = Pick<
   InvoiceDetail,
   "id" | "quotationId" | "quotationNo" | "invoiceNo" | "poNumber" | "status"

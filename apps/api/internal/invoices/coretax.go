@@ -132,8 +132,9 @@ func (h *CoretaxHandler) Export(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if refused := refusedBuyers([]Invoice{inv}, map[int64]clients.Client{inv.CompanyClientID: client}).message(); refused != "" {
-		httperr.Render(w, httperr.UnprocessableDetail(refused, nil))
+	if refused := refusedBuyers([]Invoice{inv}, map[int64]clients.Client{inv.CompanyClientID: client}); len(refused) > 0 {
+		p := refused.problem()
+		httperr.RenderAs(w, p.Status, p)
 		return
 	}
 
@@ -327,35 +328,71 @@ func tkuMismatch(c clients.Client) bool {
 	return ok && tku != "" && !strings.HasPrefix(tku, tin)
 }
 
-// buyerRefusal lists refused invoices.
-type buyerRefusal struct {
-	// Open, no 16 digit NPWP
-	missing []string
-	// Open, TKU not on the invoiced NPWP
-	mismatch []string
-	// Paid, either problem, past fixing
-	paid []string
+// RefusalReason says why it failed
+type RefusalReason string
+
+const (
+	ReasonNpwpMissing RefusalReason = "npwp_missing"
+	ReasonTkuMismatch RefusalReason = "tku_mismatch"
+	ReasonPaid        RefusalReason = "paid"
+)
+
+// CoretaxRefusal is one refused invoice
+type CoretaxRefusal struct {
+	InvoiceID   int64         `json:"invoiceId"`
+	QuotationID int64         `json:"quotationId"`
+	InvoiceNo   string        `json:"invoiceNo"`
+	ClientID    int64         `json:"clientId"`
+	ClientName  string        `json:"clientName"`
+	Reason      RefusalReason `json:"reason"`
 }
 
-// message words the refusal toast.
-// Every invoice keeps the buyer it was created with, so an open one is
-// fixed on the client and then by a Pengganti, which copies the client
-// again. A paid one can no longer be cancelled, so it is named to leave out.
+// CoretaxRefusalProblem is the refusal body
+type CoretaxRefusalProblem struct {
+	httperr.Error
+	Refused []CoretaxRefusal `json:"refused"`
+}
+
+// CoretaxRefusedCode tags the refusal
+const CoretaxRefusedCode = "coretax_refused"
+
+// buyerRefusal lists refused invoices
+type buyerRefusal []CoretaxRefusal
+
+// numbers lists one reason's invoices
+func (b buyerRefusal) numbers(reason RefusalReason) []string {
+	var out []string
+	for _, r := range b {
+		if r.Reason == reason {
+			out = append(out, r.InvoiceNo)
+		}
+	}
+	return out
+}
+
+// message words the refusal
 func (b buyerRefusal) message() string {
 	var parts []string
-	if len(b.missing) > 0 {
+	if nos := b.numbers(ReasonNpwpMissing); len(nos) > 0 {
 		parts = append(parts, "Ekspor Coretax butuh NPWP 16 digit untuk pembeli Indonesia. "+
-			"Lengkapi NPWP klien, lalu batalkan dan terbitkan ulang invoice berikut: "+strings.Join(b.missing, ", ")+".")
+			"Lengkapi NPWP klien, lalu batalkan dan terbitkan ulang invoice berikut: "+strings.Join(nos, ", ")+".")
 	}
-	if len(b.mismatch) > 0 {
+	if nos := b.numbers(ReasonTkuMismatch); len(nos) > 0 {
 		parts = append(parts, "NPWP klien berubah setelah invoice terbit, jadi ID TKU klien tidak cocok dengan NPWP di invoice. "+
-			"Batalkan lalu terbitkan Pengganti untuk invoice berikut: "+strings.Join(b.mismatch, ", ")+".")
+			"Batalkan lalu terbitkan Pengganti untuk invoice berikut: "+strings.Join(nos, ", ")+".")
 	}
-	if len(b.paid) > 0 {
+	if nos := b.numbers(ReasonPaid); len(nos) > 0 {
 		parts = append(parts, "Invoice lunas berikut tidak menyimpan NPWP pembeli yang cocok untuk Coretax dan tidak dapat diubah lagi: "+
-			strings.Join(b.paid, ", ")+". Pilih periode ekspor yang tidak memuatnya.")
+			strings.Join(nos, ", ")+". Pilih periode ekspor yang tidak memuatnya.")
 	}
 	return strings.Join(parts, " ")
+}
+
+// problem builds the 422 body
+func (b buyerRefusal) problem() CoretaxRefusalProblem {
+	e := httperr.UnprocessableDetail(b.message(), nil)
+	e.Code = CoretaxRefusedCode
+	return CoretaxRefusalProblem{Error: e, Refused: b}
 }
 
 func strDeref(p *string) string {
