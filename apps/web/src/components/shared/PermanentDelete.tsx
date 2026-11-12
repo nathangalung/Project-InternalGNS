@@ -1,6 +1,6 @@
 import { useState } from "react"
 import Modal from "@/components/shared/Modal"
-import { errorMessage } from "@/lib/errors"
+import { errorMessage, problemCode } from "@/lib/errors"
 import { btnRemove, ui } from "@/lib/ui"
 
 type PermanentDeleteProps = {
@@ -11,6 +11,8 @@ type PermanentDeleteProps = {
   along: string
   // Deletes, then leaves the page.
   onDelete: () => Promise<unknown>
+  // Where to deactivate instead
+  deactivateHint?: string
 }
 
 // Hapus Permanen with confirmation.
@@ -18,15 +20,23 @@ type PermanentDeleteProps = {
 // The confirm dialog names the record and shows any failure inline, the
 // server's refusal of a used record included, so the reader can deactivate
 // it instead.
-export default function PermanentDelete({ noun, name, along, onDelete }: PermanentDeleteProps) {
+export default function PermanentDelete({
+  noun,
+  name,
+  along,
+  onDelete,
+  deactivateHint,
+}: PermanentDeleteProps) {
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [inUse, setInUse] = useState(false)
 
   const close = () => {
     if (busy) return
     setOpen(false)
     setError(null)
+    setInUse(false)
   }
 
   const confirm = async () => {
@@ -36,6 +46,7 @@ export default function PermanentDelete({ noun, name, along, onDelete }: Permane
       await onDelete()
     } catch (err) {
       setError(errorMessage(err, `Gagal menghapus ${noun}.`))
+      setInUse(problemCode(err) === "in_use")
       setBusy(false)
     }
   }
@@ -75,6 +86,7 @@ export default function PermanentDelete({ noun, name, along, onDelete }: Permane
                 className="rounded-md border-l-4 border-[#DC2626] bg-[#FEF2F2] px-4 py-3 text-[13px] text-[#7F1D1D]"
               >
                 {error}
+                {inUse && deactivateHint && <span className="mt-1 block">{deactivateHint}</span>}
               </div>
             )}
           </div>

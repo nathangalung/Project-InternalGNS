@@ -109,9 +109,10 @@ test("Hapus Permanen keeps a quoted vendor and says why", async ({ page, seed })
   const dialog = page.getByRole("dialog", { name: "Hapus Vendor Permanen?" })
   await dialog.getByRole("button", { name: "Hapus Permanen" }).click()
 
-  await expect(dialog.getByRole("alert")).toHaveText(
-    "Vendor ini sudah dipakai di 1 quotation. Nonaktifkan saja.",
-  )
+  const refusal = dialog.getByRole("alert")
+  await expect(refusal).toContainText("Vendor ini sudah dipakai di 1 quotation. Nonaktifkan saja.")
+  // It says where to deactivate instead.
+  await expect(refusal).toContainText("matikan Status Vendor di halaman ini, lalu Simpan.")
   await expect(page).toHaveURL(new RegExp(`/vendors/${vendor.id}$`))
   await dialog.getByRole("button", { name: "Batal" }).click()
   await expect(dialog).toBeHidden()

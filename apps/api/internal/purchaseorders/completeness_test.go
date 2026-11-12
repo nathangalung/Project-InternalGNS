@@ -128,7 +128,7 @@ func TestGapLabels(t *testing.T) {
 			Number: s("1"), Npwp: s(validNPWP), Address: s("3"), ContactInactive: true,
 		}))
 	assert.Equal(t, []CompletenessGap{
-		{Code: GapVendorLocation, Label: "Lokasi"},
+		{Code: GapVendorLocation, Label: "Alamat"},
 		{Code: GapVendorReach, Label: "Email atau Nomor Telepon"},
 	}, missingVendorFields(VendorCompleteness{}))
 }
@@ -139,19 +139,19 @@ func TestRecordIssue(t *testing.T) {
 		Kind: KindClient, ID: 7, Name: "PT X", Missing: gaps,
 		Message: "Data klien PT X belum lengkap: NPWP, Alamat",
 	}, recordIssue(KindClient, 7, "PT X", gaps))
-	assert.Equal(t, "Data vendor CV Y belum lengkap: Lokasi",
-		recordIssue(KindVendor, 3, "CV Y", []CompletenessGap{{Code: GapVendorLocation, Label: "Lokasi"}}).Message)
+	assert.Equal(t, "Data vendor CV Y belum lengkap: Alamat",
+		recordIssue(KindVendor, 3, "CV Y", []CompletenessGap{{Code: GapVendorLocation, Label: "Alamat"}}).Message)
 }
 
 func TestCompletenessFields(t *testing.T) {
 	issues := []CompletenessIssue{
 		recordIssue(KindClient, 7, "PT X", []CompletenessGap{{Code: GapClientNpwp, Label: "NPWP"}}),
-		recordIssue(KindVendor, 3, "CV Y", []CompletenessGap{{Code: GapVendorLocation, Label: "Lokasi"}}),
+		recordIssue(KindVendor, 3, "CV Y", []CompletenessGap{{Code: GapVendorLocation, Label: "Alamat"}}),
 		shippingIssues(41, []LineCompleteness{{ItemType: "product"}})[0],
 	}
 	assert.Equal(t, map[string]string{
 		"klien:7":       "Data klien PT X belum lengkap: NPWP",
-		"vendor:3":      "Data vendor CV Y belum lengkap: Lokasi",
+		"vendor:3":      "Data vendor CV Y belum lengkap: Alamat",
 		"pengiriman:41": "Alamat pengiriman belum diisi",
 	}, completenessFields(issues))
 }
