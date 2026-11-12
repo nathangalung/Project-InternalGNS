@@ -23,6 +23,20 @@ const SCOPE: Record<PoIssueKind, string> = {
   client: "Klien",
   vendor: "Vendor",
   shipping: "Pengiriman",
+  line: "Produk",
+}
+
+// Ubah PO step per issue
+function editStep(issue: PoCompletenessIssue): { step: number; line?: number } {
+  if (issue.kind === "shipping") return { step: 2 }
+  if (issue.kind === "line") return { step: 1, line: issue.id }
+  return { step: 1 }
+}
+
+// Label of a line issue
+function lineLabel(issue: PoCompletenessIssue): string {
+  const name = issue.name ? ` (${issue.name})` : ""
+  return `Produk ${issue.position ?? ""}${name}`.trim()
 }
 
 // Server-reported gaps before work or delivery.
@@ -46,10 +60,8 @@ export default function CompletenessModal({
       }
     >
       <p className="m-0 text-[13px] leading-[1.5] text-[#4A4455]">
-        Sebelum mengubah status menjadi <strong className="text-[#6B21A8]">{target}</strong>, data
-        berikut harus dilengkapi terlebih dahulu. Isi No. PO dari klien, buka nama klien atau
-        vendor, Ganti Narahubung untuk memilih narahubung aktif, atau Ubah PO untuk mengisi alamat
-        pengiriman.
+        Sebelum mengubah status menjadi <strong className="text-[#6B21A8]">{target}</strong>,
+        lengkapi data berikut. Klik tautan di setiap bagian untuk membuka tempat mengisinya.
       </p>
 
       <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
@@ -60,7 +72,7 @@ export default function CompletenessModal({
           >
             <div className="mb-1 text-[13px] font-bold text-accent-900">
               {SCOPE[issue.kind]}:{" "}
-              {issue.kind === "po" ? (
+              {issue.kind === "po" && issue.missing.some((g) => g.code === "po_number") ? (
                 onEnterPoNumber ? (
                   <button
                     type="button"
@@ -72,19 +84,20 @@ export default function CompletenessModal({
                 ) : (
                   "No. PO"
                 )
-              ) : issue.kind === "shipping" ? (
-                <Link
-                  to="/purchase-orders/$id/edit"
-                  params={{ id: String(quotationId) }}
-                  state={trail}
-                  className={`${ui.entityLink} font-bold`}
-                >
-                  Ubah PO
-                </Link>
-              ) : (
+              ) : issue.kind === "client" || issue.kind === "vendor" ? (
                 <EntityLink kind={issue.kind} id={issue.id} className="font-bold">
                   {issue.name ?? `#${issue.id}`}
                 </EntityLink>
+              ) : (
+                <Link
+                  to="/purchase-orders/$id/edit"
+                  params={{ id: String(quotationId) }}
+                  search={editStep(issue)}
+                  state={trail}
+                  className={`${ui.entityLink} font-bold`}
+                >
+                  {issue.kind === "line" ? lineLabel(issue) : "Ubah PO"}
+                </Link>
               )}
             </div>
             {issue.missing.length > 0 ? (

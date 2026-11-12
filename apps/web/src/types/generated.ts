@@ -556,6 +556,7 @@ export type PoCompletenessIssue = {
     kind: PoIssueKind;
     id: number;
     name?: string;
+    position?: number;
     message: string;
     missing: PoCompletenessGap[];
 };
@@ -585,7 +586,7 @@ export type PoFileInput = {
 };
 
 // From purchaseorders/completeness.go
-export type PoGapCode = "client_address" | "client_npwp" | "client_number" | "contact_inactive" | "contact_name" | "contact_reach" | "po_number" | "shipping_address" | "vendor_location" | "vendor_reach";
+export type PoGapCode = "client_address" | "client_npwp" | "client_number" | "contact_inactive" | "contact_name" | "contact_reach" | "line_price" | "lines_qty" | "no_products" | "po_number" | "shipping_address" | "vendor_location" | "vendor_reach";
 
 // From purchaseorders/completeness.go
 export type PoIncompleteProblem = ProblemDetail & {
@@ -593,7 +594,7 @@ export type PoIncompleteProblem = ProblemDetail & {
 };
 
 // From purchaseorders/completeness.go
-export type PoIssueKind = "client" | "po" | "shipping" | "vendor";
+export type PoIssueKind = "client" | "line" | "po" | "shipping" | "vendor";
 
 // From purchaseorders/dto.go
 export type PoItemInput = {
@@ -616,6 +617,11 @@ export type PoItemInput = {
 // From purchaseorders/dto.go
 export type PoNotesInput = {
     notes: string;
+};
+
+// From purchaseorders/completeness.go
+export type PoReadiness = {
+    issues: PoCompletenessIssue[];
 };
 
 // From purchaseorders/dto.go

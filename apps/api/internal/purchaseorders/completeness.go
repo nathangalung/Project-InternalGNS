@@ -47,7 +47,11 @@ type VendorCompleteness struct {
 
 // LineCompleteness is a PO line.
 type LineCompleteness struct {
+	ID              int64   `db:"id"`
 	ItemType        string  `db:"item_type"`
+	ItemName        *string `db:"item_name"`
+	Qty             string  `db:"qty"`
+	SellingPrice    string  `db:"selling_price"`
 	ShipDestination *string `db:"ship_destination"`
 }
 
@@ -64,11 +68,13 @@ type CompletenessGap struct {
 // shipping), and
 // Message is the Indonesian sentence the problem's fields carry for it.
 type CompletenessIssue struct {
-	Kind    IssueKind         `json:"kind"`
-	ID      int64             `json:"id"`
-	Name    string            `json:"name,omitempty"`
-	Message string            `json:"message"`
-	Missing []CompletenessGap `json:"missing"`
+	Kind IssueKind `json:"kind"`
+	ID   int64     `json:"id"`
+	Name string    `json:"name,omitempty"`
+	// Product place, for a line
+	Position int               `json:"position,omitempty"`
+	Message  string            `json:"message"`
+	Missing  []CompletenessGap `json:"missing"`
 }
 
 // IncompleteProblem is the gate's 422.
@@ -76,6 +82,11 @@ type CompletenessIssue struct {
 // issues without parsing the prose in Fields.
 type IncompleteProblem struct {
 	httperr.Error
+	Issues []CompletenessIssue `json:"issues"`
+}
+
+// ReadinessResponse lists the blockers
+type ReadinessResponse struct {
 	Issues []CompletenessIssue `json:"issues"`
 }
 
@@ -90,6 +101,7 @@ const (
 	KindClient        IssueKind = "client"
 	KindVendor        IssueKind = "vendor"
 	KindShipping      IssueKind = "shipping"
+	KindLine          IssueKind = "line"
 )
 
 // GapCode tags one missing field.
@@ -106,6 +118,9 @@ const (
 	GapVendorLocation  GapCode = "vendor_location"
 	GapVendorReach     GapCode = "vendor_reach"
 	GapShippingAddress GapCode = "shipping_address"
+	GapNoProducts      GapCode = "no_products"
+	GapLinesQty        GapCode = "lines_qty"
+	GapLinePrice       GapCode = "line_price"
 )
 
 // scopeWord names kinds in Indonesian.
@@ -115,11 +130,14 @@ var scopeWord = map[IssueKind]string{
 	KindClient:        "klien",
 	KindVendor:        "vendor",
 	KindShipping:      "pengiriman",
+	KindLine:          "baris",
 }
 
 const (
-	poNumberMessage = "No. PO klien belum diisi"
-	shippingMessage = "Alamat pengiriman belum diisi"
+	poNumberMessage   = "No. PO klien belum diisi"
+	shippingMessage   = "Alamat pengiriman belum diisi"
+	noProductsMessage = "PO belum memiliki baris produk"
+	noQtyMessage      = "Jumlah semua baris produk masih 0"
 )
 
 func filled(v *string) bool {
@@ -217,6 +235,52 @@ func shippingIssues(poID int64, lines []LineCompleteness) []CompletenessIssue {
 		Kind: KindShipping, ID: poID, Message: shippingMessage,
 		Missing: []CompletenessGap{{GapShippingAddress, "Alamat Pengiriman"}},
 	}}
+}
+
+// lineIssues flags unbillable lines.
+func lineIssues(poID int64, lines []LineCompleteness) []CompletenessIssue {
+	var issues []CompletenessIssue
+	products, withQty := 0, false
+	for _, l := range lines {
+		if l.ItemType != "product" {
+			continue
+		}
+		products++
+		if positive(l.Qty) {
+			withQty = true
+		}
+		if positive(l.SellingPrice) {
+			continue
+		}
+		name := ""
+		if l.ItemName != nil {
+			name = strings.TrimSpace(*l.ItemName)
+		}
+		issues = append(issues, CompletenessIssue{
+			Kind: KindLine, ID: l.ID, Name: name, Position: products,
+			Message: "Produk " + strconv.Itoa(products) + " (" + name + "): harga jual belum diisi",
+			Missing: []CompletenessGap{{GapLinePrice, "Harga Jual"}},
+		})
+	}
+	if products == 0 {
+		return []CompletenessIssue{{
+			Kind: KindPurchaseOrder, ID: poID, Message: noProductsMessage,
+			Missing: []CompletenessGap{{GapNoProducts, "Baris Produk"}},
+		}}
+	}
+	if !withQty {
+		issues = append(issues, CompletenessIssue{
+			Kind: KindPurchaseOrder, ID: poID, Message: noQtyMessage,
+			Missing: []CompletenessGap{{GapLinesQty, "Jumlah"}},
+		})
+	}
+	return issues
+}
+
+// positive reads a decimal above zero.
+func positive(v string) bool {
+	f, err := strconv.ParseFloat(strings.TrimSpace(v), 64)
+	return err == nil && f > 0
 }
 
 // completenessFields keys sentences per record.
