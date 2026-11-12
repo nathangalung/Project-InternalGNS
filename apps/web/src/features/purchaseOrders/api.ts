@@ -12,6 +12,7 @@ import type {
   PoDeliveryNoteInput,
   PoDetailsInput,
   PoFileInput,
+  PoReadiness,
   PoSaved,
   PoStatusEvent,
   PoStatusInput,
@@ -59,6 +60,11 @@ export async function get(id: number): Promise<PurchaseOrderRow> {
 
 export async function listItems(id: number): Promise<PurchaseOrderItemRow[]> {
   return apiRequest<PurchaseOrderItemRow[]>({ path: `/purchase-orders/${id}/items` })
+}
+
+// What blocks the next move
+export async function readiness(id: number): Promise<PoReadiness> {
+  return apiRequest<PoReadiness>({ path: `/purchase-orders/${id}/readiness` })
 }
 
 export async function getByQuotation(quotationId: number): Promise<PurchaseOrderRow | null> {

@@ -1,6 +1,7 @@
 package purchaseorders
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -217,6 +218,62 @@ func TestShippingIssues(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Equal(t, tc.want, shippingIssues(9, tc.input))
+		})
+	}
+}
+
+// Unbillable lines are named.
+func TestLineIssues(t *testing.T) {
+	product := func(id int64, n, qty, price string) LineCompleteness {
+		return LineCompleteness{ID: id, ItemType: "product", ItemName: s(n), Qty: qty, SellingPrice: price}
+	}
+	shipping := LineCompleteness{ID: 99, ItemType: "shipping", Qty: "1", SellingPrice: "0"}
+	noQty := CompletenessIssue{
+		Kind: KindPurchaseOrder, ID: 9, Message: "Jumlah semua baris produk masih 0",
+		Missing: []CompletenessGap{{Code: GapLinesQty, Label: "Jumlah"}},
+	}
+	unpriced := func(id int64, pos int, n string) CompletenessIssue {
+		return CompletenessIssue{
+			Kind: KindLine, ID: id, Name: n, Position: pos,
+			Message: "Produk " + strconv.Itoa(pos) + " (" + n + "): harga jual belum diisi",
+			Missing: []CompletenessGap{{Code: GapLinePrice, Label: "Harga Jual"}},
+		}
+	}
+
+	cases := []struct {
+		name  string
+		input []LineCompleteness
+		want  []CompletenessIssue
+	}{
+		{name: "priced lines with a quantity", input: []LineCompleteness{product(1, "Tali", "2", "1000.00"), shipping}},
+		{name: "a free shipping line is fine", input: []LineCompleteness{shipping, product(1, "Tali", "1", "5.00")}},
+		{
+			name:  "an unpriced line is named by its product place",
+			input: []LineCompleteness{shipping, product(1, "Tali", "1", "5.00"), product(2, "Cat", "1", "0.00")},
+			want:  []CompletenessIssue{unpriced(2, 2, "Cat")},
+		},
+		{
+			name:  "every quantity zero",
+			input: []LineCompleteness{product(1, "Tali", "0", "5.00"), product(2, "Cat", "0.000", "5.00")},
+			want:  []CompletenessIssue{noQty},
+		},
+		{
+			name:  "no product line",
+			input: []LineCompleteness{shipping},
+			want: []CompletenessIssue{{
+				Kind: KindPurchaseOrder, ID: 9, Message: "PO belum memiliki baris produk",
+				Missing: []CompletenessGap{{Code: GapNoProducts, Label: "Baris Produk"}},
+			}},
+		},
+		{
+			name:  "a line with no name",
+			input: []LineCompleteness{{ID: 3, ItemType: "product", Qty: "1", SellingPrice: ""}},
+			want:  []CompletenessIssue{unpriced(3, 1, "")},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, lineIssues(9, tc.input))
 		})
 	}
 }

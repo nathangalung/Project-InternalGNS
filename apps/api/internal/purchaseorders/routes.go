@@ -37,6 +37,7 @@ func Routes(d deps.Deps) chi.Router {
 	r.Get("/{id}", h.Get)
 	r.Get("/{id}/items", h.ListItems)
 	r.Get("/{id}/history", h.History)
+	r.With(header).Get("/{id}/readiness", h.Readiness)
 	r.With(header).Get("/{id}/upload-url", assetproxy.Upload(doc))
 	r.Get("/{id}/download-url", assetproxy.Download(doc))
 	r.With(header).Patch("/{id}/status", h.ChangeStatus)

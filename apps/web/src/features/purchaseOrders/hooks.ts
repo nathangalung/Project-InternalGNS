@@ -74,6 +74,15 @@ export function usePoItems(id: number | undefined) {
   })
 }
 
+// Next-move blockers, when asked
+export function usePoReadiness(id: number, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.purchaseOrders.readiness(id),
+    queryFn: enabled ? () => poApi.readiness(id) : skipToken,
+    throwOnError: false,
+  })
+}
+
 export function usePurchaseOrderByQuotation(quotationId: number | undefined) {
   return useQuery({
     queryKey: quotationId

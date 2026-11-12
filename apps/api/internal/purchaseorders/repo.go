@@ -326,7 +326,24 @@ func (r *Repo) Completeness(ctx context.Context, poID int64) ([]CompletenessIssu
 			issues = append(issues, recordIssue(KindVendor, v.ID, v.Name, missing))
 		}
 	}
-	return append(issues, shippingIssues(poID, lines)...), nil
+	issues = append(issues, shippingIssues(poID, lines)...)
+	return append(issues, lineIssues(poID, lines)...), nil
+}
+
+// Readiness lists next-move blockers
+func (r *Repo) Readiness(ctx context.Context, poID int64) ([]CompletenessIssue, error) {
+	po, err := r.GetByID(ctx, poID)
+	if err != nil {
+		return nil, err
+	}
+	if po.Status != StatusUploaded && po.Status != StatusOnProgress {
+		return []CompletenessIssue{}, nil
+	}
+	issues, err := r.Completeness(ctx, poID)
+	if issues == nil && err == nil {
+		issues = []CompletenessIssue{}
+	}
+	return issues, err
 }
 
 // errNoTx marks a non-transactional executor.

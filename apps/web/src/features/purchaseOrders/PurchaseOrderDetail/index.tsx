@@ -25,6 +25,7 @@ import {
   useChangePoStatus,
   usePoHistory,
   usePoItems,
+  usePoReadiness,
   usePoUpload,
   useRemovePoFile,
 } from "../hooks"
@@ -40,6 +41,7 @@ import {
   canDownloadDeliveryNote,
   completenessIssues,
   deliveryNoteFileName,
+  nextGatedMove,
   poBreakdown,
   poClientEditable,
   poEditLockReason,
@@ -98,6 +100,10 @@ export default function PurchaseOrderDetail({ po, clientInfo, onEdit }: Purchase
   const profitShown = hasCost && po.poTotalProfit !== undefined
   // Heads run the PO; operational input only edits its purchase prices
   const writes = managesPOs(me?.role)
+  // What blocks the next move
+  const next = writes ? nextGatedMove(po.status, po.allowedTransitions) : undefined
+  const { data: readiness } = usePoReadiness(po.id, next !== undefined)
+  const blockers = next ? (readiness?.issues ?? []) : []
   const editsLines = canWriteCatalog(me?.role)
   const history = useMemo(
     () => (events ?? []).map((ev) => poHistoryEntry(ev, actorNames.get(ev.changedBy))),
@@ -246,6 +252,31 @@ export default function PurchaseOrderDetail({ po, clientInfo, onEdit }: Purchase
           onSelect={(t) => setChoice(t ? { from: po.status, t } : null)}
           onSave={handleSave}
         />
+        {next && blockers.length > 0 && (
+          <div
+            role="status"
+            className="rounded-lg border border-[rgba(245,158,11,0.4)] bg-[rgba(245,158,11,0.06)] px-5 py-3.5 text-[#92400E]"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <span className="text-sm font-medium">
+                PO belum bisa diubah ke {next.label}. Lengkapi {blockers.length} data berikut dulu.
+              </span>
+              <button
+                type="button"
+                className={`${ui.btnPrimary} px-4`}
+                onClick={() => setGate({ issues: blockers, target: next.label })}
+              >
+                Lihat dan Lengkapi
+              </button>
+            </div>
+            <ul className="m-0 mt-2 list-disc pl-5 text-sm">
+              {blockers.slice(0, 5).map((issue) => (
+                <li key={`${issue.kind}-${issue.id}`}>{issue.message}</li>
+              ))}
+              {blockers.length > 5 && <li>dan {blockers.length - 5} lainnya.</li>}
+            </ul>
+          </div>
+        )}
         <FileCard
           fileName={po.fileName}
           fileSize={po.fileSize}

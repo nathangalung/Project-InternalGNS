@@ -64,6 +64,7 @@ export const queryKeys = {
     list: (params: Record<string, unknown> = {}) => ["purchase-orders", "list", params] as const,
     detail: (id: number) => ["purchase-orders", "detail", id] as const,
     items: (id: number) => ["purchase-orders", id, "items"] as const,
+    readiness: (id: number) => ["purchase-orders", id, "readiness"] as const,
     byQuotation: (quotationId: number) => ["purchase-orders", "by-quotation", quotationId] as const,
   },
   invoices: {

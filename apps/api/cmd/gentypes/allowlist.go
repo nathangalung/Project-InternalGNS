@@ -141,6 +141,7 @@ var allowlist = []pkg{
 		{Go: "CompletenessGap", TS: "PoCompletenessGap"},
 		{Go: "CompletenessIssue", TS: "PoCompletenessIssue"},
 		{Go: "IncompleteProblem", TS: "PoIncompleteProblem"},
+		{Go: "ReadinessResponse", TS: "PoReadiness"},
 	}},
 	{"internal/invoices", []entry{
 		{Go: "Status", TS: "InvoiceBackendStatus"},

@@ -178,6 +178,7 @@ func TestHandler_HistoryAndRemoveFile_Refusals(t *testing.T) {
 		detail string
 	}{
 		{"history bad id", http.MethodGet, "/purchase-orders/abc/history", http.StatusBadRequest, "invalid id"},
+		{"readiness bad id", http.MethodGet, "/purchase-orders/abc/readiness", http.StatusBadRequest, "invalid id"},
 		{"history unknown", http.MethodGet, "/purchase-orders/99999999/history",
 			http.StatusNotFound, "purchase order not found"},
 		{"remove bad id", http.MethodDelete, "/purchase-orders/abc/file", http.StatusBadRequest, "invalid id"},
@@ -207,6 +208,7 @@ func TestHandler_DatabaseFaults(t *testing.T) {
 		{"list items", http.MethodGet, "/purchase-orders/1/items", nil},
 		{"export", http.MethodGet, "/purchase-orders/export.xlsx", nil},
 		{"history", http.MethodGet, "/purchase-orders/1/history", nil},
+		{"readiness", http.MethodGet, "/purchase-orders/1/readiness", nil},
 		{"remove file", http.MethodDelete, "/purchase-orders/1/file", nil},
 		{"notes", http.MethodPatch, "/purchase-orders/1/notes", purchaseorders.UpdateNotesRequest{Notes: "x"}},
 		{"details", http.MethodPatch, "/purchase-orders/1/details",
@@ -239,6 +241,8 @@ func TestHandler_SecondQueryFaults(t *testing.T) {
 	}{
 		{"attach after the owner check", purchaseorders.StatusPending, http.MethodPatch, "/file",
 			func(poID int64) any { return ownedPOFile(poID) }},
+		{"readiness after the status read", purchaseorders.StatusOnProgress, http.MethodGet, "/readiness",
+			func(int64) any { return nil }},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

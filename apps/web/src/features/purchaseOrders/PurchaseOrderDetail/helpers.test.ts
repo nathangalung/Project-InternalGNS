@@ -10,6 +10,7 @@ import {
   isInvoiceFiled,
   isPoFileLocked,
   isPoLockRefusal,
+  nextGatedMove,
   PO_CONFLICT_MESSAGE,
   PO_LABEL,
   PO_LOCKED_CODE,
@@ -236,6 +237,26 @@ describe("poBreakdown", () => {
       totalProfit: 200000,
       grandTotal: 1054500,
     })
+  })
+})
+
+describe("nextGatedMove", () => {
+  const work = { to: "ON_PROGRESS", label: "Dalam Progres", requiresNote: false } as const
+  const deliver = { to: "DELIVERED", label: "Dikirim", requiresNote: false } as const
+  const cancel = { to: "CANCELLED", label: "Dibatalkan", requiresNote: true } as const
+
+  it.each([
+    ["uploaded starts work", "UPLOADED", [cancel, work], work],
+    ["work delivers", "ON_PROGRESS", [work, deliver, cancel], deliver],
+    ["no gated move offered", "ON_PROGRESS", [cancel], undefined],
+    ["pending has none", "PENDING", [cancel], undefined],
+    ["delivered has none", "DELIVERED", [], undefined],
+  ] as const)("%s", (_name, status, transitions, want) => {
+    expect(nextGatedMove(status, [...transitions])).toEqual(want)
+  })
+
+  it("reads missing transitions as none", () => {
+    expect(nextGatedMove("UPLOADED", undefined)).toBeUndefined()
   })
 })
 

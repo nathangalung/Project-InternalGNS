@@ -368,6 +368,7 @@ func fieldKey(is purchaseorders.CompletenessIssue) string {
 		purchaseorders.KindClient:        "klien",
 		purchaseorders.KindVendor:        "vendor",
 		purchaseorders.KindShipping:      "pengiriman",
+		purchaseorders.KindLine:          "baris",
 	}[is.Kind]
 	return fmt.Sprintf("%s:%d", scope, is.ID)
 }
@@ -450,4 +451,59 @@ func TestRepo_Transition_NeedsPONumber(t *testing.T) {
 			assert.EqualError(t, err, "No. PO klien belum diisi. Isi No. PO terlebih dahulu.")
 		})
 	}
+}
+
+// Readiness names blockers early.
+// A PO in work reads its next move's gaps without moving; a delivered one
+// has no gated move left.
+func TestHandler_Readiness(t *testing.T) {
+	ctx, tx, srv := txServer(t)
+	_, poID := poAt(t, tx, purchaseorders.StatusOnProgress)
+	read := func(id int64) (int, purchaseorders.ReadinessResponse) {
+		res := doJSON(t, srv, http.MethodGet, fmt.Sprintf("/purchase-orders/%d/readiness", id), nil)
+		defer res.Body.Close()
+		var out purchaseorders.ReadinessResponse
+		if res.StatusCode == http.StatusOK {
+			readJSON(t, res, &out)
+		}
+		return res.StatusCode, out
+	}
+
+	code, ready := read(poID)
+	require.Equal(t, http.StatusOK, code)
+	assert.Empty(t, ready.Issues)
+
+	var lineID int64
+	var name string
+	require.NoError(t, tx.QueryRow(ctx, `
+		UPDATE purchase_order_items SET selling_price = 0
+		WHERE id = (SELECT id FROM purchase_order_items
+		            WHERE po_id = $1 AND item_type = 'product' ORDER BY line_number LIMIT 1)
+		RETURNING id, item_name`, poID).Scan(&lineID, &name))
+	want := purchaseorders.CompletenessIssue{
+		Kind: purchaseorders.KindLine, ID: lineID, Name: name, Position: 1,
+		Message: "Produk 1 (" + name + "): harga jual belum diisi",
+		Missing: []purchaseorders.CompletenessGap{{Code: purchaseorders.GapLinePrice, Label: "Harga Jual"}},
+	}
+	code, ready = read(poID)
+	require.Equal(t, http.StatusOK, code)
+	assert.Equal(t, []purchaseorders.CompletenessIssue{want}, ready.Issues)
+
+	// The move names the same line.
+	res := doJSON(t, srv, http.MethodPatch, fmt.Sprintf("/purchase-orders/%d/status", poID),
+		purchaseorders.ChangeStatusRequest{Status: purchaseorders.StatusDelivered})
+	var p purchaseorders.IncompleteProblem
+	readJSON(t, res, &p)
+	res.Body.Close()
+	require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+	assert.Equal(t, purchaseorders.IncompleteCode, p.Code)
+	assert.Equal(t, []purchaseorders.CompletenessIssue{want}, p.Issues)
+
+	_, delivered := poAt(t, tx, purchaseorders.StatusDelivered)
+	code, ready = read(delivered)
+	require.Equal(t, http.StatusOK, code)
+	assert.Equal(t, []purchaseorders.CompletenessIssue{}, ready.Issues)
+
+	code, _ = read(999999999)
+	assert.Equal(t, http.StatusNotFound, code)
 }

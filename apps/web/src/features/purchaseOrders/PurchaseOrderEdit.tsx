@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import NavTrail from "@/components/shared/NavTrail"
 import StateMessage from "@/components/shared/StateMessage"
 import { useMe } from "@/features/auth/hooks"
@@ -38,6 +38,10 @@ import { isPoLockRefusal } from "./PurchaseOrderDetail/helpers"
 type PurchaseOrderEditProps = {
   // Resolved from the route's quotation id
   po: PurchaseOrderRow
+  // Step to open first
+  startStep?: number
+  // Line to open first
+  startLine?: number
 }
 
 // Steps without a client step.
@@ -65,7 +69,7 @@ const arrowIcon = (
   </svg>
 )
 
-export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
+export default function PurchaseOrderEdit({ po, startStep, startLine }: PurchaseOrderEditProps) {
   const poLabel = poCrumbLabel(po.poNumber, po.quotationNo)
   // Opened without a trail: the list, then this PO.
   const trailFallback = useMemo(
@@ -132,6 +136,19 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
     },
     [unitNameById],
   )
+
+  // Open the requested line once
+  const started = useRef(false)
+  useEffect(() => {
+    if (started.current || !hydrated) return
+    started.current = true
+    if (startLine === undefined && startStep === undefined) return
+    setStep(startLine === undefined ? (startStep ?? 1) : 1)
+    if (products.some((p) => p.id === startLine)) {
+      setEditingId(startLine ?? null)
+      setShowProductAdd(true)
+    }
+  })
 
   // A failed load says so.
   //

@@ -6,6 +6,7 @@ import type {
   InvoiceBackendStatus,
   PoCompletenessIssue,
   PoIncompleteProblem,
+  PoTransition,
   PurchaseOrderRow,
 } from "@/types/api"
 import type { PoStatus } from "../types"
@@ -234,6 +235,15 @@ export const PO_INCOMPLETE_CODE = "po_incomplete"
 // The ON_PROGRESS gate answers 422 with code po_incomplete and the gaps as
 // typed issues (client, vendors, then the PO's shipping address). Returns
 // null for any other failure, so the caller falls back to the plain toast.
+// The gated move offered next
+export function nextGatedMove(
+  status: PoStatus,
+  transitions: PoTransition[] | undefined,
+): PoTransition | undefined {
+  const to = status === "UPLOADED" ? "ON_PROGRESS" : status === "ON_PROGRESS" ? "DELIVERED" : null
+  return to ? transitions?.find((t) => t.to === to) : undefined
+}
+
 export function completenessIssues(err: unknown): PoCompletenessIssue[] | null {
   if (!(err instanceof ApiError) || err.status !== 422) return null
   const body: Partial<PoIncompleteProblem> | null = err.body

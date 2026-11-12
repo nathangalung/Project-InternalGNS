@@ -6,8 +6,17 @@ import { usePurchaseOrderByQuotation } from "@/features/purchaseOrders/hooks"
 import { poEditLockReason } from "@/features/purchaseOrders/PurchaseOrderDetail/helpers"
 import PurchaseOrderEdit from "@/features/purchaseOrders/PurchaseOrderEdit"
 import { isMissing } from "@/lib/errors"
+import { compact, positiveInt } from "@/lib/list-search"
+
+// Step and line to open
+type EditSearch = { step?: number; line?: number }
 
 export const Route = createFileRoute("/_authed/purchase-orders/$id/edit")({
+  validateSearch: (search: Record<string, unknown>): EditSearch =>
+    compact({
+      step: positiveInt(search.step, 3),
+      line: positiveInt(search.line, Number.MAX_SAFE_INTEGER),
+    }),
   component: PurchaseOrderEditRoute,
 })
 
@@ -16,6 +25,7 @@ export const Route = createFileRoute("/_authed/purchase-orders/$id/edit")({
 // As on the detail route.
 function PurchaseOrderEditRoute() {
   const { id } = Route.useParams()
+  const { step, line } = Route.useSearch()
   const numericId = Number(id)
   const quotationId = Number.isInteger(numericId) && numericId > 0 ? numericId : undefined
   const { data: po, isLoading, error, refetch } = usePurchaseOrderByQuotation(quotationId)
@@ -47,5 +57,5 @@ function PurchaseOrderEditRoute() {
   }
 
   // Keyed so another PO starts a fresh form.
-  return <PurchaseOrderEdit key={po.id} po={po} />
+  return <PurchaseOrderEdit key={po.id} po={po} startStep={step} startLine={line} />
 }

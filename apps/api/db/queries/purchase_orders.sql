@@ -222,8 +222,9 @@ FOR SHARE OF cc;
 SELECT status FROM purchase_orders WHERE id = $1 FOR UPDATE;
 
 -- name: purchase_orders.completeness_lines
--- Every PO line's type and shipping address; $1=po id.
-SELECT item_type, ship_destination
+-- Every PO line the gate reads; $1=po id.
+SELECT id, item_type, item_name, qty::text AS qty,
+       selling_price::text AS selling_price, ship_destination
 FROM purchase_order_items
 WHERE po_id = $1
 ORDER BY line_number;

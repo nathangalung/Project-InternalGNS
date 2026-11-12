@@ -577,6 +577,25 @@ func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, UpdatedResponse{ID: id, RowVersion: newVersion})
 }
 
+// Readiness shows next-move blockers
+func (h *Handler) Readiness(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	issues, err := h.repo.Readiness(r.Context(), id)
+	if errors.Is(err, ErrNotFound) {
+		httperr.Render(w, httperr.NotFound("purchase order not found"))
+		return
+	}
+	if err != nil {
+		httperr.RenderDBErrCtx(r.Context(), w, err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, ReadinessResponse{Issues: issues})
+}
+
 // gatedMove names the gated moves.
 // Starting work and delivering both need complete master data: edits in
 // ON_PROGRESS and client edits can reopen a gap after the promotion passed.
