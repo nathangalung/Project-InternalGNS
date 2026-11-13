@@ -93,9 +93,39 @@ describe("Step4Summary line notices", () => {
   })
 
   it("asks a new quotation for a product", async () => {
-    await mount(<Step4Summary {...base} requireProducts />)
+    await mount(
+      <Step4Summary
+        {...base}
+        noProductsText="Tambahkan minimal satu produk sebelum membuat penawaran."
+      />,
+    )
     expect(text()).toContain("Tambahkan minimal satu produk sebelum membuat penawaran.")
     expect(text()).not.toContain("Isi minimal satu produk atau informasi pengiriman")
+  })
+})
+
+describe("Step4Summary save notices", () => {
+  it("says why a save is refused and opens the step that fixes it", async () => {
+    const go = vi.fn()
+    await mount(
+      <Step4Summary
+        {...base}
+        notices={[
+          { text: "Alamat pengiriman wajib diisi.", go, goLabel: "Ke Langkah Pengiriman" },
+          { text: "Minta Kepala Operasional mengisinya." },
+        ]}
+      />,
+    )
+    expect(text()).toContain("Alamat pengiriman wajib diisi.")
+    expect(text()).toContain("Minta Kepala Operasional mengisinya.")
+    await click(button("Ke Langkah Pengiriman"))
+    expect(go).toHaveBeenCalledTimes(1)
+  })
+
+  it("asks a PO for a product in its own words", async () => {
+    await mount(<Step4Summary {...base} noProductsText="Tambahkan minimal satu produk." />)
+    expect(text()).toContain("Tambahkan minimal satu produk.")
+    expect(text()).not.toContain("informasi pengiriman")
   })
 })
 

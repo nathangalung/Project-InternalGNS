@@ -52,12 +52,22 @@ type Step4SummaryProps = {
   linesToComplete?: LineProblem[]
   // Back to the product step
   onGoToProducts?: () => void
-  // Create needs a product
-  requireProducts?: boolean
+  // Shown while no product: a save needs one
+  noProductsText?: string
+  // Other reasons a save is refused
+  notices?: SummaryNotice[]
   // Another user holds the header
   readOnly?: boolean
   // False for a role that sets no harga jual: no selling figure shows
   pricing?: boolean
+}
+
+// A refusal with its fix
+export type SummaryNotice = {
+  text: string
+  // Opens the step that fixes it
+  go?: () => void
+  goLabel?: string
 }
 
 const PAGE_SIZE = 5
@@ -165,7 +175,15 @@ function TermsCard({
 }
 
 // Notice line with a link
-function NoticeHead({ text, go }: { text: string; go?: () => void }) {
+function NoticeHead({
+  text,
+  go,
+  goLabel = "Ke Langkah Produk",
+}: {
+  text: string
+  go?: () => void
+  goLabel?: string
+}) {
   return (
     <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
       <span>{text}</span>
@@ -175,7 +193,7 @@ function NoticeHead({ text, go }: { text: string; go?: () => void }) {
           onClick={go}
           className={`cursor-pointer border-0 bg-transparent p-0 text-xs font-semibold ${entityLink()}`}
         >
-          Ke Langkah Produk
+          {goLabel}
         </button>
       )}
     </div>
@@ -204,7 +222,8 @@ export default function Step4Summary({
   linesToFix = [],
   linesToComplete = [],
   onGoToProducts,
-  requireProducts = false,
+  noProductsText,
+  notices = [],
   readOnly = false,
   pricing = true,
 }: Step4SummaryProps) {
@@ -219,8 +238,9 @@ export default function Step4Summary({
 
   const hasContent = products.length > 0 || isValidAddress(shippingAddress)
   const addressError = optionalAddressError(shippingAddress)
-  const noProducts = requireProducts && products.length === 0
-  const hasNotices = linesToFix.length > 0 || linesToComplete.length > 0 || noProducts
+  const noProducts = noProductsText !== undefined && products.length === 0
+  const hasNotices =
+    linesToFix.length > 0 || linesToComplete.length > 0 || noProducts || notices.length > 0
 
   return (
     <div className={qe.stepContent}>
@@ -230,12 +250,14 @@ export default function Step4Summary({
           {terms && <TermsCard terms={terms} id={id} readOnly={readOnly} />}
           {noProducts && (
             <div role="alert" className={`${alertBox} mt-2.5`}>
-              <NoticeHead
-                text="Tambahkan minimal satu produk sebelum membuat penawaran."
-                go={onGoToProducts}
-              />
+              <NoticeHead text={noProductsText} go={onGoToProducts} />
             </div>
           )}
+          {notices.map((n) => (
+            <div key={n.text} role="alert" className={`${alertBox} mt-2.5`}>
+              <NoticeHead text={n.text} go={n.go} goLabel={n.goLabel} />
+            </div>
+          ))}
           {linesToFix.length > 0 && (
             <div role="alert" className={`${alertBox} mt-2.5`}>
               <NoticeHead
@@ -346,7 +368,7 @@ export default function Step4Summary({
       <div>
         <h2 className={`${qe.sectionTitle} mb-3`}>Ringkasan Penawaran</h2>
 
-        {!hasContent && !requireProducts && (
+        {!hasContent && noProductsText === undefined && (
           <div className={`${alertBox} mb-5`}>
             Isi minimal satu produk atau informasi pengiriman sebelum menyimpan.
           </div>

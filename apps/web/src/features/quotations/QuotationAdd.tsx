@@ -336,7 +336,7 @@ export default function QuotationAdd() {
             linesToFix={fixLines}
             linesToComplete={unsentLines}
             onGoToProducts={() => setStep(2)}
-            requireProducts
+            noProductsText="Tambahkan minimal satu produk sebelum membuat penawaran."
           />
         )}
       </div>
