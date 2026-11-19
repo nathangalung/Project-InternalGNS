@@ -45,7 +45,7 @@ SQL is hand-written in `db/queries`; there is no code generator.
 
 Caret ranges are intentional; exact versions are pinned by `bun.lock`. CI runs
 `bun install --frozen-lockfile` to refuse drift. The production image serves
-the build from `nginx:1.30.6-alpine` (the stable branch).
+the build from `nginx:1.30.7-alpine` (the stable branch).
 
 ## Infra
 
