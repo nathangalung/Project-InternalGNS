@@ -10,7 +10,7 @@ import ProductTable from "@/features/quotations/QuotationDetail/ProductTable"
 import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
 import type { ClientInfo, ProductRow } from "@/features/quotations/types"
 import { useNavTrail } from "@/hooks/useNavTrail"
-import { downloadFile, downloadPdf } from "@/lib/api-client"
+import { downloadFile } from "@/lib/api-client"
 import { formatDate, toNum } from "@/lib/format"
 import { listCrumb } from "@/lib/nav-trail"
 import { canWriteCatalog, managesPOs } from "@/lib/rbac"
@@ -23,6 +23,7 @@ import {
   useActorNames,
   useChangePoClient,
   useChangePoStatus,
+  useDeliveryNoteDownload,
   usePoHistory,
   usePoItems,
   usePoReadiness,
@@ -40,7 +41,6 @@ import HistoryCard from "./HistoryCard"
 import {
   canDownloadDeliveryNote,
   completenessIssues,
-  deliveryNoteFileName,
   nextGatedMove,
   poBreakdown,
   poClientEditable,
@@ -139,6 +139,7 @@ export default function PurchaseOrderDetail({ po, clientInfo, onEdit }: Purchase
     setChangingClient(true)
   }
   const dnReady = canDownloadDeliveryNote(po)
+  const downloadNote = useDeliveryNoteDownload()
   const editLockReason = poEditLockReason(po)
   const fileRemovable = po.status === "PENDING" || po.status === "UPLOADED"
   const hasFile = Boolean(po.objectKey && po.fileName)
@@ -206,12 +207,9 @@ export default function PurchaseOrderDetail({ po, clientInfo, onEdit }: Purchase
     }
   }
 
-  // dnReady guarantees the number.
+  // The first download issues the number.
   function downloadDeliveryNote() {
-    return downloadPdf(
-      `/purchase-orders/${po.id}/delivery-note.pdf`,
-      deliveryNoteFileName(po.deliveryNoteNumber ?? ""),
-    )
+    return downloadNote(po)
   }
 
   async function handleDownloadDeliveryNote() {

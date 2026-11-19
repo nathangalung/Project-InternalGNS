@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { ApiError, apiList, apiRequest, downloadXlsx } from "@/lib/api-client"
+import { ApiError, apiList, apiRequest, downloadPdf, downloadXlsx } from "@/lib/api-client"
 import * as api from "./api"
 
 vi.mock("@/lib/api-client", async (importOriginal) => ({
@@ -34,6 +34,14 @@ describe("purchase orders api", () => {
   ])("exports %s as delivery notes", async (_name, params, path) => {
     await api.exportXlsx(params)
     expect(downloadXlsx).toHaveBeenCalledWith(path, "delivery-note-export.xlsx")
+  })
+
+  it("downloads the Surat Jalan under the given name", async () => {
+    await api.downloadDeliveryNote(4, "Surat_Jalan_PO_1.pdf")
+    expect(downloadPdf).toHaveBeenCalledWith(
+      "/purchase-orders/4/delivery-note.pdf",
+      "Surat_Jalan_PO_1.pdf",
+    )
   })
 
   it("reads a quotation without a PO as null", async () => {

@@ -519,9 +519,9 @@ func shippingLine(t *testing.T, items []purchaseorders.PurchaseOrderItem) purcha
 func int16Ptr(v int16) *int16 { return &v }
 func strPtr(v string) *string { return &v }
 
-// ON_PROGRESS issues the note number.
-// It is never reissued.
-func TestRepo_ChangeStatus_OnProgressIssuesDeliveryNote(t *testing.T) {
+// The first download issues the number.
+// Dalam Progres issues none, and nothing reissues it after.
+func TestRepo_ChangeStatus_KeepsIssuedDeliveryNote(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, poID := acceptedQuotationWithPO(t, tx)
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
@@ -538,8 +538,10 @@ func TestRepo_ChangeStatus_OnProgressIssuesDeliveryNote(t *testing.T) {
 	po, err := repo.GetByID(ctx, poID)
 	require.NoError(t, err)
 	assert.Nil(t, po.DeliveryNoteNumber)
-	issued := dnAfter(purchaseorders.StatusOnProgress)
-	require.NotNil(t, issued)
+	assert.Nil(t, dnAfter(purchaseorders.StatusOnProgress), "Dalam Progres issues none")
+	dn, err := repo.IssueDeliveryNote(ctx, poID, seedUserID)
+	require.NoError(t, err)
+	issued := &dn
 	assert.Contains(t, *issued, "DN-")
 	for _, step := range []purchaseorders.Status{
 		purchaseorders.StatusUploaded,

@@ -37,6 +37,9 @@ func TestDeliveryNote_DatedWhenIssued(t *testing.T) {
 	var today time.Time
 	require.NoError(t, tx.QueryRow(ctx, `SELECT CURRENT_DATE`).Scan(&today))
 	reachStatus(t, tx, poID, purchaseorders.StatusOnProgress)
+	// The first download issues it.
+	_, err = repo.IssueDeliveryNote(ctx, poID, seedUserID)
+	require.NoError(t, err)
 	po, err := repo.GetByID(ctx, poID)
 	require.NoError(t, err)
 	require.NotNil(t, po.DeliveryNoteNumber)

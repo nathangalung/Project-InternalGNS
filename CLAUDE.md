@@ -442,10 +442,19 @@ shows a missing one as Belum ada No. PO.
   attach (PO file, logo, item image, invoice attachment or proof) first stats
   the object, so a key with no upload behind it is a 422. UPLOADED
   goes to ON_PROGRESS; ON_PROGRESS to DELIVERED or back to UPLOADED; any open
-  state to CANCELLED with a reason. The delivery-note number is stamped on
-  ON_PROGRESS or DELIVERED together with its WIB issue date
+  state to CANCELLED with a reason. The delivery-note number follows the
+  order the notes are downloaded (00124): moving to ON_PROGRESS issues
+  none, and the first download of a PO in ON_PROGRESS or DELIVERED, by any
+  role that can download it, issues it (`fn_issue_delivery_note`, under the
+  PO row lock, before the PDF renders) with its WIB issue date
   (`delivery_note_date`), which the note prints as its Date above the PO No
-  and PO Date rows, and DELIVERED creates the invoice. DELIVERED and
+  and PO Date rows. Every later download prints the same number, and the
+  PO history notes `Nomor Surat Jalan <no> diterbitkan`. A PO delivered
+  without a download is issued its number on DELIVERED, which creates the
+  invoice. The web offers Unduh Surat Jalan from ON_PROGRESS on
+  (`canDownloadDeliveryNote`), names a first download after the PO
+  (`deliveryNoteDownloadName`) and reloads the PO after every download
+  (`useDeliveryNoteDownload`). DELIVERED and
   CANCELLED are terminal, and the file is locked in both. The lines lock in
   both too, with one exception: while a delivered PO's invoice is cancelled
   and no live invoice replaces it, Ubah PO opens again, so the Pengganti

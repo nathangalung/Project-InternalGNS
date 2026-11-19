@@ -397,6 +397,17 @@ func (r *Repo) ChangeStatus(ctx context.Context, id int64, status Status, actorI
 	return r.Transition(ctx, id, status, "", actorID)
 }
 
+// IssueDeliveryNote returns the note number.
+// The first download of a working PO issues it; later ones read it.
+func (r *Repo) IssueDeliveryNote(ctx context.Context, id, actorID int64) (string, error) {
+	var dn string
+	err := r.db.QueryRow(ctx, r.store.Get("purchase_orders.issue_delivery_note"), id, actorID).Scan(&dn)
+	if err != nil {
+		return "", classifyPgErr(err)
+	}
+	return dn, nil
+}
+
 // Transition moves and records history.
 // The note goes into the PO's history.
 // CANCELLED requires a non-blank note.

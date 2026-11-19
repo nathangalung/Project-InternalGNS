@@ -385,8 +385,10 @@ func TestHandler_Export_DeliveryNoteFollowsIssuance(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx, tx, srv := txServer(t)
 			_, poID := poAt(t, tx, purchaseorders.StatusOnProgress)
+			_, err := purchaseorders.NewRepo(tx, testutil.Store(t)).IssueDeliveryNote(ctx, poID, seedUserID)
+			require.NoError(t, err)
 			// The client's PO predates the note, so the two dates differ.
-			_, err := tx.Exec(ctx, `UPDATE purchase_orders SET po_date = DATE '2026-01-05' WHERE id = $1`, poID)
+			_, err = tx.Exec(ctx, `UPDATE purchase_orders SET po_date = DATE '2026-01-05' WHERE id = $1`, poID)
 			require.NoError(t, err)
 			tc.walk(t, tx, poID)
 			po, err := purchaseorders.NewRepo(tx, testutil.Store(t)).GetByID(ctx, poID)

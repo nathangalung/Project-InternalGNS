@@ -27,6 +27,7 @@ import type {
 import { detailsChanged } from "./adapters"
 import {
   completenessIssues,
+  deliveryNoteDownloadName,
   isInvoiceFiled,
   isPoLockRefusal,
   type PoDetailsErrors,
@@ -254,6 +255,26 @@ export function useChangePoClient() {
       }
     },
   })
+}
+
+// Surat Jalan download.
+//
+// The first download issues the number and dates the note, so the PO
+// reloads after it, even when the download failed after the issue.
+export function useDeliveryNoteDownload() {
+  const qc = useQueryClient()
+  return async (po: {
+    id: number
+    deliveryNoteNumber?: string
+    poNumber?: string
+    quotationNo: string
+  }) => {
+    try {
+      await poApi.downloadDeliveryNote(po.id, deliveryNoteDownloadName(po))
+    } finally {
+      qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
+    }
+  }
 }
 
 // Surat Jalan row notes.

@@ -425,7 +425,9 @@ func TestRepo_ChangeClient_PenggantiBillsNewClient(t *testing.T) {
 func TestRepo_ChangeClient_LiveInvoiceLocks(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, poID := poAt(t, tx, purchaseorders.StatusOnProgress)
-	_, err := tx.Exec(ctx, `SELECT fn_create_invoice($1, $2)`, poID, seedUserID)
+	_, err := tx.Exec(ctx, `SELECT fn_issue_delivery_note($1, $2)`, poID, seedUserID)
+	require.NoError(t, err)
+	_, err = tx.Exec(ctx, `SELECT fn_create_invoice($1, $2)`, poID, seedUserID)
 	require.NoError(t, err)
 	sister, own := sisterClient(t, tx, "PT Saudara Holding")
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))

@@ -2,6 +2,7 @@ import {
   apiList,
   apiRequest,
   buildQuery,
+  downloadPdf,
   downloadXlsx,
   nullOn404,
   type PaginatedList,
@@ -52,6 +53,12 @@ export function exportXlsx(params: ListParams = {}): Promise<void> {
     `/purchase-orders/export.xlsx${qs ? `?${qs}` : ""}`,
     "delivery-note-export.xlsx",
   )
+}
+
+// Surat Jalan PDF.
+// The first download issues its number.
+export function downloadDeliveryNote(id: number, fileName: string): Promise<void> {
+  return downloadPdf(`/purchase-orders/${id}/delivery-note.pdf`, fileName)
 }
 
 export async function get(id: number): Promise<PurchaseOrderRow> {
