@@ -1,6 +1,7 @@
 package purchaseorders_test
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -91,33 +92,55 @@ func TestDeliveryNote_Faults(t *testing.T) {
 		name      string
 		exec      func(inner db.Executor) db.Executor
 		templates func(t *testing.T) string
+		// The number exists before the download
+		issued bool
 	}{
 		{
 			"reading the PO fails",
 			func(db.Executor) db.Executor { return testutil.FakeExec{} },
 			poTemplatesRoot,
+			true,
+		},
+		{
+			"issuing the number fails",
+			func(inner db.Executor) db.Executor { return &testutil.CountingExec{Inner: inner, FailAfter: 1} },
+			poTemplatesRoot,
+			false,
+		},
+		{
+			"rereading the issued PO fails",
+			func(inner db.Executor) db.Executor { return &testutil.CountingExec{Inner: inner, FailAfter: 2} },
+			poTemplatesRoot,
+			false,
 		},
 		{
 			"reading the lines fails",
 			func(inner db.Executor) db.Executor { return &testutil.CountingExec{Inner: inner, FailAfter: 1} },
 			poTemplatesRoot,
+			true,
 		},
 		{
 			// Never a note with a blank address.
 			"reading the client fails",
 			func(inner db.Executor) db.Executor { return &testutil.CountingExec{Inner: inner, FailAfter: 2} },
 			poTemplatesRoot,
+			true,
 		},
 		{
 			"the template is missing",
 			func(inner db.Executor) db.Executor { return inner },
 			func(t *testing.T) string { return t.TempDir() },
+			true,
 		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			_, tx := testutil.BeginTx(t)
 			_, poID := poAt(t, tx, purchaseorders.StatusOnProgress)
+			if tc.issued {
+				_, err := purchaseorders.NewRepo(tx, testutil.Store(t)).IssueDeliveryNote(context.Background(), poID, seedUserID)
+				require.NoError(t, err)
+			}
 			srv := execServer(t, tc.exec(tx), tc.templates(t))
 
 			res := doJSON(t, srv, http.MethodGet, fmt.Sprintf("/purchase-orders/%d/delivery-note.pdf", poID), nil)
