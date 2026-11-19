@@ -162,11 +162,17 @@ Feature: Purchase order lifecycle
     When the user downloads the delivery note
     Then the response status is 409
 
-  Scenario: The delivery note carries the number stored when work starts
+  Scenario: The first download issues the delivery note number
     Given an accepted quotation
     And the PO has reached "ON_PROGRESS"
     When the user reads the PO by quotation
+    Then the PO has no delivery note number
+    When the user downloads the delivery note
+    And the user reads the PO by quotation
     Then the PO has a delivery note number
+    When the user downloads the delivery note
+    And the user reads the PO by quotation
+    Then the delivery note number is unchanged
     When the user transitions the PO through "UPLOADED,ON_PROGRESS"
     Then every PO transition succeeds
     When the user reads the PO by quotation

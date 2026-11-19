@@ -712,6 +712,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^an invoice product line has unit price "([^"]+)"$`, state.invoiceProductLineUnitPriceEquals)
 		sc.Step(`^the user downloads the delivery note$`, state.downloadDeliveryNote)
 		sc.Step(`^the PO has a delivery note number$`, state.poHasDeliveryNoteNumber)
+		sc.Step(`^the PO has no delivery note number$`, state.poHasNoDeliveryNoteNumber)
 		sc.Step(`^the delivery note number is unchanged$`, state.deliveryNoteNumberUnchanged)
 		sc.Step(`^the user exports the PO list$`, state.exportPOList)
 		sc.Step(`^the export lists the stored delivery note number$`, state.exportListsDeliveryNoteNumber)

@@ -416,30 +416,43 @@ test.describe("purchase order status", () => {
     expect((await seed.poByQuotation(q.id)).status).toBe("ON_PROGRESS")
   })
 
-  test("Dalam Progres issues the Surat Jalan number", async ({ page, seed }) => {
+  test("the first Surat Jalan download issues its number", async ({ page, seed }) => {
     const { client, q, po } = await acceptedPo(seed)
     await seed.attachPoFile(po)
+    await stubDeliveryNote(page, po.id)
 
     await page.goto(`/purchase-orders/${q.id}`)
     await expect(page.getByRole("button", { name: "Unduh Surat Jalan" })).toBeDisabled()
     await choosePoStatus(page, "PO Diunggah", "Dalam Progres")
     await expect(page).toHaveURL(/\/purchase-orders$/)
 
+    // Dalam Progres issues no number.
+    const working = await seed.poByQuotation(q.id)
+    expect(working.status).toBe("ON_PROGRESS")
+    expect(working.deliveryNoteNumber).toBeFalsy()
+    await page.getByPlaceholder("Cari purchase order, klien, atau nomor...").fill(seed.prefix)
+    const row = page.getByRole("row", { name: new RegExp(client.name) })
+    await expect(row).toContainText("Dalam Progres")
+    const button = row.getByRole("button", { name: `Unduh Surat Jalan ${working.poNumber}` })
+    await expect(button).toBeEnabled()
+    const download = page.waitForEvent("download")
+    await button.click()
+    await download
+
     const saved = await seed.poByQuotation(q.id)
-    expect(saved.status).toBe("ON_PROGRESS")
     expect(saved.deliveryNoteNumber).toBeTruthy()
     // The note is dated the WIB day its number was issued.
     const todayWib = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" })
     expect(saved.deliveryNoteDate?.slice(0, 10)).toBe(todayWib)
-    await page.getByPlaceholder("Cari purchase order, klien, atau nomor...").fill(seed.prefix)
-    const row = page.getByRole("row", { name: new RegExp(client.name) })
-    await expect(row).toContainText("Dalam Progres")
-    await expect(
-      row.getByRole("button", { name: `Unduh Surat Jalan ${saved.poNumber}` }),
-    ).toBeEnabled()
 
     await page.goto(`/purchase-orders/${q.id}`)
-    await expect(page.getByText(`Surat Jalan ${saved.deliveryNoteNumber}`)).toBeVisible()
+    await expect(
+      page.getByText(`Surat Jalan ${saved.deliveryNoteNumber}`, { exact: true }),
+    ).toBeVisible()
+    // The history names who issued it.
+    await expect(
+      page.getByText(`Nomor Surat Jalan ${saved.deliveryNoteNumber} diterbitkan`),
+    ).toBeVisible()
     await expect(page.getByRole("button", { name: "Unduh Surat Jalan" })).toBeEnabled()
     const menu = page.getByRole("button", { name: "Dalam Progres", exact: true })
     await menu.click()

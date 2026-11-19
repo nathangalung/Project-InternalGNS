@@ -14,6 +14,7 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/internal/clients"
 	"github.com/nathangalung/internalgns/apps/api/internal/pdfgen"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 )
@@ -69,6 +70,19 @@ func (h *DeliveryNoteHandler) ExportPDF(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// The first download issues the number.
+	if workStarted(po) && (po.DeliveryNoteNumber == nil || *po.DeliveryNoteNumber == "") {
+		if _, err := h.repo.IssueDeliveryNote(r.Context(), id, deps.CurrentUserID(r.Context())); err != nil &&
+			!errors.Is(err, ErrLocked) {
+			httperr.RenderDBErrCtx(r.Context(), w, err)
+			return
+		}
+		if po, err = h.repo.GetByID(r.Context(), id); err != nil {
+			httperr.RenderDBErrCtx(r.Context(), w, err)
+			return
+		}
+	}
+
 	dnNo, ok := issuedDeliveryNote(po)
 	if !ok {
 		httperr.Render(w, httperr.Conflict(
@@ -99,11 +113,16 @@ func (h *DeliveryNoteHandler) ExportPDF(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
+// workStarted is Dalam Progres or Dikirim.
+func workStarted(po PurchaseOrder) bool {
+	return po.Status == StatusOnProgress || po.Status == StatusDelivered
+}
+
 // issuedDeliveryNote returns the stored number.
 // It does so only once work has started.
 // A PO reverted below ON_PROGRESS keeps its number but cannot print it.
 func issuedDeliveryNote(po PurchaseOrder) (string, bool) {
-	if po.Status != StatusOnProgress && po.Status != StatusDelivered {
+	if !workStarted(po) {
 		return "", false
 	}
 	if po.DeliveryNoteNumber == nil || *po.DeliveryNoteNumber == "" {

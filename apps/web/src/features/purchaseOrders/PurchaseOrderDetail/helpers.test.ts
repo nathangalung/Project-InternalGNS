@@ -6,6 +6,7 @@ import type { PoCompletenessIssue, PoIncompleteProblem, PurchaseOrderRow } from 
 import {
   canDownloadDeliveryNote,
   completenessIssues,
+  deliveryNoteDownloadName,
   deliveryNoteFileName,
   isInvoiceFiled,
   isPoFileLocked,
@@ -106,21 +107,38 @@ describe("poEditLockReason", () => {
 })
 
 describe("canDownloadDeliveryNote", () => {
+  // The first download issues the number.
   it.each([
-    ["ON_PROGRESS", "DN-1/GNS/IX/2026", true],
-    ["DELIVERED", "DN-1/GNS/IX/2026", true],
-    ["ON_PROGRESS", undefined, false],
-    ["DELIVERED", "  ", false],
-    ["UPLOADED", "DN-1/GNS/IX/2026", false],
-    ["CANCELLED", "DN-1/GNS/IX/2026", false],
-  ] as const)("%s with %s -> %s", (status, deliveryNoteNumber, ok) => {
-    expect(canDownloadDeliveryNote({ status, deliveryNoteNumber })).toBe(ok)
+    ["ON_PROGRESS", true],
+    ["DELIVERED", true],
+    ["PENDING", false],
+    ["UPLOADED", false],
+    ["CANCELLED", false],
+  ] as const)("%s -> %s", (status, ok) => {
+    expect(canDownloadDeliveryNote({ status })).toBe(ok)
   })
 })
 
 describe("deliveryNoteFileName", () => {
   it("uses the stored number, safe for a filename", () => {
     expect(deliveryNoteFileName("DN-2600121/GNS/IX/2026")).toBe("DN-2600121_GNS_IX_2026.pdf")
+  })
+})
+
+describe("deliveryNoteDownloadName", () => {
+  it("names the file after the issued number", () => {
+    expect(
+      deliveryNoteDownloadName({ deliveryNoteNumber: "DN-00107/GNS/XI/2026", quotationNo: "Q-1" }),
+    ).toBe("DN-00107_GNS_XI_2026.pdf")
+  })
+
+  it("names it after the PO before the first download", () => {
+    expect(deliveryNoteDownloadName({ poNumber: "PO/KLIEN/7", quotationNo: "Q-1" })).toBe(
+      "Surat_Jalan_PO_KLIEN_7.pdf",
+    )
+    expect(deliveryNoteDownloadName({ deliveryNoteNumber: " ", quotationNo: "Q-00012" })).toBe(
+      "Surat_Jalan_PO_dari_Q-00012.pdf",
+    )
   })
 })
 

@@ -8,7 +8,6 @@ import SearchInput from "@/components/shared/SearchInput"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useMe } from "@/features/auth/hooks"
-import { downloadPdf } from "@/lib/api-client"
 import { resolveRange } from "@/lib/date-range"
 import { formatDate } from "@/lib/format"
 import { emptyListText } from "@/lib/list-empty"
@@ -18,12 +17,11 @@ import { ui } from "@/lib/ui"
 import { useListScreen, usePageWithin } from "@/lib/useListScreen"
 import { poRowFromBackend } from "./adapters"
 import * as purchaseOrdersApi from "./api"
-import { usePoUpload, usePurchaseOrders } from "./hooks"
+import { useDeliveryNoteDownload, usePoUpload, usePurchaseOrders } from "./hooks"
 import { PO_FILTERS, poListSchema } from "./list-search"
 import PoNumber from "./PoNumber"
 import {
   canDownloadDeliveryNote,
-  deliveryNoteFileName,
   isPoFileLocked,
   PO_LABEL,
   PO_NUMBER_MISSING,
@@ -82,6 +80,7 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
   const currentRows: PoRow[] = useMemo(() => (rawList?.rows ?? []).map(poRowFromBackend), [rawList])
   const uploadRow = currentRows.find((r) => r.id === uploadPoId)
   const upload = usePoUpload(uploadRow)
+  const downloadNote = useDeliveryNoteDownload()
 
   const totalItems = rawList?.total ?? 0
   usePageWithin(list, rawList?.total)
@@ -96,13 +95,10 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
     return result.errors
   }
 
+  // The first download issues the number.
   async function handleDownloadDN(row: PoRow) {
-    if (!row.deliveryNoteNumber) return
     try {
-      await downloadPdf(
-        `/purchase-orders/${row.id}/delivery-note.pdf`,
-        deliveryNoteFileName(row.deliveryNoteNumber),
-      )
+      await downloadNote(row)
     } catch {
       toast.error("Gagal mengunduh Surat Jalan.")
     }

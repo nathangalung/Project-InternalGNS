@@ -284,6 +284,10 @@ FROM purchase_orders po
 JOIN company_client cc ON cc.id = po.company_client_id
 WHERE po.id = $1;
 
+-- name: purchase_orders.issue_delivery_note
+-- The first download issues the number; $1=po id, $2=user.
+SELECT fn_issue_delivery_note($1::bigint, $2::bigint);
+
 -- name: purchase_orders.change_status
 -- $4 is the note; CANCELLED requires one.
 SELECT fn_change_po_status($1::bigint, $2::text, $3::bigint, $4::text);

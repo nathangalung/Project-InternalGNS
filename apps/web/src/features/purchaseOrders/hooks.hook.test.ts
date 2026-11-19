@@ -22,6 +22,7 @@ import {
   useActorNames,
   useChangePoClient,
   useChangePoStatus,
+  useDeliveryNoteDownload,
   useInvoiceFiled,
   usePoFileUrl,
   usePoHistory,
@@ -365,6 +366,22 @@ describe("PO writes", () => {
     await settle(() => result.current.mutateAsync({ id: 3, input: { clientId: 8 }, rowVersion: 5 }))
     expect(toast.error).not.toHaveBeenCalled()
     expect(invalidated(qc, [poDetail])).toEqual(reloads ? [poDetail] : [])
+  })
+
+  // The first download issues the number.
+  it.each<[string, boolean]>([
+    ["download", true],
+    ["failed download", false],
+  ])("a Surat Jalan %s reloads the PO", async (_name, ok) => {
+    if (ok) m.downloadDeliveryNote.mockResolvedValue()
+    else m.downloadDeliveryNote.mockRejectedValue(new TypeError("fetch failed"))
+    const { qc, result } = renderQueryHook(() => useDeliveryNoteDownload())
+    seed(qc, [poDetail, dash])
+    const run = result.current({ id: 3, poNumber: "PO/KLIEN/7", quotationNo: "Q-1" })
+    if (ok) await settle(() => run)
+    else await settle(() => run.catch(() => undefined))
+    expect(m.downloadDeliveryNote).toHaveBeenCalledWith(3, "Surat_Jalan_PO_KLIEN_7.pdf")
+    expect(invalidated(qc, [poDetail, dash])).toEqual([poDetail])
   })
 
   it("delivery note notes save with the row version and refresh the PO and its lines", async () => {

@@ -62,13 +62,17 @@ func TestHandler_UpdateItems_RoundTrip(t *testing.T) {
 }
 
 // Note numbers are distinct (PO-07).
-// Two POs of one client start work; the stored numbers must differ, and
-// each is what the PO reports.
+// Two POs of one client download their notes; the stored numbers must
+// differ, and each is what the PO reports.
 func TestRepo_DeliveryNoteNumbersAreDistinct(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, first := poAt(t, tx, purchaseorders.StatusOnProgress)
 	_, second := poAt(t, tx, purchaseorders.StatusOnProgress)
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+	for _, id := range []int64{first, second} {
+		_, err := repo.IssueDeliveryNote(ctx, id, seedUserID)
+		require.NoError(t, err)
+	}
 
 	a, err := repo.GetByID(ctx, first)
 	require.NoError(t, err)

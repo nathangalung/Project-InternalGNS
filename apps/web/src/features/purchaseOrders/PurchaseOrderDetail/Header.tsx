@@ -140,9 +140,11 @@ export default function Header({
             onClick={onDownloadDeliveryNote}
             disabled={!onDownloadDeliveryNote}
             title={
-              onDownloadDeliveryNote
-                ? undefined
-                : "Surat Jalan tersedia setelah status Dalam Progres"
+              !onDownloadDeliveryNote
+                ? "Surat Jalan tersedia setelah status Dalam Progres"
+                : deliveryNoteNumber
+                  ? undefined
+                  : "Nomor Surat Jalan terbit saat pertama kali diunduh"
             }
           >
             <svg

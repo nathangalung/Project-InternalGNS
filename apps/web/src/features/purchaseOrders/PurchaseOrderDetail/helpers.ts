@@ -155,17 +155,26 @@ export function previewKind(fileName: string | undefined): PreviewKind {
   return IMAGE_EXT.has(ext) ? "image" : "none"
 }
 
-// Surat Jalan needs issued number.
-export function canDownloadDeliveryNote(
-  po: Pick<PurchaseOrderRow, "status" | "deliveryNoteNumber">,
-): boolean {
-  const started = po.status === "ON_PROGRESS" || po.status === "DELIVERED"
-  return started && Boolean(po.deliveryNoteNumber?.trim())
+// Surat Jalan opens once work starts.
+// The first download issues its number.
+export function canDownloadDeliveryNote(po: Pick<PurchaseOrderRow, "status">): boolean {
+  return po.status === "ON_PROGRESS" || po.status === "DELIVERED"
 }
 
 // Download name from stored number.
 export function deliveryNoteFileName(deliveryNoteNumber: string): string {
   return `${deliveryNoteNumber.trim().replace(/[^A-Za-z0-9._-]/g, "_")}.pdf`
+}
+
+// Download name, before or after issue.
+// The name is asked before the first download issues the number, so that
+// download is named after the PO.
+export function deliveryNoteDownloadName(po: {
+  deliveryNoteNumber?: string
+  poNumber?: string
+  quotationNo: string
+}): string {
+  return deliveryNoteFileName(po.deliveryNoteNumber?.trim() || `Surat Jalan ${poRef(po)}`)
 }
 
 // Filed invoice freezes number, date.

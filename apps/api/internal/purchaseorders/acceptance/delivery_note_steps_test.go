@@ -84,6 +84,15 @@ func (s *scenarioState) poHasDeliveryNoteNumber() error {
 	return nil
 }
 
+// Dalam Progres issues no number.
+// Only the first download does.
+func (s *scenarioState) poHasNoDeliveryNoteNumber() error {
+	if dn, err := s.readDeliveryNoteNumber(); err == nil {
+		return fmt.Errorf("want no delivery note number, got %s", dn)
+	}
+	return nil
+}
+
 // Re-promotion reuses the number.
 // A revert and re-promotion must not consume a second number.
 func (s *scenarioState) deliveryNoteNumberUnchanged() error {
