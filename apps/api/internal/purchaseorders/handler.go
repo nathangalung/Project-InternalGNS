@@ -596,6 +596,28 @@ func (h *Handler) Readiness(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, ReadinessResponse{Issues: issues})
 }
 
+// DeliveryNoteNumber issues or returns the number.
+// The web asks before the first download opens its save dialog, so even
+// that file is named after the note. Asking again returns the same one.
+func (h *Handler) DeliveryNoteNumber(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	dn, err := h.repo.IssueDeliveryNote(r.Context(), id, deps.CurrentUserID(r.Context()))
+	switch {
+	case errors.Is(err, ErrNotFound):
+		httperr.Render(w, httperr.NotFound("purchase order not found"))
+	case errors.Is(err, ErrLocked):
+		httperr.Render(w, httperr.Conflict(err.Error()))
+	case err != nil:
+		httperr.RenderDBErrCtx(r.Context(), w, err)
+	default:
+		httpx.WriteJSON(w, http.StatusOK, DeliveryNoteNumberResponse{DeliveryNoteNumber: dn})
+	}
+}
+
 // gatedMove names the gated moves.
 // Starting work and delivering both need complete master data: edits in
 // ON_PROGRESS and client edits can reopen a gap after the promotion passed.

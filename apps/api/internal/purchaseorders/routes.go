@@ -49,6 +49,8 @@ func Routes(d deps.Deps) chi.Router {
 	r.With(header).Patch("/{id}/client", h.ChangeClient)
 	// The delivery note's row notes, written by the roles that run the PO.
 	r.With(header).Patch("/{id}/delivery-note", h.UpdateDeliveryNote)
+	// Issued by the first download, for every role that downloads it.
+	r.Get("/{id}/delivery-note/number", h.DeliveryNoteNumber)
 	r.Put("/{id}/items", h.UpdateItems)
 
 	if d.TemplatesRoot != "" {

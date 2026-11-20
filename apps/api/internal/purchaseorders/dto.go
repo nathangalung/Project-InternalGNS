@@ -224,6 +224,12 @@ type ListResult struct {
 	Total int64
 }
 
+// DeliveryNoteNumberResponse names the issued note.
+// Asked before the first download, so the file carries the number.
+type DeliveryNoteNumberResponse struct {
+	DeliveryNoteNumber string `json:"deliveryNoteNumber"`
+}
+
 // UpdatedResponse carries the new version.
 type UpdatedResponse struct {
 	ID         int64 `json:"id"`

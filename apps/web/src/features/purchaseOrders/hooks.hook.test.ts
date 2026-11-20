@@ -372,16 +372,29 @@ describe("PO writes", () => {
   it.each<[string, boolean]>([
     ["download", true],
     ["failed download", false],
-  ])("a Surat Jalan %s reloads the PO", async (_name, ok) => {
-    if (ok) m.downloadDeliveryNote.mockResolvedValue()
-    else m.downloadDeliveryNote.mockRejectedValue(new TypeError("fetch failed"))
-    const { qc, result } = renderQueryHook(() => useDeliveryNoteDownload())
-    seed(qc, [poDetail, dash])
-    const run = result.current({ id: 3, poNumber: "PO/KLIEN/7", quotationNo: "Q-1" })
-    if (ok) await settle(() => run)
-    else await settle(() => run.catch(() => undefined))
-    expect(m.downloadDeliveryNote).toHaveBeenCalledWith(3, "Surat_Jalan_PO_KLIEN_7.pdf")
-    expect(invalidated(qc, [poDetail, dash])).toEqual([poDetail])
+  ])(
+    "a first Surat Jalan %s is named after its new number and reloads the PO",
+    async (_name, ok) => {
+      m.deliveryNoteNumber.mockResolvedValue({ deliveryNoteNumber: "DN-00108/GNS/XI/2026" })
+      if (ok) m.downloadDeliveryNote.mockResolvedValue()
+      else m.downloadDeliveryNote.mockRejectedValue(new TypeError("fetch failed"))
+      const { qc, result } = renderQueryHook(() => useDeliveryNoteDownload())
+      seed(qc, [poDetail, dash])
+      const run = result.current({ id: 3 })
+      if (ok) await settle(() => run)
+      else await settle(() => run.catch(() => undefined))
+      expect(m.deliveryNoteNumber).toHaveBeenCalledWith(3)
+      expect(m.downloadDeliveryNote).toHaveBeenCalledWith(3, "DN-00108_GNS_XI_2026.pdf")
+      expect(invalidated(qc, [poDetail, dash])).toEqual([poDetail])
+    },
+  )
+
+  it("a reprint keeps the stored number without asking", async () => {
+    m.downloadDeliveryNote.mockResolvedValue()
+    const { result } = renderQueryHook(() => useDeliveryNoteDownload())
+    await settle(() => result.current({ id: 3, deliveryNoteNumber: "DN-00107/GNS/XI/2026" }))
+    expect(m.deliveryNoteNumber).not.toHaveBeenCalled()
+    expect(m.downloadDeliveryNote).toHaveBeenCalledWith(3, "DN-00107_GNS_XI_2026.pdf")
   })
 
   it("delivery note notes save with the row version and refresh the PO and its lines", async () => {

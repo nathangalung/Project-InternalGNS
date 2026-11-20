@@ -437,10 +437,14 @@ test.describe("purchase order status", () => {
     await expect(button).toBeEnabled()
     const download = page.waitForEvent("download")
     await button.click()
-    await download
+    const file = await download
 
     const saved = await seed.poByQuotation(q.id)
     expect(saved.deliveryNoteNumber).toBeTruthy()
+    // Even the first file is named after the new number.
+    expect(file.suggestedFilename()).toBe(
+      `${saved.deliveryNoteNumber?.replace(/[^A-Za-z0-9._-]/g, "_")}.pdf`,
+    )
     // The note is dated the WIB day its number was issued.
     const todayWib = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" })
     expect(saved.deliveryNoteDate?.slice(0, 10)).toBe(todayWib)

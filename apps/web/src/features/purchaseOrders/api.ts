@@ -11,6 +11,7 @@ import type {
   PoBackendStatus,
   PoClientInput,
   PoDeliveryNoteInput,
+  PoDeliveryNoteNumber,
   PoDetailsInput,
   PoFileInput,
   PoReadiness,
@@ -72,6 +73,12 @@ export async function listItems(id: number): Promise<PurchaseOrderItemRow[]> {
 // What blocks the next move
 export async function readiness(id: number): Promise<PoReadiness> {
   return apiRequest<PoReadiness>({ path: `/purchase-orders/${id}/readiness` })
+}
+
+// Surat Jalan number, issued once.
+// Asked before the first download, so its file is named after the note.
+export async function deliveryNoteNumber(id: number): Promise<PoDeliveryNoteNumber> {
+  return apiRequest<PoDeliveryNoteNumber>({ path: `/purchase-orders/${id}/delivery-note/number` })
 }
 
 export async function getByQuotation(quotationId: number): Promise<PurchaseOrderRow | null> {

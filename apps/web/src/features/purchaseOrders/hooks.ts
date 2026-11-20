@@ -27,7 +27,7 @@ import type {
 import { detailsChanged } from "./adapters"
 import {
   completenessIssues,
-  deliveryNoteDownloadName,
+  deliveryNoteFileName,
   isInvoiceFiled,
   isPoLockRefusal,
   type PoDetailsErrors,
@@ -259,18 +259,16 @@ export function useChangePoClient() {
 
 // Surat Jalan download.
 //
-// The first download issues the number and dates the note, so the PO
-// reloads after it, even when the download failed after the issue.
+// The first download issues the number and dates the note. The number is
+// asked for before the save dialog opens, so even that file is named after
+// it, and the PO reloads after every download, failed ones included.
 export function useDeliveryNoteDownload() {
   const qc = useQueryClient()
-  return async (po: {
-    id: number
-    deliveryNoteNumber?: string
-    poNumber?: string
-    quotationNo: string
-  }) => {
+  return async (po: { id: number; deliveryNoteNumber?: string }) => {
     try {
-      await poApi.downloadDeliveryNote(po.id, deliveryNoteDownloadName(po))
+      const number =
+        po.deliveryNoteNumber?.trim() || (await poApi.deliveryNoteNumber(po.id)).deliveryNoteNumber
+      await poApi.downloadDeliveryNote(po.id, deliveryNoteFileName(number))
     } finally {
       qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
     }

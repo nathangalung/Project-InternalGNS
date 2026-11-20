@@ -166,17 +166,6 @@ export function deliveryNoteFileName(deliveryNoteNumber: string): string {
   return `${deliveryNoteNumber.trim().replace(/[^A-Za-z0-9._-]/g, "_")}.pdf`
 }
 
-// Download name, before or after issue.
-// The name is asked before the first download issues the number, so that
-// download is named after the PO.
-export function deliveryNoteDownloadName(po: {
-  deliveryNoteNumber?: string
-  poNumber?: string
-  quotationNo: string
-}): string {
-  return deliveryNoteFileName(po.deliveryNoteNumber?.trim() || `Surat Jalan ${poRef(po)}`)
-}
-
 // Filed invoice freezes number, date.
 export function isInvoiceFiled(status: InvoiceBackendStatus | undefined): boolean {
   return status === "sent" || status === "paid" || status === "overdue"
