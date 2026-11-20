@@ -591,6 +591,11 @@ export type PoDeliveryNoteLineInput = {
 };
 
 // From purchaseorders/dto.go
+export type PoDeliveryNoteNumber = {
+    deliveryNoteNumber: string;
+};
+
+// From purchaseorders/dto.go
 export type PoDetailsInput = {
     poNumber: string;
     poDate: string;

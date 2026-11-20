@@ -452,9 +452,12 @@ shows a missing one as Belum ada No. PO.
   PO history notes `Nomor Surat Jalan <no> diterbitkan`. A PO delivered
   without a download is issued its number on DELIVERED, which creates the
   invoice. The web offers Unduh Surat Jalan from ON_PROGRESS on
-  (`canDownloadDeliveryNote`), names a first download after the PO
-  (`deliveryNoteDownloadName`) and reloads the PO after every download
-  (`useDeliveryNoteDownload`). DELIVERED and
+  (`canDownloadDeliveryNote`). Before the first download opens its save
+  dialog it asks `GET /purchase-orders/{id}/delivery-note/number`, which
+  issues the number the same way, so every file, the first included, is
+  named after the note (`DN-00108_GNS_XI_2026.pdf`), and it reloads the PO
+  after every download (`useDeliveryNoteDownload`). Invoice files are named
+  after the invoice number, which is the note's. DELIVERED and
   CANCELLED are terminal, and the file is locked in both. The lines lock in
   both too, with one exception: while a delivered PO's invoice is cancelled
   and no live invoice replaces it, Ubah PO opens again, so the Pengganti

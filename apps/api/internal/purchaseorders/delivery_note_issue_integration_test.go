@@ -1,6 +1,7 @@
 package purchaseorders_test
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -140,4 +141,56 @@ func TestDeliveryNote_DeliveredIssuesWhenNeverDownloaded(t *testing.T) {
 	require.NoError(t, tx.QueryRow(ctx,
 		`SELECT invoice_no FROM invoices WHERE po_id = $1`, poID).Scan(&invoiceNo))
 	assert.Equal(t, "INV"+(*po.DeliveryNoteNumber)[2:], invoiceNo)
+}
+
+// The number before the first download.
+// The web asks for it before the save dialog opens, so even the first
+// file is named after the note; asking again returns the same number.
+func TestHandler_DeliveryNoteNumber(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+	working := workingPO(t, tx, purchaseorders.StatusOnProgress)
+	uploaded := workingPO(t, tx, purchaseorders.StatusUploaded)
+	srv := execServer(t, tx, poTemplatesRoot(t))
+	path := func(id int64) string {
+		return "/purchase-orders/" + strconv.FormatInt(id, 10) + "/delivery-note/number"
+	}
+
+	var first purchaseorders.DeliveryNoteNumberResponse
+	res := doJSON(t, srv, http.MethodGet, path(working), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&first))
+	res.Body.Close()
+	assert.Regexp(t, `^DN-[0-9]{5,}/GNS/[IVXLC]+/[0-9]{4}$`, first.DeliveryNoteNumber)
+
+	var again purchaseorders.DeliveryNoteNumberResponse
+	res = doJSON(t, srv, http.MethodGet, path(working), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&again))
+	res.Body.Close()
+	assert.Equal(t, first, again, "asking again keeps the number")
+
+	po, err := repo.GetByID(ctx, working)
+	require.NoError(t, err)
+	require.NotNil(t, po.DeliveryNoteNumber)
+	assert.Equal(t, first.DeliveryNoteNumber, *po.DeliveryNoteNumber)
+
+	// Last: the refusal aborts the transaction.
+	res = doJSON(t, srv, http.MethodGet, path(uploaded), nil)
+	assert.Equal(t, http.StatusConflict, res.StatusCode)
+	assert.Equal(t, "Surat jalan tersedia setelah status PO Dalam Progres.", readProblem(t, res).Detail)
+	res.Body.Close()
+}
+
+func TestHandler_DeliveryNoteNumber_Refusals(t *testing.T) {
+	_, tx := testutil.BeginTx(t)
+	srv := execServer(t, tx, poTemplatesRoot(t))
+	for path, want := range map[string]int{
+		"/purchase-orders/x/delivery-note/number":        http.StatusBadRequest,
+		"/purchase-orders/99999999/delivery-note/number": http.StatusNotFound,
+	} {
+		res := doJSON(t, srv, http.MethodGet, path, nil)
+		assert.Equal(t, want, res.StatusCode, path)
+		res.Body.Close()
+	}
 }

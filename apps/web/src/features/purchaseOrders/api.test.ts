@@ -36,6 +36,14 @@ describe("purchase orders api", () => {
     expect(downloadXlsx).toHaveBeenCalledWith(path, "delivery-note-export.xlsx")
   })
 
+  it("asks for the Surat Jalan number", async () => {
+    request.mockResolvedValueOnce({ deliveryNoteNumber: "DN-00108/GNS/XI/2026" })
+    await expect(api.deliveryNoteNumber(4)).resolves.toEqual({
+      deliveryNoteNumber: "DN-00108/GNS/XI/2026",
+    })
+    expect(request).toHaveBeenCalledWith({ path: "/purchase-orders/4/delivery-note/number" })
+  })
+
   it("downloads the Surat Jalan under the given name", async () => {
     await api.downloadDeliveryNote(4, "Surat_Jalan_PO_1.pdf")
     expect(downloadPdf).toHaveBeenCalledWith(

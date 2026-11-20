@@ -63,6 +63,7 @@ export type {
   PoCompletenessIssue,
   PoDeliveryNoteInput,
   PoDeliveryNoteLineInput,
+  PoDeliveryNoteNumber,
   PoDetailsInput,
   PoFileInput,
   PoIncompleteProblem,
