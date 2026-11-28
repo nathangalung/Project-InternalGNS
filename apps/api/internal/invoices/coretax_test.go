@@ -69,8 +69,8 @@ func TestBuildGoodService_DBToCoretaxOptRemap(t *testing.T) {
 		if gs.Opt != "B" {
 			t.Fatalf("want Opt B for DB=J, got %q", gs.Opt)
 		}
-		if gs.Unit != "UM.0033" {
-			t.Fatalf("want fallback UM.0033, got %q", gs.Unit)
+		if gs.Unit != "UM.0030" {
+			t.Fatalf("want service fallback UM.0030, got %q", gs.Unit)
 		}
 	})
 	t.Run("nil goods_or_service defaults to Opt A", func(t *testing.T) {
@@ -80,6 +80,43 @@ func TestBuildGoodService_DBToCoretaxOptRemap(t *testing.T) {
 			t.Fatalf("want default Opt A, got %q", gs.Opt)
 		}
 	})
+}
+
+// Coretax refuses a goods unit on a service line.
+func TestBuildGoodService_UnitByLineType(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name string
+		gs   string
+		unit *string
+		want string
+	}{
+		{"service with Unit files Kegiatan", "J", sptr("UM.0018"), "UM.0030"},
+		{"service with Set files Kegiatan", "J", sptr("UM.0019"), "UM.0030"},
+		{"service with Piece files Kegiatan", "J", sptr("UM.0021"), "UM.0030"},
+		{"service without unit files Kegiatan", "J", nil, "UM.0030"},
+		{"service with blank unit files Kegiatan", "J", sptr(""), "UM.0030"},
+		{"service keeps a time unit", "J", sptr("UM.0026"), "UM.0026"},
+		{"service keeps Kegiatan", "J", sptr("UM.0030"), "UM.0030"},
+		{"service with Lainnya files Kegiatan", "J", sptr("UM.0033"), "UM.0030"},
+		{"goods keeps Unit", "B", sptr("UM.0018"), "UM.0018"},
+		{"goods without unit files Lainnya", "B", nil, "UM.0033"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			gs := buildGoodService(InvoiceItem{
+				ItemName:        "x",
+				Qty:             "1",
+				UnitPrice:       "1",
+				GoodsOrService:  &tt.gs,
+				UnitCoretaxCode: tt.unit,
+			})
+			if gs.Unit != tt.want {
+				t.Fatalf("want unit %s, got %q", tt.want, gs.Unit)
+			}
+		})
+	}
 }
 
 func TestBuildBulk_BuyerIDTKUFallback(t *testing.T) {
