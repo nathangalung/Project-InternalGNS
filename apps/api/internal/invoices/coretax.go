@@ -214,12 +214,34 @@ func coretaxInvoiceFor(settings deps.CoretaxSettings, inv Invoice, items []Invoi
 	}
 }
 
+// Service units kept as recorded.
+var coretaxServiceUnits = map[string]bool{
+	"UM.0023": true, // Tahun
+	"UM.0024": true, // Bulan
+	"UM.0025": true, // Minggu
+	"UM.0026": true, // Hari
+	"UM.0027": true, // Jam
+	"UM.0028": true, // Menit
+	"UM.0030": true, // Kegiatan
+}
+
+const (
+	coretaxGoodsUnitDefault   = "UM.0033" // Lainnya
+	coretaxServiceUnitDefault = "UM.0030" // Kegiatan
+)
+
 // buildGoodService maps one invoice line.
 //
 // DB stores `goods_or_service` as 'B' (Barang / product) or 'J' (Jasa / shipping
 // service). Coretax XML `<Opt>` uses 'A' for Barang and 'B' for Jasa — the
-// remap is intentional, not a typo. Unit falls back to "UM.0033" (general
-// "Other/Lainnya") when no Coretax code is recorded for the unit.
+// remap is intentional, not a typo.
+//
+// Unit is the line's Coretax code. A goods line with none files "UM.0033"
+// (Lainnya). Coretax refuses a goods unit such as Unit or Set on a service
+// line ("satuan tidak dikenali"), so a service line keeps only a time unit or
+// Kegiatan and otherwise, a missing one included, files "UM.0030"
+// (Kegiatan): one delivery is one activity. The stored line and the invoice
+// PDF keep their own unit.
 //
 // Code is DJP's Kode Barang/Jasa, which Coretax checks against its own
 // reference when filled. The IMPA code is another code space, so every line
@@ -229,9 +251,15 @@ func buildGoodService(it InvoiceItem) coretaxGoodService {
 	if it.GoodsOrService != nil && strings.EqualFold(*it.GoodsOrService, "J") {
 		opt = "B"
 	}
-	unit := "UM.0033"
-	if it.UnitCoretaxCode != nil && *it.UnitCoretaxCode != "" {
+	unit := ""
+	if it.UnitCoretaxCode != nil {
 		unit = *it.UnitCoretaxCode
+	}
+	switch {
+	case opt == "B" && !coretaxServiceUnits[unit]:
+		unit = coretaxServiceUnitDefault
+	case unit == "":
+		unit = coretaxGoodsUnitDefault
 	}
 	price, discount := lineGrossAndDiscount(it)
 	return coretaxGoodService{

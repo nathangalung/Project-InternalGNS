@@ -626,7 +626,12 @@ shows a missing one as Belum ada No. PO.
   template), bold headers, and every column sized to its widest cell so
   Excel never shows ###. Kode Barang Jasa is
   always `000000`, never the IMPA code, since Coretax checks a filled code
-  against DJP's own reference.
+  against DJP's own reference. A unit files its `coretax_code` (Lainnya,
+  `UM.0033`, when it has none), except on a service line (Opt `B`, the
+  shipping line): Coretax refuses a goods unit such as Unit or Set there
+  ("satuan tidak dikenali"), so it keeps only a time unit or Kegiatan
+  and otherwise files Kegiatan (`UM.0030`). The stored line and
+  the PDF keep their own unit (`coretaxServiceUnits` in `coretax.go`).
   The same way it keeps its quotation's payment terms (`payment_terms`,
   trimmed, NULL when blank, 00110), which the PDF prints as PAYMENT TERMS
   and the detail shows as Syarat Pembayaran; an invoice without terms (its
